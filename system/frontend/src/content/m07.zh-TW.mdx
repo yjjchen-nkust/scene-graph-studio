@@ -1,0 +1,130 @@
+---
+id: m07
+order: 7
+title_en: "One-stage: FCSGG, RelTR, SGTR, EGTR, DSGG, SpeaQ, Hydra-SGG, REACT"
+title_zh: "單階段方法：FCSGG、RelTR、SGTR、EGTR、DSGG、SpeaQ、Hydra-SGG、REACT"
+anchor_labs: [L4]
+knowledge_points: [O1, O2, O3, O4, O5, O6, O7, O8]
+symbols:
+  - sym: "q"
+    gloss_en: "number of queries a set-prediction model carries"
+    gloss_zh: "集合預測模型所攜帶的 query 數量"
+  - sym: "\\hat\\sigma"
+    gloss_en: "the assignment matching predictions to ground truth"
+    gloss_zh: "將預測配對至標準答案的指派"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場，接續 M05 的比值：約每十萬組候選配對僅一組承載關係。單階段方法直接預測三元組集合，全程不列舉配對。宜明言此非速度上的最佳化：問題由「這些配對之中何者有關係」換成「本影像之中有些什麼」，兩者失效模式不同。此句為本單元的主軸。"
+  - id: s2
+    kind: math
+    seconds_budget: 360
+    presenter_notes_zh: "六分鐘。輸出為無序集合，故損失必先經由二分圖指派決定各預測對應何項標註。重點在於其後全部行為取決於 query 數量 q，而 q 於訓練之前即已選定——此為 s5 檢核點的依據。匈牙利演算法的 O(q³) 成本可提及但不必展開。"
+  - id: s3
+    kind: prose
+    seconds_budget: 360
+    presenter_notes_zh: "六分鐘，八種設計，平均每項四十五秒，不宜逐一展開。宜以 FCSGG 為前緣左端（最快、最不準）起手，以 EGTR 的觀察為最具啟發性者作結——偵測器原已計算物件間交互作用，其後卻予以捨棄。收束句為：閱讀單階段方法的表格時宜先讀延遲欄位。"
+  - id: s4
+    kind: lab
+    lab: L4
+    seconds_budget: 360
+    presenter_notes_zh: "L4 六分鐘。將單階段預測與 M05 的兩階段預測並列於同一影像。應帶入的問題僅有一個：當兩者意見不一致時，該不一致在於關係本身，抑或在於影像中究竟有哪些物件。此問題即 M03 SGCls 的用途，可一併回顧。"
+  - id: s5
+    kind: checkpoint
+    presenter_notes_zh: "檢核點。q = 100、每張影像平均 25 個標準答案三元組：召回率上限為 100/|G|，於平均情形不構成拘束，但於三元組數超過 100 的影像上即構成硬性上限。其餘 query 的失效情形包括輸出重複三元組（故需 s2 的指派）與輸出低信心雜訊而不付任何代價（M04 s2 已說明錯誤猜測不計代價）。"
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 停止列舉配對
+
+M5 以一項比值作結：約每十萬組候選配對之中，僅一組承載關係。單階段方法正視此一事實，直接預測三元組的集合，全程不進行任何配對列舉。其所借用的機制源自 DETR：固定數量的 query，每一 query 至多輸出一項預測，並以逐影像計算的二分圖指派與標準答案配對。
+
+此一改變並非速度上的最佳化。它將「這些配對之中何者具有關係」替換為「本影像之中有些什麼」，而兩個問題的失效模式並不相同。
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+模型輸出的是無序集合，而損失函數必須知道各預測分別對應哪一項標註。故先計算使總成本最小的指派，再透過該指派施加損失。其後全部行為均取決於 query 數量 $q$，而 $q$ 於訓練之前即已選定。
+
+</Intuition>
+
+<Formal>
+
+$$
+\hat\sigma=\arg\min_{\sigma}\sum_{i=1}^{\lvert G\rvert}\left[w_c\,\mathcal{L}_{\text{cls}}(i,\sigma(i))+w_b\,\mathcal{L}_{\text{box}}(i,\sigma(i))\right]
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\hat\sigma &= \arg\min_{\sigma}\ \sum_{i=1}^{\lvert G\rvert}\mathcal{L}\bigl(i,\sigma(i)\bigr),
+\qquad \mathcal{L}=w_c\mathcal{L}_{\text{cls}}+w_b\mathcal{L}_{\text{box}}\\
+\text{cost} &= O(q^3) \ \text{by the Hungarian algorithm, } q=\text{number of queries}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}q<\lvert G\rvert \;\Rightarrow\; \lvert G\rvert-q \text{ ground-truth triplets are unreachable: recall is capped at } q/\lvert G\rvert.
+\\ q\gg\lvert G\rvert \;\Rightarrow\; q-\lvert G\rvert \text{ slots train only against } \varnothing \text{ and stay undertrained.}
+\\[4pt]
+\text{SpeaQ answers with groupwise specialization; Hydra-SGG with one-to-many assignment.}\end{gathered}
+$$
+
+上述兩項界限宜視為訓練無法消除的設計拘束。query 過少，則召回率存在模型無論如何學習均無法突破的上限；query 過多，則多數 query 於訓練期間僅見到無物件類別，因而始終無法發揮作用。
+
+此即本單元標題中後段各方法存在的理由。SpeaQ 將 query 分組專門化，使單一 query 負責某一類關係而非某一位置；Hydra-SGG 則將單一預測指派給多個標準答案三元組，藉此鬆綁「一 query 一答案」此一造成長尾訓練不足的規則。
+
+另須留意 $q$ 對速度與準確度前緣的影響：Hungarian 步驟的複雜度為 $q$ 的三次方，故無法僅以增大 $q$ 同時迴避兩種失效模式。
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## 七種設計，及其各自推動之處
+
+**FCSGG** 預測關係親和場——一組稠密的逐像素向量場——而非離散配對。其為文獻中速度最快、準確度最低者，構成前緣的左端。
+
+**RelTR** 將主體與客體 query 耦合，使單一 query 同時承載三元組的兩端。
+
+**SGTR** 於實體提案與 predicate 提案之間建構二分圖，使配對由學習而得，而非經由列舉或假定。
+
+**EGTR** 自偵測器本身的解碼器注意力中萃取關係；其觀察在於偵測器原已計算物件間的交互作用，其後卻予以捨棄。
+
+**DSGG** 將整體視為單一的圖預測問題；**SpeaQ** 依組別專門化 query；**Hydra-SGG** 採用一對多的混合指派；**REACT** 則為近期的效率取向成果。
+
+持平的總結是：前緣於速度上大幅推進，於準確度上則推進有限。閱讀單階段方法的表格時，宜先讀延遲欄位。
+
+</Step>
+
+<Step id="s4">
+
+## 實作單元的內容
+
+L4 將上述預測與 M5 的兩階段預測並列於同一影像之上。宜帶入的問題為：當單階段模型與兩階段模型意見不一致時，該不一致究竟在於關係本身，抑或在於影像中究竟有哪些物件？
+
+</Step>
+
+<Step id="s5">
+
+## 檢核點
+
+某單階段模型以 $q = 100$ 個 query 訓練，其資料集每張影像平均含 25 個標準答案三元組。請說明此一設定所施加的召回率上限，以及其餘 75 個 query 可能遭遇的失效情形。
+
+</Step>

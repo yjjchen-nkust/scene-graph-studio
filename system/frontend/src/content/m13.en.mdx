@@ -1,0 +1,173 @@
+---
+id: m13
+order: 13
+title_en: "3D and embodied: 3DSSG, Hydra, ConceptGraphs, Clio, SayPlan, VLM-MSGraph"
+title_zh: "3D 與具身場景圖：3DSSG、Hydra、ConceptGraphs、Clio、SayPlan、VLM-MSGraph"
+anchor_labs: [L4]
+knowledge_points: [G1, G2, G3, G4, G5, G6]
+symbols:
+  - sym: "\\mathcal{G}_{\\ell}"
+    gloss_en: "the scene graph at hierarchy level ℓ"
+    gloss_zh: "階層第 ℓ 層的場景圖"
+  - sym: "\\Phi_{\\ell}"
+    gloss_en: "the lossy collapse from level ℓ to level ℓ+1"
+    gloss_zh: "由第 ℓ 層折疊至第 ℓ+1 層的有損映射"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening. Every graph so far existed to be scored; here a graph exists to be used, queried by a planner working to a budget. That single change reorders every priority in the course, and it is worth saying so. Give the millions-of-voxels against thousands-of-tokens contrast here as the way into s2."
+  - id: s2
+    kind: math
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes. The hierarchy is a lossy collapse layer by layer: voxels to objects, objects to places, places to rooms, rooms to floors. Each layer is small enough to reason over precisely because the one below it was discarded — that sentence is the page. Flag the seven-tokens-per-node figure as an estimate, and Hydra's 48,000 as the paper's own number. The checkpoint in s5 is arithmetic on those two."
+  - id: s3
+    kind: math
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes, and it is the most transferable idea in the module. Clio asks what a lossy collapse is lossy with respect to, and answers: the task. Granularity is a property of the scene and the job together, not of the scene. Make the comparison with M04 — a metric computed without knowing the downstream task is in the same position, and R@K treats every ground-truth triplet as equally worth recovering, which no real task does. That comparison is where this module joins the twelve before it."
+  - id: s4
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes. The point is that none of these systems reports R@K on held-out annotations; they report task success. That is not a lowering of standards but the metric the graph actually serves, and it escapes most of the hazards of M04 — a task either succeeded or it did not, and neither the constraint mode nor predicate merging touches that. Trail M14 here: some application areas have quietly stopped reporting SGG metrics altogether."
+  - id: s5
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint, and it is arithmetic on the two numbers from s2. Four thousand tokens at roughly seven per node is about 570 nodes, so the room layer and everything above it fit whole and the object layer does not. The way to reach the layers below is to expand on demand — locate in the upper layer first, then pull back only the relevant subtree, which is Clio's task-dependent granularity as an implementation. If only the node count comes back, ask the second half."
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## When the graph has to be acted on
+
+Everything so far has produced a graph to be scored. In robotics the graph is produced to be used:
+a planner queries it, and the query has a budget. That single change reorders every priority in
+this course.
+
+Accuracy still matters, but so does size, and size in a way the still-image problem never had to
+confront. A dense metric map of a building is millions of voxels; a language model's context is
+thousands of tokens. Something has to collapse.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+A 3D scene graph is built in layers, each one a lossy collapse of the one below: voxels to objects,
+objects to places, places to rooms, rooms to floors. Each level is small enough to reason over
+precisely because the level below it was thrown away.
+
+</Intuition>
+
+<Formal>
+
+$$
+\mathcal{G}_{\ell+1}=\Phi_{\ell}(\mathcal{G}_{\ell}),\qquad \lvert V_{\ell+1}\rvert\ll\lvert V_{\ell}\rvert,\qquad \text{tokens}\approx 7\,\lvert V_{\ell}\rvert
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\mathcal{G}_{\ell+1} &= \Phi_\ell(\mathcal{G}_\ell), \qquad \lvert V_{\ell+1}\rvert \ll \lvert V_\ell\rvert \quad\text{(lossy collapse)}\\
+\text{tokens}(\ell) &\approx 7\,\lvert V_\ell\rvert
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Hydra: } 48{,}000 \text{ voxels} \to 140 \text{ objects} \to 52 \text{ places} \to 36 \text{ rooms} \to 3 \text{ floors.}
+\\[4pt]
+\text{SayPlan searches the collapsed graph first, then expands only the relevant subgraph:}
+\\ 48{,}000\cdot 7 \approx 336\text{k tokens (infeasible)} \quad\text{versus}\quad 36\cdot 7 \approx 252 \text{ tokens.}\end{gathered}
+$$
+
+The token estimate is the part to dwell on. If a level costs roughly seven tokens per node, then
+the level you can hand to a language model is fixed by its context window and nothing else — not by
+what the robot can perceive, and not by what the task needs.
+
+So the collapse $\Phi_\ell$ is where the engineering is, and every system in this module is a
+different answer to the same question: what does the level above need to know, and what can safely
+be forgotten?
+
+**Hydra** builds the hierarchy in real time as the robot moves. **ConceptGraphs** builds it with an
+open vocabulary from 2D foundation models rather than from a closed 3D class list. **SayPlan**
+searches over a collapsed graph and expands only the branch it needs, which is the direct answer to
+the token bound. **VLM-MSGraph** extends the hierarchy again with a vision-language model at each
+level.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+<Intuition>
+
+Clio asks the question the others leave implicit. If the collapse is lossy, lossy with respect to
+what? The answer it gives is: with respect to the task. Granularity is not a property of the scene,
+it is a property of the scene *and* the job to be done.
+
+</Intuition>
+
+<Formal>
+
+$$
+V_{\text{task}}=\{v\in V:\ \mathrm{sim}(v,\text{task})>\theta\};\qquad \text{granularity is a property of the task, not the scene}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+V_{\text{task}}=\{v\in V:\ \mathrm{sim}(v,\text{task})>\theta\};\qquad \text{granularity is a property of the task, not the scene}
+$$
+
+</Worked>
+
+<Implications>
+
+This is the most transferable idea in the module, and it applies far outside robotics. A scene
+graph built without knowing the query has to guess which distinctions matter, and it will guess
+wrong in both directions — carrying detail nobody needs and collapsing detail someone does.
+
+Hold it against M4. A metric computed without knowing the downstream task is in the same position:
+R@K treats every ground-truth triplet as equally worth recovering, and no task does.
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+## What 3D changes about evaluation
+
+3DSSG established the problem on point clouds and gave the field its first benchmark. But notice
+what none of these systems report: R@K on a held-out annotation.
+
+They report task success. Did the robot find the object, complete the plan, answer the question?
+That is not a lowering of standards, it is the metric the graph exists to serve — and it is
+immune to most of the hazards M4 catalogued, because a task either succeeded or it did not, and no
+constraint mode or predicate merging changes that.
+
+M14 returns to this: several application areas have quietly stopped reporting SGG metrics at all.
+
+</Step>
+
+<Step id="s5">
+
+## Checkpoint
+
+A planner has a 4,000-token budget and the hierarchy costs about seven tokens per node. Say which
+level of Hydra's example hierarchy it can hold whole, and what a system must do to use the levels
+below it.
+
+</Step>

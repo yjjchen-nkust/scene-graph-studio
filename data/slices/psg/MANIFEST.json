@@ -1,0 +1,507 @@
+{
+  "dataset": "psg",
+  "seed": 20260915,
+  "distribution": "fetch",
+  "images": [
+    {
+      "image_id": "150323",
+      "url": null,
+      "file": "images/150323.jpg",
+      "sha256": "756af170de5d32112b9c0cf5af399dc4dd19a2c455e4d352c3c60577d1ebe3a6",
+      "bytes": 131912,
+      "width": 375,
+      "height": 500,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "1591847",
+      "url": null,
+      "file": "images/1591847.jpg",
+      "sha256": "20f701233b0235e3f6e31e11c8b4364c1aedd954a5fc7d2d5610aaa8318d0528",
+      "bytes": 119801,
+      "width": 335,
+      "height": 500,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "1592294",
+      "url": null,
+      "file": "images/1592294.jpg",
+      "sha256": "8ed212a0ffcf1b3d5f1fb307839030fb41aed1ff7488845a3bed02e386474082",
+      "bytes": 245344,
+      "width": 640,
+      "height": 384,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2316734",
+      "url": null,
+      "file": "images/2316734.jpg",
+      "sha256": "417cc6070263d75276d13bf64f7422d0b7a99fe790fbb3b0fb629f13e674b0a6",
+      "bytes": 139204,
+      "width": 428,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2320471",
+      "url": null,
+      "file": "images/2320471.jpg",
+      "sha256": "7b219a60215bc7abfdfecb9e00d042e993e7c941d6cf5fb02f16dc82891e05da",
+      "bytes": 293792,
+      "width": 640,
+      "height": 538,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2321539",
+      "url": null,
+      "file": "images/2321539.jpg",
+      "sha256": "6bd1a11dd96e356d2c7c206a2eef5542e9fc27ff91731fde9fc6cae1f9fcf01e",
+      "bytes": 104237,
+      "width": 439,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2328303",
+      "url": null,
+      "file": "images/2328303.jpg",
+      "sha256": "dc5224344a70a6bb7bda0d21dddeac70f599aeaa35b2ce1fa3620821c6de4bf0",
+      "bytes": 283112,
+      "width": 640,
+      "height": 480,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2328483",
+      "url": null,
+      "file": "images/2328483.jpg",
+      "sha256": "62514a521cb0e8893f31ac15ceae6cf8c7e0014becc56297f816a4a92534ef10",
+      "bytes": 178152,
+      "width": 640,
+      "height": 427,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2329676",
+      "url": null,
+      "file": "images/2329676.jpg",
+      "sha256": "c1ac8270b67fc383f20fd7ca99786dac0267445f78d3f3e72f980b5e33e4a638",
+      "bytes": 252530,
+      "width": 633,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2330610",
+      "url": null,
+      "file": "images/2330610.jpg",
+      "sha256": "261ba1b81c768f47b8452cd8fc7866a354a69c336a927032486d129b8684eb44",
+      "bytes": 98901,
+      "width": 500,
+      "height": 335,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2331677",
+      "url": null,
+      "file": "images/2331677.jpg",
+      "sha256": "9c232d034a786aaffe1bbd88973e80fbedc31a7e38b1c842994dd19a60477530",
+      "bytes": 71309,
+      "width": 426,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2332593",
+      "url": null,
+      "file": "images/2332593.jpg",
+      "sha256": "0b2c0ecc70dbb65f58872da9df0f5e67767b61a94646bfecd8aad3aeee49469b",
+      "bytes": 197905,
+      "width": 480,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2333751",
+      "url": null,
+      "file": "images/2333751.jpg",
+      "sha256": "8213bdf2c6b934a49dca80f82999842a7a6989a6ade6ee8b0b32ab33fc5eb3f3",
+      "bytes": 125917,
+      "width": 640,
+      "height": 480,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2334095",
+      "url": null,
+      "file": "images/2334095.jpg",
+      "sha256": "f193d982ca276820bb038610d4ac45fb2de46715510186b834c984a7f099a365",
+      "bytes": 205815,
+      "width": 640,
+      "height": 427,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2335651",
+      "url": null,
+      "file": "images/2335651.jpg",
+      "sha256": "84d161aa4f1a335ec3971c5d050338e7c13b9e3c90231c0de7e677094a172eae",
+      "bytes": 206645,
+      "width": 640,
+      "height": 480,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2336518",
+      "url": null,
+      "file": "images/2336518.jpg",
+      "sha256": "9fbfdb443c249bdac83b8d0c9d4120a817cdf3987a7826a90e9fcbc95b535986",
+      "bytes": 227501,
+      "width": 640,
+      "height": 480,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2337487",
+      "url": null,
+      "file": "images/2337487.jpg",
+      "sha256": "a9616d5a9604e21d6fe11e216ca2f61cd63a53cd2376f6d7a705a8893d50363a",
+      "bytes": 277909,
+      "width": 640,
+      "height": 475,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2338925",
+      "url": null,
+      "file": "images/2338925.jpg",
+      "sha256": "49568f890bcbfddb7afd18ba8afc6c1b20ffe6611a888a3cb93150d24b253ffa",
+      "bytes": 179749,
+      "width": 640,
+      "height": 480,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2339307",
+      "url": null,
+      "file": "images/2339307.jpg",
+      "sha256": "2213aaaaa54c5432da09fe3851cb0b5f4783f9c9754d9d6df2ab28d3d7c69271",
+      "bytes": 89548,
+      "width": 640,
+      "height": 428,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2340293",
+      "url": null,
+      "file": "images/2340293.jpg",
+      "sha256": "6673f93274f96666b7caaca9d0bde6e4de2238bfc21d9fa57c141d0f3a99e8d0",
+      "bytes": 189391,
+      "width": 640,
+      "height": 481,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2345367",
+      "url": null,
+      "file": "images/2345367.jpg",
+      "sha256": "ae95bd418ccaeacb5254137d5e76b47b1cb41e94128779b892f34fbfa4b8b3d7",
+      "bytes": 144639,
+      "width": 500,
+      "height": 334,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2346651",
+      "url": null,
+      "file": "images/2346651.jpg",
+      "sha256": "e990a24059a6953a273e24c5cdd40fb3db9bb3903172750844ef3831be8bb35f",
+      "bytes": 84741,
+      "width": 427,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2346979",
+      "url": null,
+      "file": "images/2346979.jpg",
+      "sha256": "791eb6de6cf059c67b2b7809cd5132b3708ed39d36a1f67c55714a91391b3cfc",
+      "bytes": 96698,
+      "width": 640,
+      "height": 360,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2347266",
+      "url": null,
+      "file": "images/2347266.jpg",
+      "sha256": "ad01e4704883ecaaa25321efcc24d2ada74a725fe70cc0578890dca7a4745c60",
+      "bytes": 137812,
+      "width": 640,
+      "height": 428,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2351639",
+      "url": null,
+      "file": "images/2351639.jpg",
+      "sha256": "bd2e7cbc6a32b8e28bfb18b00d2d3bbd439ba5f5ad676b4af068380047c69f69",
+      "bytes": 150923,
+      "width": 640,
+      "height": 480,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2353709",
+      "url": null,
+      "file": "images/2353709.jpg",
+      "sha256": "594fe5627bb6841d17f01439c7bcc95374e501c6e1b69a63ddd477298f3d13b8",
+      "bytes": 154375,
+      "width": 640,
+      "height": 478,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2354062",
+      "url": null,
+      "file": "images/2354062.jpg",
+      "sha256": "e63efa78dc3ef4bc5490566bfac5a21b3669e1ec12f3dc700462cd6c196d46ef",
+      "bytes": 112940,
+      "width": 640,
+      "height": 433,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2357581",
+      "url": null,
+      "file": "images/2357581.jpg",
+      "sha256": "dfcab549fd7473061805dd9736ae0d1b0d008f18cddd55abe76e17c3405daae0",
+      "bytes": 97322,
+      "width": 640,
+      "height": 427,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2360368",
+      "url": null,
+      "file": "images/2360368.jpg",
+      "sha256": "2807fcb8cc5b8787e149247b2dc01f9dff1c56cc66cf9759ae1f58f39fd9879c",
+      "bytes": 194049,
+      "width": 640,
+      "height": 480,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2360861",
+      "url": null,
+      "file": "images/2360861.jpg",
+      "sha256": "321f2374beb5e907f2bc2e7eb8ba1fa5fc311f922a9d4dab86230dcc37beb0b4",
+      "bytes": 187988,
+      "width": 640,
+      "height": 427,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2361452",
+      "url": null,
+      "file": "images/2361452.jpg",
+      "sha256": "fe3203e5b883c416d43c1b8edfcb052767e07a0e0f7576c9479f1994dccb9799",
+      "bytes": 289590,
+      "width": 640,
+      "height": 424,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2361677",
+      "url": null,
+      "file": "images/2361677.jpg",
+      "sha256": "3c21d6cb222e98c8fd88a6ea7ab6b0bacec19a5802092098536a079cc26dd23f",
+      "bytes": 122268,
+      "width": 640,
+      "height": 481,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2362435",
+      "url": null,
+      "file": "images/2362435.jpg",
+      "sha256": "6067fb9c3fc361df097d97cfce2bbfb895929b74cfe5ced4759445f8acdc5159",
+      "bytes": 125759,
+      "width": 408,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2362836",
+      "url": null,
+      "file": "images/2362836.jpg",
+      "sha256": "4d406247b349070eb79a47c16d299fc6285188c81241097169bb797cf921be2c",
+      "bytes": 200848,
+      "width": 612,
+      "height": 612,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2366368",
+      "url": null,
+      "file": "images/2366368.jpg",
+      "sha256": "83510eae4283a8d1bbbfdc917574e500f4deb2f2fb75389c966baa532576738c",
+      "bytes": 213635,
+      "width": 640,
+      "height": 427,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2366415",
+      "url": null,
+      "file": "images/2366415.jpg",
+      "sha256": "2a92ab31c32928d402a0ac0b4688d242afbbfd3ef9325e3e92f4b6886e74a7bd",
+      "bytes": 183775,
+      "width": 640,
+      "height": 480,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2379226",
+      "url": null,
+      "file": "images/2379226.jpg",
+      "sha256": "4607fda38ed071e25e65232b197c425c147bd416b53921d7aaf2265722b5d8ed",
+      "bytes": 140356,
+      "width": 640,
+      "height": 426,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2382602",
+      "url": null,
+      "file": "images/2382602.jpg",
+      "sha256": "11759a17fd060f1675ed4924e06ca75c8d536ab2b4167238cfcb5d1911d1f47b",
+      "bytes": 111966,
+      "width": 640,
+      "height": 484,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2386590",
+      "url": null,
+      "file": "images/2386590.jpg",
+      "sha256": "b6ceb52f4df09d31630a04a012e61a6be6f4dd7b9b7e4ee6a63eb37edb16c514",
+      "bytes": 53199,
+      "width": 640,
+      "height": 480,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2387946",
+      "url": null,
+      "file": "images/2387946.jpg",
+      "sha256": "dbdde9e6fa081de9038e90808e870b8f44c54b9e409de6a8b8dd688766f4bc2e",
+      "bytes": 228628,
+      "width": 426,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2390117",
+      "url": null,
+      "file": "images/2390117.jpg",
+      "sha256": "56291fed6a9c4db8eeb5709dc565dfa91f05bc2adf9fae54cbce3ed8037596ff",
+      "bytes": 189837,
+      "width": 640,
+      "height": 469,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2394546",
+      "url": null,
+      "file": "images/2394546.jpg",
+      "sha256": "7ed1f3b86156096c5ae2521b046c371c844fe60e5cd959e7f3a022de15e5dadf",
+      "bytes": 137128,
+      "width": 640,
+      "height": 316,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2395185",
+      "url": null,
+      "file": "images/2395185.jpg",
+      "sha256": "9d3f32bb93adf432173ff294315d7632e8a9947b40650d0e8480e0c95216ab8c",
+      "bytes": 168365,
+      "width": 480,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2403748",
+      "url": null,
+      "file": "images/2403748.jpg",
+      "sha256": "c0e4922ef54172a9926493ed866391755c885c4864d3e5d7721c6c3bb1e41c34",
+      "bytes": 272184,
+      "width": 640,
+      "height": 425,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2407805",
+      "url": null,
+      "file": "images/2407805.jpg",
+      "sha256": "0b632f3436577373d4ca2a7c0084adde69bcab6ad69a605eefd350a417fa861a",
+      "bytes": 153632,
+      "width": 427,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2407908",
+      "url": null,
+      "file": "images/2407908.jpg",
+      "sha256": "fbd43dde415e77a49c89f2f8ed9c904a3d5a86bb04a9c6415b06be87a85200ae",
+      "bytes": 242407,
+      "width": 480,
+      "height": 640,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2408421",
+      "url": null,
+      "file": "images/2408421.jpg",
+      "sha256": "0a732c08d066aad4395efecfe4c84ba6573b15330bac62c1b26ff0c3ca9db6df",
+      "bytes": 145278,
+      "width": 640,
+      "height": 400,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2410457",
+      "url": null,
+      "file": "images/2410457.jpg",
+      "sha256": "19c0cc79ee0972f564eaa7fc7f31dc1b612df9a845702d15290cb21b286ef5cd",
+      "bytes": 86163,
+      "width": 640,
+      "height": 446,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "2411218",
+      "url": null,
+      "file": "images/2411218.jpg",
+      "sha256": "227fb6bfdc2acff13936f2e0c931d6d237447cd6b1ea29e836aed263f66a052e",
+      "bytes": 109896,
+      "width": 640,
+      "height": 480,
+      "source_dataset": "psg"
+    },
+    {
+      "image_id": "498255",
+      "url": null,
+      "file": "images/498255.jpg",
+      "sha256": "905f640f424be3ccb20aa010e1efcf880bee51109abb7dffe614a018362a0c79",
+      "bytes": 184653,
+      "width": 640,
+      "height": 425,
+      "source_dataset": "psg"
+    }
+  ]
+}

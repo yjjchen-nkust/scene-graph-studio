@@ -1,0 +1,126 @@
+---
+id: m00
+order: 0
+title_en: "Why scene graphs — from labels to structure"
+title_zh: "為何需要場景圖：從標籤到結構"
+anchor_labs: [L1]
+knowledge_points: [F1, F2, F5, F8]
+symbols:
+  - sym: "G"
+    gloss_en: "a scene graph"
+    gloss_zh: "場景圖"
+  - sym: "V"
+    gloss_en: "the object set of a scene graph"
+    gloss_zh: "場景圖的物件集合"
+  - sym: "E"
+    gloss_en: "the relationship set of a scene graph"
+    gloss_zh: "場景圖的關係集合"
+  - sym: "\\mathcal{P}"
+    gloss_en: "predicate class set"
+    gloss_zh: "predicate 類別集合"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "先呈現三張照片，暫不說明。待現場指出三者標籤相同，再進入主題；在此之前不提出「場景圖」一詞。"
+  - id: s2
+    kind: math
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘。本步驟僅需確立多重圖之定義：先於板書定義物件集合與關係集合，再對照投影片。若進行至 predicate 類別集合時現場無回應，可要求舉出一個在此不合法的 predicate。"
+  - id: s3
+    kind: lab
+    lab: L1
+    seconds_budget: 480
+    presenter_notes_zh: "L1 實作八分鐘。不另發材料：邊界框已繪製完成，本步驟僅需命名關係。宜巡視現場；最常見的初次錯誤為主詞與受詞互換，於評分差異顯示前先行指出較佳。"
+  - id: s4
+    kind: checkpoint
+    presenter_notes_zh: "進入下一單元前，請兩位學員各提出一組三元組。可逆者多為 next to，不可逆者多為 on。若無人提出可逆的 predicate，該結果即為題目後半的答案，並非未完成。"
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 標籤無法表達的資訊
+
+分類器面對一張廚房影像，輸出 `person`、`cup`、`table`。面對「人將杯子舉在桌子上方」與「杯子已置於桌面、人正離開」兩張影像，輸出仍是同樣三個標籤。標籤相同，場景並不相同。
+
+所缺少的並非更精細的標籤，而是被標記物件之間的關係。場景圖是承載此一資訊的最小表示：物件本身，以及物件之間具方向、具名稱的邊。
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+場景圖分別記錄「影像中有哪些物件」與「這些物件彼此之間的關係」。後者正是標籤清單所捨棄的部分，也是困難所在：可能的關係數量隨物件數量呈平方成長，標註預算則否。
+
+</Intuition>
+
+<Formal>
+
+影像上的場景圖為一具方向、具標記的多重圖
+
+$$
+G = (V, E), \qquad E \subseteq V \times \mathcal{P} \times V
+$$
+
+其中 $V$ 為已定位物件之集合，每一元素為帶有類別的影像區域；$\mathcal{P}$ 為固定的 predicate 類別集合。$E$ 之元素寫為三元組
+
+$$
+\langle s, p, o \rangle, \qquad s, o \in V,\; p \in \mathcal{P}
+$$
+
+依序讀為主體、關係、客體。三元組具方向性：$\langle s, p, o \rangle$ 與 $\langle o, p, s \rangle$ 對同一影像所作的陳述並不相同。
+
+</Formal>
+
+<Worked>
+
+以前述廚房影像為例，令 $V = \{v_1{:}\,\texttt{person},\, v_2{:}\,\texttt{cup},\, v_3{:}\,\texttt{table}\}$，且 $\mathcal{P} \supseteq \{\texttt{holding}, \texttt{on}, \texttt{above}\}$。
+
+第一張影像為
+
+$$
+E_1 = \{\langle v_1, \texttt{holding}, v_2 \rangle,\; \langle v_2, \texttt{above}, v_3 \rangle\}
+$$
+
+第二張影像為
+
+$$
+E_2 = \{\langle v_2, \texttt{on}, v_3 \rangle\}
+$$
+
+$V$ 相同、$E$ 不同，而此一差異即為場景的全部內容。就數量而言：$|V| = 3$ 時共有 $|V|(|V|-1) = 6$ 組有序配對，若 $|\mathcal{P}| = 50$，僅三個物件即產生 $300$ 個候選三元組。$|V| = 20$（一般照片的規模）時，配對數為 $380$，候選三元組達 $19{,}000$ 個。
+
+</Worked>
+
+<Implications>
+
+由此可得三項推論，三者於後續各單元均會再次出現。
+
+**邊集稀疏，候選集不稀疏。** 模型須就 $O(|V|^2|\mathcal{P}|)$ 個可能性進行排序，而標準答案僅含數十條邊。此即本領域所有指標皆為「在排序截斷位置上的召回率」而非準確率的原因。
+
+**方向承載語意，對稱化會使其消失。** 對同一影像，$\langle \texttt{cup}, \texttt{on}, \texttt{table} \rangle$ 為真，$\langle \texttt{table}, \texttt{on}, \texttt{cup} \rangle$ 為偽。以無序配對儲存的表示無法表達此一差異；以無序配對評分的模型，所回答的並非原本的問題。
+
+**已標註者不等於為真者。** Visual Genome 的邊是標註者當時所寫下的內容，而非場景中成立的全部關係。因此模型提出而標註未含的邊，可能是錯誤，也可能正確但未被記錄。指標無法區分兩者，本課程於差異圖中以 missed 與 spurious 的分野再次處理此一問題。
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## 實作單元的內容
+
+L1 提供一張已框出物件的影像，由學員自行建立 $E$：點選主體、點選客體、指定 predicate。所建之圖隨後於 PredCls 協定下與標準答案比對評分；該協定已給定框與標籤，故所量測者僅為學員所提出的結構。
+
+</Step>
+
+<Step id="s4">
+
+## 檢核點
+
+就眼前的影像，各寫出一組三元組：其一反向後仍為真，其一反向後為偽。若找不到前者，請說明 predicate 集合為何使其難以成立。
+
+</Step>

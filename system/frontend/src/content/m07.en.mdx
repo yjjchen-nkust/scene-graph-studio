@@ -1,0 +1,153 @@
+---
+id: m07
+order: 7
+title_en: "One-stage: FCSGG, RelTR, SGTR, EGTR, DSGG, SpeaQ, Hydra-SGG, REACT"
+title_zh: "單階段方法：FCSGG、RelTR、SGTR、EGTR、DSGG、SpeaQ、Hydra-SGG、REACT"
+anchor_labs: [L4]
+knowledge_points: [O1, O2, O3, O4, O5, O6, O7, O8]
+symbols:
+  - sym: "q"
+    gloss_en: "number of queries a set-prediction model carries"
+    gloss_zh: "集合預測模型所攜帶的 query 數量"
+  - sym: "\\hat\\sigma"
+    gloss_en: "the assignment matching predictions to ground truth"
+    gloss_zh: "將預測配對至標準答案的指派"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening, and it picks up M05's ratio: roughly one candidate pair in a hundred thousand carries a relation. One-stage methods predict the set of triplets directly and enumerate nothing. Say plainly that this is not a speed optimisation: the question changes from which of these pairs has a relation to what is in this image, and the two fail differently. That sentence is the spine of the module."
+  - id: s2
+    kind: math
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes. The output is an unordered set, so the loss must first decide through a bipartite assignment which prediction answers which annotation. The point to hold is that everything afterwards depends on the query count q, and q is fixed before training — which is what the checkpoint in s5 turns on. The O(q³) Hungarian cost is worth naming and not worth opening."
+  - id: s3
+    kind: prose
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes over eight designs, forty-five seconds each, none of them opened up. Start at FCSGG as the left end of the frontier — fastest, least accurate — and end on EGTR, which is the most instructive observation of the eight: the detector had already computed the interactions between objects and was throwing them away. Close on the line about reading the latency column first."
+  - id: s4
+    kind: lab
+    lab: L4
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes on L4, one-stage predictions beside M05's two-stage predictions on one image. One question to bring: when they disagree, is the disagreement about the relation or about what is in the image at all. That is what SGCls is for in M03, and it is worth saying so again here."
+  - id: s5
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint. q = 100 against an average of 25 ground-truth triplets: the recall ceiling is 100/|G|, which does not bind on an average image and binds hard on any image carrying more than a hundred. The failure modes for the rest are duplicate triplets, which is why the assignment of s2 exists, and low-confidence noise emitted at no cost, which M04 s2 already established is free."
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## Stop enumerating pairs
+
+M5 ended on a ratio: about one candidate pair in a hundred thousand carries a relation. One-stage
+methods take that seriously and predict the set of triplets directly, with no pair enumeration
+anywhere. The mechanism they borrow is DETR's: a fixed number of queries, each of which may emit
+one prediction, matched to the ground truth by a bipartite assignment computed per image.
+
+The change is not a speed optimisation. It replaces "which of these pairs is related" with "what
+is in this image", and the two questions have different failure modes.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+The model emits an unordered set, and the loss needs to know which prediction is being judged
+against which annotation. The assignment that minimises total cost is computed first, then the
+loss is applied through it. Everything downstream depends on $q$, the number of queries, and $q$
+is chosen before training.
+
+</Intuition>
+
+<Formal>
+
+$$
+\hat\sigma=\arg\min_{\sigma}\sum_{i=1}^{\lvert G\rvert}\left[w_c\,\mathcal{L}_{\text{cls}}(i,\sigma(i))+w_b\,\mathcal{L}_{\text{box}}(i,\sigma(i))\right]
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\hat\sigma &= \arg\min_{\sigma}\ \sum_{i=1}^{\lvert G\rvert}\mathcal{L}\bigl(i,\sigma(i)\bigr),
+\qquad \mathcal{L}=w_c\mathcal{L}_{\text{cls}}+w_b\mathcal{L}_{\text{box}}\\
+\text{cost} &= O(q^3) \ \text{by the Hungarian algorithm, } q=\text{number of queries}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}q<\lvert G\rvert \;\Rightarrow\; \lvert G\rvert-q \text{ ground-truth triplets are unreachable: recall is capped at } q/\lvert G\rvert.
+\\ q\gg\lvert G\rvert \;\Rightarrow\; q-\lvert G\rvert \text{ slots train only against } \varnothing \text{ and stay undertrained.}
+\\[4pt]
+\text{SpeaQ answers with groupwise specialization; Hydra-SGG with one-to-many assignment.}\end{gathered}
+$$
+
+Read the two bounds as a design constraint that no amount of training removes. Too few queries and
+recall has a ceiling the model cannot reach whatever it learns. Too many and most queries see only
+the no-object class during training, so they never become useful.
+
+That is why the later entries in this module's title exist. SpeaQ specialises queries into groups
+so that a query is responsible for a kind of relation rather than for a slot. Hydra-SGG assigns one
+prediction to several ground-truth triplets, which softens the "one query, one answer" rule that
+creates the undertrained tail.
+
+Note also what $q$ does to the speed-accuracy frontier: the Hungarian step is cubic in $q$, so the
+two failure modes cannot both be escaped by making $q$ large.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## Seven designs, and what each one moved
+
+**FCSGG** predicts relation affinity fields — a dense, per-pixel vector field — rather than
+discrete pairs. It is the fastest thing in the literature and the least accurate, which makes it
+the left-hand end of the frontier.
+
+**RelTR** couples subject and object queries so that one query carries both ends of a triplet.
+
+**SGTR** builds a bipartite graph between entity and predicate proposals, so the pairing is
+learned rather than enumerated or assumed.
+
+**EGTR** extracts relations from the detector's own decoder attention, on the observation that a
+detector already computes object-to-object interaction and then discards it.
+
+**DSGG** treats the whole thing as one graph-prediction problem; **SpeaQ** specialises queries by
+group; **Hydra-SGG** uses hybrid one-to-many assignment; **REACT** is the recent efficiency entry.
+
+The honest summary is that the frontier moved a long way in speed and much less in accuracy. When
+you read a one-stage table, read the latency column first.
+
+</Step>
+
+<Step id="s4">
+
+## In the lab
+
+L4 places these predictions beside the two-stage ones of M5 on the same image. The question to
+carry into it: where a one-stage model and a two-stage model disagree, is the disagreement about
+the relation, or about which objects are in the image at all?
+
+</Step>
+
+<Step id="s5">
+
+## Checkpoint
+
+A one-stage model is trained with $q = 100$ queries on a dataset whose images average 25
+ground-truth triplets. State the recall ceiling this imposes, and the failure the other 75 queries
+are likely to suffer.
+
+</Step>

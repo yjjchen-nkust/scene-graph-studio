@@ -1,0 +1,612 @@
+<title>Scene Graph Knowledge Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'local'},
+ options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};
+</script>
+<script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js"></script>
+
+<style>
+:root{
+  --ground:#EDEFEC; --panel:#FAFBFA; --panel-2:#E3E8E4; --sunk:#DCE2DE;
+  --ink:#111A17; --ink-2:#394743; --muted:#697874; --rule:#C7D1CC;
+  --accent:#0E6B6E; --accent-2:#0A5052; --accent-soft:#D5E8E6;
+  --live:#1F7A4D; --live-soft:#DCEFE3; --spec:#8A6D1F; --spec-soft:#F0E7CC;
+  --m-match:#1F7A4D; --m-spur:#B3301F; --m-miss:#7F8D8B; --m-loc:#A9720C;
+  --sans:"Archivo","Noto Sans TC",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0C1312; --panel:#141D1C; --panel-2:#1C2625; --sunk:#101817;
+  --ink:#E6EDEA; --ink-2:#B0BEBA; --muted:#82908D; --rule:#293634;
+  --accent:#52C0B7; --accent-2:#7FD6CD; --accent-soft:#122F2D;
+  --live:#4FBF7E; --live-soft:#13291E; --spec:#D6AE52; --spec-soft:#2B2517;
+  --m-match:#4FBF7E; --m-spur:#E8705C; --m-miss:#7E8C8A; --m-loc:#E0AE4A;
+}}
+:root[data-theme="dark"]{
+  --ground:#0C1312; --panel:#141D1C; --panel-2:#1C2625; --sunk:#101817;
+  --ink:#E6EDEA; --ink-2:#B0BEBA; --muted:#82908D; --rule:#293634;
+  --accent:#52C0B7; --accent-2:#7FD6CD; --accent-soft:#122F2D;
+  --live:#4FBF7E; --live-soft:#13291E; --spec:#D6AE52; --spec-soft:#2B2517;
+  --m-match:#4FBF7E; --m-spur:#E8705C; --m-miss:#7E8C8A; --m-loc:#E0AE4A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+:root[data-lang="zh"] [lang="en"]{display:none}
+:root:not([data-lang="zh"]) [lang="zh"]{display:none}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:20px}
+h1{font-size:clamp(28px,4.4vw,44px);font-weight:700;letter-spacing:-.03em;line-height:1.05;margin:0 0 12px;text-wrap:balance}
+h2{font-size:clamp(20px,2.4vw,26px);font-weight:600;letter-spacing:-.02em;margin:0 0 4px;text-wrap:balance}
+h3{font-size:16px;font-weight:600;margin:0 0 5px}
+p{margin:0 0 14px;max-width:72ch}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.86em;background:var(--panel-2);padding:1px 5px;border-radius:3px}
+.mono{font-family:var(--mono)}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 9px}
+
+/* bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:60;
+  background:color-mix(in srgb,var(--ground) 90%,transparent);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--rule)}
+.bar-in{max-width:1160px;margin:0 auto;padding:9px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.mark{font-weight:700;font-size:13.5px;letter-spacing:-.01em;margin-right:auto;display:flex;gap:8px;align-items:center}
+.seg{display:flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden;background:var(--panel)}
+.seg button{font:600 11.5px/1 var(--sans);letter-spacing:.02em;padding:7px 12px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--panel)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* hero */
+.hero{padding-block:clamp(34px,5vw,60px) 26px}
+.lede{font-size:clamp(17px,1.9vw,20px);line-height:1.5;color:var(--ink-2);max-width:66ch}
+.stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:26px;padding-top:20px;border-top:1px solid var(--rule)}
+.stat b{display:block;font:600 27px/1 var(--mono);color:var(--accent);font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+
+/* TOC */
+.toc-ctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.toc-ctl input[type=search]{flex:1;min-width:190px;font:500 13px var(--mono);padding:8px 12px;
+  border:1px solid var(--rule);border-radius:4px;background:var(--panel);color:var(--ink)}
+.toc-ctl input:focus-visible{outline:2px solid var(--accent);outline-offset:-1px}
+.cluster{margin-bottom:22px}
+.cluster-h{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.cluster-h b{font-size:15px;font-weight:600}
+.cluster-h .cid{font:600 11px var(--mono);color:var(--panel);background:var(--accent);
+  padding:2px 7px;border-radius:3px;letter-spacing:.06em}
+.cluster-h .cn{font-size:12px;color:var(--muted);margin-left:auto;font-family:var(--mono)}
+.kp{display:grid;grid-template-columns:3.4em minmax(0,1.15fr) minmax(0,1.5fr) auto;gap:12px;
+  align-items:baseline;padding:8px 12px;border-bottom:1px solid var(--rule);font-size:13.5px}
+.kp:first-of-type{border-top:1px solid var(--rule)}
+.kp:hover{background:var(--panel)}
+.kp .id{font:600 11.5px var(--mono);color:var(--accent)}
+.kp .ti{font-weight:500;color:var(--ink)}
+.kp .kb{font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.45}
+.kp a.ti{text-decoration:none}
+.kp a.ti:hover{text-decoration:underline}
+.tag{font:600 9px var(--sans);letter-spacing:.08em;text-transform:uppercase;padding:2.5px 6px;border-radius:2px;white-space:nowrap}
+.t-live{background:var(--live-soft);color:var(--live)}
+.t-spec{background:var(--spec-soft);color:var(--spec)}
+@media (max-width:760px){.kp{grid-template-columns:3.2em 1fr auto}.kp .kb{grid-column:2/4;font-size:11px}}
+
+/* playground */
+.pg{background:var(--panel);border:1px solid var(--rule);border-radius:5px;margin:0 0 26px;overflow:hidden;scroll-margin-top:70px}
+.pg-h{padding:13px 17px;border-bottom:1px solid var(--rule);display:flex;gap:11px;align-items:baseline;flex-wrap:wrap}
+.pg-h .id{font:600 11.5px var(--mono);color:var(--panel);background:var(--accent);padding:2px 7px;border-radius:3px}
+.pg-h h3{margin:0;flex:1;min-width:150px}
+.pg-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px)}
+@media (max-width:780px){.pg-body{grid-template-columns:1fr}}
+.pg-vis{padding:15px 17px;background:var(--sunk);border-right:1px solid var(--rule);min-width:0}
+@media (max-width:780px){.pg-vis{border-right:0;border-bottom:1px solid var(--rule)}}
+.pg-side{padding:15px 17px;display:flex;flex-direction:column;gap:13px;min-width:0}
+.pg-note{padding:11px 17px;border-top:1px solid var(--rule);background:var(--panel-2);
+  font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.pg-note b{color:var(--ink)}
+svg.stage{display:block;width:100%;height:auto}
+
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctl label{font-size:11.5px;font-weight:600;color:var(--ink-2);letter-spacing:.01em}
+.ctl .val{font:600 12.5px var(--mono);color:var(--accent);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent);height:18px;margin:0}
+.knob{display:flex;border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.knob button{flex:1;font:600 11px var(--mono);padding:6px 4px;border:0;border-right:1px solid var(--rule);
+  background:var(--panel-2);color:var(--muted);cursor:pointer}
+.knob button:last-child{border-right:0}
+.knob button[aria-pressed="true"]{background:var(--accent);color:var(--panel)}
+.knob button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.checks{display:flex;flex-direction:column;gap:6px}
+.chk{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+.chk input{accent-color:var(--accent);width:15px;height:15px;margin:0;flex:none}
+.out{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.out.one{grid-template-columns:1fr}
+.out.three{grid-template-columns:1fr 1fr 1fr}
+.o{background:var(--panel-2);padding:9px 11px;min-width:0}
+.o k{display:block;font-size:9.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.o v{display:block;font:600 21px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.o s{display:block;font:400 10.5px var(--mono);color:var(--muted);margin-top:3px}
+.o v.up{color:var(--m-match)} .o v.dn{color:var(--m-spur)}
+input[type=text]{width:100%;font:500 12.5px var(--mono);padding:7px 10px;border:1px solid var(--rule);
+  border-radius:4px;background:var(--panel-2);color:var(--ink)}
+
+.mathblock{background:var(--panel);border-left:3px solid var(--accent);border-radius:0 4px 4px 0;
+  padding:2px 16px;margin:0 0 14px;overflow-x:auto}
+mjx-container{color:var(--ink)} mjx-container[display="true"]{margin:0!important;padding:10px 2px}
+
+section{padding-block:clamp(30px,4.4vw,52px);border-top:1px solid var(--rule)}
+.sec-h{margin-bottom:20px}
+.sec-h p{color:var(--muted);font-size:14px;margin:3px 0 0}
+footer{border-top:1px solid var(--rule);padding-block:26px 40px;font-size:12.5px;color:var(--muted)}
+
+/* math + prose */
+.pg-math{padding:2px 17px;border-top:1px solid var(--rule);background:var(--panel);overflow-x:auto}
+.mathblock{background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--accent);
+  border-radius:0 4px 4px 0;padding:2px 16px;margin:0 0 14px;overflow-x:auto}
+mjx-container{color:var(--ink)} mjx-container[display="true"]{margin:0!important;padding:10px 2px}
+.prose{max-width:70ch}
+.prose p{font-size:15.5px;line-height:1.65;color:var(--ink-2)}
+.prose strong{color:var(--ink);font-weight:600}
+.defs{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;align-items:baseline;font-size:14.5px;
+  margin:0 0 20px;padding:15px 18px;background:var(--panel-2);border-radius:4px;line-height:1.5}
+.defs dt{font-family:var(--mono);font-size:12.5px;color:var(--accent);white-space:nowrap}
+.defs dd{margin:0;color:var(--ink-2)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--panel);margin-bottom:16px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:480px}
+th,td{text-align:left;padding:8px 13px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  background:var(--panel-2);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.drop{color:var(--m-spur);font-weight:600}
+.callout{border-left:3px solid var(--spec);background:var(--spec-soft);padding:14px 18px;
+  border-radius:0 4px 4px 0;margin:0 0 16px}
+.callout p{margin:0;font-size:14.5px;line-height:1.55}
+.callout .h{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--spec);display:block;margin-bottom:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px;margin-bottom:16px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:16px 18px}
+.card p{margin:0;font-size:14px;line-height:1.55;color:var(--ink-2)}
+.card .tag2{font-family:var(--mono);font-size:10px;color:var(--muted);display:block;margin-bottom:6px}
+.steps{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin-bottom:16px}
+.step{background:var(--panel);padding:15px 18px;display:grid;grid-template-columns:auto 1fr;gap:15px;align-items:start}
+.step-n{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);padding-top:.3em;white-space:nowrap}
+.step p{margin:2px 0 0;font-size:14.5px;line-height:1.55;color:var(--ink-2)}
+
+
+/* theorem environment */
+.def,.prop{border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:0 4px 4px 0;
+  background:var(--panel);padding:13px 18px;margin:0 0 15px}
+.prop{border-left-color:var(--m-loc)}
+.def-h,.prop-h{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 6px;display:block}
+.prop-h{color:var(--m-loc)}
+.def-h em,.prop-h em{font-style:normal;color:var(--ink-2);font-weight:600;letter-spacing:.02em;text-transform:none;font-size:12.5px}
+.def p,.prop p{margin:0 0 8px;font-size:14.5px;line-height:1.6;color:var(--ink-2)}
+.def p:last-child,.prop p:last-child{margin-bottom:0}
+.def mjx-container[display="true"],.prop mjx-container[display="true"]{padding:6px 2px}
+.term{color:var(--accent);font-weight:600}
+
+/* derivation: equation left, justification right */
+.deriv{display:grid;grid-template-columns:1fr auto;gap:2px 20px;align-items:center;
+  margin:10px 0 12px;padding:12px 16px;background:var(--panel-2);border-radius:4px;overflow-x:auto}
+.deriv .eq{min-width:0}
+.deriv .why{font-size:11.5px;color:var(--muted);text-align:right;white-space:nowrap;
+  font-family:var(--sans);padding-left:8px}
+@media (max-width:700px){.deriv{grid-template-columns:1fr}.deriv .why{text-align:left;padding:0 0 6px;white-space:normal}}
+.qed{display:block;text-align:right;color:var(--muted);font-size:13px;margin-top:2px}
+
+details.drill{border-top:1px solid var(--rule);background:var(--panel-2)}
+details.drill>summary{cursor:pointer;padding:8px 17px;font-size:11px;font-weight:600;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--accent);list-style:none}
+details.drill>summary::-webkit-details-marker{display:none}
+details.drill>summary::before{content:"▸ ";font-size:10px}
+details.drill[open]>summary::before{content:"▾ "}
+details.drill>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.drill-body{padding:2px 17px 12px;overflow-x:auto}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="bar"><div class="bar-in">
+  <span class="mark">
+    <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M5 5.5H15M5 5.5L10 14.5M15 5.5L10 14.5" stroke="currentColor" stroke-width="1.1" fill="none" opacity=".45"/>
+      <circle cx="5" cy="5.5" r="2.2" fill="currentColor"/><circle cx="15" cy="5.5" r="2.2" fill="currentColor"/>
+      <circle cx="10" cy="14.5" r="2.2" fill="currentColor"/></svg>
+    Knowledge Map</span>
+  <div class="seg" role="group" aria-label="Language">
+    <button id="lang-en" type="button" aria-pressed="true">EN</button>
+    <button id="lang-zh" type="button" aria-pressed="false">繁中</button>
+  </div>
+</div></div>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="eyebrow"><span lang="en">Scene Graph Studio · anchor paper and full curriculum</span><span lang="zh">Scene Graph Studio · 核心論文與完整課程</span></p>
+  <h1><span lang="en">IndVisSGG, and the field it sits in</span><span lang="zh">IndVisSGG，以及它所處的領域</span></h1>
+  <p class="lede">
+    <span lang="en">Wang, Yan, Li and Liu replaced the learned relation head with a prompted vision-language model, and the whole of their contribution turns out to live in four equations. This page works outward from those equations to the 93 knowledge points a student needs to judge them — 27 of which you can operate here, including an image lab that computes a scene graph from a frame you upload.</span>
+    <span lang="zh">Wang、Yan、Li、Liu 用一個被提示的 vision-language model 取代了學習出來的關係預測頭，而他們的全部貢獻，最後落在四條方程式上。本頁從那四條方程式往外推，一路連到學生要評斷它們所需的 93 個知識點——其中 27 個可以在這裡直接操作，包括一個能對你上傳的影格計算場景圖的影像實驗室。</span>
+  </p>
+  <div class="stats">
+    <div class="stat"><b id="s-total">93</b><span><span lang="en">knowledge points</span><span lang="zh">知識點</span></span></div>
+    <div class="stat"><b id="s-live">27</b><span><span lang="en">live here</span><span lang="zh">本頁可操作</span></span></div>
+    <div class="stat"><b>12</b><span><span lang="en">clusters</span><span lang="zh">群組</span></span></div>
+    <div class="stat"><b id="s-deriv">23</b><span><span lang="en">derivations shown</span><span lang="zh">完整推導</span></span></div>
+  </div>
+</div>
+
+
+<section id="paper">
+  <div class="sec-h">
+    <h2><span lang="en">1 &middot; The anchor paper</span><span lang="zh">1 &middot; 核心論文</span></h2>
+    <p><span lang="en">Wang, Yan, Li, Liu &middot; <i>IndVisSGG: VLM-based scene graph generation for industrial spatial intelligence</i> &middot; Advanced Engineering Informatics 65 (2025) 103107</span><span lang="zh">Wang、Yan、Li、Liu &middot; <i>IndVisSGG: VLM-based scene graph generation for industrial spatial intelligence</i> &middot; Advanced Engineering Informatics 65 (2025) 103107</span></p>
+  </div>
+
+  <div class="prose">
+    <p><span lang="en">Every prior scene graph method needed annotated boxes or masks before it could predict a relation, which is why no industrial scene graph dataset existed &mdash; nobody would pay to annotate one. IndVisSGG removes the annotation step by prompting GPT-4V directly, and spends its engineering on making that prompt reliable. The whole method is three stages and four equations.</span>
+    <span lang="zh">在此之前的每一個 scene graph 方法，都得先有標註好的 box 或 mask 才能預測關係——這正是工業 scene graph 資料集始終不存在的原因：沒有人願意付錢做這種標註。IndVisSGG 用直接提示 GPT-4V 的方式拿掉了標註這一步，並把工程量花在讓那個 prompt 變得可靠。整個方法就是三個階段、四條方程式。</span></p>
+  </div>
+
+  <div class="steps">
+    <div class="step"><span class="step-n">step 1</span><div>
+      <h3><span lang="en">Extract spatial&ndash;temporal triplets</span><span lang="zh">抽取時空三元組</span></h3>
+      <p><span lang="en">Ask the model for triplets. Without criteria it answers in free text and nothing is scorable. Supplying the Triplets Extraction Criteria &mdash; a predefined object set <i>O</i>, predicate set <i>P</i>, and examples <i>E</i> carrying both positive and negative cases with an analysis &mdash; constrains the output to a vocabulary the metric can see.</span>
+      <span lang="zh">請模型輸出三元組。沒有 criteria 時它會用自由文字回答，於是什麼都無法計分。提供 Triplets Extraction Criteria——預先定義的物件集合 <i>O</i>、predicate 集合 <i>P</i>，以及同時包含正例與反例並附上分析的範例 <i>E</i>——就能把輸出約束到指標看得見的詞彙裡。</span></p>
+    </div></div>
+    <div class="step"><span class="step-n">step 2</span><div>
+      <h3><span lang="en">Triple-check across temporal domains</span><span lang="zh">跨時間域的三重檢查</span></h3>
+      <p><span lang="en">Run <i>N</i> independent experts over step one&rsquo;s output. The paper names three real corrections they make: deleting a hallucinated <code>wrench</code> absent from <i>O</i>; recovering <code>terminals</code>, <code>beam</code> and <code>panel</code> that step one missed; and rewriting an imprecise <code>taping</code> into the criteria-legal <code>knocking on</code>.</span>
+      <span lang="zh">對第一步的輸出跑 <i>N</i> 個獨立的 expert。論文列出它們實際做的三種修正：刪掉 <i>O</i> 中根本不存在、被幻覺出來的 <code>wrench</code>；救回第一步漏掉的 <code>terminals</code>、<code>beam</code>、<code>panel</code>；把不精確的 <code>taping</code> 改寫成 criteria 允許的 <code>knocking on</code>。</span></p>
+    </div></div>
+    <div class="step"><span class="step-n">step 3</span><div>
+      <h3><span lang="en">Summarise</span><span lang="zh">整合</span></h3>
+      <p><span lang="en">Reconcile the <i>N</i> revisions and their analyses into one graph per timestamp, then link timestamps so edges can be born and die across the span.</span>
+      <span lang="zh">把 <i>N</i> 份修正與其分析整合成每個時間戳一張圖，再把各時間戳串接起來，讓邊能在整段時間跨度上生成與消失。</span></p>
+    </div></div>
+  </div>
+
+  <div class="mathblock">
+    \[ out_{trpl}=\mathrm{VLM}(V_t,\textit{Prompt}) \qquad (1) \]
+    \[ out^{s_1}_t=\mathrm{VLM}(V_t,\,O,\,P,\,E,\,\textit{Prompt}) \qquad (2) \]
+    \[ \bigl(out^{s_2}_t,\,a_i\bigr)=\mathrm{VLM}\bigl(V_t,O,P,E,\textit{Prompt},out^{s_1}_t\bigr),\qquad i\in\{1,\dots,N\} \qquad (3) \]
+    \[ out^{s_3}_t=\mathrm{VLM}\bigl(out^{s_2}_t,\alpha,\textit{Prompt}\bigr),\qquad \{out^{s_2}_t,\alpha\}=\bigl\{out^{s_2}_t,\,a_i \mid i\in\{1,\dots,N\}\bigr\} \qquad (4) \]
+  </div>
+
+  <div class="prose">
+    <p><span lang="en"><strong>Read equations (1) and (2) side by side.</strong> They differ in nothing but the presence of <i>O</i>, <i>P</i> and <i>E</i>. So the paper&rsquo;s Table 3 &mdash; \(R@20\) climbing from <b>0.032</b> with neither, to 1.787 with <i>O</i>, to 20.792 with <i>O</i> and <i>P</i>, to <b>23.040</b> once examples and analysis are added &mdash; measures the value of constraining a vision-language model&rsquo;s output vocabulary. It measures no architecture whatsoever. That is the real finding, and it is easy to read past. Playground <a href="#pg-L8">L8</a> rebuilds that table one toggle at a time.</span>
+    <span lang="zh"><strong>把方程式 (1) 與 (2) 並排讀。</strong>兩者唯一的差別就是有沒有 <i>O</i>、<i>P</i>、<i>E</i>。因此論文 Table 3 的 \(R@20\)——兩者皆無時是 <b>0.032</b>，給 <i>O</i> 是 1.787，給 <i>O</i> 與 <i>P</i> 是 20.792，再加上範例與分析後是 <b>23.040</b>——量的是「約束 vision-language model 輸出詞彙」的價值，完全沒有量到任何架構。這才是真正的發現，而且很容易讀過去就忽略。Playground <a href="#pg-L8">L8</a> 讓你一次一個開關把那張表重建出來。</span></p>
+  </div>
+
+  <div class="tablewrap"><table>
+    <thead><tr>
+      <th><span lang="en">Dataset</span><span lang="zh">資料集</span></th>
+      <th><span lang="en">Images</span><span lang="zh">影像</span></th><th>ObjCls</th><th>RelCls</th><th>PPI</th>
+      <th><span lang="en">Dup-free</span><span lang="zh">無重複</span></th><th><span lang="en">Industrial</span><span lang="zh">工業場景</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>VG</td><td class="num">108K</td><td class="num">34K</td><td class="num">40K</td><td class="num">21.4</td><td class="drop">&#10007;</td><td class="drop">&#10007;</td></tr>
+      <tr><td>VG-150</td><td class="num">88K</td><td class="num">150</td><td class="num">50</td><td class="num">5.7</td><td class="drop">&#10007;</td><td class="drop">&#10007;</td></tr>
+      <tr><td>VrR-VG</td><td class="num">59K</td><td class="num">1600</td><td class="num">117</td><td class="num">3.4</td><td class="drop">&#10007;</td><td class="drop">&#10007;</td></tr>
+      <tr><td>GQA</td><td class="num">85K</td><td class="num">1703</td><td class="num">310</td><td class="num">50.6</td><td style="color:var(--m-match)">&#10003;</td><td class="drop">&#10007;</td></tr>
+      <tr><td>PSG</td><td class="num">49K</td><td class="num">133</td><td class="num">56</td><td class="num">5.7</td><td style="color:var(--m-match)">&#10003;</td><td class="drop">&#10007;</td></tr>
+      <tr><td><b>ISG</b></td><td class="num"><b>10K</b></td><td class="num"><b>688</b></td><td class="num"><b>144</b></td><td class="num"><b>17.6</b></td><td style="color:var(--m-match)">&#10003;</td><td style="color:var(--m-match)">&#10003;</td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:12.5px;color:var(--muted);max-width:70ch"><span lang="en">The paper&rsquo;s Table 1. PPI counts predicates per image. ISG is assembled from CHICO, Ego4D, EPIC-KITCHENS, HA-ViD, IKEA ASM and CALVIN &mdash; none of which ship relation labels, which is the whole argument for building it.</span><span lang="zh">論文的 Table 1。PPI 表示每張影像的 predicate 數。ISG 由 CHICO、Ego4D、EPIC-KITCHENS、HA-ViD、IKEA ASM、CALVIN 組成——這些資料集全都沒有附關係標註，而這正是必須自建 ISG 的全部理由。</span></p>
+
+  <div class="callout">
+    <p><span class="h"><span lang="en">The dataset is not available</span><span lang="zh">資料集並未公開</span></span>
+    <span lang="en">Verified September 2026: no repository matches IndVisSGG, the second author&rsquo;s page lists it paper-link-only while attaching <code>[Code]</code> badges to his other work, and no Hugging Face dataset corresponds. The similarly-named <code>ISG-Bench</code> is an unrelated interleaved-generation benchmark. Teach ISG from these published figures, label it request-only, and build a mini-ISG by the same method from openly licensed industrial frames.</span>
+    <span lang="zh">2026 年 9 月查證：沒有任何 repository 對應 IndVisSGG，第二作者的頁面只掛論文連結，但他其他論文都附 <code>[Code]</code> 標記，Hugging Face 上也沒有對應資料集。名稱相近的 <code>ISG-Bench</code> 是另一個無關的交錯生成基準。請依這些已發表的數字來教 ISG，標註為「需來信索取」，並以同樣方法用授權開放的工業影格自建 mini-ISG。</span></p>
+  </div>
+
+  <div class="cards">
+    <div class="card"><span class="tag2">Table 2</span>
+      <h3><span lang="en">What it beats</span><span lang="zh">它贏過什麼</span></h3>
+      <p><span lang="en">On VG, \(R@20=23.29\) and \(mR@20=12.98\) against VCTree&rsquo;s 22.0 and 8.0. The mean-Recall margin is the larger one &mdash; the criteria help rare predicates most.</span><span lang="zh">在 VG 上 \(R@20=23.29\)、\(mR@20=12.98\)，對比 VCTree 的 22.0 與 8.0。mean Recall 的領先幅度更大——criteria 對罕見 predicate 幫助最多。</span></p></div>
+    <div class="card"><span class="tag2">Table 4</span>
+      <h3><span lang="en">Three experts</span><span lang="zh">三個 expert</span></h3>
+      <p><span lang="en">\(N=3\) gives \(R@20=23.158\); \(N=5\) gives 23.287 and a better \(mR\) too. The paper still recommends three, on token cost. An empirical claim with no theory &mdash; see <a href="#pg-L9">L9</a>.</span><span lang="zh">\(N=3\) 得到 \(R@20=23.158\)；\(N=5\) 是 23.287，且 \(mR\) 也更好。論文仍基於 token 成本推薦三個。這是沒有理論的經驗主張——見 <a href="#pg-L9">L9</a>。</span></p></div>
+    <div class="card"><span class="tag2">&sect;6</span>
+      <h3><span lang="en">Its stated limitation</span><span lang="zh">它自陳的限制</span></h3>
+      <p><span lang="en">Only GPT-4V and Gemini-Pro-Vision were tested; the authors note the backbone VLM may change results. Both are now superseded, which makes the claim harder to check rather than easier.</span><span lang="zh">只測試了 GPT-4V 與 Gemini-Pro-Vision；作者指出換掉底層 VLM 可能改變結果。兩者現在都已被取代，使得這個主張更難、而非更容易驗證。</span></p></div>
+  </div>
+</section>
+
+<section id="math">
+  <div class="sec-h">
+    <h2><span lang="en">2 &middot; The mathematics</span><span lang="zh">2 &middot; 數學</span></h2>
+    <p><span lang="en">Fifteen definitions, eight propositions, every derivation shown.</span><span lang="zh">十五條定義、八個命題，每一步推導都寫出來。</span></p>
+  </div>
+
+  <div class="prose">
+    <p><span lang="en">Until 2024 these metrics circulated as <em>verbal</em> definitions. Lorenz et al. (CVPRW 2024, <a href="https://arxiv.org/abs/2404.09616">arXiv 2404.09616</a>) showed that published implementations disagree as a direct result. What follows states each object precisely, then derives every relation between them.</span>
+    <span lang="zh">直到 2024 年，這些指標都只以<em>文字敘述</em>流通。Lorenz 等人（CVPRW 2024，<a href="https://arxiv.org/abs/2404.09616">arXiv 2404.09616</a>）證明已發表的實作因此彼此不一致。以下先精確定義每個物件，再推導它們之間的每一個關係。</span></p>
+  </div>
+
+  <h3><span lang="en">2.1 &middot; Objects</span><span lang="zh">2.1 &middot; 物件</span></h3>
+
+  <div class="def"><span class="def-h">Definition 1 &nbsp;<em><span lang="en">grounded object</span><span lang="zh">已定位物件</span></em></span>
+    <p><span lang="en">Fix a class vocabulary \(\mathcal{C}\) and a predicate vocabulary \(\mathcal{P}\). A <span class="term">grounded object</span> is a pair \(v=(c,b)\) with \(c\in\mathcal{C}\) and box \(b=(x,y,w,h)\in\mathbb{R}^4\). Write \(A(b)=wh\) for its area and \(\mathrm{ctr}(b)=(x+\tfrac{w}{2},\,y+\tfrac{h}{2})\) for its centre.</span>
+    <span lang="zh">固定類別詞彙 \(\mathcal{C}\) 與 predicate 詞彙 \(\mathcal{P}\)。<span class="term">已定位物件</span>是一個序對 \(v=(c,b)\)，其中 \(c\in\mathcal{C}\)、box \(b=(x,y,w,h)\in\mathbb{R}^4\)。記 \(A(b)=wh\) 為面積，\(\mathrm{ctr}(b)=(x+\tfrac{w}{2},\,y+\tfrac{h}{2})\) 為中心。</span></p>
+  </div>
+
+  <div class="def"><span class="def-h">Definition 2 &nbsp;<em><span lang="en">scene graph</span><span lang="zh">場景圖</span></em></span>
+    <p><span lang="en">A <span class="term">scene graph</span> over timespan \(T\) is \(G=(V,E,T)\) with \(V\) a finite set of grounded objects and \(E\subseteq V\times\mathcal{P}\times V\). An element \(t=\langle s,p,o\rangle\in E\) is a <span class="term">triplet</span>. For a single image \(T\) is a point and we write \(G=(V,E)\). This is the anchor paper&rsquo;s own notation.</span>
+    <span lang="zh">時間跨度 \(T\) 上的<span class="term">場景圖</span>為 \(G=(V,E,T)\)，其中 \(V\) 是已定位物件的有限集合，\(E\subseteq V\times\mathcal{P}\times V\)。元素 \(t=\langle s,p,o\rangle\in E\) 稱為<span class="term">三元組</span>。單張影像時 \(T\) 退化為一點，記作 \(G=(V,E)\)。這是核心論文自己的記法。</span></p>
+  </div>
+
+  <div class="def"><span class="def-h">Definition 3 &nbsp;<em><span lang="en">pair projection</span><span lang="zh">配對投影</span></em></span>
+    <p><span lang="en">\(\pi:V\times\mathcal{P}\times V\to V\times V\), \(\pi(\langle s,p,o\rangle)=(s,o)\). It forgets the predicate and keeps the ordered pair.</span>
+    <span lang="zh">\(\pi:V\times\mathcal{P}\times V\to V\times V\)，\(\pi(\langle s,p,o\rangle)=(s,o)\)。它忘掉 predicate，保留有序配對。</span></p>
+  </div>
+
+  <h3><span lang="en">2.2 &middot; When a prediction counts</span><span lang="zh">2.2 &middot; 什麼情況算命中</span></h3>
+
+  <div class="def"><span class="def-h">Definition 4 &nbsp;<em><span lang="en">intersection over union</span><span lang="zh">交集比聯集</span></em></span>
+    <p>\[ \operatorname{IoU}(b,b')=\frac{A(b\cap b')}{A(b\cup b')}=\frac{A(b\cap b')}{A(b)+A(b')-A(b\cap b')}\in[0,1] \]</p>
+  </div>
+
+  <div class="prop"><span class="prop-h">Proposition 1 &nbsp;<em><span lang="en">the scale ceiling</span><span lang="zh">尺度上限</span></em></span>
+    <p><span lang="en">For any two boxes, \(\operatorname{IoU}(b,b')\le \dfrac{\min(A(b),A(b'))}{\max(A(b),A(b'))}\). A prediction twice the correct area can never exceed \(\tfrac12\), however perfectly centred.</span>
+    <span lang="zh">對任意兩個 box，\(\operatorname{IoU}(b,b')\le \dfrac{\min(A(b),A(b'))}{\max(A(b),A(b'))}\)。面積為正解兩倍的預測，無論對得多準，都不可能超過 \(\tfrac12\)。</span></p>
+    <div class="deriv">
+      <div class="eq">\[ A(b\cap b')\le\min\bigl(A(b),A(b')\bigr) \]</div>
+      <div class="why"><span lang="en">intersection lies in both</span><span lang="zh">交集同時屬於兩者</span></div>
+      <div class="eq">\[ A(b\cup b')\ge\max\bigl(A(b),A(b')\bigr) \]</div>
+      <div class="why"><span lang="en">union contains both</span><span lang="zh">聯集包含兩者</span></div>
+      <div class="eq">\[ \operatorname{IoU}=\frac{A(b\cap b')}{A(b\cup b')}\le\frac{\min(A(b),A(b'))}{\max(A(b),A(b'))} \]</div>
+      <div class="why"><span lang="en">divide the bounds</span><span lang="zh">兩式相除</span></div>
+    </div>
+    <p><span lang="en">Consequence: with \(\tau=0.5\), any box whose area ratio to the truth exceeds \(2\) is rejected before its position is even considered. Playground <a href="#pg-F3">F3</a> reports this ceiling live.</span>
+    <span lang="zh">推論：取 \(\tau=0.5\) 時，任何與正解面積比超過 \(2\) 的 box，還沒考慮位置就已被拒絕。Playground <a href="#pg-F3">F3</a> 會即時顯示這個上限。</span><span class="qed">&#9633;</span></p>
+  </div>
+
+  <div class="def"><span class="def-h">Definition 5 &nbsp;<em><span lang="en">the match relation</span><span lang="zh">命中關係</span></em></span>
+    <p><span lang="en">Fix \(\tau\in(0,1]\). For a predicted triplet \(\hat t\) and a ground-truth triplet \(t\), write \(\hat t\simeq t\) when</span><span lang="zh">固定 \(\tau\in(0,1]\)。對預測三元組 \(\hat t\) 與 ground-truth 三元組 \(t\)，當下式成立時記 \(\hat t\simeq t\)：</span></p>
+    <p>\[ \underbrace{c_{\hat s}=c_s \;\wedge\; c_{\hat o}=c_o \;\wedge\; \hat p=p}_{\text{classification}} \;\wedge\; \underbrace{\operatorname{IoU}(b_{\hat s},b_s)\ge\tau \;\wedge\; \operatorname{IoU}(b_{\hat o},b_o)\ge\tau}_{\text{localization}} \]</p>
+    <p><span lang="en"><b>\(\simeq\) is reflexive and symmetric but not transitive</b>, so it is not an equivalence relation and induces no partition. Two distinct predictions may match one ground-truth triplet.</span>
+    <span lang="zh"><b>\(\simeq\) 具自反性與對稱性，但不具傳遞性</b>，因此不是等價關係，也不誘導任何分割。兩個相異的預測可能命中同一個 ground-truth 三元組。</span></p>
+  </div>
+
+  <h3><span lang="en">2.3 &middot; Ranking, constraint, and the candidate set</span><span lang="zh">2.3 &middot; 排序、constraint 與候選集合</span></h3>
+
+  <div class="def"><span class="def-h">Definition 6 &nbsp;<em><span lang="en">candidate set</span><span lang="zh">候選集合</span></em></span>
+    <p><span lang="en">A model emits scored triplets \(\hat T=\{(\hat t_i,\sigma_i)\}\), \(\sigma_i\in[0,1]\). Sort by \(\sigma\) descending and let \(X_k\) be the first \(k\). Ties are broken by a fixed rule, which is part of the specification because it is observable.</span>
+    <span lang="zh">模型輸出帶分數的三元組 \(\hat T=\{(\hat t_i,\sigma_i)\}\)，\(\sigma_i\in[0,1]\)。依 \(\sigma\) 遞減排序，取前 \(k\) 個為 \(X_k\)。同分以固定規則決定先後——這屬於規格的一部分，因為它是可觀察的。</span></p>
+  </div>
+
+  <div class="def"><span class="def-h">Definition 7 &nbsp;<em><span lang="en">graph constraint</span><span lang="zh">graph constraint</span></em></span>
+    <p><span lang="en">\(X_k\) satisfies the <span class="term">graph constraint</span> when \(\pi\) restricted to \(X_k\) is injective &mdash; at most one predicate survives per ordered pair. In practice keep \(\arg\max_p\sigma(\langle s,p,o\rangle)\). Write \(X_k^{\mathrm{ng}}\) for the unconstrained candidate set, admitting up to \(m\) predicates per pair.</span>
+    <span lang="zh">當 \(\pi\) 限制在 \(X_k\) 上為單射時，稱 \(X_k\) 滿足 <span class="term">graph constraint</span>——每個有序配對至多留下一個 predicate。實務上保留 \(\arg\max_p\sigma(\langle s,p,o\rangle)\)。記 \(X_k^{\mathrm{ng}}\) 為不受約束的候選集合，每個配對至多容許 \(m\) 個 predicate。</span></p>
+  </div>
+
+  <div class="def"><span class="def-h">Definition 8 &nbsp;<em><span lang="en">credited matches</span><span lang="zh">計入的命中</span></em></span>
+    <p><span lang="en">Because \(\simeq\) is not an equivalence relation, &ldquo;\(G\cap X_k\)&rdquo; is defined as a maximum matching, not a set intersection:</span><span lang="zh">由於 \(\simeq\) 不是等價關係，「\(G\cap X_k\)」定義為最大匹配，而非集合交集：</span></p>
+    <p>\[ \mu(G,X_k)=\max\bigl\{\,\lvert M\rvert \;:\; M\subseteq X_k\times G,\ M \text{ a partial injection},\ (\hat t,t)\in M\Rightarrow \hat t\simeq t \,\bigr\} \]</p>
+    <p><span lang="en">Each ground-truth triplet may be credited at most once, and each prediction spends itself on at most one.</span><span lang="zh">每個 ground-truth 三元組至多被計入一次，每筆預測也至多消耗在一個上面。</span></p>
+  </div>
+
+  <h3><span lang="en">2.4 &middot; The recalls</span><span lang="zh">2.4 &middot; 各種 recall</span></h3>
+
+  <div class="def"><span class="def-h">Definition 9 &nbsp;<em>R@k, R<sub>p</sub>@k, mR@k</em></span>
+    <p><span lang="en">Let \(N=\lvert G\rvert\), \(G^{(p)}=\{t\in G:\operatorname{pred}(t)=p\}\), \(n_p=\lvert G^{(p)}\rvert\), and \(\mathcal{P}'=\{p:n_p>0\}\) with \(C=\lvert\mathcal{P}'\rvert\).</span>
+    <span lang="zh">令 \(N=\lvert G\rvert\)、\(G^{(p)}=\{t\in G:\operatorname{pred}(t)=p\}\)、\(n_p=\lvert G^{(p)}\rvert\)，以及 \(\mathcal{P}'=\{p:n_p>0\}\)、\(C=\lvert\mathcal{P}'\rvert\)。</span></p>
+    <p>\[ R@k=\frac{\mu(G,X_k)}{N},\qquad R_p@k=\frac{\mu\bigl(G^{(p)},X_k\bigr)}{n_p},\qquad mR@k=\frac{1}{C}\sum_{p\in\mathcal{P}'}R_p@k \]</p>
+  </div>
+
+  <div class="def"><span class="def-h">Definition 10 &nbsp;<em><span lang="en">the weighting family</span><span lang="zh">加權族</span></em></span>
+    <p><span lang="en">For \(\alpha\in[0,1]\) define \(\displaystyle w_p(\alpha)=\frac{n_p^{\alpha}}{\sum_{q\in\mathcal{P}'}n_q^{\alpha}}\) and</span><span lang="zh">對 \(\alpha\in[0,1]\) 定義 \(\displaystyle w_p(\alpha)=\frac{n_p^{\alpha}}{\sum_{q\in\mathcal{P}'}n_q^{\alpha}}\)，並令</span>
+    \[ R_{\alpha}@k=\sum_{p\in\mathcal{P}'}w_p(\alpha)\,R_p@k \]</p>
+  </div>
+
+  <h3><span lang="en">2.5 &middot; The decomposition</span><span lang="zh">2.5 &middot; 分解</span></h3>
+
+  <div class="prop"><span class="prop-h">Proposition 2 &nbsp;<em><span lang="en">R@k is a frequency-weighted mean of per-predicate recalls</span><span lang="zh">R@k 是各 predicate recall 的頻率加權平均</span></em></span>
+    <div class="deriv">
+      <div class="eq">\[ R@k=\frac{\mu(G,X_k)}{N} \]</div>
+      <div class="why"><span lang="en">Definition 9</span><span lang="zh">定義 9</span></div>
+      <div class="eq">\[ =\frac{1}{N}\sum_{p\in\mathcal{P}'}\mu\bigl(G^{(p)},X_k\bigr) \]</div>
+      <div class="why"><span lang="en">\(\{G^{(p)}\}\) partitions \(G\); a match is credited to exactly one class</span><span lang="zh">\(\{G^{(p)}\}\) 分割 \(G\)，每個命中只歸屬一個類別</span></div>
+      <div class="eq">\[ =\frac{1}{N}\sum_{p\in\mathcal{P}'}n_p\cdot\frac{\mu\bigl(G^{(p)},X_k\bigr)}{n_p} \]</div>
+      <div class="why"><span lang="en">multiply and divide by \(n_p>0\)</span><span lang="zh">同乘同除 \(n_p>0\)</span></div>
+      <div class="eq">\[ =\sum_{p\in\mathcal{P}'}\frac{n_p}{N}\,R_p@k \]</div>
+      <div class="why"><span lang="en">Definition 9 again</span><span lang="zh">再次套用定義 9</span></div>
+    </div>
+    <p><span lang="en">Since \(\sum_p n_p/N=1\) and \(\sum_p 1/C=1\), both \(R@k\) and \(mR@k\) are weighted means of the <em>same</em> quantities \(R_p@k\). Comparing with Definition 10, \(w_p(1)=n_p/N\) and \(w_p(0)=1/C\), so</span>
+    <span lang="zh">因為 \(\sum_p n_p/N=1\)、\(\sum_p 1/C=1\)，\(R@k\) 與 \(mR@k\) 都是<em>同一組</em>量 \(R_p@k\) 的加權平均。對照定義 10，\(w_p(1)=n_p/N\)、\(w_p(0)=1/C\)，故</span>
+    \[ R_1@k=R@k,\qquad R_0@k=mR@k \]
+    <span class="qed">&#9633;</span></p>
+  </div>
+
+  <h3><span lang="en">2.6 &middot; Why the gap exists, exactly</span><span lang="zh">2.6 &middot; 落差究竟從何而來</span></h3>
+
+  <div class="prop"><span class="prop-h">Proposition 3 &nbsp;<em><span lang="en">the covariance identity</span><span lang="zh">共變異數恆等式</span></em></span>
+    <p><span lang="en">Let \(\bar n=N/C\) be the mean predicate count and let \(\operatorname{Cov}\) denote empirical covariance under the uniform distribution on \(\mathcal{P}'\). Then</span>
+    <span lang="zh">令 \(\bar n=N/C\) 為 predicate 的平均數量，\(\operatorname{Cov}\) 表示在 \(\mathcal{P}'\) 上均勻分布下的經驗共變異數。則</span></p>
+    <p>\[ \boxed{\;R@k-mR@k=\frac{\operatorname{Cov}_{p\sim\mathcal{U}(\mathcal{P}')}\bigl(n_p,\;R_p@k\bigr)}{\bar n}\;} \]</p>
+    <div class="deriv">
+      <div class="eq">\[ R@k-mR@k=\sum_{p}\frac{n_p}{N}R_p-\frac{1}{C}\sum_{p}R_p \]</div>
+      <div class="why"><span lang="en">Proposition 2 and Definition 9</span><span lang="zh">命題 2 與定義 9</span></div>
+      <div class="eq">\[ =\frac{1}{N}\sum_{p}\Bigl(n_p-\frac{N}{C}\Bigr)R_p=\frac{1}{N}\sum_{p}\bigl(n_p-\bar n\bigr)R_p \]</div>
+      <div class="why"><span lang="en">collect over a common denominator</span><span lang="zh">通分後合併</span></div>
+      <div class="eq">\[ =\frac{1}{N}\sum_{p}\bigl(n_p-\bar n\bigr)\bigl(R_p-\bar R\bigr) \]</div>
+      <div class="why"><span lang="en">\(\sum_p(n_p-\bar n)=0\), so subtracting any constant \(\bar R\) changes nothing</span><span lang="zh">\(\sum_p(n_p-\bar n)=0\)，故減去任何常數 \(\bar R\) 都不影響</span></div>
+      <div class="eq">\[ =\frac{C}{N}\cdot\frac{1}{C}\sum_{p}\bigl(n_p-\bar n\bigr)\bigl(R_p-\bar R\bigr)=\frac{\operatorname{Cov}(n,R)}{\bar n} \]</div>
+      <div class="why"><span lang="en">definition of empirical covariance, and \(C/N=1/\bar n\)</span><span lang="zh">經驗共變異數的定義，且 \(C/N=1/\bar n\)</span></div>
+    </div>
+    <p><span lang="en">Taking \(\bar R=mR@k\) is the natural choice and makes the third line literal.<span class="qed">&#9633;</span></span>
+    <span lang="zh">取 \(\bar R=mR@k\) 是自然的選擇，並讓第三行成為字面意義上的等式。<span class="qed">&#9633;</span></span></p>
+  </div>
+
+  <div class="prose">
+    <p><span lang="en"><strong>This is the sharpest statement available about the whole field.</strong> The gap between the two headline metrics is <em>exactly</em> the covariance between how often a predicate occurs and how well the model does on it, divided by the mean frequency. Three corollaries follow immediately:</span>
+    <span lang="zh"><strong>這是關於整個領域所能給出的最銳利的陳述。</strong>兩個主要指標之間的落差，<em>恰好</em>等於「某個 predicate 出現的頻率」與「模型在它上面的表現」兩者的共變異數，再除以平均頻率。三個推論立刻成立：</span></p>
+  </div>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th><span lang="en">Condition</span><span lang="zh">條件</span></th><th><span lang="en">Consequence</span><span lang="zh">結果</span></th><th><span lang="en">What it describes</span><span lang="zh">對應什麼情形</span></th></tr></thead>
+    <tbody>
+      <tr><td class="num">\(\operatorname{Cov}(n,R)>0\)</td><td class="num">\(R>mR\)</td><td><span lang="en">the model does better on common predicates &mdash; the frequency-biased regime, and every model before 2020</span><span lang="zh">模型在常見 predicate 上表現較好——頻率偏差區間，2020 年前的每個模型都在這裡</span></td></tr>
+      <tr><td class="num">\(\operatorname{Cov}(n,R)=0\)</td><td class="num">\(R=mR\)</td><td><span lang="en">performance is uncorrelated with frequency. Holds automatically when the distribution is flat, which is why the gap vanishes at Zipf exponent \(s=0\) in <a href="#pg-F7">F7</a></span><span lang="zh">表現與頻率無關。分布為平坦時自動成立，這正是 <a href="#pg-F7">F7</a> 中 Zipf 指數 \(s=0\) 時落差消失的原因</span></td></tr>
+      <tr><td class="num">\(\operatorname{Cov}(n,R)<0\)</td><td class="num">\(mR>R\)</td><td><span lang="en">the model does better on rare predicates. The worked example below reaches this once the graph constraint is lifted</span><span lang="zh">模型在罕見 predicate 上表現較好。下方的手算範例在關掉 graph constraint 後就進入這個狀態</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3><span lang="en">2.7 &middot; Worked example, with the identity checked</span><span lang="zh">2.7 &middot; 手算範例，並驗證恆等式</span></h3>
+  <div class="prose"><p><span lang="en">\(N=10\), \(C=7\), \(\bar n=10/7\). Counts \(n_{\texttt{on}}=3\), \(n_{\texttt{near}}=2\), and \(n_p=1\) for the remaining five. Under the constraint at \(k=20\):</span>
+  <span lang="zh">\(N=10\)、\(C=7\)、\(\bar n=10/7\)。數量為 \(n_{\texttt{on}}=3\)、\(n_{\texttt{near}}=2\)，其餘五個 \(n_p=1\)。在 \(k=20\) 且開啟 constraint 時：</span></p></div>
+  <div class="deriv">
+    <div class="eq">\[ R@20=\tfrac{3}{10}\cdot\tfrac{2}{3}+\tfrac{2}{10}\cdot 1+\tfrac{1}{10}+\tfrac{1}{10}+0+0+0=0.600 \]</div>
+    <div class="why"><span lang="en">Proposition 2</span><span lang="zh">命題 2</span></div>
+    <div class="eq">\[ mR@20=\tfrac{1}{7}\bigl(\tfrac{2}{3}+1+1+1+0+0+0\bigr)=\tfrac{11}{21}\approx 0.5238 \]</div>
+    <div class="why"><span lang="en">Definition 9</span><span lang="zh">定義 9</span></div>
+    <div class="eq">\[ \operatorname{Cov}(n,R)=\tfrac{1}{7}\textstyle\sum_p (n_p-\tfrac{10}{7})(R_p-\tfrac{11}{21})\approx 0.10884 \]</div>
+    <div class="why"><span lang="en">seven terms, summed</span><span lang="zh">七項相加</span></div>
+    <div class="eq">\[ \frac{\operatorname{Cov}(n,R)}{\bar n}=\frac{0.10884}{10/7}\approx 0.07619=R@20-mR@20 \]</div>
+    <div class="why"><span lang="en">Proposition 3 &mdash; verified</span><span lang="zh">命題 3——驗證通過</span></div>
+  </div>
+  <div class="prose"><p><span lang="en">Now lift the constraint. The model is unchanged; only \(X_k\) grows. Two singleton classes, <code>above</code> and <code>picking up</code>, are recovered:</span>
+  <span lang="zh">現在關掉 constraint。模型沒有改變，只有 \(X_k\) 變大。兩個只有單一實例的類別 <code>above</code> 與 <code>picking up</code> 被救回：</span></p></div>
+  <div class="deriv">
+    <div class="eq">\[ \mathrm{ngR}@20=0.800,\qquad \mathrm{mNgR}@20=\tfrac{1}{7}\bigl(\tfrac{2}{3}+1+1+1+1+1+0\bigr)=\tfrac{17}{21}\approx 0.8095 \]</div>
+    <div class="why"><span lang="en">same two definitions, larger \(X_k\)</span><span lang="zh">同樣兩條定義，較大的 \(X_k\)</span></div>
+    <div class="eq">\[ \operatorname{Cov}(n,R)\approx-0.01361 \quad\Longrightarrow\quad \frac{-0.01361}{10/7}\approx-0.00952=\mathrm{ngR}-\mathrm{mNgR} \]</div>
+    <div class="why"><span lang="en">covariance turns negative &mdash; \(mR\) now exceeds \(R\)</span><span lang="zh">共變異數轉負——\(mR\) 於是超過 \(R\)</span></div>
+  </div>
+  <div class="prose"><p><span lang="en">The sign flip is the whole lesson. Recovering two rare triplets moved \(R\) by \(0.200\) and \(mR\) by \(0.286\), and pushed the covariance through zero. No model changed; only the counting rule did. Playground <a href="#pg-E6">E6</a> is Definition 10 as a single slider.</span>
+  <span lang="zh">正負號的翻轉就是整堂課的重點。救回兩個罕見三元組讓 \(R\) 上升 \(0.200\)、\(mR\) 上升 \(0.286\)，並把共變異數推過了零點。模型毫無改變，改變的只有計數規則。Playground <a href="#pg-E6">E6</a> 就是把定義 10 做成一根滑桿。</span></p></div>
+
+  <h3><span lang="en">2.8 &middot; The remaining metrics</span><span lang="zh">2.8 &middot; 其餘指標</span></h3>
+
+  <div class="def"><span class="def-h">Definitions 11&ndash;13 &nbsp;<em>ngR@k, zR@k, PR@k</em></span>
+    <p>\[ \mathrm{ngR}@k=\frac{\mu\bigl(G,X_k^{\mathrm{ng}}\bigr)}{N},\qquad zR@k=\frac{\mu(G_z,X_k)}{\lvert G_z\rvert},\qquad PR@k=\frac{\bigl\lvert\pi(G)\cap\pi(X_k)\bigr\rvert}{\lvert\pi(G)\rvert} \]</p>
+    <p><span lang="en">where \(G_z=\{t\in G:(c_s,p,c_o)\notin\mathcal{T}_{\text{train}}\}\) and \(\mathcal{T}_{\text{train}}\) is the set of class-level triplet types seen in training. <b>Zero-shot recall is not a new metric</b> &mdash; it is \(R@k\) on a filtered ground truth.</span>
+    <span lang="zh">其中 \(G_z=\{t\in G:(c_s,p,c_o)\notin\mathcal{T}_{\text{train}}\}\)，\(\mathcal{T}_{\text{train}}\) 是訓練時見過的類別層級三元組型態集合。<b>Zero-shot recall 不是新指標</b>——它就是在過濾後 ground truth 上的 \(R@k\)。</span></p>
+  </div>
+
+  <div class="prop"><span class="prop-h">Proposition 4 &nbsp;<em><span lang="en">three orderings</span><span lang="zh">三組序關係</span></em></span>
+    <p>\[ \text{(a)}\ \ k'\ge k\Rightarrow R@k'\ge R@k \qquad \text{(b)}\ \ \mathrm{ngR}@(mk)\ge R@k \qquad \text{(c)}\ \ PR@k\ge R@k \]</p>
+    <div class="deriv">
+      <div class="eq">\[ k'\ge k\Rightarrow X_k\subseteq X_{k'}\Rightarrow \mu(G,X_k)\le\mu(G,X_{k'}) \]</div>
+      <div class="why"><span lang="en">(a) a maximum matching cannot shrink when the left vertex set grows</span><span lang="zh">(a) 左側頂點集合變大時，最大匹配不可能變小</span></div>
+      <div class="eq">\[ \hat t\in X_k \text{ at constrained rank } r\le k,\ \sigma=\sigma(\hat t) \;\Rightarrow\; \bigl\lvert\{\text{pairs with top score}>\sigma\}\bigr\rvert\le r-1 \]</div>
+      <div class="why"><span lang="en">(b) each of the \(r-1\) candidates above \(\hat t\) occupies a distinct pair, by Definition 7</span><span lang="zh">(b) 依定義 7，排在 \(\hat t\) 之上的 \(r-1\) 個候選各佔一個相異配對</span></div>
+      <div class="eq">\[ \text{rank}_{\mathrm{ng}}(\hat t)\le (r-1)m+m=rm\le km \;\Rightarrow\; X_k\subseteq X_{km}^{\mathrm{ng}} \]</div>
+      <div class="why"><span lang="en">a pair whose top predicate scores below \(\sigma\) contributes nothing above \(\sigma\), so only those \(r-1\) pairs and \(\hat t\)&rsquo;s own can, at \(m\) entries each</span><span lang="zh">最高分 predicate 低於 \(\sigma\) 的配對，不會貢獻任何高於 \(\sigma\) 的項目，故只有那 \(r-1\) 個配對與 \(\hat t\) 自身的配對可能貢獻，每個至多 \(m\) 項</span></div>
+      <div class="eq">\[ \hat t\simeq t \Rightarrow \pi(\hat t)\text{ matches }\pi(t) \]</div>
+      <div class="why"><span lang="en">(c) \(\simeq\) implies pair agreement; dropping the predicate can only add matches</span><span lang="zh">(c) \(\simeq\) 蘊含配對一致；捨棄 predicate 只會增加命中</span></div>
+    </div>
+    <div class="callout">
+      <p><span class="h"><span lang="en">The factor \(m\) in (b) is not decoration</span><span lang="zh">(b) 中的因子 \(m\) 不是裝飾</span></span>
+      <span lang="en">At a <em>shared</em> budget, \(\mathrm{ngR}@k\ge R@k\) is <b>not</b> a theorem, because lifting the constraint lets one strong pair spend several slots. Take four pairs scoring \(A\!:\,0.90,\,0.88,\,0.86\), \(B\!:\,0.85\), \(C\!:\,0.84\), \(D\!:\,0.83\). Then \(X_3=\{A_1,B_1,C_1\}\) but \(X_3^{\mathrm{ng}}=\{A_1,A_2,A_3\}\); if the ground truth is \(\{B_1,C_1\}\) then \(R@3=1\) while \(\mathrm{ngR}@3=0\). The published tables escape this only because \(k\in\{20,50,100\}\) is large relative to the pair count, never because the inequality is guaranteed. Playground <a href="#pg-E7">E7</a> uses the standard convention &mdash; expand first, then take the top \(k\) &mdash; and the shipped fixture stays inside the safe regime at every \(k\).</span>
+      <span lang="zh">在<em>共用</em>預算下，\(\mathrm{ngR}@k\ge R@k\) <b>並不是</b>定理，因為解除 constraint 會讓單一個強配對佔走數個名額。取四個配對，分數為 \(A\!:\,0.90,\,0.88,\,0.86\)、\(B\!:\,0.85\)、\(C\!:\,0.84\)、\(D\!:\,0.83\)。則 \(X_3=\{A_1,B_1,C_1\}\)，但 \(X_3^{\mathrm{ng}}=\{A_1,A_2,A_3\}\)；若 ground truth 為 \(\{B_1,C_1\}\)，則 \(R@3=1\) 而 \(\mathrm{ngR}@3=0\)。已發表的表格之所以不會遇到這個情形，只是因為 \(k\in\{20,50,100\}\) 相對於配對數夠大，而非該不等式受到保證。Playground <a href="#pg-E7">E7</a> 採用標準慣例——先展開、再取前 \(k\) 個——而所附的資料在每一個 \(k\) 上都落在安全區間內。</span></p>
+    </div>
+    <p><span lang="en">(a) is why recall alone cannot penalise a model that emits a thousand guesses: <b>no precision term exists anywhere in this literature</b>. (b) is why a number reported without both its constraint mode <em>and</em> its \(m\) is meaningless. (c) is how Pair-Net identified pair detection, not relation classification, as the binding constraint in panoptic SGG.<span class="qed">&#9633;</span></span>
+    <span lang="zh">(a) 說明了為何單靠 recall 無法懲罰一個輸出上千條猜測的模型：<b>這整個文獻裡不存在任何 precision 項</b>。(b) 說明了為何一個沒有同時交代 constraint 模式<em>與</em> \(m\) 的數字毫無意義。(c) 則是 Pair-Net 用來指認出「panoptic SGG 的瓶頸在配對偵測、而非關係分類」的依據。<span class="qed">&#9633;</span></span></p>
+  </div>
+
+  <h3><span lang="en">2.9 &middot; Protocols</span><span lang="zh">2.9 &middot; Protocol</span></h3>
+
+  <div class="def"><span class="def-h">Definition 14 &nbsp;<em>PredCls, SGCls, SGDet</em></span>
+    <p><span lang="en">Let \(\mathcal{H}_{\text{PredCls}}\), \(\mathcal{H}_{\text{SGCls}}\), \(\mathcal{H}_{\text{SGDet}}\) be the hypothesis spaces a model may search under each protocol. PredCls supplies ground-truth boxes <em>and</em> labels, SGCls supplies boxes only, SGDet supplies nothing.</span>
+    <span lang="zh">令 \(\mathcal{H}_{\text{PredCls}}\)、\(\mathcal{H}_{\text{SGCls}}\)、\(\mathcal{H}_{\text{SGDet}}\) 為各 protocol 下模型可搜尋的假設空間。PredCls 給 ground-truth box <em>與</em>標籤，SGCls 只給 box，SGDet 什麼都不給。</span></p>
+    <p>\[ \lvert\mathcal{H}_{\text{PredCls}}\rvert=\lvert V\rvert^2\lvert\mathcal{P}\rvert \;\le\; \lvert\mathcal{H}_{\text{SGCls}}\rvert=\lvert V\rvert^2\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert \;\le\; \lvert\mathcal{H}_{\text{SGDet}}\rvert \]</p>
+  </div>
+
+  <div class="prop"><span class="prop-h">Proposition 5 &nbsp;<em><span lang="en">the protocol chain</span><span lang="zh">protocol 鏈</span></em></span>
+    <p>\[ \sup_{h\in\mathcal{H}_{\text{SGDet}}} R@k \;\le\; \sup_{h\in\mathcal{H}_{\text{SGCls}}} R@k \;\le\; \sup_{h\in\mathcal{H}_{\text{PredCls}}} R@k \]</p>
+    <p><span lang="en">Each protocol withholds strictly more information than the one to its right, so any hypothesis achievable under the harder protocol is achievable under the easier one by ignoring the extra input. The recall <em>attainable</em> is therefore non-decreasing along the chain.<span class="qed">&#9633;</span></span>
+    <span lang="zh">每個 protocol 比右邊那個嚴格隱藏更多資訊，因此在較難 protocol 下可達成的任何假設，在較易的 protocol 下都可藉由忽略多餘輸入來達成。故沿此鏈<em>可達</em>的 recall 單調不減。<span class="qed">&#9633;</span></span></p>
+    <p><span lang="en"><b>Read the quantifier.</b> This bounds the supremum over each hypothesis space. It does <em>not</em> follow that three separately trained systems will rank in that order, and a table where they do not is reporting a fact about training, not an error. The familiar ordering holds for a <em>single</em> system measured three times, because there the SGDet pipeline is the SGCls pipeline with detection prepended, so its predictions are a degraded copy of the same predictions. Playground <a href="#pg-E10">E10</a> is built that way on purpose &mdash; it degrades localization rather than re-running detection &mdash; so there the ordering is forced by construction, and a violation on those fixtures really does mean the implementation is wrong.</span>
+    <span lang="zh"><b>請留意量詞。</b>此式界定的是各假設空間上的上確界。由它<em>不能</em>推出三個分別訓練的系統必然依此順序排列；若某張表格並非如此，那反映的是訓練的事實，而不是錯誤。習見的順序成立於<em>同一個</em>系統被量測三次的情形，因為此時 SGDet 流程就是 SGCls 流程前面再接上偵測，其預測為同一組預測的降級副本。Playground <a href="#pg-E10">E10</a> 刻意依此方式建構——它是讓定位品質降級，而非重跑偵測——因此在該處順序由建構本身保證，此時若違反，確實代表實作有誤。</span></p>
+    <p><span lang="en"><b>The standard misreading.</b> PredCls and SGCls supply ground-truth <em>boxes</em>, never ground-truth <em>pairs</em>. The factor \(\lvert V\rvert^2\) survives in every protocol &mdash; the model still decides which of the ordered pairs are related at all.</span>
+    <span lang="zh"><b>最常見的誤讀。</b>PredCls 與 SGCls 給的是 ground-truth <em>box</em>，絕不是 ground-truth <em>配對</em>。因子 \(\lvert V\rvert^2\) 在每個 protocol 中都存在——模型仍須自行判斷哪些有序配對真的有關係。</span></p>
+  </div>
+
+  <h3><span lang="en">2.10 &middot; Cost</span><span lang="zh">2.10 &middot; 計算成本</span></h3>
+
+  <div class="prop"><span class="prop-h">Proposition 6 &nbsp;<em><span lang="en">the quadratic term</span><span lang="zh">平方項</span></em></span>
+    <p><span lang="en">A two-stage method classifying every ordered pair performs \(N_{\text{prop}}(N_{\text{prop}}-1)\lvert\mathcal{P}\rvert\) decisions, while \(\lvert E\rvert=O(N_{\text{prop}})\) in practice. At 80 proposals over GQA&rsquo;s 310 predicates: \(80\cdot 79\cdot 310=1{,}958{,}800\) decisions for roughly twenty true relations &mdash; a positive rate near \(10^{-5}\). This single ratio motivates one-stage set prediction, and Pair-Net&rsquo;s result that sparsifying pairs <em>before</em> classification is where the gain lives. Playground <a href="#pg-T1">T1</a>.</span>
+    <span lang="zh">對每個有序配對都做分類的兩階段方法，需要 \(N_{\text{prop}}(N_{\text{prop}}-1)\lvert\mathcal{P}\rvert\) 次判斷，而實務上 \(\lvert E\rvert=O(N_{\text{prop}})\)。以 80 個提案、GQA 的 310 個 predicate 計算：\(80\cdot 79\cdot 310=1{,}958{,}800\) 次判斷，對應大約二十個真實關係——正例率約 \(10^{-5}\)。單單這個比值就構成了 one-stage 集合預測的動機，也解釋了 Pair-Net 的結論：增益來自在分類<em>之前</em>先稀疏化配對。見 Playground <a href="#pg-T1">T1</a>。</span></p>
+  </div>
+
+  <div class="prop"><span class="prop-h">Proposition 7 &nbsp;<em><span lang="en">greedy matching is an approximation, not an identity</span><span lang="zh">貪婪匹配是近似，不是恆等</span></em></span>
+    <p><span lang="en">Every implementation computes \(\mu(G,X_k)\) greedily in score order. Exact maximum bipartite matching costs \(O\bigl(\lvert E\rvert\sqrt{\lvert V\rvert}\bigr)\) by Hopcroft&ndash;Karp. Greedy attains the optimum whenever the bipartite graph induced by \(\simeq\) admits a unique maximum matching &mdash; in particular when \(\simeq\) is a near-bijection, which holds on natural data because two ground-truth triplets rarely share a class pair <em>and</em> a predicate <em>and</em> mutually sufficient overlap.</span>
+    <span lang="zh">所有實作都以依分數排序的貪婪法計算 \(\mu(G,X_k)\)。精確的最大二分匹配用 Hopcroft&ndash;Karp 需 \(O\bigl(\lvert E\rvert\sqrt{\lvert V\rvert}\bigr)\)。當 \(\simeq\) 誘導的二分圖具有唯一最大匹配時，貪婪法即達最佳——特別是當 \(\simeq\) 接近雙射時成立，而在自然資料上這通常為真，因為兩個 ground-truth 三元組很少同時共用類別配對、predicate、以及足夠的重疊。</span></p>
+    <p><span lang="en"><b>This is an assumption, not a theorem.</b> It is a proof obligation the test suite discharges on adversarial fixtures &mdash; duplicated boxes at \(\operatorname{IoU}\) exactly \(\tau\), ties in \(\sigma\), and classes with a single ground-truth instance.</span>
+    <span lang="zh"><b>這是假設，不是定理。</b>它是測試套件必須在對抗性樣本上履行的證明義務——包括 \(\operatorname{IoU}\) 恰好等於 \(\tau\) 的重複 box、\(\sigma\) 同分、以及只有單一 ground-truth 實例的類別。</span></p>
+  </div>
+
+  <h3><span lang="en">2.11 &middot; The anchor paper&rsquo;s equations</span><span lang="zh">2.11 &middot; 核心論文的方程式</span></h3>
+
+  <div class="def"><span class="def-h">Definition 15 &nbsp;<em><span lang="en">the IndVisSGG operator</span><span lang="zh">IndVisSGG 運算子</span></em></span>
+    <p><span lang="en">Let \(\mathrm{VLM}(\cdot)\) be a prompted vision-language model, \(V_t\) the visual input at timestamp \(t\), and let the Triplets Extraction Criteria be the triple \((O,P,E)\) of predefined objects, predefined predicates, and worked examples with analyses.</span>
+    <span lang="zh">令 \(\mathrm{VLM}(\cdot)\) 為被提示的 vision-language model，\(V_t\) 為時間戳 \(t\) 的視覺輸入，Triplets Extraction Criteria 為三元組 \((O,P,E)\)：預定義物件、預定義 predicate、以及附分析的範例。</span></p>
+    <p>\[ out_{trpl}=\mathrm{VLM}(V_t,\textit{Prompt}) \tag{1} \]
+    \[ out^{s_1}_t=\mathrm{VLM}(V_t,\,O,\,P,\,E,\,\textit{Prompt}) \tag{2} \]
+    \[ \bigl(out^{s_2}_t,a_i\bigr)=\mathrm{VLM}\bigl(V_t,O,P,E,\textit{Prompt},out^{s_1}_t\bigr),\quad i\in\{1,\dots,N\} \tag{3} \]
+    \[ out^{s_3}_t=\mathrm{VLM}\bigl(out^{s_2}_t,\alpha,\textit{Prompt}\bigr),\quad \{out^{s_2}_t,\alpha\}=\bigl\{out^{s_2}_t,a_i \mid i\in\{1,\dots,N\}\bigr\} \tag{4} \]</p>
+  </div>
+
+  <div class="prop"><span class="prop-h">Proposition 8 &nbsp;<em><span lang="en">what the ablation measures</span><span lang="zh">消融實驗量的是什麼</span></em></span>
+    <p><span lang="en">Equations (1) and (2) have identical operator, identical input image, and identical prompt template. They differ in exactly one respect: whether \((O,P,E)\) is supplied. Therefore any difference in score between them is attributable to that argument alone.</span>
+    <span lang="zh">方程式 (1) 與 (2) 的運算子相同、輸入影像相同、prompt 模板相同。兩者只在一件事上不同：有沒有提供 \((O,P,E)\)。因此兩者分數的任何差異，都只能歸因於這個引數。</span></p>
+    <div class="deriv">
+      <div class="eq">\[ R@20\bigl(out_{trpl}\bigr)=0.032 \]</div>
+      <div class="why"><span lang="en">equation (1), no criteria</span><span lang="zh">方程式 (1)，無 criteria</span></div>
+      <div class="eq">\[ R@20\bigl(out^{s_1}_t \mid O\bigr)=1.787,\qquad R@20\bigl(out^{s_1}_t \mid O,P\bigr)=20.792 \]</div>
+      <div class="why"><span lang="en">equation (2), partial criteria</span><span lang="zh">方程式 (2)，部分 criteria</span></div>
+      <div class="eq">\[ R@20\bigl(out^{s_1}_t \mid O,P,E\bigr)=23.040 \]</div>
+      <div class="why"><span lang="en">equation (2), full criteria</span><span lang="zh">方程式 (2)，完整 criteria</span></div>
+    </div>
+    <p><span lang="en">A factor of \(720\) between the endpoints, with <b>no architectural difference whatsoever</b>. The paper&rsquo;s Table 3 measures the value of constraining a vision-language model&rsquo;s output vocabulary, and nothing else. Read equation (1) alongside Definition 9: a predicate outside \(\mathcal{P}\) satisfies no conjunct of Definition 5, so it can never match. Recall carries no precision term, so the spurious triplet is not itself penalised &mdash; it consumes one of the \(k\) ranked slots, and the true triplet it displaced goes unmatched. One out-of-vocabulary answer therefore costs twice, and both costs land inside recall. Playground <a href="#pg-L8">L8</a> rebuilds the table; <a href="#pg-L10">L10</a> shows the double cost.<span class="qed">&#9633;</span></span>
+    <span lang="zh">兩端相差 \(720\) 倍，而<b>架構上毫無差異</b>。論文 Table 3 量的就是「約束 vision-language model 輸出詞彙」的價值，除此之外什麼也沒量。把方程式 (1) 與定義 9 一起讀：不在 \(\mathcal{P}\) 內的 predicate 無法滿足定義 5 的任何一個合取項，因此它永遠不可能命中。Recall 不含任何 precision 項，所以這個多餘的三元組本身不會被扣分——它佔掉 \(k\) 個名額之一，而被它擠掉的真正三元組則未被命中。一個不在詞彙表內的答案因此付出兩次代價，且兩次都落在 recall 之內。Playground <a href="#pg-L8">L8</a> 會重建這張表；<a href="#pg-L10">L10</a> 展示這個雙重代價。<span class="qed">&#9633;</span></span></p>
+  </div>
+</section>
+
+<section id="lab">
+  <div class="sec-h">
+    <h2><span lang="en">3 &middot; Image Lab</span><span lang="zh">3 &middot; 影像實驗室</span></h2>
+    <p><span lang="en">Upload a frame, drag to ground objects, and compute a scene graph from box geometry alone.</span><span lang="zh">上傳影格，拖曳框出物件，僅用 box 幾何就計算出一張場景圖。</span></p>
+  </div>
+  <div id="imagelab"></div>
+</section>
+
+<section id="toc">
+  <div class="sec-h">
+    <h2><span lang="en">4 &middot; Table of contents</span><span lang="zh">4 &middot; 目錄</span></h2>
+    <p><span lang="en">Search filters by identifier, title, or control. Live entries link to their playground.</span><span lang="zh">搜尋可依代號、標題或控制項過濾。標為 live 的項目可直接跳到 playground。</span></p>
+  </div>
+  <div class="toc-ctl">
+    <input type="search" id="q" placeholder="filter — try: slider, mR, IndVisSGG, temporal" aria-label="Filter knowledge points">
+    <div class="knob" style="max-width:250px">
+      <button type="button" data-f="all" aria-pressed="true">all</button>
+      <button type="button" data-f="live" aria-pressed="false">live</button>
+      <button type="button" data-f="spec" aria-pressed="false">spec</button>
+    </div>
+  </div>
+  <div id="toc-out"></div>
+</section>
+
+<section id="playgrounds">
+  <div class="sec-h">
+    <h2><span lang="en">5 &middot; Playgrounds</span><span lang="zh">5 &middot; Playgrounds</span></h2>
+    <p><span lang="en">Twenty-seven knowledge points, each with its own controls. They share one evaluation engine, so a change in one is the same arithmetic you meet in the next.</span><span lang="zh">27 個知識點，各有自己的控制項。它們共用同一套評測引擎，因此在某一處看到的變化，就是下一處會遇到的同一組運算。</span></p><div class="callout" style="margin-top:14px"><p><span class="h"><span lang="en">Read the numbers correctly</span><span lang="zh">請正確解讀這些數字</span></span><span lang="en">The data behind these playgrounds is <b>synthetic</b>, built to expose each effect cleanly. The arithmetic is exact and matches the definitions above, but the values are not measurements of any model. Where a figure is quoted from a paper it is named and attributed in the note beneath. E10 in particular simulates the protocol chain by degrading localization, rather than re-running detection.</span><span lang="zh">這些 playground 背後的資料是<b>合成的</b>，目的是乾淨地凸顯每個現象。運算完全精確、與上方定義一致，但這些數值並非對任何模型的實測。凡是引自論文的數字，都會在下方註解中標明出處。特別是 E10，它以降低定位品質來模擬 protocol 鏈，而不是真的重跑偵測。</span></p></div>
+  </div>
+  <div id="pg-out"></div>
+</section>
+
+<footer><div>
+  <span lang="en">Scene Graph Studio · knowledge map · 15 September 2026 · anchor paper <a href="https://doi.org/10.1016/j.aei.2024.103107">10.1016/j.aei.2024.103107</a> · metric definitions follow <a href="https://arxiv.org/abs/2404.09616">arXiv 2404.09616</a></span>
+  <span lang="zh">Scene Graph Studio · 知識地圖 · 2026 年 9 月 15 日 · 核心論文 <a href="https://doi.org/10.1016/j.aei.2024.103107">10.1016/j.aei.2024.103107</a> · 指標定義依據 <a href="https://arxiv.org/abs/2404.09616">arXiv 2404.09616</a></span>
+</div></footer>
+
+</div>
+
+<script src="kp-data.js"></script>
+<script src="pg.js"></script>
+<script src="imagelab.js"></script>

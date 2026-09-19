@@ -1,0 +1,324 @@
+{
+  "data": [
+    {
+      "file_name": "val2017/000000000001.jpg",
+      "pan_seg_file_name": "panoptic_val2017/000000000001.png",
+      "height": 10,
+      "width": 12,
+      "image_id": "000000000001",
+      "coco_image_id": 1,
+      "segments_info": [
+        {
+          "id": 1,
+          "category_id": 0,
+          "iscrowd": 0,
+          "isthing": 1,
+          "attribute_ids": [],
+          "area": 24
+        },
+        {
+          "id": 2,
+          "category_id": 1,
+          "iscrowd": 0,
+          "isthing": 1,
+          "attribute_ids": [],
+          "area": 25
+        },
+        {
+          "id": 3,
+          "category_id": 3,
+          "iscrowd": 0,
+          "isthing": 0,
+          "attribute_ids": [],
+          "area": 36
+        }
+      ],
+      "annotations": [
+        {
+          "bbox": [
+            1.0,
+            1.0,
+            5.0,
+            7.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 0
+        },
+        {
+          "bbox": [
+            6.0,
+            4.0,
+            11.0,
+            9.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 1
+        },
+        {
+          "bbox": [
+            0.0,
+            0.0,
+            12.0,
+            3.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 3
+        }
+      ],
+      "relations": [
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          1,
+          2,
+          4
+        ],
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "file_name": "val2017/000000000002.jpg",
+      "pan_seg_file_name": "panoptic_val2017/does-not-exist.png",
+      "height": 10,
+      "width": 12,
+      "image_id": "000000000002",
+      "coco_image_id": 2,
+      "segments_info": [
+        {
+          "id": 1,
+          "category_id": 0,
+          "iscrowd": 0,
+          "isthing": 1,
+          "attribute_ids": [],
+          "area": 24
+        },
+        {
+          "id": 2,
+          "category_id": 1,
+          "iscrowd": 0,
+          "isthing": 1,
+          "attribute_ids": [],
+          "area": 25
+        },
+        {
+          "id": 3,
+          "category_id": 3,
+          "iscrowd": 0,
+          "isthing": 0,
+          "attribute_ids": [],
+          "area": 36
+        }
+      ],
+      "annotations": [
+        {
+          "bbox": [
+            1.0,
+            1.0,
+            5.0,
+            7.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 0
+        },
+        {
+          "bbox": [
+            6.0,
+            4.0,
+            11.0,
+            9.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 1
+        },
+        {
+          "bbox": [
+            0.0,
+            0.0,
+            12.0,
+            3.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 3
+        }
+      ],
+      "relations": [
+        [
+          0,
+          1,
+          3
+        ],
+        [
+          0,
+          99,
+          1
+        ]
+      ]
+    },
+    {
+      "file_name": "val2017/000000000003.jpg",
+      "pan_seg_file_name": "panoptic_val2017/000000000001.png",
+      "height": 10,
+      "width": 12,
+      "image_id": "000000000003",
+      "coco_image_id": 3,
+      "segments_info": [
+        {
+          "id": 1,
+          "category_id": 0,
+          "iscrowd": 0,
+          "isthing": 1,
+          "attribute_ids": [],
+          "area": 0
+        },
+        {
+          "id": 2,
+          "category_id": 1,
+          "iscrowd": 0,
+          "isthing": 1,
+          "attribute_ids": [],
+          "area": 36
+        }
+      ],
+      "annotations": [
+        {
+          "bbox": [
+            2.0,
+            2.0,
+            2.0,
+            8.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 0
+        },
+        {
+          "bbox": [
+            3.0,
+            3.0,
+            9.0,
+            9.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 1
+        }
+      ],
+      "relations": [
+        [
+          0,
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "file_name": "train2017/000000000004.jpg",
+      "pan_seg_file_name": "panoptic_train2017/000000000004.png",
+      "height": 10,
+      "width": 12,
+      "image_id": "000000000004",
+      "coco_image_id": 4,
+      "segments_info": [
+        {
+          "id": 1,
+          "category_id": 0,
+          "iscrowd": 0,
+          "isthing": 1,
+          "attribute_ids": [],
+          "area": 24
+        },
+        {
+          "id": 2,
+          "category_id": 1,
+          "iscrowd": 0,
+          "isthing": 1,
+          "attribute_ids": [],
+          "area": 25
+        },
+        {
+          "id": 3,
+          "category_id": 3,
+          "iscrowd": 0,
+          "isthing": 0,
+          "attribute_ids": [],
+          "area": 36
+        }
+      ],
+      "annotations": [
+        {
+          "bbox": [
+            1.0,
+            1.0,
+            5.0,
+            7.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 0
+        },
+        {
+          "bbox": [
+            6.0,
+            4.0,
+            11.0,
+            9.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 1
+        },
+        {
+          "bbox": [
+            0.0,
+            0.0,
+            12.0,
+            3.0
+          ],
+          "bbox_mode": 0,
+          "category_id": 3
+        }
+      ],
+      "relations": [
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          1,
+          2,
+          4
+        ],
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    }
+  ],
+  "thing_classes": [
+    "person",
+    "bench",
+    "car"
+  ],
+  "stuff_classes": [
+    "tree-merged",
+    "sky-other-merged"
+  ],
+  "predicate_classes": [
+    "over",
+    "in front of",
+    "beside",
+    "on",
+    "sitting on"
+  ],
+  "test_image_ids": [
+    "000000000001",
+    "000000000002",
+    "000000000003"
+  ]
+}

@@ -1,0 +1,205 @@
+---
+id: m01
+order: 1
+title_en: "The triplet and the Visual Genome data model"
+title_zh: "三元組與 Visual Genome 資料模型"
+anchor_labs: [L1]
+knowledge_points: [F5, F6, F7, X1]
+symbols:
+  - sym: "\\mathcal{P}"
+    gloss_en: "predicate class set"
+    gloss_zh: "predicate 類別集合"
+  - sym: "C"
+    gloss_en: "number of predicate classes"
+    gloss_zh: "predicate 類別數"
+  - sym: "n_p"
+    gloss_en: "number of ground-truth triplets carrying predicate p"
+    gloss_zh: "標準答案中 predicate p 的三元組數量"
+  - sym: "N"
+    gloss_en: "total number of ground-truth triplets"
+    gloss_zh: "標準答案三元組總數"
+  - sym: "R_p"
+    gloss_en: "recall restricted to predicate p"
+    gloss_zh: "僅就 predicate p 計算的召回率"
+  - sym: "s"
+    gloss_en: "Zipf exponent of the predicate frequency law"
+    gloss_zh: "predicate 頻率分布的 Zipf 指數"
+  - sym: "\\gamma"
+    gloss_en: "how strongly a model's per-predicate recall follows frequency"
+    gloss_zh: "模型各 predicate 召回率隨頻率變化的強度"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening. One thing has to land: Visual Genome is three layers collected separately, the relationship layer is radically incomplete, and nothing marks which unrecorded edges were considered and rejected. Every metric in the course rests on that. Leave the synonym problem alone here; it is the next step."
+  - id: s2
+    kind: math
+    seconds_budget: 180
+    presenter_notes_en: "Three minutes. The conclusion is that merging synonyms raises mR@k with the model untouched. Write the predicate class count before and after on the board before the inequality appears on the slide. If the direction of the inequality is disputed, set one of the two μ terms to zero and read the extreme case off it."
+  - id: s3
+    kind: math
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes, and it is the derivation M04 and L3 both stand on: under a Zipf distribution and a head-biased model, the ratio of R to mR is a ratio of harmonic numbers. Separate the two parameters when introducing them — s belongs to the data, γ to the model. If time is short, drop the closed form and keep R ≥ mR."
+  - id: s4
+    kind: prose
+    seconds_budget: 180
+    presenter_notes_en: "Three minutes, and it is a naming convention rather than a result, so keep it short. The point is that three distinct re-releases share the name VG150 and do not share a test set, so a table that mixes them is not a comparison. Say plainly that this project writes vg150-sgb everywhere and that D-09 is enforced by a lint rather than by memory. If asked which split is better, the answer is that the course does not rank them and only requires that a paper say which one it used."
+  - id: s5
+    kind: lab
+    lab: L1
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes on L1. The task is to add edges, submit, and see which annotated edges were missed. Walk the room looking for a proposal marked spurious that is plainly true of the image — that is the incompleteness of s1, made visible, and it is worth reading one out to the room."
+  - id: s6
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint. A complete answer has two halves: to judge the model you need the vocabulary before and after the merge and the per-predicate counts; to judge the field you need a re-evaluation under one fixed vocabulary. The room will usually produce the first half only. Ask for the second."
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## Three layers, annotated by different people
+
+Visual Genome is not one annotation. It is a stack: regions with free-text descriptions, objects
+grounded in boxes, attributes on those objects, and relationships between them — each layer
+collected separately, by different crowd workers, with no requirement that the layers agree.
+
+Two consequences arrive before any model does. The predicate vocabulary is whatever people wrote,
+so `on`, `on top of`, `sitting on` and `resting on` all exist and none of them is a parent of
+another. And the relationship layer is radically incomplete: an annotator recorded a few edges
+per image out of the hundreds that hold, and nothing marks which of the rest were considered and
+rejected.
+
+The course returns to the second point repeatedly, because every metric in the field treats the
+annotation as if it were the truth.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+Four predicates that mean the same thing are four separate classes to the metric. A model that
+answers `on` when the annotator wrote `sitting on` is scored exactly as wrong as one that answers
+`eating`. Merging synonyms is therefore not tidying: it changes the number, on the same model,
+without retraining anything.
+
+</Intuition>
+
+<Formal>
+
+$$
+p_1,p_2\mapsto\tilde p \;\Rightarrow\; \lvert\mathcal{P}^{\prime}\rvert\downarrow,\qquad mR@k=\frac{1}{\lvert\mathcal{P}^{\prime}\rvert}\sum_{p}R_p@k\ \uparrow
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\text{merge } p_1,p_2\mapsto\tilde p:\quad n_{\tilde p}&=n_{p_1}+n_{p_2}, &&C\mapsto C-1\\
+R_{\tilde p}@k &= \frac{\mu(G^{(p_1)}\cup G^{(p_2)},X_k)}{n_{p_1}+n_{p_2}} \;\ge\; \frac{\max_i \mu(G^{(p_i)},X_k)}{n_{p_1}+n_{p_2}}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{A prediction of } p_1 \text{ against ground truth } p_2 \text{ spent a ranked slot } \textit{and} \text{ left the truth unmatched.}
+\\ \text{After merging it is a match, so } mR \text{ rises with the model unchanged.}\end{gathered}
+$$
+
+Two papers that merge differently report numbers that cannot be compared, and neither is wrong.
+This is the first of several reasons a table of published figures is not a ranking.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+<Intuition>
+
+The predicate distribution is not merely uneven, it is Zipf-like: a handful of spatial predicates
+cover most of the annotation and the rest are rare. A model that learns only the head can post a
+high recall while knowing nothing about any relation that carries information. Mean recall exists
+to make that visible, and the arithmetic below says exactly when the two metrics agree.
+
+</Intuition>
+
+<Formal>
+
+$$
+n_p\propto p^{-s},\qquad R_p=\Bigl(\tfrac{n_p}{n_1}\Bigr)^{\gamma},\qquad R=\sum_p\frac{n_p}{N}R_p,\qquad mR=\frac{1}{C}\sum_p R_p
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+n_p &\propto p^{-s},\quad p=1,\dots,C &&\text{Zipf}\\
+R_p &= (n_p/n_1)^{\gamma}=p^{-s\gamma} &&\text{head-biased model}\\
+R &= \sum_p \frac{n_p}{N}R_p = \frac{\sum_p p^{-s(1+\gamma)}}{\sum_p p^{-s}} = \frac{H_C^{(s+s\gamma)}}{H_C^{(s)}} &&\text{generalized harmonic numbers}\\
+mR &= \frac{1}{C}\sum_p p^{-s\gamma} = \frac{H_C^{(s\gamma)}}{C}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}s=0 \;\Rightarrow\; n_p \text{ constant} \;\Rightarrow\; \operatorname{Cov}(n,R)=0 \;\Rightarrow\; R=mR \ \text{ exactly.}\end{gathered}
+$$
+
+Read the condition in the other direction: $R$ and $mR$ separate exactly to the extent that a
+model's per-predicate recall is correlated with predicate frequency. The gap between them is not
+a second measurement of quality. It is a measurement of that correlation.
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+## `VG150` names three different datasets
+
+$$
+\texttt{VG150}\ \mapsto\ \text{three distinct }(\mathcal{D}_{\text{train}},\mathcal{D}_{\text{val}},\mathcal{D}_{\text{test}})\ \Longrightarrow\ \text{numbers not comparable}
+$$
+
+The 150-object, 50-predicate subset of Visual Genome has been redistributed in several splits
+that share a name and not a test set. A figure from one split placed in a table beside a figure
+from another is not a comparison, and nothing in either paper's notation says which was used.
+
+This project therefore never writes bare `vg150`. The dataset identifier is `vg150-sgb`, naming
+the redistribution, and decision D-09 forbids the short form anywhere in the codebase — a rule
+enforced by lint rather than by memory, because the two names are one character apart.
+
+</Step>
+
+<Step id="s5">
+
+## In the lab
+
+L1 gives you an image whose objects are already boxed and asks for the edges. Build a few
+triplets, submit, and look at which of the annotated edges you missed. Then ask the harder
+question: of the edges you proposed that came back `spurious`, how many are actually true of the
+photograph and simply absent from the annotation?
+
+</Step>
+
+<Step id="s6">
+
+## Checkpoint
+
+Suppose a paper merges `on` and `sitting on` and reports mR@50 two points above the previous
+best. State what you would need from the paper to decide whether the model improved. Then state
+what you would need to decide whether the *field* improved.
+
+</Step>

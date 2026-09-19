@@ -1,0 +1,191 @@
+---
+id: m03
+order: 3
+title_en: "Protocols: PredCls, SGCls, SGDet"
+title_zh: "評測協定：PredCls、SGCls、SGDet"
+anchor_labs: [L2]
+knowledge_points: [E1, E2, E10, E12]
+symbols:
+  - sym: "\\simeq"
+    gloss_en: "the match relation between a predicted and a ground-truth triplet"
+    gloss_zh: "預測三元組與標準答案三元組之間的配對關係"
+  - sym: "\\Phi_{\\text{cls}}"
+    gloss_en: "the classification half of a match"
+    gloss_zh: "配對條件中的分類部分"
+  - sym: "\\Phi_{\\text{loc}}"
+    gloss_en: "the localization half of a match"
+    gloss_zh: "配對條件中的定位部分"
+  - sym: "\\mathcal{H}"
+    gloss_en: "the hypothesis space a protocol leaves the model to search"
+    gloss_zh: "某一協定下模型須搜尋的假設空間"
+  - sym: "\\mathcal{C}"
+    gloss_en: "object class set"
+    gloss_zh: "物件類別集合"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場。三個協定名稱聽來像三種指標，實為就同一份材料所設的三種考試，差別在於模型獲得多少輸入，評分程式則完全不變。此點宜於任何數值出現之前先行釐清。另請一併說明：若評分器內部依協定分支，所量測者即為第四種對象，而該對象並無任何論文據以發表。"
+  - id: s2
+    kind: math
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘。配對規則由兩個彼此獨立的部分構成：指認是否正確、位置是否正確。本領域多數令人困惑的結果，均源自二者被合併為單一數值報告。宜於板書將兩個合取項分開書寫，並保留至 s3 一併使用。"
+  - id: s3
+    kind: math
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘。協定間的大小關係常被引述為經驗規律，實為必然，論證僅需一行：資訊較少時所能做到者，在資訊較多時忽略多出的輸入即可達成。宜請現場先行提出反例，再說明反例不存在的理由；此較直接給出證明更能留下印象。"
+  - id: s4
+    kind: prose
+    seconds_budget: 180
+    presenter_notes_zh: "三分鐘。此處的重點是主張的性質而非演算法。貪婪配對不保證最大配對，但已發表數值即以貪婪法計算，故本專案亦然並明白載明。宜指出 `data/golden/vectors.json` 收有專為區分貪婪解與最大配對而建構的案例，即以對抗性測資檢驗此一假設而非逕行宣稱。"
+  - id: s5
+    kind: prose
+    seconds_budget: 180
+    presenter_notes_zh: "三分鐘。配對規則中不存在「為真但未被記錄」此一類別，符合影像事實而未見於標註者一律判為 spurious。此為兩項前提所導出的後果而非可修正的實作選擇。三項推論須完整說明：可量測精確率的上限、對頭部模型的獎勵，以及差異圖中 spurious 一色的意義。"
+  - id: s6
+    kind: lab
+    lab: L2
+    seconds_budget: 420
+    presenter_notes_zh: "L2 七分鐘。同一組固定預測於三種協定下評分，本實作測資上依序為 0.25、0.50、0.75。移動旋鈕之後請要求現場閱讀測資說明，指出每一階段所修復者為預測中的哪一項缺陷——此為本步驟的重點，僅觀察數值上升則未達成目的。"
+  - id: s7
+    kind: checkpoint
+    presenter_notes_zh: "檢核點。該推論的問題在於 PredCls 與 SGDet 之差同時包含偵測品質與關係推理品質，無法歸因於其一。可解決爭議的量測為 SGCls：其提供框而不提供標籤，故可將偵測與分類分離。若現場逕答「兩者不可比較」，請追問應當量測何者。"
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 協定所規範者為模型獲得何種輸入，而非如何評分
+
+三個協定名稱所描述的，是就同一份材料所設計的三種不同考試。PredCls 提供標準答案的框與物件標籤，僅要求模型回答 predicate；SGCls 提供框而不提供標籤；SGDet 則不提供任何輸入。
+
+評分程式在三者之間並未改變。此點宜及早說明，因為三個名稱聽來近似三種指標，實則不然：三者為三種不同程度的協助，而同一配對規則施用於模型所回傳的任何結果。若系統於評分器內部依協定分支，所量測者將是第四種對象，而該對象並無任何論文據以發表。
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+在任何數值產生之前，必須有一規則決定：預測三元組於何時視同標註三元組。該定義包含兩個相互獨立的部分——是否指認了正確的對象，以及是否置於正確的位置。本領域絕大多數令人困惑的結果，均源自此二部分被合併為單一數值報告。
+
+</Intuition>
+
+<Formal>
+
+$$
+\hat t\simeq t\iff\underbrace{c_{\hat s}=c_s\wedge c_{\hat o}=c_o\wedge\hat p=p}_{\text{classification}}\wedge\underbrace{\operatorname{IoU}(b_{\hat s},b_s)\ge\tau\wedge\operatorname{IoU}(b_{\hat o},b_o)\ge\tau}_{\text{localization}}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\hat t\simeq t &\iff \Phi_{\text{cls}}\wedge\Phi_{\text{loc}}\\
+\Phi_{\text{cls}} &= (c_{\hat s}=c_s)\wedge(c_{\hat o}=c_o)\wedge(\hat p=p)\\
+\Phi_{\text{loc}} &= (\operatorname{IoU}_s\ge\tau)\wedge(\operatorname{IoU}_o\ge\tau)
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\neg\Phi_{\text{cls}}\wedge\Phi_{\text{loc}} \equiv \text{right place, wrong name} \quad
+\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}} \equiv \text{right name, wrong place}
+\\[4pt]
+\text{Two independent failure modes} \Rightarrow \text{four diff colours, and three protocols to separate them.}\end{gathered}
+$$
+
+自 L1 起所閱讀的四色差異圖，即為上述連言的拆解。`localization` 一色對應 $\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}}$ 之情形，其設置目的正在於：使「predicate 正確但框位置不佳」不致與「predicate 錯誤」呈現為同一結果。
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+<Intuition>
+
+協定之間的大小關係常被引述為經驗性規律。實則不然：此一關係為必然，且論證僅需一行。凡模型在資訊較少時所能做到者，在資訊較多時亦必能做到——忽略多出的輸入即可。
+
+</Intuition>
+
+<Formal>
+
+$$
+R_{\text{SGDet}}@k\ \le\ R_{\text{SGCls}}@k\ \le\ R_{\text{PredCls}}@k \qquad\text{for every model, every fixture}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\lvert\mathcal{H}_{\text{PredCls}}\rvert &= \lvert V\rvert^2\lvert\mathcal{P}\rvert\\
+\lvert\mathcal{H}_{\text{SGCls}}\rvert &= \lvert V\rvert^2\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert\\
+\lvert\mathcal{H}_{\text{SGDet}}\rvert &\supseteq \lvert\mathcal{H}_{\text{SGCls}}\rvert \quad\text{(boxes unknown too)}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Any hypothesis reachable under a harder protocol is reachable under an easier one}
+\\ \text{by discarding the extra input} \;\Rightarrow\; R_{\text{SGDet}}\le R_{\text{SGCls}}\le R_{\text{PredCls}}.
+\\[4pt]
+\textbf{Note } \lvert V\rvert^2 \text{ survives in all three: boxes are given, pairs never are.}\end{gathered}
+$$
+
+末段的註記正是學員常忽略、而授課者最為在意之處。PredCls 提供框，但從未提供「哪些配對之間存在關係」。$\lvert V\rvert^2$ 此一因子於三種協定下均存在；此即本應用於每一筆 PredCls 與 SGCls 回應中無例外附加 `gt_boxes_not_pairs` 警示的理由。
+
+因此，PredCls 的數值並非「簡單情境」的數值，而是「關係推理被單獨量測」的數值；此為另一種陳述，且更具實用價值。
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+## 貪婪配對為假設，而非定理
+
+將排序後的預測清單與標註進行配對，屬於二分圖配對問題。本領域的實作沿排序依序取用第一個可用配對，此即貪婪法。貪婪法一般而言並不保證取得最大配對。
+
+然而已發表的數值即以此法計算，故本專案亦以同一方式計算，並明白載明。該假設係以對抗性測資加以檢驗而非逕行宣稱：`data/golden/vectors.json` 收錄了專為區分貪婪解與最大配對而建構的案例，而評測引擎以貪婪解為準，因為文獻所報告者即為貪婪解。
+
+宜留意此處所涉主張的性質。「本案例中貪婪解等於最大配對」屬經驗性陳述，可加以檢驗；「貪婪法為業界通行之計算方式」則屬關於領域現況的事實。兩者皆非定理，此即引擎文件將其稱為假設的理由。
+
+</Step>
+
+<Step id="s5">
+
+## 未被標註者，於評分中等同錯誤
+
+配對規則並不存在「為真但未被記錄」此一類別。凡符合影像事實而未見於標註的預測三元組，一律判為 `spurious`，與純粹錯誤者同等處理。
+
+此非可經由實作修正的選擇，而係由兩項前提所導出：標註本身並不完整（M1），且指標僅有標註可資比對。其後果貫穿本課程其餘各單元：此一規則為可量測的精確率設下上限，獎勵傾向預測分布頭部的模型，並使差異圖中的 `spurious` 一色成為學員應當再三檢視者。
+
+</Step>
+
+<Step id="s6">
+
+## 實作單元的內容
+
+L2 以同一組固定預測，分別於三種協定下評分。移動旋鈕並觀察數值變化：於本實作所用測資上，三者依序為 0.25、0.50、0.75。接著閱讀測資說明，找出每一階段所修復者，係預測中的哪一項缺陷。
+
+</Step>
+
+<Step id="s7">
+
+## 檢核點
+
+某模型報告 PredCls R@50 為 0.65、SGDet R@50 為 0.28。某位同僚據此推論該模型的關係推理能力不足。請說明此一推論的問題所在，以及何種量測方式可解決該爭議。
+
+</Step>

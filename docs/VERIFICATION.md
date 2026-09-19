@@ -1,0 +1,462 @@
+# Verification — the nine checks
+
+Design document §6 names nine checks. Each is recorded here with the date it was run and what it
+produced. **A check that was not run is recorded as not run.** There is no third state, and
+nothing below is inferred from a check that resembles it.
+
+Run on **2026-09-18**, on the machine the repository `CLAUDE.md` calls the author's box: Windows
+11, Node 24.19.0, Python with `torch` 2.10.0+cpu present, all four cut slices unpacked (that
+interpreter is now py12 and its torch is the cu128 build — §12 and §13). Check 6
+runs against a deliberately reduced environment instead; §6 says exactly what it is and how to
+repeat it.
+
+Two of the nine are scripts anyone can re-run: `npm run check:offline` (check 6) and
+`npm run test:e2e` (check 8). The other seven are recorded below with what they produced.
+
+| # | Check | Outcome |
+|---|---|---|
+| 1 | Evaluation engine truth | **passed** |
+| 2 | Reproduce a known number | **passed as a sanity check**, never as a reproduction |
+| 3 | The constraint gap is visible | **passed, with a finding** |
+| 4 | The FREQ humiliation reproduces | **passed in the lab's own tests**; the ad-hoc corpus written for this check did not, and why is recorded |
+| 5 | The protocol correction reproduces | **passed** |
+| 6 | The offline run | **passed**, arranged rather than found: `npm run check:offline`; re-run 2026-09-19 |
+| 7 | Bilingual parity | **passed** |
+| 8 | Lecture rehearsal | **passed, after fixing three defects it found**; the viewport finding was reviewed and accepted |
+| 9 | The source audit | **passed, after fixing a count it found** |
+
+---
+
+## 1. Evaluation engine truth — passed
+
+`pytest backend/tests -q` — 251 passed, 7 skipped. `npm run test:ts` — 484 passed.
+`npm run lint:parity` — 13 golden cases agree between the Python and TypeScript engines.
+
+Then one vector hand-verified against the definitions rather than against the engine.
+**`gv-004-all-tied-scores`**, chosen because it pins a tie-break and not only a number:
+
+* Two predictions of ⟨1, `on`, 2⟩, both scoring 0.5, submitted as relationship ids 7 then 3.
+* The tie-break is `(-score, relationship_id)` ascending, so id **3** — submitted *second* — ranks
+  first. Computed by hand: `[7, 3]` in, `[3, 7]` ranked. The engine agrees.
+* Subject IoU of `(0,0,10,10)` against `(1,1,10,10)`: intersection 81, union 119, **0.6807**.
+  `81/119 = 0.6807`. Above τ = 0.5. Object IoU 1.0. Predicate equal.
+* R@20 = 1/1 = **1.0**. One predicate class present, so mR@20 = **1.0**.
+* The file expects `R@20 = 1.0`, `mR@20 = 1.0`. They agree.
+
+## 2. Reproduce a known number — passed as a sanity check
+
+Committed RelTR predictions through `/api/eval` at SGDet, graph constraint, K = 50.
+
+**On the `placeholder` slice, not `vg150-sgb`.** The measured prediction tier is blocked on
+licences (`data/predictions/PROVENANCE.md`), so no RelTR output exists for `vg150-sgb` to run.
+What exists is the *reconstructed* tier, and the run is recorded as what it is.
+
+| Model | R@50 | mR@50 | Frames |
+|---|---|---|---|
+| `reltr` | 0.6667 | 0.6667 | 6 |
+| `motifs` | 0.6111 | 0.6111 | 6 |
+
+The paper's 27.5 is not reproduced and was never going to be: six synthetic frames are not
+26,446 photographs. The check is that the magnitude is plausible and the tags are right, and the
+`params_echo` carries `protocol: sgdet` and `constraint: graph` as submitted. **This is a sanity
+check and is not a reproduction of any published figure.**
+
+## 3. The constraint gap is visible — passed, with a finding
+
+Same predictions, `constraint` toggled from `graph` to `none`:
+
+| Model | R@50 graph | R@50 none |
+|---|---|---|
+| `motifs` | 0.6111 | 0.6667 |
+| `reltr` | 0.6667 | 0.6667 |
+
+Motifs moves upward, which is the check. **RelTR does not move at all**, and that is correct
+rather than a failure: RelTR is one-stage and emits one prediction per object pair, so graph
+constraint — which keeps the highest-scoring prediction per pair — has nothing to remove. The
+two-stage model emits several per pair and loses them.
+
+This is the lesson L6 is built on, appearing unprompted in a verification run. It is recorded
+here because a reader who checked only RelTR would conclude `ng-R@K` was broken.
+
+## 4. The FREQ humiliation reproduces — passed in the lab's own tests
+
+`labs/L3/test/freq.test.ts` asserts it directly, and both assertions are strict inequalities:
+
+* *"beats the tail-aware model on R"* — `R(λ=0) > R(λ=1)`.
+* *"loses badly to it on mR"* — `mR(λ=0) < mR(λ=1)`.
+* `covarianceGap(per_predicate, K)` equals `R − mR` to ten decimal places, which is knowledge
+  point E11 as an identity rather than as a claim.
+
+**The ad-hoc corpus written for this check did not reproduce the gap**, and the reason is
+recorded rather than the corpus quietly replaced: a 239-graph Zipf corpus over seven predicates
+gave `R@50 = mR@50 = 0.4477`. `predictFreq` emits every ordered pair × every predicate, so at
+K = 50 over a six-class vocabulary the cutoff never binds and every predicate is recovered
+equally. The gap is a fact about a K that bites, and the parameters were mine, not the lab's.
+
+## 5. The protocol correction reproduces — passed
+
+`labs/L6/forensics.ts` over the L6 fixture, both mask-pairing modes:
+
+| Prediction | `multi_mpo` | `single_mpo` |
+|---|---|---|
+| one-stage | 0.75 | **0.25** |
+| two-stage | 0.50 | 0.50 |
+
+One-stage numbers fall by two thirds when the pairing is corrected; two-stage numbers do not
+move. That is the **direction** the ECCV 2024 table reports, and the direction is all this check
+claims — the magnitudes are the fixture's, not the paper's.
+
+## 6. The offline run — passed, 2026-09-18
+
+`npm run check:offline` — 8 tests, all passing. Re-run it with:
+
+```bash
+python -m venv .offline-venv
+.offline-venv/Scripts/python -m pip install -r backend/requirements.txt
+npm run check:offline -- --python .offline-venv/Scripts/python
+```
+
+The check asks for three conditions. It was previously recorded as not run because only one of
+them is a property of a machine, and the other two were arranged by hand or not at all.
+`tools/offline_check.mjs` now arranges all three, so this is a check that can be repeated rather
+than a thing that happened once on a laptop.
+
+| Condition | How it was met |
+|---|---|
+| `torch` uninstalled | the backend runs on an interpreter where `torch` is not importable, and the script **refuses to continue** if it is. `requirements.txt` never listed `torch`, so a venv built from it is torch-free by construction. |
+| slices never fetched | `SGS_DATA_DIR` points at a scratch directory holding the committed annotations, no images, and a `placeholder` slice generated on the spot. The author's `data/` is not touched. |
+| the network down | Playwright aborts every request to anything but this origin and **records the attempt**, so the run fails on the attempt rather than on a timeout. |
+
+The third is **stricter than unplugging a cable**. A disconnected machine tells you the
+application survived a fetch it should never have made; interception tells you it never made
+one, which is what NFR-1 states. The first test in `e2e/offline.spec.ts` provokes both kinds of
+outward request a page can make — `fetch` and an `<img>` — and asserts both are recorded, so the
+empty list the other seven tests assert is a fact rather than an empty implementation.
+
+What passed, with no backend `torch` and one slice:
+
+* `/api/health` reports PyTorch **not installed**, `live_models` **none**, and exactly one slice
+  unpacked.
+* All fifteen modules open in the study shell; the lecture walks M0 → M14 by keyboard.
+* The mathematics renders with no font or script fetched — KaTeX is typeset at build time and its
+  WOFF2 files are bundled, which is what SRS §11.3 requires and what this now demonstrates.
+* All eight labs render on the placeholder slice alone. A lab that cannot show its data states a
+  reason of more than ten characters and leaks no stack frame.
+* `POST /api/infer/motifs` → **503 `inference_unavailable`**, with `detail.torch_present: false`
+  and a sentence in both languages.
+* `POST /api/vlm/indvissgg` with `provider: claude` → **503 `vlm_unavailable`**, likewise.
+
+**What this still does not establish.** The machine had a working network; nothing was fetched
+because nothing was attempted, not because nothing could be. For a hall with no wifi at all that
+is the same thing, and for a laptop with a captive portal it is better than the same thing. It
+remains true that this was not run on a machine that has never had the corpora on it.
+
+## 7. Bilingual parity — passed
+
+`npm run lint:i18n` — 198 keys, both locales complete, zero missing in either direction.
+
+Term consistency spot-checked by reading, since the lint checks keys and not register. The
+technical terms stay in English inside the Chinese strings, as PRD §6.1 requires: `predicate`,
+`scene graph`, `Recall@K`, `next to`, `on`. The prose is 書面語 throughout, with no second person
+and no rhetorical questions — M00's 「所缺少的並非更精細的標籤，而是被標記物件之間的關係」 is
+the register the whole corpus keeps.
+
+The e2e suite asserts the default locale is 繁體中文 on a machine with no stored preference,
+because that default is what a fresh machine in the hall will get.
+
+## 8. Lecture rehearsal — passed, after fixing three defects it found
+
+Two suites, 26 tests, all passing: `e2e/lecture.spec.ts` walks the deck, and
+`e2e/projector.spec.ts` repeats it at the three resolutions a lecture theatre actually presents
+at — **XGA 1024×768, WXGA 1280×800 and 1920×1080**. The first two matter because a laptop driving
+a projector reports its own panel, so the author sees 1920×1080 and the room sees something else.
+
+**Defect 1 — the deck lost keypresses** (D67). Walking M04, the longest module, the deck advanced
+one step for two presses: both were computed from the same rendered index, because the second
+key arrives before React re-registers the listener. A held arrow repeats about thirty times a
+second, so this is a professor's problem and not a robot's.
+
+**Defect 2 — one key, two encodings** (D68). `useLocale` stored the language preference as a bare
+string while `persist` stores JSON.
+
+**Defect 3 — three equations ran off an XGA panel** (D70). M04's steps 1 to 3 overflow 1024×768
+by up to 163 px, invisible on the author's own display. `fitMath.ts` now shrinks a display block
+to fit. Diagnosing it took three wrong measurements of the same geometry, each of which made an
+assertion pass against a formula that was visibly cut off; the write-up is D70 and the comment in
+`fitMath.ts` names all three, because the next person to measure a KaTeX block will reach for the
+same wrong one.
+
+**Contrast is now measured as painted, not as configured.** `palette.ts` asserts the tokens;
+this suite reads `getComputedStyle` on every heading, paragraph, list item and table cell the
+lecture renders and computes WCAG 2.1 against the nearest opaque ancestor. Every painted word
+clears 7:1 at all three resolutions. That is a different statement from the palette test and the
+one the room experiences.
+
+**Reviewed and accepted by the author, 2026-09-18: 25 of 92 slides run past the bottom of an
+XGA panel.**
+
+| Panel | Slides over the fold | Worst |
+|---|---|---|
+| 1024×768 | 25 of 92 | M00 step 2, by 1030 px |
+| 1280×800 | 24 of 92 | M00 step 2, by 749 px |
+| 1920×1080 | 8 of 92 | M00 step 2, by 348 px |
+
+The measurement was put to the author with the options — split the slides into more steps, or
+leave them — and the answer was to leave them. **The item is closed on that judgement, not on a
+code change**, and the numbers stay in this table so a different hall or a different term can
+re-open it without re-measuring.
+
+Shrinking the type to fit was never on the table: it would break NFR-5's 24 px floor, which is
+the one thing standing between these slides and an unreadable projection.
+
+What was fixed is the part that made a long slide worse than long. The shell scrolled the whole
+page, so the position indicator and the section clock scrolled away exactly when a slide was too
+long to see the end of — the two things that tell the professor where they are, gone at the
+moment they are needed. The step region now scrolls inside a fixed shell.
+
+Screenshots at all three resolutions are written to `test-results/projector/` on every run, for
+the judgement no browser can make.
+
+**The by-hand half is done.** The author reviewed the rendering across the three resolutions and
+reported no problem with it on 2026-09-18. What a headless viewport still cannot report — a lit
+room, a drifted lamp, the back row — is knowledge the author has and this file does not, which is
+why the acceptance is recorded as a judgement rather than as a measurement.
+
+## 9. The source audit — passed, after fixing a count it found
+
+`npm run lint:content` — clean: 13 golden cases, 7 licence rows, 15 of 15 modules in both
+locales, 93 knowledge points all assigned, 43 symbols with no redefinition.
+
+`data/LICENCES.md`: seven rows, all `Checked` 2026-09-16 or 2026-09-18. Every dataset with
+committed annotations clears `annotations_commit` — `vrd` and `haystack` state no licence and are
+NO on both gates, and nothing is committed for either. `data/mini-isg/LICENCE.md` carries
+IndustReal at Apache-2.0 with the 4TU data record as the statement URL, and MECCANO as **none
+stated, treated as NO**, with the consequence written out: no frame is copied.
+
+**`docs/INDEX.md` claimed eleven cards carry numbers.** The corpus has 60 cards and **ten** carry
+a non-empty `reported` list — `imp-2017`, `imp-plus-2017`, `freq-2018`, `neural-motifs-2018`,
+`vctree-2019`, `gps-net-2020`, `fcsgg-2021`, `psgformer-2022`, `reltr-2023`, `indvissgg-2025` —
+totalling 87 figures. The 87 was right and the eleven was not. Corrected in place.
+
+There is no unverified tier: a card either carries figures read off a named table or says plainly
+that it carries none.
+
+---
+
+## 10. NFR-8, measured — passed, 2026-09-19
+
+Not one of design §6's nine. It is here because `docs/INDEX.md` §3 named an enforcing artefact
+for NFR-1 through NFR-7 and left NFR-8's cell blank, and nothing in 253 pytest or 487 vitest
+asserted any of its three numbers. The only timing assertion in the project was `/api/health`
+under 50 ms, which is a claim about a different component. A project that refuses an unsourced
+figure in `content/` was carrying three unmeasured figures in its own requirements table.
+
+`npm run check:perf` (`tools/perf_check.mjs` + `e2e/perf.spec.ts`). It starts a backend against
+the repository's own `data/` — unlike check 6 and check 8, this one needs the machine at its most
+complete, because four of the eight labs fetch a frame and a lab rendering its failure sentence
+cannot be timed. Thirteen tests, all passing.
+
+**Cold start — budget 10 s.** A browser context created for that one route, so the HTTP cache,
+the storage and the module graph are all empty. The clock is the page's own `performance.now()`
+from the navigation's time origin to the route's first meaningful element.
+
+| Route | Measured |
+|---|---|
+| `/` | 242 ms |
+| `/lecture/m/m00/0` | 202 ms |
+| `/m/m00` | 270 ms |
+| `/map` | 218 ms |
+| `/leaderboards` | 227 ms |
+
+Roughly a fortieth of the budget, with the 3.5 MB bundle unsplit. Code splitting is therefore
+not an NFR-8 matter, whatever Vite's warning says.
+
+**Lab interaction — budget 100 ms.** Input to next painted frame: the event is dispatched inside
+the page and two animation frames are awaited, the first callback running before the current
+frame is painted and the second after it.
+
+| Lab | Interaction | To paint | Idle two frames | Work |
+|---|---|---|---|---|
+| L1 | add a triplet | 34.1 ms | 34.2 ms | 0.0 ms |
+| L2 | move K to 73 | 34.1 ms | 32.6 ms | 1.5 ms |
+| L3 | move λ to 1 | 33.2 ms | 33.8 ms | 0.0 ms |
+| L7 | type a caption | 33.5 ms | 32.2 ms | 1.3 ms |
+| L8 | delete a triplet | 35.1 ms | 33.0 ms | 2.1 ms |
+
+These are one run. The interaction figures move by a few milliseconds between runs and the work
+column with them — a later run put L1 at 6.7 ms — because the page is competing with whatever
+else the machine is doing. The budget is 100 ms and the variance is single-digit, so the margin
+is not in question; the table records a run rather than a constant.
+
+**The first draft of this table reported the instrument.** Every lab came back at 33 ms, which is
+two frames at 60 Hz and is what this measurement cannot go below whatever the application does.
+The idle column is the same two-frame wait measured on the same page in the same frame, so the
+last column is the application's own cost: under a millisecond in three labs and 2.1 ms in the
+worst. Without that calibration the table would have said 33 ms five times and meant nothing.
+
+L4, L5 and L6 are not in it, for stated reasons. L4's and L5's buttons start a request — a model
+inference, a VLM turn — which is not a local interaction, and timing a fetch under a rendering
+budget would be filing the wrong measurement. L6 has no control at all.
+
+**The estimate before the inference.** NFR-8's third clause. Every column in L4 renders
+`latency-<model>` before its Run button, and on this machine all five say 本機尚未量測延遲 —
+the unmeasured sentence, which is the correct answer here and is not a blank line. The assertion
+is that the line is non-empty and present while the button is still unpressed.
+
+**One more test in this file, and it is not a timing claim.** `selecting an object` clicks the
+centre of a bounding box with `page.mouse` and asserts a role was assigned — the real-browser half
+of D75, which jsdom cannot cover because it has no hit testing at all. It lives here because this
+is the only e2e file that runs with a backend, and L1 needs one. Detaching the svg click handler
+in view mode fails it and nothing else.
+
+**Mutations.** Both budgets were set to 1 ms and all eleven budget-dependent assertions went red.
+The unmeasured-latency sentence was replaced with an empty string and the estimate test went red
+naming `latency-reltr`. Four more assertions failed for real during development before they
+passed: the change guard caught an L3 readout that does not move with its slider (`gap` is
+evaluated at λ = 0 by design) and an L1 button that was disabled, the "at least three measured"
+guard caught a run with one, and the L4 count caught columns that had not arrived.
+
+**What it does not measure.** The lecture theatre's machine. These are this box's numbers, and
+D-02 makes the weaker ARM64 machine the ship target. Running `npm run check:perf` there is the
+remaining half, and it is the author's to run.
+
+## 11. Dependency pins against the interpreter — passed, 2026-09-19
+
+Also not one of the nine, and the same shape of finding. D-04 states that versions are pinned at
+measured values. Nothing compared the file to the interpreter, and six of the ten pins in
+`backend/requirements.txt` disagreed with the environment that had just produced a green CI:
+`fastapi` 0.136.1 against 0.135.1, `uvicorn` 0.46.0 against 0.41.0, `pydantic` 2.13.3 against
+2.12.5, `python-multipart` 0.0.20 against 0.0.22, `pillow` 12.2.0 against 12.0.0, `pytest` 9.0.3
+against 9.0.2. `requirements-infer.txt` had drifted further: `transformers` 4.57.0 against 5.4.0
+and `huggingface_hub` 0.36.0 against 1.8.0.
+
+`pytest-cov` was pinned at 6.0.0, was not installed, and no command anywhere passes `--cov`.
+
+`backend/tests/test_pins.py` now compares both files to the running interpreter, and
+`backend/scripts/check_pins.py` prints the comparison. `requirements.txt` must match exactly;
+`requirements-infer.txt` tolerates absence, because NFR-1 requires the base install to be
+torch-free and an uninstalled extra there is the expected state rather than a fault. A PEP 440
+local segment is ignored **where the pin does not state one**, so `torch==2.10.0` is satisfied by
+the `+cpu` wheel; a pin that does state one is a claim about the build and is compared exactly
+(§13).
+
+All nine required pins now agree. Four of the five optional ones agreed and `timm` was not
+installed here, which the file said in a comment rather than implying otherwise by its silence.
+**Since 2026-09-19 all five agree**: the extras were installed into py12 when the interpreter
+moved (§12), `timm` among them.
+Watched to fail: `pytest` moved to 9.0.3 in the file, and the test reported
+`pytest pinned 9.0.3, found 9.0.2`.
+
+## 12. The interpreter every check runs on — recorded, 2026-09-19
+
+§10 and §11 measured numbers without stating which interpreter produced them, and until this
+date that question had two answers: `start.ps1` pinned the machine-wide `C:\Python\Python312`,
+while the `npm` scripts and the parity harness used the bare name `python` and took whatever
+PATH resolved first. The author's environment is neither of those by intent — it is the global
+virtual environment `py12` (`C:\Python\pyVenv\py12`, Python 3.12.3). See DEVIATIONS D80.
+
+Every Python step now resolves that environment through one of two files applying one order —
+`system/tools/py.mjs` (npm scripts, `tools/*.mjs`) and `system/tools/Resolve-Python.ps1`
+(`start.ps1`, `fetch-data.ps1`). **Check 6 is the exception and stays on its own `--python`**:
+it requires a torch-free interpreter and `py12` has torch.
+
+**What moving the gate onto `py12` exposed.** `py12` did not have `pyarrow` or `ruff`, both
+pinned in `requirements.txt`, and its torch was 2.9.1 / torchvision 0.24.1 against pins of
+2.10.0 / 0.25.0. The pins were kept and the environment brought up to them, so §11's table
+still holds — now against the interpreter the work actually runs on. `python-pptx 1.0.2` was
+installed as well, for the repository's other tracks.
+
+**Re-run after the change:** `npm run ci` exits 0 — 263 pytest passed and 7 skipped, 510 vitest
+across 44 files, parity 13/13, i18n 198 keys, content lint clean, frontend build 741 modules.
+`start.ps1` was run end to end on spare ports: it resolved `py12`, exported `SGS_PYTHON`, and
+`/api/health` answered with `torch_version 2.10.0+cpu` while the dev server returned HTTP 200.
+
+`tools/test/py.test.mjs` asserts the resolution order, and was watched to fail: disabling the
+`SGS_PYTHON` branch failed 1 of 8, and dropping `PY12_HOME` from the candidate list failed 3.
+
+## 13. The CUDA build of torch — measured, 2026-09-19
+
+The author's box has an RTX 3090, and until this date the project's interpreter did not use it:
+`pip install -r requirements-infer.txt` had no index line, PyPI serves the CPU wheel on Windows,
+and so py12 held `torch 2.10.0+cpu` with `torch.cuda.is_available()` returning `False` on a
+machine with 24 GB of NVIDIA memory sitting idle. Nothing was wrong with the hardware and
+nothing in the file said which build had been measured.
+
+**Measured after the change**, on py12:
+
+| | |
+|---|---|
+| `torch` | `2.10.0+cu128` |
+| `torchvision` | `0.25.0+cu128` |
+| `torch.version.cuda` | `12.8` |
+| `torch.cuda.is_available()` | `True`, 1 device |
+| device | NVIDIA GeForce RTX 3090, compute capability 8.6 |
+| cuDNN | 9.10.2 |
+| driver | 595.79 |
+
+A 2048 × 2048 matmul was run on the device and returned a tensor on `cuda:0`, so this is an
+exercised device and not a reported capability. cu126, cu128 and cu130 all publish a 2.10.0
+wheel for cp312 on Windows; cu128 was chosen for an Ampere card.
+
+**The pin file had to change twice over to make this checkable.** `requirements-infer.txt` now
+carries `--extra-index-url https://download.pytorch.org/whl/cu128`, because PyPI does not hold
+that build and a file that cannot install itself will be installed wrongly. `parse_pins` used to
+refuse any line without `==`, so it now skips pip options. And `compare` used to ignore the local
+segment on both sides, which would have made `+cu128` decoration: the file could name a GPU build
+while a CPU wheel was installed and the check would pass. The rule is now asymmetric and stated
+in `agrees()` — a pin with no local segment accepts any build, a pin that states one is compared
+exactly.
+
+`npm run check:pins`: 9 of 9 required and 5 of 5 optional pins agree. Watched to fail: the pin
+moved to `+cu126` against the installed `+cu128` produced one failure naming both.
+
+**NFR-1 is untouched.** `requirements.txt` still lists no torch, check 6 still requires an
+interpreter without it, and no P0 feature reaches any of this. The GPU build is an opt-in extra
+on one machine, and the TEACH box (ARM64, no CUDA) is unaffected.
+
+## 14. The gate on the machine it is not run on — fixed, 2026-09-19
+
+Every number in §§10–13 was measured on the author's Windows box, where `npm run ci` exits 0.
+`main`'s GitHub Actions run had been red for **five consecutive pushes** — 2026-09-18 13:33 and
+15:36, 2026-09-19 01:28, 02:41 and 02:59 — and the last two of those are the commits that
+recorded §12 and §13 as passed.
+
+The first three are D81, whose fix landed in the same commit that introduced the cause of the
+next two, so the gate was never green on the runner at any point. On the runner, all seven tests
+in `tools/test/py.test.mjs` failed: they spell the Windows interpreter layout into their
+assertions (`…\Scripts\python.exe`, drive letters, `USERPROFILE`) while `py.mjs` read the
+platform from the host. See DEVIATIONS D83.
+
+**The rule this project keeps relearning applies to the gate itself.** A check that runs in one
+environment states nothing about the other, and "green on my machine" was being read as green.
+
+| | before | after |
+|---|---|---|
+| `tools/test/py.test.mjs` | 7 tests, Windows layout only, passing on one platform of two | 20 tests, **both** layouts asserted from either host |
+| `py.mjs` | `process.platform` read at module scope; `join`/`basename` follow the host | `platform` is an argument; `win32` and `posix` chosen explicitly |
+| POSIX candidate list | three drive-letter paths joined POSIX-style, matching nothing | empty, so the fallback is reached and the workflow's `SGS_PYTHON` is what names the interpreter |
+
+**Watched to fail.** The new file run against the previous `py.mjs`, on Windows: 9 failed, 11
+passed — every POSIX assertion, which is the coverage that did not exist before.
+
+**A second finding, from running the suite the way the author's own machine is configured.**
+`SGS_CORPUS_ROOT` is set to `C:\DataRaw` on this box (INDEX §5), and with it set
+`test_data_dir_follows_its_environment_variable` fails: it asserts that `SGS_DATA_DIR` moves the
+corpus root underneath it, which holds only when no corpus root is named. The four adapter tests
+that exercise the real corpora are skipped without that variable, so the configuration in which
+the adapters are actually tested is the configuration in which the suite was red. The test now
+clears the variable, and a second test states the other half of the rule — an explicit
+`SGS_CORPUS_ROOT` wins — which is the behaviour `tools/offline_check.mjs` relies on when it sets
+both. See DEVIATIONS D84.
+
+**Re-run, 2026-09-19, on `py12`:** `npm run ci` exits 0 — **266 pytest passed, 7 skipped**, and
+**271 passed, 2 skipped** with `SGS_CORPUS_ROOT=C:\DataRaw`, which had been 1 failed before this
+change; **527 vitest across 45 files**; parity 13/13; i18n 198 keys; content lint clean; `ruff`
+clean; frontend build 741 modules. `npm run test:e2e` 26 passed, `npm run check:perf` 13 passed,
+`npm run check:offline -- --python .offline-venv/Scripts/python` 8 passed, `npm run check:pins`
+9 of 9 and 5 of 5.
+
+**Three documents carried three different counts, and none matched the run.** `docs/INDEX.md`
+said 263 pytest and 502 vitest, this file's §12 said 263 and 510 in 44 files, `README.md` said
+263 and 515. The measurement was 265 and 515 before today's change. §12's figures stay as
+written, being the record of that day's run; the two present-tense claims are corrected.

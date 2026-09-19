@@ -1,0 +1,151 @@
+---
+id: m00
+order: 0
+title_en: "Why scene graphs — from labels to structure"
+title_zh: "為何需要場景圖：從標籤到結構"
+anchor_labs: [L1]
+knowledge_points: [F1, F2, F5, F8]
+symbols:
+  - sym: "G"
+    gloss_en: "a scene graph"
+    gloss_zh: "場景圖"
+  - sym: "V"
+    gloss_en: "the object set of a scene graph"
+    gloss_zh: "場景圖的物件集合"
+  - sym: "E"
+    gloss_en: "the relationship set of a scene graph"
+    gloss_zh: "場景圖的關係集合"
+  - sym: "\\mathcal{P}"
+    gloss_en: "predicate class set"
+    gloss_zh: "predicate 類別集合"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Put the three photographs up and say nothing. Wait until somebody in the room says the labels are the same. That sentence is the module; do not name the scene graph before it has been said."
+  - id: s2
+    kind: math
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes, and the multigraph definition is the only thing that has to land. Define the object set and the relationship set on the board before the slide does. If the room is quiet when the predicate set appears, ask for one predicate that would be illegal here."
+  - id: s3
+    kind: lab
+    lab: L1
+    seconds_budget: 480
+    presenter_notes_en: "Eight minutes on L1. Hand out nothing; the boxes are already drawn and the only work is naming the relation. Walk the room. The common first mistake is a triplet with subject and object swapped, and it is worth finding one before the diff does."
+  - id: s4
+    kind: checkpoint
+    presenter_notes_en: "Collect two triplets from two different people before moving on. The reversible one is usually next to, the irreversible one usually on. If nobody finds a reversible predicate, that is the answer to the second half of the question rather than a failure."
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## What a label cannot say
+
+A classifier looking at a kitchen returns `person`, `cup`, `table`. So does a classifier looking
+at a photograph of a person holding a cup over a table, and at one of a cup already on the table
+with the person walking away. The three labels are identical; the scenes are not.
+
+The missing thing is not a better label. It is the relation between the labelled things. A scene
+graph is the smallest representation that carries it: the objects, and the directed, named edges
+between them.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+A scene graph names what is in the image and, separately, how those things stand to one another.
+The second half is what a list of labels throws away. It is also where nearly all the difficulty
+is, because the number of possible relations grows with the square of the number of objects while
+the annotation budget does not.
+
+</Intuition>
+
+<Formal>
+
+A scene graph over an image is a directed, labelled multigraph
+
+$$
+G = (V, E), \qquad E \subseteq V \times \mathcal{P} \times V
+$$
+
+where $V$ is the set of localized objects, each an image region with a class, and $\mathcal{P}$
+is a fixed set of predicate classes. An element of $E$ is written as a triplet
+
+$$
+\langle s, p, o \rangle, \qquad s, o \in V,\; p \in \mathcal{P}
+$$
+
+read *subject, predicate, object*. The triplet is ordered: $\langle s, p, o \rangle$ and
+$\langle o, p, s \rangle$ are different claims about the image.
+
+</Formal>
+
+<Worked>
+
+Take the kitchen above, with $V = \{v_1{:}\,\texttt{person},\, v_2{:}\,\texttt{cup},\,
+v_3{:}\,\texttt{table}\}$ and $\mathcal{P} \supseteq \{\texttt{holding}, \texttt{on},
+\texttt{above}\}$.
+
+The first photograph is
+
+$$
+E_1 = \{\langle v_1, \texttt{holding}, v_2 \rangle,\; \langle v_2, \texttt{above}, v_3 \rangle\}
+$$
+
+and the second is
+
+$$
+E_2 = \{\langle v_2, \texttt{on}, v_3 \rangle\}
+$$
+
+Same $V$, different $E$, and the difference is the whole content of the scene. Count the
+possibilities: with $|V| = 3$ there are $|V|(|V|-1) = 6$ ordered pairs, and with
+$|\mathcal{P}| = 50$ predicates there are $300$ candidate triplets over three objects alone. At
+$|V| = 20$, which is an ordinary photograph, there are $380$ pairs and $19{,}000$ candidates.
+
+</Worked>
+
+<Implications>
+
+Three things follow, and each one returns later in the course.
+
+**The edge set is sparse and the candidate set is not.** A model must rank $O(|V|^2|\mathcal{P}|)$
+possibilities against a ground truth holding a few dozen edges. This is why every metric in this
+field is a recall at a rank cutoff, and never an accuracy.
+
+**Direction carries meaning that symmetry destroys.** $\langle \texttt{cup}, \texttt{on},
+\texttt{table} \rangle$ is true and $\langle \texttt{table}, \texttt{on}, \texttt{cup} \rangle$ is
+false, of the same photograph. A representation that stores an unordered pair cannot express the
+difference, and a model scored on unordered pairs is not being asked the question.
+
+**What is annotated is not what is true.** Visual Genome's edges are what somebody wrote down,
+not everything that holds in the scene, so an edge the model proposes and the annotation lacks may
+be a mistake or may be correct and unrecorded. The metric cannot tell the two apart, and the
+course returns to this as the difference between *missed* and *spurious* in the diff.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## What you will do in the lab
+
+L1 hands you an image with its objects already boxed and asks you to build $E$ yourself: click a
+subject, click an object, name the predicate. Your graph is then scored against the annotation
+under PredCls, which gives you the boxes and the labels so that the only thing measured is the
+structure you proposed.
+
+</Step>
+
+<Step id="s4">
+
+## Checkpoint
+
+Write down, for the photograph in front of you, one triplet whose reverse is also true and one whose reverse is false. If you cannot find the first, say why the predicate set makes it hard.
+
+</Step>

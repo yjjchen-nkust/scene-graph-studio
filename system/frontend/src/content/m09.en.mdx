@@ -1,0 +1,143 @@
+---
+id: m09
+order: 9
+title_en: "Open vocabulary: VS³, OvSGTR, PGSG"
+title_zh: "開放詞彙：VS³、OvSGTR、PGSG"
+anchor_labs: [L4]
+knowledge_points: [V1, V2, V3, V4, V5]
+symbols:
+  - sym: "\\mathcal{C}_{\\text{base}}"
+    gloss_en: "object classes seen during training"
+    gloss_zh: "訓練階段可見的物件類別"
+  - sym: "\\mathcal{C}_{\\text{novel}}"
+    gloss_en: "object classes held out from training"
+    gloss_zh: "自訓練階段保留的物件類別"
+claims:
+  - id: c-m09-splits
+    text_en: "On VG150 the training set falls to 50,107 images under OvD, 44,333 under OvR and 36,425 under OvD+R"
+    text_zh: "於 VG150 上，訓練集在 OvD 下降至 50,107 張影像，OvR 下為 44,333 張，OvD+R 下為 36,425 張"
+    source: ovsgtr-2024
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: sgdet
+    verified: false
+  - id: c-m09-novel
+    text_en: "Swin-T novel-split relation recall: 18.14 under OvD, 13.45 under OvR, 9.20 under OvD+R"
+    text_zh: "Swin-T 於 novel 分割上的關係召回率：OvD 為 18.14、OvR 為 13.45、OvD+R 為 9.20"
+    source: ovsgtr-2024
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: sgdet
+    verified: false
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening, and it places the module between M01 and M11: M01 said the predicate vocabulary is whatever the annotator happened to write, and M11 will say the frontier VLM scores 0.032 because it does not know which vocabulary is allowed. Open-vocabulary work asks what happens when a model must name something it was never trained to name. Say up front that the subtlety is in the held-out protocol rather than in the methods."
+  - id: s2
+    kind: math
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes. Split into base and novel, train on base only, and the trap is what that costs: any image containing a single novel class has to be removed whole, so the training set shrinks faster than the fraction of classes kept. Ask the room to estimate how many images survive when eighty per cent of classes are kept, then show it. The size of that error is the lesson."
+  - id: s3
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes, and the leakage section is the centre of the module. If the grounding pretraining corpus already contains the held-out classes, the model was never tested on novel classes at all, and this is not hypothetical. The question to ask is not how it does on novel classes but whether those classes are unseen to the whole pipeline, backbone included. Keep the closing line: a paper willing to discuss this deserves more credit than its numbers alone would earn."
+  - id: s4
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint. OvR and OvD are different held-out settings, so 14.2 and 19.6 are not the same quantity. Knowing nothing about either method, expect OvD to be higher, because holding out object classes alone removes fewer training images than holding out predicates as well. If the answer stops at the settings being different, ask which should be higher and why."
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## The vocabulary was always the problem
+
+M1 said the predicate vocabulary is whatever annotators wrote. M11 will say a frontier VLM scores
+0.032 because it does not know which words are allowed. Open-vocabulary work sits between those
+two observations: it asks what happens when a model must name something it was never trained to
+name.
+
+The experimental design is a holdout, and the holdout is where the subtlety is.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+Split the class set into base and novel, train on base only, and report on each part separately.
+The trap is in what "train on base only" costs: an image containing one novel class must leave the
+training set entirely, so the training data shrinks faster than the fraction held out.
+
+</Intuition>
+
+<Formal>
+
+$$
+\mathcal{C}=\mathcal{C}_{\text{base}}\sqcup\mathcal{C}_{\text{novel}},\quad \mathcal{P}=\mathcal{P}_{\text{base}}\sqcup\mathcal{P}_{\text{novel}};\qquad R \text{ reported on each part separately}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}\mathcal{C}=\mathcal{C}_{\text{base}}\sqcup\mathcal{C}_{\text{novel}},&\qquad \mathcal{P}=\mathcal{P}_{\text{base}}\sqcup\mathcal{P}_{\text{novel}}\\\mathcal{D}_{\text{train}}&=\bigl\{I : \text{every }t\in G_I\text{ uses base classes only}\bigr\}\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Holding out a class removes every image containing it, so }\lvert\mathcal{D}_{\text{train}}\rvert\text{ falls faster than the holdout fraction:}\\ \text{VG150}\to 50{,}107\ (\text{OvD}),\quad 44{,}333\ (\text{OvR}),\quad 36{,}425\ (\text{OvD+R}).\\[4pt]\text{Report }R\text{ on base and novel separately; one number hides which half failed.}\\ \text{Verified, Swin-T novel split: OvD }18.14,\quad\text{OvR }13.45,\quad\text{OvD+R }9.20\text{ (relations)}.\\[4pt]\text{Withholding }\textit{relations}\text{ hurts far more than withholding objects:}\\ \text{object names transfer through a pretrained text encoder, relations do not.}\end{gathered}
+$$
+
+Three things follow, and the third is the one that changes how you read the literature.
+
+**Report base and novel separately.** One averaged number hides which half failed, and the halves
+fail for different reasons.
+
+**The three regimes are not comparable with each other.** OvD holds out object classes, OvR holds
+out relation classes, OvD+R holds out both, and each shrinks the training set differently. A method
+evaluated under OvD is not in competition with one evaluated under OvD+R.
+
+**Withholding relations hurts far more than withholding objects**, and the reason is the honest
+finding of this module: an object name transfers through a pretrained text encoder, which has seen
+the word in a caption somewhere. A relation does not. There is no pretraining corpus in which
+`meshed with` is grounded to an image the way `wrench` is.
+
+That asymmetry is why VS³ inherits a visual-semantic space from a grounding model, why OvSGTR
+aligns nodes and edges separately, and why PGSG generates novel predicate *words* rather than
+selecting from a list.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## The leakage that invalidates the setup
+
+A model whose grounding pretraining corpus already contains the held-out classes has not been
+tested on novel classes at all. This is not hypothetical: the pretraining sets used by the
+grounding models these methods build on are large, web-scraped and not disjoint from Visual
+Genome.
+
+When you read an open-vocabulary result, the question to ask is not how well it did on novel
+classes. It is whether the novel classes were novel to the *whole pipeline*, including everything
+inherited from the backbone. Most papers cannot answer this, and the ones that discuss it deserve
+more credit than their numbers alone suggest.
+
+</Step>
+
+<Step id="s4">
+
+## Checkpoint
+
+A paper reports novel-class relation recall of 14.2 under OvR and compares it with a competitor's
+19.6 under OvD. Say what is wrong with the comparison, and state which of the two numbers you
+would expect to be larger before knowing anything about either method.
+
+</Step>

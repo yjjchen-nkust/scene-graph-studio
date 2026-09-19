@@ -1,0 +1,24 @@
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+# E741 forbids `l`, `I` and `O` as names, because in most code they are a lowercase L or a zero
+# wearing a disguise. Here `O` is none of those: it is IndVisSGG's own symbol for the object
+# vocabulary, the O of the (O, P, E) triple the paper's step-1 prompt is built from, and it is
+# the same O that M11 defines, that `TECEditor` labels in the interface, and that the API accepts
+# by that name. Renaming it to `objects` would make the code stop matching the paper it
+# reproduces, and every reader who came from the paper would have to learn a second vocabulary
+# for the same thing.
+#
+# Scoped to the four files that carry the paper's notation, so the rule still applies everywhere
+# a stray `O` would genuinely be a zero.
+[tool.ruff.lint.per-file-ignores]
+"app/api/vlm.py" = ["E741"]
+"app/vlm/indvissgg.py" = ["E741"]
+"app/vlm/prompts.py" = ["E741"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

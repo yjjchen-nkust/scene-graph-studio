@@ -1,0 +1,207 @@
+{
+  "dataset": "indoorvg",
+  "seed": 20260915,
+  "distribution": "fetch",
+  "images": [
+    {
+      "image_id": "104907",
+      "url": null,
+      "file": "images/104907.jpg",
+      "sha256": "f99a77a7fd2229fe7cc7207c81a50ecb9391d82ffe75e3298cd4a7d27af3da74",
+      "bytes": 82579,
+      "width": 500,
+      "height": 281,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "106949",
+      "url": null,
+      "file": "images/106949.jpg",
+      "sha256": "ab1c8a3f8f027ccd5499780652abf3446f5f6d3121745f187205b598104f312a",
+      "bytes": 160059,
+      "width": 500,
+      "height": 375,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "14407",
+      "url": null,
+      "file": "images/14407.jpg",
+      "sha256": "8e2685140dff1b58911f078d0531763698115f0ecd2a55d552b889bf08b75a23",
+      "bytes": 122662,
+      "width": 500,
+      "height": 375,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "24921",
+      "url": null,
+      "file": "images/24921.jpg",
+      "sha256": "4c9cdd45b63fbbcc320af829b2ee3ca9666f32635e81b42c09f6148677d7c272",
+      "bytes": 75121,
+      "width": 333,
+      "height": 500,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "31713",
+      "url": null,
+      "file": "images/31713.jpg",
+      "sha256": "4612b5a6ae4c43a47fca83604e71d112dd5d2b9c5fba4b1a261db9aaf40f3cff",
+      "bytes": 108716,
+      "width": 500,
+      "height": 333,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "4274",
+      "url": null,
+      "file": "images/4274.jpg",
+      "sha256": "3f0f74da553ce756b29eb7ba23cb359eb87948e3aab824e3a7c9706a81c099ea",
+      "bytes": 106476,
+      "width": 798,
+      "height": 598,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "47678",
+      "url": null,
+      "file": "images/47678.jpg",
+      "sha256": "d5267aaf8aeadf11d13ecbbe7b06ec5e84839ef791a6009df05ed7f7219fa64b",
+      "bytes": 93977,
+      "width": 500,
+      "height": 333,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "50376",
+      "url": null,
+      "file": "images/50376.jpg",
+      "sha256": "9afe894b4626d54a09469fc62d12ae644e44575625e8eaab75d7a9e0130032e0",
+      "bytes": 97168,
+      "width": 500,
+      "height": 375,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "59439",
+      "url": null,
+      "file": "images/59439.jpg",
+      "sha256": "599832009b1bb707cc7d3f02bef81a24837b6fb194781e9c2c9156e21730bc76",
+      "bytes": 177908,
+      "width": 500,
+      "height": 389,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "66866",
+      "url": null,
+      "file": "images/66866.jpg",
+      "sha256": "7bdc04436e71f4851de3e77836e840c6aeb623be9796e3caca26446ea9ec434a",
+      "bytes": 133685,
+      "width": 500,
+      "height": 334,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "70897",
+      "url": null,
+      "file": "images/70897.jpg",
+      "sha256": "45ec9237a172347d97186b38e221d4fe2c4f2618ee1905924f4f1f75509cb19a",
+      "bytes": 147218,
+      "width": 375,
+      "height": 500,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "74857",
+      "url": null,
+      "file": "images/74857.jpg",
+      "sha256": "94ffc9273a0e9af0e17b34d7622c0ae6bfbd8c27de0f8369d21288210464ae08",
+      "bytes": 122093,
+      "width": 500,
+      "height": 333,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "78671",
+      "url": null,
+      "file": "images/78671.jpg",
+      "sha256": "6de91e0c349e782fb26946d91f014d39f09607eceaef552410cee23b355911b5",
+      "bytes": 132935,
+      "width": 375,
+      "height": 500,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "86621",
+      "url": null,
+      "file": "images/86621.jpg",
+      "sha256": "9280ed94adb6f5a7fd1822504c6ec19095ec5275e92a0c4fa933e3363aab178a",
+      "bytes": 102902,
+      "width": 500,
+      "height": 375,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "87066",
+      "url": null,
+      "file": "images/87066.jpg",
+      "sha256": "d7c59183cd32588920dd1631cc71a427485ac9e914350966d83897e8ba0460cb",
+      "bytes": 79322,
+      "width": 500,
+      "height": 375,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "89953",
+      "url": null,
+      "file": "images/89953.jpg",
+      "sha256": "026f2359ed79184a0fda0b976e5aeb38bf75e22a367134a73da207159dcd336d",
+      "bytes": 130607,
+      "width": 476,
+      "height": 500,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "93757",
+      "url": null,
+      "file": "images/93757.jpg",
+      "sha256": "cbbe14159da45987f1806f2337e5b40090c3d7bf74b7a14f1531ae20d2c128af",
+      "bytes": 129806,
+      "width": 500,
+      "height": 375,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "9664",
+      "url": null,
+      "file": "images/9664.jpg",
+      "sha256": "253b760e60e52f1b5ab926b6e3934f46b50438e4bc3ec66918ea8c10207518aa",
+      "bytes": 375473,
+      "width": 1024,
+      "height": 653,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "97909",
+      "url": null,
+      "file": "images/97909.jpg",
+      "sha256": "e60d00184e996be35752d3de833e7734781cfbfc0e40e786a5dfb83747c7bfe3",
+      "bytes": 93976,
+      "width": 500,
+      "height": 333,
+      "source_dataset": "indoorvg"
+    },
+    {
+      "image_id": "98826",
+      "url": null,
+      "file": "images/98826.jpg",
+      "sha256": "fa0fdf04630da288555e4c66052dcac45be8fcaa5674302b7ce9637fbba31b6d",
+      "bytes": 108916,
+      "width": 323,
+      "height": 500,
+      "source_dataset": "indoorvg"
+    }
+  ]
+}

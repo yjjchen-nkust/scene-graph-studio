@@ -1,0 +1,164 @@
+---
+id: m14
+order: 14
+title_en: "Downstream applications, open problems, and the two gaps"
+title_zh: "下游應用、未解問題，以及兩項落差"
+anchor_labs: [L8]
+knowledge_points: [R1, R2, R3, R4, R5, R6, R7, R8, R9, X4, X5, X6, X8]
+symbols: []
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening, and it is the last module. List all four uses, and be explicit about where the difficulty in the first one lies: not in generating the image but in measuring whether the image satisfies the relations it was given — which is M03's matching problem again, with no annotation on either side. The failure in the second is the asymmetry from M00, and that link is worth making too."
+  - id: s2
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes. Relation hallucination is the failure mode this course is best equipped to name, and its cause is the frequency prior that made FREQ strong in M04: person riding horse is a common pair, so a person standing near a horse gets reported as riding it. Make that link explicitly or the page becomes description. Keep the HOI section brief — near neighbour, not the same problem, so neither results nor baselines transfer."
+  - id: s3
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes, and it is the page that matters most here. Driving and surgery each stopped reporting R@K independently and for different reasons: the first measures an intermediate representation by task metrics, the second can afford precision because its annotation is exhaustive. Say the conclusion of reading them together out loud — the rule from M03, that what was not annotated scores as an error, is a consequence of the Visual Genome annotation process and not a property of the problem. Change the annotation and the metric changes with it."
+  - id: s4
+    kind: prose
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes, four items, and Haystack is the one that carries the page: it is the only dataset in this course on which precision can be computed, because it supplies explicit negatives — precision needs to know what is false, and nothing else records that. Be straight about mini-ISG too: same method, openly licensed frames, this course's teaching set and not the authors' dataset, small and described as small, and it exists so that the last lab has something to run on. That proportion is the course's own handling of sources, demonstrated."
+  - id: s5
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes, and it closes the course. Take the two gaps separately and give each its consequences. The measurement gap: the metrics cannot separate a wrong prediction from a right one the annotator never recorded, and every consequence in this course follows from it. The deployment gap: the results come from photographs of everyday scenes while the claimed applications are industrial, surgical or robotic, and the vocabularies do not overlap. Read the last paragraph out as written — a student who finishes this course should be able to say which of the two gaps a new paper addresses, and to notice when a paper claims one and measures the other. That is the exit criterion for the whole course."
+  - id: s6
+    kind: lab
+    lab: L8
+    seconds_budget: 480
+    presenter_notes_en: "Eight minutes on L8, the last lab, and its openness is deliberate. Take the graph built in L1 and actually use it, by any one of the three routes. The real exercise is what follows: write down the metric used and why that metric. There is no marking scheme; the question exists to check whether M13 s3 and M14 s3 landed — the choice of metric follows the task rather than the convention of the field."
+  - id: s7
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint, and it is the last question in the course. The difference is completeness: surgical video is annotated exhaustively by clinicians to a protocol, so a relation that is not recorded really is absent, while Visual Genome's relationship layer is radically incomplete and an unrecorded relation may well be true. What would have to change is the annotation process itself — annotate exhaustively, or supply explicit negatives as Haystack does. If the answer is more annotation, ask for the difference between more and exhaustive; that distinction is the question."
+---
+
+
+<Step id="s1">
+
+## What the graph is for
+
+Fourteen modules have treated the scene graph as the thing to be produced and scored. This one
+asks what it is produced *for*, and the answer reorganises the whole course.
+
+Four uses, and they make different demands.
+
+**Conditioning image generation.** A graph specifies a layout and a set of relations, and a
+generator renders it. The hard part is not generating — it is measuring whether the rendered image
+actually satisfies the relations it was given, which turns out to be the same matching problem as
+M3 with neither side annotated.
+
+**Probing what vision-language models understand.** ARO, SugarCrepe and VSR test whether a model
+distinguishes `cup on table` from `table on cup`. Many do not, and the failure is exactly M0's
+asymmetry: a model trained on bag-of-words alignment has no reason to encode direction.
+
+**Memory and retrieval.** A scene graph is a queryable index over a scene or a video, which is
+what makes it useful as an agent's memory and as the retrieval structure in a RAG pipeline.
+
+**Fusion with knowledge graphs.** The scene graph says what is in front of the camera; a knowledge
+graph says what is true in general. Joining them is old in symbolic AI and newly practical.
+
+</Step>
+
+<Step id="s2">
+
+## Relation hallucination, and the neighbouring field
+
+**Hallucinated relations** are the failure mode this course is best equipped to name. A VLM asked
+to describe a scene will report plausible relations that are not present, and the reason is the
+same frequency prior that made FREQ a strong baseline in M4: `person riding horse` is common, so a
+person near a horse becomes a person riding one.
+
+**HOI detection** is the neighbouring field, and it is worth knowing that it is neighbouring rather
+than identical. Human-object interaction detection restricts the subject to a person and the
+predicate to an action, which makes the problem smaller and the metrics different. Results do not
+transfer, and neither do the baselines.
+
+</Step>
+
+<Step id="s3">
+
+## Where the field stopped using its own metrics
+
+Two application areas are worth naming because they made the same decision independently.
+
+**Driving scene graphs** report task metrics — collision rate, planning success, time to
+intervention — and not R@K. The graph is an intermediate representation and its quality is
+measured by what depends on it.
+
+**Surgical scene graphs** report per-relation F1, which has a precision term. They can afford one
+because their annotation is exhaustive: a surgical video is annotated by clinicians against a
+protocol, so an unrecorded relation is genuinely absent rather than merely unrecorded.
+
+Read those two facts together and M3's rule — that a missing annotation counts as a mistake —
+stands revealed as a consequence of Visual Genome's annotation process rather than a property of
+the problem. Change the annotation and the metric changes with it.
+
+</Step>
+
+<Step id="s4">
+
+## The datasets nobody teaches, and why they matter
+
+**IndoorVG** merges Visual Genome classes into a smaller indoor vocabulary. M1 gave the arithmetic
+of what merging does to mean recall; this is that arithmetic applied to a whole dataset, and it is
+why `indoorvg` figures cannot be placed beside `vg150-sgb` figures.
+
+**Haystack** ships explicit negatives — relations annotated as *not* holding. That is the only
+dataset in this course that makes precision computable, and the reason is worth stating plainly:
+precision needs to know what is false, and no other dataset records it.
+
+**GQA, VrR-VG, SpatialSense and UnRel** each re-annotate or re-filter Visual Genome for a
+different purpose, and each produces numbers that look comparable with VG150's and are not.
+
+**The industrial gap** is what produced ISG, and M11 covered it. This project's **mini-ISG** is
+built by the same method from openly licensed frames and is labelled as this course's teaching set,
+never as the authors'. It is small, it is honest about being small, and it exists so that the last
+lab runs on something.
+
+</Step>
+
+<Step id="s5">
+
+## The two gaps
+
+**The measurement gap.** The field's metric cannot distinguish a wrong prediction from a correct
+one the annotator did not write down, and every consequence in this course follows from that: no
+precision, a frequency baseline that beats learned models, a debiasing literature trading one
+number against another, and a mask-pairing correction ignored for two years. Haystack shows the gap
+is closable. Nothing else in the field has closed it.
+
+**The deployment gap.** Almost every result in this course was produced on photographs of everyday
+scenes, and almost every stated application is industrial, surgical, or robotic. The vocabularies
+do not overlap, the annotation budgets do not resemble each other, and the two areas that did
+deploy — driving and surgery — stopped using the field's metrics to do it.
+
+A student who finishes this course should be able to say which of the two gaps a new paper is
+addressing, and to notice when it claims to address one while measuring the other.
+
+</Step>
+
+<Step id="s6">
+
+## In the lab
+
+L8 is the course's last, and it is open: take a graph you built in L1, and use it. Condition a
+layout on it, query it as memory, or test whether a model can tell it from its reverse.
+
+Then write down which metric you used, and why that one.
+
+</Step>
+
+<Step id="s7">
+
+## Checkpoint
+
+Surgical scene graph work reports per-relation F1 and Visual Genome work cannot. Explain the
+difference in one sentence, then say what would have to change about Visual Genome for the two to
+report the same metric.
+
+</Step>

@@ -1,0 +1,224 @@
+---
+id: m03
+order: 3
+title_en: "Protocols: PredCls, SGCls, SGDet"
+title_zh: "評測協定：PredCls、SGCls、SGDet"
+anchor_labs: [L2]
+knowledge_points: [E1, E2, E10, E12]
+symbols:
+  - sym: "\\simeq"
+    gloss_en: "the match relation between a predicted and a ground-truth triplet"
+    gloss_zh: "預測三元組與標準答案三元組之間的配對關係"
+  - sym: "\\Phi_{\\text{cls}}"
+    gloss_en: "the classification half of a match"
+    gloss_zh: "配對條件中的分類部分"
+  - sym: "\\Phi_{\\text{loc}}"
+    gloss_en: "the localization half of a match"
+    gloss_zh: "配對條件中的定位部分"
+  - sym: "\\mathcal{H}"
+    gloss_en: "the hypothesis space a protocol leaves the model to search"
+    gloss_zh: "某一協定下模型須搜尋的假設空間"
+  - sym: "\\mathcal{C}"
+    gloss_en: "object class set"
+    gloss_zh: "物件類別集合"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening. The three protocol names sound like three metrics and are three exams over one body of material: what changes is how much input the model is given, and the scoring program does not change at all. Settle that before any number appears. Say the other half too — a scorer that branches internally on the protocol is measuring a fourth thing, and no paper has published that thing."
+  - id: s2
+    kind: math
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes. The match relation is two independent conjuncts — did it name the right thing, did it put it in the right place — and most of the confusing results in this field come from reporting the two as one number. Write the two conjuncts separately on the board and leave them up; s3 uses them."
+  - id: s3
+    kind: math
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes. The ordering between protocols is usually quoted as an empirical regularity and is in fact forced, in one line: whatever a model can do with less information it can do with more by ignoring the extra input. Ask the room for a counterexample first and then show why there is none — it lands better than the proof given straight."
+  - id: s4
+    kind: prose
+    seconds_budget: 180
+    presenter_notes_en: "Three minutes, and the point is the status of the claim rather than the algorithm. Greedy matching does not guarantee a maximum matching; published numbers are computed greedily, so this project computes them greedily and says so. Mention that data/golden/vectors.json holds a case built to separate the greedy answer from the maximum one — the assumption is tested adversarially rather than asserted."
+  - id: s5
+    kind: prose
+    seconds_budget: 180
+    presenter_notes_en: "Three minutes. The match relation has no category for true but unrecorded, so a prediction that is plainly true of the image and absent from the annotation is scored spurious. That follows from two premises and is not an implementation choice anyone can fix. Give all three consequences: the ceiling on measurable precision, the reward to head-heavy models, and what the spurious colour in the diff means from here on."
+  - id: s6
+    kind: lab
+    lab: L2
+    seconds_budget: 420
+    presenter_notes_en: "Seven minutes on L2. One fixed prediction scored under all three protocols: 0.25, 0.50, 0.75 on this fixture. After the knob has been moved, make the room read the fixture's own description and say which defect in the prediction each step repairs. That is the point of the step; watching the number rise is not."
+  - id: s7
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint. The inference fails because the gap between PredCls and SGDet contains detection quality and relation quality together and cannot be attributed to either. The measurement that settles it is SGCls, which supplies boxes without labels and so separates detection from classification. If the room only says the two are not comparable, ask what they would measure instead."
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## A protocol is what the model is handed, not how it is scored
+
+The three protocol names describe three different exams over the same material. PredCls gives the
+model the ground-truth boxes and the ground-truth object labels, and asks only for the predicates.
+SGCls gives the boxes and withholds the labels. SGDet gives nothing.
+
+The scoring code does not change between them. This is worth saying early, because the names sound
+like three metrics and they are not: they are three levels of assistance, and the same matching
+rule runs on whatever the model returns. A system that branched on the protocol inside the scorer
+would be measuring a fourth thing that nobody publishes against.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+Before any number exists, something must decide when a predicted triplet counts as the same
+triplet as an annotated one. The definition has two independent halves — did it name the right
+things, and did it put them in the right place — and almost every confusing result in this field
+comes from those two halves being reported as one.
+
+</Intuition>
+
+<Formal>
+
+$$
+\hat t\simeq t\iff\underbrace{c_{\hat s}=c_s\wedge c_{\hat o}=c_o\wedge\hat p=p}_{\text{classification}}\wedge\underbrace{\operatorname{IoU}(b_{\hat s},b_s)\ge\tau\wedge\operatorname{IoU}(b_{\hat o},b_o)\ge\tau}_{\text{localization}}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\hat t\simeq t &\iff \Phi_{\text{cls}}\wedge\Phi_{\text{loc}}\\
+\Phi_{\text{cls}} &= (c_{\hat s}=c_s)\wedge(c_{\hat o}=c_o)\wedge(\hat p=p)\\
+\Phi_{\text{loc}} &= (\operatorname{IoU}_s\ge\tau)\wedge(\operatorname{IoU}_o\ge\tau)
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\neg\Phi_{\text{cls}}\wedge\Phi_{\text{loc}} \equiv \text{right place, wrong name} \quad
+\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}} \equiv \text{right name, wrong place}
+\\[4pt]
+\text{Two independent failure modes} \Rightarrow \text{four diff colours, and three protocols to separate them.}\end{gathered}
+$$
+
+The four-colour diff you have been reading since L1 is this conjunction taken apart. `localization`
+is the case $\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}}$ and it exists precisely so that a right
+predicate on a badly placed box does not look the same as a wrong predicate.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+<Intuition>
+
+The protocol ordering is often quoted as an empirical regularity. It is not: it is forced, and the
+argument is a single line. Anything a model could do with less information it could also do with
+more, by ignoring the extra.
+
+</Intuition>
+
+<Formal>
+
+$$
+R_{\text{SGDet}}@k\ \le\ R_{\text{SGCls}}@k\ \le\ R_{\text{PredCls}}@k \qquad\text{for every model, every fixture}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\lvert\mathcal{H}_{\text{PredCls}}\rvert &= \lvert V\rvert^2\lvert\mathcal{P}\rvert\\
+\lvert\mathcal{H}_{\text{SGCls}}\rvert &= \lvert V\rvert^2\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert\\
+\lvert\mathcal{H}_{\text{SGDet}}\rvert &\supseteq \lvert\mathcal{H}_{\text{SGCls}}\rvert \quad\text{(boxes unknown too)}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Any hypothesis reachable under a harder protocol is reachable under an easier one}
+\\ \text{by discarding the extra input} \;\Rightarrow\; R_{\text{SGDet}}\le R_{\text{SGCls}}\le R_{\text{PredCls}}.
+\\[4pt]
+\textbf{Note } \lvert V\rvert^2 \text{ survives in all three: boxes are given, pairs never are.}\end{gathered}
+$$
+
+The note at the end is the part students skip and professors care about. PredCls hands over the
+boxes; it never hands over which pairs are related. The $\lvert V\rvert^2$ factor is present under
+every protocol, which is why the warning `gt_boxes_not_pairs` is attached to every PredCls and
+SGCls response in this application without exception.
+
+A PredCls number is therefore not "the easy case". It is the case where the relation reasoning is
+measured alone, which is a different claim and a more useful one.
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+## Greedy assignment is an assumption, not a theorem
+
+Matching a ranked list of predictions against the annotation is a bipartite assignment problem. The
+field's implementations walk the ranking in score order and take the first available match, which
+is greedy. Greedy does not in general attain the maximum matching.
+
+It is nonetheless what the published numbers were computed with, so this project computes it the
+same way — and says so. The assumption is discharged on adversarial fixtures rather than asserted:
+`data/golden/vectors.json` carries cases built to separate greedy from maximum, and the engine is
+held to the greedy answer because that is the answer the literature reports.
+
+Notice which kind of claim this is. "Greedy equals maximum here" is empirical and checkable.
+"Greedy is what everyone computes" is a fact about the field. Neither is a theorem, and the
+distinction is why the engine's documentation calls it an assumption.
+
+</Step>
+
+<Step id="s5">
+
+## A missing annotation counts as a mistake
+
+The matching rule has no category for "true but unrecorded". A predicted triplet that holds of the
+photograph and is absent from the annotation is scored `spurious`, identically to one that is
+simply wrong.
+
+This is not an implementation choice that could be fixed. It follows from the annotation being
+incomplete (M1) and the metric having only the annotation to compare against. Its consequences run
+through the rest of the course: it puts a ceiling on measurable precision, it rewards models that
+predict the head of the distribution, and it makes the `spurious` colour in the diff the one a
+student should always look at twice.
+
+</Step>
+
+<Step id="s6">
+
+## In the lab
+
+L2 scores one fixed prediction under all three protocols. Move the knob and watch the number move:
+on the lab's fixture it reads 0.25, 0.50 and 0.75. Then read the fixture's description and find
+which single defect in the prediction each step recovers.
+
+</Step>
+
+<Step id="s7">
+
+## Checkpoint
+
+A model reports PredCls R@50 of 0.65 and SGDet R@50 of 0.28. A colleague concludes that its
+relation reasoning is weak. State what is wrong with that inference, and what measurement would
+settle the question.
+
+</Step>

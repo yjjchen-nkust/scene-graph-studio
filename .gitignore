@@ -1,0 +1,22 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.venv/
+.env
+.DS_Store
+.pytest_cache/
+data/_raw/
+data/slices/*/images/
+!data/slices/placeholder/images/
+
+# Model weights. The repo-root .gitignore un-ignores this whole data/ tree (it had already
+# cost two tracks their data directory), so anything large has to be excluded here.
+data/checkpoints/
+# Machine-local timing, written by the live path and reported per machine in PROVENANCE.md.
+data/predictions/.latency.json
+
+# Playwright (check 8 of docs/VERIFICATION.md) writes both on every run.
+test-results/
+playwright-report/
+.offline-venv/

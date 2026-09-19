@@ -1,0 +1,4 @@
+# Playwright writes these here, next to playwright.config.ts, on every run of check 8
+# (docs/VERIFICATION.md). The traces are useful for a minute and large for ever.
+test-results/
+playwright-report/

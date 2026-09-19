@@ -1,0 +1,147 @@
+---
+id: m12
+order: 12
+title_en: "Video and spatio-temporal: STTran, TEMPURA, OED, DiffVsgg, UNO"
+title_zh: "影片與時空場景圖：STTran、TEMPURA、OED、DiffVsgg、UNO"
+anchor_labs: [L2]
+knowledge_points: [S1, S2, S3, S4, S5, S6]
+symbols:
+  - sym: "T"
+    gloss_en: "the set of timestamps a video scene graph spans"
+    gloss_zh: "影片場景圖所涵蓋的時間戳記集合"
+  - sym: "E_t"
+    gloss_en: "the edges present at timestamp t"
+    gloss_zh: "於時間戳記 t 存在的邊"
+  - sym: "\\theta"
+    gloss_en: "the confidence threshold an edge must reach to be present"
+    gloss_zh: "邊得以存在所須達到的信心門檻"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening. The signature goes from (V, E) to (V, E, T), and the third element is not decoration: edges are born and die. Put the module's question up here and leave it up — an edge that appears in one frame and is gone in the next, is that an event or detector noise. The still-image problem has no counterpart to it, and everything in the module comes from taking it seriously."
+  - id: s2
+    kind: math
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes. An edge exists at a timestamp only if the timestamp falls in its lifetime and its confidence clears the threshold, so raising θ monotonically thins every E_t. The point is that θ is not a post-processing detail but the knob trading temporal recall against stability — the same species as k in M04 and τ in M02, free parameters that move the number with the model untouched. Say so explicitly."
+  - id: s3
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes over five designs, with an extra minute for TEMPURA: it models how confident it ought to be, which is the closest thing in this literature to the calibration gap named in M04 s9. Keep the closing line — the sequence is a steady removal of hand-built machinery, M07 removed the pairing and this removes the tracker, and each removal makes the remaining failure modes easier to see rather than fewer."
+  - id: s4
+    kind: lab
+    lab: L2
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes back in L2 rather than in a new lab. Switch the constraint mode to semi and, on a pair that genuinely carries both an attention relation and a contacting one, look at what graph throws away and what none lets in. Say the key sentence in the room: the middle setting is not a compromise — for this kind of data it is the correct one."
+  - id: s5
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint. A case where raising it helps: the downstream use is coarse event counting or activity segmentation, where flicker from noisy edges costs more than a miss. A case where it destroys the point of the recording: the video exists to capture a brief event — a momentary contact, a single handover — and the higher threshold filters out the only thing worth recording. If only the first comes back, ask for the second; the second is the question."
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## A third element in the signature
+
+A video scene graph is not an image scene graph computed repeatedly. Its signature is
+$G = (V, E, T)$, and the third element is not decoration: an edge has a birth and a death, and the
+question of whether an edge that appears in one frame and vanishes in the next is a real event or
+detector noise has no counterpart in the still-image problem.
+
+Everything in this module follows from taking that question seriously.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+An edge is present at a timestamp if it is alive then and its confidence clears a threshold. Raise
+the threshold and fewer edges survive at every timestamp — so the threshold is not a detail of
+post-processing, it is the dial that trades temporal recall against stability.
+
+</Intuition>
+
+<Formal>
+
+$$
+G=(V,E,T),\qquad E=\bigcup_{t\in T}E_t,\qquad e\in E_t\iff \mathrm{born}(e)\le t\le\mathrm{die}(e)\ \wedge\ w_e\ge\theta
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}E_t &= \bigl\{e : \mathrm{born}(e)\le t\le\mathrm{die}(e)\ \wedge\ w_e\ge\theta\bigr\}\\E &= \textstyle\bigcup_{t\in T}E_t\\\theta'\ge\theta &\Rightarrow E_t(\theta')\subseteq E_t(\theta)\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\lvert E_t\rvert\text{ is non-increasing in }\theta\text{: raising the threshold trades temporal recall for stability.}\\[4pt]\text{An edge present in one frame and gone the next is either a real event or detector noise,}\\ \text{and }\theta\text{ is the only thing separating them. That is why }T\text{ belongs in the signature }G=(V,E,T)\\ \text{rather than being handled by running an image model once per frame.}\end{gathered}
+$$
+
+That is why $T$ belongs in the signature rather than being handled by running an image model once
+per frame. A per-frame model has no way to express "this edge persisted", so it cannot distinguish
+a flicker from an event, and $\theta$ is the only thing standing between the two.
+
+**Action Genome** — the dataset the field uses — splits its predicates into three groups:
+attention, spatial, and contacting. A pair can carry one from each simultaneously, and that is a
+fact about the world rather than an annotation artefact: a person can be *looking at* and
+*holding* the same cup.
+
+This is where M4's third constraint mode earns its place. The graph constraint would force one
+predicate per pair and discard two thirds of a legitimate annotation; no constraint at all admits
+every runner-up. `semi`, with $m$ fixed small, is the mode that matches the data.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## Five designs over the temporal axis
+
+**STTran** is the field's baseline: a spatial encoder over each frame, a temporal decoder across
+them. Its constrained-to-unconstrained gap is the figure M4 used to show how far a mode switch can
+move a number.
+
+**TEMPURA** adds memory and, more unusually, uncertainty — it models how confident it should be
+rather than only what it believes, which is the closest thing in this literature to the calibration
+M4 noted is absent.
+
+**OED** removes the tracker: one stage, end to end, no separate association step. The tracker was
+a large fraction of both the error and the engineering.
+
+**DiffVsgg** and **UNO** are the recent entries, applying diffusion and unified online prediction
+respectively.
+
+Read the sequence as progressive removal of hand-built machinery — pairs in M7, the tracker here —
+and notice that each removal makes the remaining failure modes easier to see rather than fewer.
+
+</Step>
+
+<Step id="s4">
+
+## In the lab
+
+Return to L2 and switch the constraint mode to `semi`. On a pair that genuinely carries an
+attention relation and a contacting relation at once, watch what `graph` throws away and what
+`none` lets in. The middle setting is not a compromise; on this data it is the correct one.
+
+</Step>
+
+<Step id="s5">
+
+## Checkpoint
+
+Raising $\theta$ reduces $|E_t|$ at every $t$. Describe a situation in which raising it improves
+the graph's usefulness, and one in which it destroys the only thing the video was recorded to
+capture.
+
+</Step>

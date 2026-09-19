@@ -1,0 +1,133 @@
+---
+id: m10
+order: 10
+title_en: "The LLM and VLM era in three modes: annotator, generator, RL-reasoner"
+title_zh: "LLM 與 VLM 時代的三種模式：標註者、生成者、強化學習推理者"
+anchor_labs: [L7]
+knowledge_points: [L1, L2, L3, L4, L5, L6, L7, L11]
+symbols: []
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening, and the three roles have to be fully up before anything else; the next four pages hang off them. Confusing the three is the main source of confusion in reading this period. Repeat the closing line verbatim: an annotator number measures a trained model, a generator number measures a prompt. That sentence is the answer to the checkpoint in s6."
+  - id: s2
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes. The zero-shot collapse is vocabulary and not vision: the match relation requires the predicate string to be equal, so a model answering sitting on where the annotation says on has spent a rank slot and left the ground truth unmatched. Point out that this is M01's synonym merging seen from the model's side instead of the dataset's. Make sure it has landed before M11, because that paper is one answer to exactly this."
+  - id: s3
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes, four items, and SVG and ROBIN is the one that matters. It attacks the incompleteness of M03 head on, and it is the mode with the clearest measurable benefit, because its output is training data and training data can be checked by training on it. Close on the methodological conclusion — asking a model to check a candidate is a narrower question than asking it to produce one, and narrow questions get more reliable answers — and note that M11's review stage is that idea applied inside a generator."
+  - id: s4
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes, and the reinforcement-learning and reasoning-substrate items can be brisk — the page is really the caveat at the end. Every result here came from a particular version of a proprietary model, and those versions cannot be reproduced; a number attached to GPT-4V measures an artefact that no longer exists in that form. M11 says the same of its own anchor paper. This is why the course sources every number rather than only the doubtful ones, and the link to NFR-2 is worth making explicitly."
+  - id: s5
+    kind: lab
+    lab: L7
+    seconds_budget: 420
+    presenter_notes_en: "Seven minutes on L7. Three modes on one image, all through recorded transcripts, so nothing depends on a live API or a particular model version — which is the caveat of s4 built into the lab, and worth saying so in the room. The task is to read the transcripts and not only the scores: the annotator and the generator fail visibly differently in them."
+  - id: s6
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint. It has to be the annotator mode for the number to be a claim about a trained model; a generator number measures a prompt. What tells them apart is whether a language model is in the loop at test time. If it is not, it is an annotator result. If it is, the number is bound to a prompt and, per the caveat of s4, cannot be reproduced."
+---
+
+
+<Step id="s1">
+
+## Three things a language model can be asked to do here
+
+The literature since 2023 uses large models in three distinct roles, and conflating them is the
+main source of confusion when reading it.
+
+**As annotator.** The model does not produce the scene graph at test time. It repairs, extends or
+relabels the training annotation, and a conventional model is then trained on the result. LLM4SGG
+and GPT4SGG are here.
+
+**As generator.** The model produces the scene graph directly at test time. IndVisSGG is here, and
+so is every prompting result you have seen quoted.
+
+**As reasoner.** The graph is not the output but the substrate: the model reasons over it, or is
+trained by reinforcement with a graph-shaped reward. SaGe is here.
+
+Ask which role a paper is in before reading its numbers. An annotator's numbers measure a trained
+model; a generator's measure a prompt.
+
+</Step>
+
+<Step id="s2">
+
+## Zero-shot collapse, and why it is not a vision failure
+
+A frontier VLM asked plainly for VG-150 triplets scores R@50 of roughly 1 to 2. It describes the
+scene correctly when asked in prose. The collapse is entirely in the vocabulary: M4's match
+relation requires string identity on the predicate, and a model that answers `sitting on` where
+the annotation says `on` has spent a ranked slot and left the truth unmatched.
+
+LLM4SGG names this *semantic over-simplification* and is worth reading for the name alone. It is
+the same phenomenon as M1's synonym merging, seen from the model's side rather than the dataset's.
+
+Hold on to this when you reach M11, because the whole anchor paper is one answer to it.
+
+</Step>
+
+<Step id="s3">
+
+## The annotator mode, where the gains are real
+
+**LLM4SGG** uses a language model to extract triplets from image captions and align them to the
+target vocabulary, producing supervision for images that had none.
+
+**GPT4SGG** combines a holistic image description with region captions, so that the model reasons
+about the whole scene and about the parts, then reconciles them.
+
+**SVG and ROBIN** attack annotation incompleteness directly: given a graph, predict the relations
+the annotator did not record. This is the most direct assault on the problem M3 named, and it is
+the mode with the clearest measurable benefit, because the output is training data whose quality
+can be checked by training on it.
+
+**Verification over generation** — CAGE, ReLIC — is the mode's methodological conclusion. Asking a
+model to check a candidate is a narrower question than asking it to produce one, and narrower
+questions are answered more reliably. M11's audit stage is this idea applied inside a generator.
+
+</Step>
+
+<Step id="s4">
+
+## The reasoner mode, and one honest caution
+
+**Reinforcement learning with a graph-shaped reward** trains a model against a reward computed
+from graph structure rather than from token likelihood. The appeal is obvious: the reward can
+encode the thing you actually want.
+
+**SaGe** treats the scene graph as a reasoning substrate — the graph is the intermediate
+representation a downstream question is answered over, not the deliverable.
+
+The caution applies to this whole module. Every result in it was produced with a proprietary model
+at a particular version, and those versions are not reproducible. A number attached to "GPT-4V" is
+a measurement of an artefact that no longer exists in that form. M11 says the same thing about its
+own anchor paper, and it is the reason this course marks provenance on every figure rather than
+only on the ones it doubts.
+
+</Step>
+
+<Step id="s5">
+
+## In the lab
+
+L7 runs the three modes over the same image with committed transcripts, so the comparison does not
+depend on a live API or on a model version. Read the transcripts, not only the scores: the
+annotator mode and the generator mode fail in visibly different ways.
+
+</Step>
+
+<Step id="s6">
+
+## Checkpoint
+
+A paper reports that its language-model pipeline reaches mR@50 of 21.4 on VG-150. Say which of the
+three modes it must be in for that number to be a claim about a trained model rather than about a
+prompt, and what in the paper would tell you.
+
+</Step>

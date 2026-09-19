@@ -1,0 +1,124 @@
+---
+id: m12
+order: 12
+title_en: "Video and spatio-temporal: STTran, TEMPURA, OED, DiffVsgg, UNO"
+title_zh: "影片與時空場景圖：STTran、TEMPURA、OED、DiffVsgg、UNO"
+anchor_labs: [L2]
+knowledge_points: [S1, S2, S3, S4, S5, S6]
+symbols:
+  - sym: "T"
+    gloss_en: "the set of timestamps a video scene graph spans"
+    gloss_zh: "影片場景圖所涵蓋的時間戳記集合"
+  - sym: "E_t"
+    gloss_en: "the edges present at timestamp t"
+    gloss_zh: "於時間戳記 t 存在的邊"
+  - sym: "\\theta"
+    gloss_en: "the confidence threshold an edge must reach to be present"
+    gloss_zh: "邊得以存在所須達到的信心門檻"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場。簽名由 (V, E) 變為 (V, E, T)，而第三個元素並非裝飾：邊具有生成與消亡的時點。宜將本單元的核心問題於此提出並保留至結束——某條邊於一影格出現、次一影格消失，究竟是真實事件抑或偵測器雜訊；該問題於靜態影像問題中並無對應物，本單元全部內容均源自認真看待它。"
+  - id: s2
+    kind: math
+    seconds_budget: 360
+    presenter_notes_zh: "六分鐘。邊於某時間戳記存在須同時滿足存活期間與信心門檻兩項條件，故提高 θ 使各時間戳記上存活的邊單調減少。重點在於 θ 並非後處理細節，而是在時間召回率與穩定性之間權衡的旋鈕，與 M04 的 k 及 M02 的 τ 同屬一類——皆為改變數值而與模型無關的自由參數。此一歸類宜明確指出。"
+  - id: s3
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘，五種設計。TEMPURA 值得多留一分鐘：其建模對象包含「應當多有把握」，為本領域文獻中最接近 M04 s9 所指校準缺口者。收束句宜保留：此序列為對人工建構機制的逐步移除——M07 移除配對，此處移除追蹤器——而每一次移除均使其餘失效模式更易於辨識，並非使其數量減少。"
+  - id: s4
+    kind: lab
+    lab: L2
+    seconds_budget: 300
+    presenter_notes_zh: "L2 五分鐘，回到既有實作而非新開一個。任務為將約束模式切換至 semi，於確實同時具備 attention 關係與 contacting 關係的配對上，觀察 graph 所捨棄者與 none 所納入者。關鍵句須當場說明：中間設定並非折衷，就此類資料而言它才是正確的設定。"
+  - id: s5
+    kind: checkpoint
+    presenter_notes_zh: "檢核點。可提升效用的情境：下游為粗粒度的事件計數或活動分段，雜訊邊造成的閃爍損害大於漏失。將摧毀錄製目的的情境：影片所欲捕捉者本身即為短暫事件——瞬間接觸、一次交遞——提高門檻恰好濾去唯一值得記錄者。若現場僅答出前者，請追問後者，因後者方為本題的重點。"
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 簽名中的第三個元素
+
+影片場景圖並非對影像場景圖的重複計算。其簽名為 $G = (V, E, T)$，而第三個元素並非裝飾：邊具有生成與消亡的時點；而「某條邊於一影格出現、次一影格消失，究竟是真實事件抑或偵測器雜訊」此一問題，於靜態影像問題中並無對應物。
+
+本單元全部內容，均源自認真看待該問題。
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+某條邊於某一時間戳記存在，須同時滿足兩項條件：該時點位於其存活期間內，且其信心值超過門檻。提高門檻，則各時間戳記上存活的邊隨之減少——因此該門檻並非後處理的細節，而是在時間召回率與穩定性之間權衡的旋鈕。
+
+</Intuition>
+
+<Formal>
+
+$$
+G=(V,E,T),\qquad E=\bigcup_{t\in T}E_t,\qquad e\in E_t\iff \mathrm{born}(e)\le t\le\mathrm{die}(e)\ \wedge\ w_e\ge\theta
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}E_t &= \bigl\{e : \mathrm{born}(e)\le t\le\mathrm{die}(e)\ \wedge\ w_e\ge\theta\bigr\}\\E &= \textstyle\bigcup_{t\in T}E_t\\\theta'\ge\theta &\Rightarrow E_t(\theta')\subseteq E_t(\theta)\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\lvert E_t\rvert\text{ is non-increasing in }\theta\text{: raising the threshold trades temporal recall for stability.}\\[4pt]\text{An edge present in one frame and gone the next is either a real event or detector noise,}\\ \text{and }\theta\text{ is the only thing separating them. That is why }T\text{ belongs in the signature }G=(V,E,T)\\ \text{rather than being handled by running an image model once per frame.}\end{gathered}
+$$
+
+此即 $T$ 應納入簽名、而非以「每影格執行一次影像模型」處理的理由。逐影格模型無從表達「此邊持續存在」，因而無法區分閃爍與事件，而 $\theta$ 為橫亙於兩者之間的唯一依據。
+
+**Action Genome**——該領域所使用的資料集——將其 predicate 分為三組：attention、spatial 與 contacting。同一配對可同時承載三組各一個 predicate，而此為關於世界的事實而非標註產物：一個人可以同時*注視*且*握持*同一個杯子。
+
+M4 所述的第三種約束模式於此取得其存在理由。graph constraint 將強制每一配對僅一個 predicate，從而捨棄合法標註的三分之二；完全不設約束則納入全部次順位項目。將 $m$ 固定為較小值的 `semi`，方為與資料相符的模式。
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## 時間軸上的五種設計
+
+**STTran** 為該領域的基線：於每一影格上執行空間編碼器，再跨影格執行時間解碼器。其約束模式與無約束模式之間的落差，即為 M4 用以說明「模式切換可使數值移動多大幅度」的數據。
+
+**TEMPURA** 加入記憶機制，且更為特殊的是加入不確定性——其建模對象不僅為「相信什麼」，亦包含「應當多有把握」；此為本領域文獻中最接近 M4 所指出之校準缺口者。
+
+**OED** 移除追蹤器：單階段、端對端，無獨立的關聯步驟。追蹤器原先佔誤差與工程成本之相當比例。
+
+**DiffVsgg** 與 **UNO** 為近期成果，分別應用擴散模型與統一線上預測。
+
+宜將此一序列視為對人工建構機制的逐步移除——M7 移除配對，此處移除追蹤器——並留意每一次移除均使其餘失效模式更易於辨識，而非使其數量減少。
+
+</Step>
+
+<Step id="s4">
+
+## 實作單元的內容
+
+請回到 L2 並將約束模式切換為 `semi`。於一組確實同時具備 attention 關係與 contacting 關係的配對上，觀察 `graph` 所捨棄者與 `none` 所納入者。中間設定並非折衷；就此類資料而言，它才是正確的設定。
+
+</Step>
+
+<Step id="s5">
+
+## 檢核點
+
+提高 $\theta$ 將使各 $t$ 上的 $|E_t|$ 減少。請描述一種提高該門檻可提升圖之效用的情境，以及一種提高該門檻將摧毀「該影片錄製之唯一目的」的情境。
+
+</Step>

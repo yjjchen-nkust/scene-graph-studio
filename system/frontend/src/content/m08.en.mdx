@@ -1,0 +1,118 @@
+---
+id: m08
+order: 8
+title_en: "Panoptic SGG and the fair-ranking correction"
+title_zh: "Panoptic SGG 與公平排名之修正"
+anchor_labs: [L6]
+knowledge_points: [P1, P2, P3, P4]
+symbols: []
+claims:
+  - id: c-m08-correction
+    text_en: "Under the corrected pairing, PSGTR mR@50 falls 20.8 to 11.62, PSGFormer 17.0 to 8.20 and HiLo 30.3 to 18.33, while two-stage methods barely move"
+    text_zh: "改用修正後的配對規則，PSGTR 的 mR@50 由 20.8 降至 11.62、PSGFormer 由 17.0 降至 8.20、HiLo 由 30.3 降至 18.33，兩階段方法則幾乎不變"
+    source: psg-fair-ranking-2024
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: sgdet
+    verified: false
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening. The thing-stuff split matters more than it first appears: a box-based dataset cannot represent stuff as an object at all, so relations involving road, wall or sky simply do not exist in Visual Genome's vocabulary. Say plainly that PSG and VG150 are not two scales of one thing but two universes of discourse, so their numbers are not comparable. The rest of the module rests on that."
+  - id: s2
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes, three methods, and Pair-Net is the one to leave room for. It does not improve relation classification; it measures where the loss actually is, and finds that pair recall — was the right subject-object pair ever proposed — is the binding constraint. A perfect relation classifier over today's proposals would still miss most of the ground truth. That is M05's positive rate seen from the other side, and the link is worth making out loud."
+  - id: s3
+    kind: prose
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes, the most important page in the module, and the numbers are not the part worth dwelling on. The arithmetic of the correction was already given in M04 s7. What this page is for: every PSG paper from 2025 and 2026 that this project checked still reports pre-correction figures. A published, correct correction ignored for two years is a fact about how the field operates, and it is why this application shows the papers' tables behind a not-comparable marker instead of merging them into a leaderboard. Explain the verified: false flag too — this course has not opened the correction's own table, and until somebody does, that is the flag it deserves."
+  - id: s4
+    kind: lab
+    lab: L6
+    seconds_budget: 480
+    presenter_notes_en: "Eight minutes on L6. One fixed prediction scored under single_mpo and multi_mpo, with the model untouched between them. The gap has to be produced by the room, not shown to it. Then one question: when a paper scores under a different rule than the work it compares itself with, what does it owe the reader. There is no settled answer; collect two or three positions and do not adjudicate."
+  - id: s5
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint, and the no-formula constraint is deliberate: what is being marked is whether the causal chain is complete. A one-stage method can emit the same mask several times, every copy scored before the correction, so a real share of its number came from double counting. A two-stage method enumerates pairs first, so a pair appears once already and there is nothing to lose. If the room reaches for the inequality from M04 s7, ask for it again in words."
+---
+
+
+<Step id="s1">
+
+## Thing and stuff
+
+Panoptic segmentation divides an image into segments of two kinds. A *thing* is a countable
+object — a person, a cup, a robot arm — and instances of it are separate segments. *Stuff* is an
+uncountable region: sky, road, wall, floor. Every pixel belongs to exactly one segment of one kind
+or the other.
+
+For scene graphs this matters more than it first appears. A box-based dataset cannot represent
+stuff as an object at all, so relations involving the road, the wall or the sky are simply absent
+from Visual Genome's vocabulary. PSG has them, and its predicate distribution is therefore not
+comparable with VG150's — not merely differently scaled, but drawn over a different universe.
+
+</Step>
+
+<Step id="s2">
+
+## The methods, and the bottleneck
+
+**PSGTR and PSGFormer** are the dataset's own baselines, one-stage transformers in the DETR
+lineage of M7, adapted to emit segments rather than boxes.
+
+**HiLo** observes that predicate frequency and predicate specificity pull in opposite directions,
+and runs high-frequency and low-frequency branches separately before merging them. It is the
+strongest reported method on the dataset and, as step 3 shows, the one the correction hit hardest.
+
+**Pair-Net** asks a different question. Instead of improving relation classification, it measures
+where the loss actually is, and finds that *pair recall* — whether the right subject-object pair
+is proposed at all — is the binding constraint. A perfect relation classifier on the pairs current
+methods propose would still lose most of the ground truth.
+
+That finding is the M8 counterpart of M5's positive-rate ratio. Both say the same thing from
+opposite directions: the hard part is not naming the relation, it is finding the pair.
+
+</Step>
+
+<Step id="s3">
+
+## The correction, and what happened to it
+
+Under the original PSG protocol a model could emit the same mask several times with different
+predicate distributions, and every copy could score. M4 gave the arithmetic: permitting $d > 1$
+masks per pair can only raise the matching, and it raises it for architectures that emit
+duplicates freely — which is every one-stage method and no two-stage method.
+
+An ECCV 2024 correction closed it. The measured effect on the three headline methods is this
+module's single claim, and it is severe: roughly half the reported mean recall of the one-stage
+entries, with the two-stage entries barely moving.
+
+**The finding that matters most is not the numbers.** It is that every 2025–26 PSG paper this
+project checked still reports the old figures. A correction that is published, correct and ignored
+for two years is a fact about how the field works, and it is the reason this application renders
+per-paper tables behind a non-comparability banner rather than merging them into a leaderboard.
+
+The claim is marked `verified: false` because this course has not opened the correction's own
+table. That is the right state for it to be in until someone does.
+
+</Step>
+
+<Step id="s4">
+
+## In the lab
+
+L6 scores one fixed prediction under `single_mpo` and `multi_mpo` and shows both numbers at once.
+Nothing about the model changes between them. Produce the gap yourself, then decide what you think
+a paper owes its reader when the rule it scored under is not the rule its competitors used.
+
+</Step>
+
+<Step id="s5">
+
+## Checkpoint
+
+Explain, in one paragraph and without formulas, why the corrected pairing rule cost one-stage
+methods roughly half their mean recall while leaving two-stage methods almost untouched.
+
+</Step>

@@ -1,0 +1,168 @@
+---
+id: m02
+order: 2
+title_en: "Grounding: bounding boxes vs panoptic masks"
+title_zh: "定位方式：邊界框與全景遮罩"
+anchor_labs: [L1]
+knowledge_points: [F3, F4, X3]
+symbols:
+  - sym: "b"
+    gloss_en: "a bounding box"
+    gloss_zh: "邊界框"
+  - sym: "\\tau"
+    gloss_en: "the IoU threshold a match must reach"
+    gloss_zh: "判定配對成立所需的 IoU 門檻"
+  - sym: "A(\\cdot)"
+    gloss_en: "area of a region"
+    gloss_zh: "區域面積"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening, and one thing only: before any match or any error can exist, some rule has to decide whether two regions are the same object, and that rule is not part of the definition of a scene graph. It is a convention with a free parameter in it, and that parameter is the τ of the next step."
+  - id: s2
+    kind: math
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes. Scale invariance is why IoU was adopted; its severity under a size mismatch is the price. Derive the bound first — two concentric boxes past a certain size ratio cannot pass the threshold however well placed they are — and only then return to the choice of τ. That bound is what the τ slider in L2 is demonstrating."
+  - id: s3
+    kind: prose
+    seconds_budget: 180
+    presenter_notes_en: "Three minutes, two points. An axis-aligned rectangle always claims more area than the object occupies, and two interleaved objects have heavily overlapping boxes while the objects themselves never touch. Masks remove that ambiguity and bring two costs of their own: annotation expense, and a pairing rule they now need. Leave single_mpo against multi_mpo for L6; here it is enough to say that the choice moves published numbers."
+  - id: s4
+    kind: prose
+    seconds_budget: 120
+    presenter_notes_en: "Two minutes. PSG is the only Tier-1 dataset in this course that carries masks, and it is what makes L6 possible. Two things before any PSG table is read: its object vocabulary includes stuff classes, so its predicate distribution is not comparable with VG150; and its annotations are MIT while the photographs are COCO, which the licence does not cover — this project commits the annotations and distributes no PSG image. The second point is the same pair of gates as data/LICENCES.md, and it is worth saying so."
+  - id: s5
+    kind: lab
+    lab: L1
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes on L1, on a PSG image with the mask layer on. Two things to find: an object whose mask and box disagree visibly, and a pair whose boxes overlap heavily while the masks never touch. The second is the case where the score changes when the metric is computed on masks instead of rectangles, and it is worth reading one out to the room."
+  - id: s6
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint. The one at τ = 0.3 is higher, and the comparison says nothing about which model is better. Push once more: both papers stated their threshold in a footnote and it still is not a comparison — what is missing is a re-evaluation at one common threshold."
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## What "the same object" means to a metric
+
+A model proposes a region and the annotation holds another. Before anything can be called a match
+or a mistake, something has to decide whether those two regions are the same object. That decision
+is not part of the definition of a scene graph. It is a convention, it has a free parameter, and
+the parameter is almost never stated.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+Intersection over union asks what fraction of the combined area the two regions agree on. It is
+scale-free, which is why it is used, and it is brutal about size: two boxes centred on the same
+object but differing enough in scale cannot reach the threshold however well they are placed. The
+bound below says exactly how much difference is enough.
+
+</Intuition>
+
+<Formal>
+
+$$
+\operatorname{IoU}(b,b^{\prime})=\frac{\lvert b\cap b^{\prime}\rvert}{\lvert b\cup b^{\prime}\rvert},\qquad \text{accept}\iff\operatorname{IoU}\ge\tau
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+A(b\cap b') &\le \min\bigl(A(b),A(b')\bigr) &&\text{the intersection lies inside both}\\
+A(b\cup b') &\ge \max\bigl(A(b),A(b')\bigr) &&\text{the union contains both}\\
+\operatorname{IoU} &= \frac{A(b\cap b')}{A(b\cup b')} \;\le\; \frac{\min(A(b),A(b'))}{\max(A(b),A(b'))} &&\text{divide the two bounds}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{With } A(b')=\lambda^2 A(b):\quad \operatorname{IoU}\le\min(\lambda^2,\lambda^{-2}),
+\quad\text{so } \lambda\ge\sqrt{2}\ \Rightarrow\ \operatorname{IoU}<\tfrac12 \text{ at } \tau=0.5.\end{gathered}
+$$
+
+A box 1.42 times too large in each direction is rejected no matter where it sits. The bound holds
+before any question of placement, so a model penalised this way is not being told that it found
+the wrong thing — it is being told that it drew the boundary at a different, defensible place.
+
+And $\tau = 0.5$ is a convention. `METRICS.md` does not state it; the field uses it; a student who
+believes it is part of the definition will misread every published table. L2's τ slider exists to
+make that parameter visible rather than assumed.
+
+A note on notation. The $\lambda$ in that bound is local: it is the ratio of the two boxes' linear
+scale and nothing else. M4 uses the same letter for the weight mixing a frequency prior with a
+visual model. The collision is in the source literature rather than in this course, and the
+symbol table therefore glosses $\lambda$ once, at that later and load-bearing use. Where a symbol
+is reused, read the module it belongs to.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## What a box cannot express
+
+A bounding box is an axis-aligned rectangle, so for anything that is not roughly rectangular it
+claims area the object does not occupy. Two objects that interleave — a person behind a railing, a
+cup on a cluttered table — have boxes that overlap heavily while the objects themselves do not
+touch. Any relation scored on box overlap inherits that error.
+
+A panoptic mask assigns every pixel to exactly one segment, which removes the ambiguity and adds
+two of its own. Masks are far more expensive to annotate, so datasets that have them are smaller.
+And mask overlap needs its own pairing rule, because a subject and an object can share a boundary
+in ways two rectangles cannot.
+
+That pairing rule is the `single_mpo` / `multi_mpo` distinction, it changes published numbers, and
+L6 exists to score one fixed prediction under both.
+
+</Step>
+
+<Step id="s4">
+
+## PSG: 133 classes, 56 predicates, masks
+
+The Panoptic Scene Graph dataset re-annotates COCO images with panoptic segments rather than
+boxes: 80 thing classes and 53 stuff classes, indexed as one concatenated list of 133, with 56
+predicates. It is the only Tier-1 dataset in this course that carries masks, which is what makes
+the L6 comparison possible at all.
+
+Two things about it are worth knowing before reading any PSG table. Its object vocabulary includes
+*stuff* — sky, road, wall — which a box-based dataset cannot represent as an object at all, so its
+predicate distribution is not comparable with VG150's. And its images are COCO photographs, whose
+licence the annotations' MIT licence does not reach: this project commits PSG annotations and
+ships no PSG image.
+
+</Step>
+
+<Step id="s5">
+
+## In the lab
+
+Open L1 on a PSG image and turn the mask overlay on. Find an object whose mask and box disagree
+sharply, then find a pair whose boxes overlap although the masks do not touch. That pair is the
+one whose score would change if the metric read masks instead of rectangles.
+
+</Step>
+
+<Step id="s6">
+
+## Checkpoint
+
+A paper reports SGDet R@50 at τ = 0.5 and a competitor reports the same metric at τ = 0.3, each
+stating its threshold in a footnote. Which number is larger, and what does the comparison tell you
+about the two models?
+
+</Step>

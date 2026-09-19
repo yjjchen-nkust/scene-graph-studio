@@ -1,0 +1,130 @@
+---
+id: m06
+order: 6
+title_en: "The bias problem: TDE, CogTree, DLFE, NICE, IETrans, ST-SGG, PE-Net, RA-SGG"
+title_zh: "偏差問題：TDE、CogTree、DLFE、NICE、IETrans、ST-SGG、PE-Net、RA-SGG"
+anchor_labs: [L3]
+knowledge_points: [D1, D2, D3, D4, D5, D6]
+symbols:
+  - sym: "\\omega_p"
+    gloss_en: "the loss weight given to predicate p"
+    gloss_zh: "賦予 predicate p 的損失權重"
+  - sym: "\\beta"
+    gloss_en: "how strongly the loss weighting inverts predicate frequency"
+    gloss_zh: "損失權重反轉 predicate 頻率的強度"
+claims:
+  - id: c-m06-flowsg
+    text_en: "FlowSG reports R@50 = 36.5 and mR@50 = 18.4 together, which is the first time the trade-off stopped binding"
+    text_zh: "FlowSG 同時報告 R@50 為 36.5、mR@50 為 18.4，此為該權衡首次不再構成拘束"
+    source: flowsg-2026
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: predcls
+    verified: false
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場，並以 M04 的恆等式起手：R − mR = Cov(n, R)/n̄。宜明言整個去偏文獻所處理者僅為此一共變異數的正負號，別無其他。持此式閱讀，2020 年的 TDE 至 2024 年的 RA-SGG 之樣貌即告清晰。若現場未修習 M04，此頁不成立，宜先行確認。"
+  - id: s2
+    kind: math
+    seconds_budget: 420
+    presenter_notes_zh: "七分鐘。損失重加權的效果與字面完全一致：稀有類別召回率上升、常見類別下降；由於 recall 由常見類別主導，後半部即為直接代價。宜強調此權衡並非設計缺陷而是算術的必然，故「能否避免」一問本身即問錯了方向。"
+  - id: s3
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘。本步驟的教學重點為主張的狀態而非結果本身。本單元唯一的 claim 記錄了一份 2026 年「兩者同時上升」的報告並標記 verified: false，因本課程尚未查閱該表格。宜明確說明此標記的意義，並列出查證所需的四項條件：相同分割、相同約束模式、相同 k、相同 predicate 合併方式。此頁即 NFR-2 的現場示範。"
+  - id: s4
+    kind: lab
+    lab: L3
+    seconds_budget: 420
+    presenter_notes_zh: "L3 七分鐘。α 滑桿由 1 移至 0，即由 R 連續移動至 mR，於同一組固定預測之上。觀察重點為各模型排名隨滑桿改變——該重新排序即整個去偏文獻在單一控制項上的呈現。宜請現場指出排名交叉發生於何處。"
+  - id: s5
+    kind: checkpoint
+    presenter_notes_zh: "檢核點。可導出者：該方法在稀有 predicate 上確有提升。不可導出者：該方法是否改進、是否值得採用——因 s2 的權衡意味 R 幾乎必然下降，而下降幅度未報告。可解決爭議的補充數值即為同一設定下的 R@50。若現場僅答「應報告 R」，請追問為何該數值必須來自同一設定。"
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 四年時間，投注於單一共變異數的正負號
+
+M4 以一項恆等式作結：$R - mR = \operatorname{Cov}(n, R)/\bar n$。recall 與 mean recall 之差，即為「predicate 出現頻率」與「模型於該 predicate 上表現」兩者之相關性，除此之外別無其他。
+
+持此恆等式閱讀去偏文獻，其樣貌即告清晰。自 2020 年的 TDE 至 2024 年的 RA-SGG，每一方法均試圖將該共變異數驅近於零，而每一方法均以 $R$ 的下降作為代價。問題不在於其是否有效，而在於其代價為何；答案存在於算術之中，而非任何論文的摘要之內。
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+調整損失權重以偏向稀有 predicate，其效果與字面完全一致：稀有類別的召回率上升，常見類別的召回率下降。由於 recall 由常見類別所主導，後半部即為直接代價；此一權衡並非設計缺陷，而是算術的必然。
+
+</Intuition>
+
+<Formal>
+
+$$
+\max_{\theta}\ mR@k\quad\text{s.t.}\quad R@k\ge R_0;\qquad \text{FlowSG: both rise, the constraint stops binding}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\text{debiasing reweights the loss: } \ \ell_\theta &= \textstyle\sum_p \omega_p\,\ell_p, \qquad \omega_p\propto n_p^{-\beta}\\
+\beta\uparrow \;&\Rightarrow\; R_p\uparrow \text{ for rare } p, \quad R_p\downarrow \text{ for common } p\\
+&\Rightarrow\; \operatorname{Cov}(n,R)\downarrow \;\Rightarrow\; R-mR \downarrow \quad\text{(Proposition 3)}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Since } R=\textstyle\sum_p \frac{n_p}{N}R_p \text{ is dominated by large } n_p, \text{ lowering common-class recall}
+\\ \text{costs } R \text{ directly. That is the trade-off, and why it held from TDE (2020) to RA-SGG (2024).}
+\\[4pt]
+\text{FlowSG (CVPR 2026) reports } 36.5\ R@50 \text{ and } 18.4\ mR@50 \text{ together: the constraint stopped binding.}\end{gathered}
+$$
+
+因此，本單元標題所列的八種方法，實為同一曲線上的八個點；僅以 $mR$ 相互比較並無意義：其中任一方法皆可藉由提高 $\beta$ 於 $mR$ 軸上進一步推升，而其於 $R$ 上的代價，論文未必載明。
+
+四個系別值得區分，因其介入之處各不相同。**TDE** 於推論階段扣除反事實項，訓練過程完全不變；**CogTree 與 DLFE** 作用於損失函數；**NICE** 主張標註本身即為錯誤，並予以重新標記；**IETrans 與 ST-SGG** 改動資料，於長尾上進行遷移與自我訓練；**PE-Net** 學習原型；**RA-SGG** 則將標註視為部分標註而非完整標註。
+
+最後兩者最值得注意，因其不再將標註視同真值——而 M3 已說明標註並非真值。
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## 何種結果方足以稱為解決
+
+若某一方法能在不降低 $R$ 的前提下提升 $mR$——亦即在不消耗頭部召回率的情況下提升長尾各 predicate 的召回率——即為脫離該權衡。2020 至 2024 年的整個系列之中並無此例，故前述最佳化問題中的拘束條件始終有效。
+
+本單元唯一的 claim 記錄了一份 2026 年「兩者同時上升」的報告，並標記為 `verified: false`：本課程尚未查閱該表格。宜將其視為待查證的主張而非可教授的結果，並留意查證所需條件——與其比較對象相同的分割方式、相同的約束模式、相同的 $k$，以及相同的 predicate 合併方式。
+
+</Step>
+
+<Step id="s4">
+
+## 實作單元的內容
+
+L3 將 $\alpha$ 置於滑桿之上，於同一組固定預測之上，由 $\alpha = 1$ 的 $R$ 連續移動至 $\alpha = 0$ 的 $mR$。請觀察各模型的排名如何隨滑桿移動而改變。該重新排序，即為整個去偏文獻於單一控制項上的呈現。
+
+</Step>
+
+<Step id="s5">
+
+## 檢核點
+
+某方法報告其 mR@50 高於先前最佳值四個百分點，且未報告 R@50。請說明由此可以導出與不可導出的結論，並指出可解決此一爭議的那一項補充數值。
+
+</Step>

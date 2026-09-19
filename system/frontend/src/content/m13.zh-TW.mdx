@@ -1,0 +1,148 @@
+---
+id: m13
+order: 13
+title_en: "3D and embodied: 3DSSG, Hydra, ConceptGraphs, Clio, SayPlan, VLM-MSGraph"
+title_zh: "3D 與具身場景圖：3DSSG、Hydra、ConceptGraphs、Clio、SayPlan、VLM-MSGraph"
+anchor_labs: [L4]
+knowledge_points: [G1, G2, G3, G4, G5, G6]
+symbols:
+  - sym: "\\mathcal{G}_{\\ell}"
+    gloss_en: "the scene graph at hierarchy level ℓ"
+    gloss_zh: "階層第 ℓ 層的場景圖"
+  - sym: "\\Phi_{\\ell}"
+    gloss_en: "the lossy collapse from level ℓ to level ℓ+1"
+    gloss_zh: "由第 ℓ 層折疊至第 ℓ+1 層的有損映射"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場。此前全部單元的圖皆用於評分，此處的圖則用於使用：規劃器對其進行查詢，而查詢具有預算限制。此一單項改變重新排序本課程中的每一項優先次序，宜明言。數百萬體素對數千 token 的對比可於此給出，作為 s2 的引子。"
+  - id: s2
+    kind: math
+    seconds_budget: 360
+    presenter_notes_zh: "六分鐘。層級為逐層有損折疊：體素至物件、物件至地點、地點至房間、房間至樓層。各層之所以小到足以據以推理，正是因為其下層已被捨棄——此句為本頁的核心，宜逐字說明。每節點約七個 token 的估計須明確標示為估計，Hydra 的 48,000 一數則為論文所載。s5 的檢核點即以此二者計算。"
+  - id: s3
+    kind: math
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘，本單元最具可遷移性的構想。Clio 所問者為：若折疊為有損，則相對於何者有損；其答案為相對於任務，故粒度並非場景的性質，而是場景與所欲完成工作兩者共同的性質。務必作出與 M04 的對照：在不知下游任務的前提下計算的指標處於相同處境，R@K 視每一標準答案三元組為同等值得找回，而任何實際任務均非如此。此一對照為本單元與前十二單元的接點。"
+  - id: s4
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘。要點為上述系統均未報告保留標註上的 R@K，而報告任務成功率。此非標準之降低，而是該圖所服務之指標，且其免於 M04 所列舉的多數風險——任務非成即敗，約束模式或 predicate 合併方式均不影響此一結果。宜於此預告 M14：若干應用領域已悄然完全停止報告 SGG 指標。"
+  - id: s5
+    kind: checkpoint
+    presenter_notes_zh: "檢核點，為 s2 兩個數字上的算術。4,000 token、每節點約七個 token，即約 570 個節點，故可完整容納房間層與其上各層，不足以容納物件層。其下各層的作法為依查詢即時展開——先於上層定位，再僅取回相關子樹，此即 Clio 的任務相關粒度於實作上的形式。若現場僅算出節點數而未答第二問，請追問。"
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 當圖必須被用於行動
+
+此前全部內容所產生的圖，皆用於評分。於機器人領域中，圖之產生係為供使用：規劃器對其進行查詢，而查詢具有預算限制。此一單項改變，重新排序了本課程中的每一項優先次序。
+
+準確度仍然重要，但規模同樣重要，且其重要性以靜態影像問題從未面對的方式呈現。一棟建築物的稠密度量地圖含數百萬體素；語言模型的脈絡則為數千 token。必有某處須進行折疊。
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+3D 場景圖以層級方式建構，每一層均為其下一層的有損折疊：體素至物件、物件至地點、地點至房間、房間至樓層。各層之所以小到足以據以推理，正是因為其下層已被捨棄。
+
+</Intuition>
+
+<Formal>
+
+$$
+\mathcal{G}_{\ell+1}=\Phi_{\ell}(\mathcal{G}_{\ell}),\qquad \lvert V_{\ell+1}\rvert\ll\lvert V_{\ell}\rvert,\qquad \text{tokens}\approx 7\,\lvert V_{\ell}\rvert
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\mathcal{G}_{\ell+1} &= \Phi_\ell(\mathcal{G}_\ell), \qquad \lvert V_{\ell+1}\rvert \ll \lvert V_\ell\rvert \quad\text{(lossy collapse)}\\
+\text{tokens}(\ell) &\approx 7\,\lvert V_\ell\rvert
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Hydra: } 48{,}000 \text{ voxels} \to 140 \text{ objects} \to 52 \text{ places} \to 36 \text{ rooms} \to 3 \text{ floors.}
+\\[4pt]
+\text{SayPlan searches the collapsed graph first, then expands only the relevant subgraph:}
+\\ 48{,}000\cdot 7 \approx 336\text{k tokens (infeasible)} \quad\text{versus}\quad 36\cdot 7 \approx 252 \text{ tokens.}\end{gathered}
+$$
+
+token 估算為最值得深思之處。若某一層的成本約為每節點七個 token，則可交付予語言模型的層級，僅由其脈絡窗口決定——而非由機器人所能感知者決定，亦非由任務所需者決定。
+
+因此折疊映射 $\Phi_\ell$ 即工程重心所在，而本單元中的每一系統，均為同一問題的不同回答：上一層需要知道什麼，又有什麼可以安全地遺忘？
+
+**Hydra** 於機器人移動的同時即時建構該階層；**ConceptGraphs** 以 2D 基礎模型的開放詞彙建構，而非依據封閉的 3D 類別清單；**SayPlan** 於折疊後的圖上搜尋，僅展開所需分支，此為對 token 界限的直接回答；**VLM-MSGraph** 則於各層級再度以視覺語言模型擴充該階層。
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+<Intuition>
+
+Clio 提出其他系統未明言的問題：若折疊為有損，則相對於何者有損？其所給出的答案為：相對於任務。粒度並非場景的性質，而是場景*與*所欲完成工作兩者共同的性質。
+
+</Intuition>
+
+<Formal>
+
+$$
+V_{\text{task}}=\{v\in V:\ \mathrm{sim}(v,\text{task})>\theta\};\qquad \text{granularity is a property of the task, not the scene}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+V_{\text{task}}=\{v\in V:\ \mathrm{sim}(v,\text{task})>\theta\};\qquad \text{granularity is a property of the task, not the scene}
+$$
+
+</Worked>
+
+<Implications>
+
+此為本單元中最具可遷移性的構想，其適用範圍遠超出機器人領域。在不知查詢內容的前提下建構的場景圖，必須猜測何種區辨具有意義，且將於兩個方向上同時猜錯——保留無人需要的細節，並折疊某人確實需要的細節。
+
+宜將此與 M4 對照。在不知下游任務的前提下計算的指標亦處於相同處境：R@K 視每一標準答案三元組為同等值得找回，而任何實際任務均非如此。
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+## 3D 對評測方式的改變
+
+3DSSG 於點雲上確立了該問題，並為該領域提供首個基準。然而宜留意上述系統均未報告者：於保留標註上的 R@K。
+
+它們所報告者為任務成功率。機器人是否找到該物件、是否完成規劃、是否回答了該問題？此非標準之降低，而是該圖所服務之指標——且其免於 M4 所列舉的多數風險，因為任務非成即敗，而約束模式或 predicate 合併方式均不影響此一結果。
+
+M14 將回到此點：若干應用領域已悄然完全停止報告 SGG 指標。
+
+</Step>
+
+<Step id="s5">
+
+## 檢核點
+
+某規劃器具備 4,000 token 的預算，而階層成本約為每節點七個 token。請指出其可完整容納 Hydra 範例階層中的哪一層，以及系統須採取何種作法方能使用其下各層。
+
+</Step>

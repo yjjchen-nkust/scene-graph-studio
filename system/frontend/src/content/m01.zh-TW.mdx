@@ -1,0 +1,180 @@
+---
+id: m01
+order: 1
+title_en: "The triplet and the Visual Genome data model"
+title_zh: "三元組與 Visual Genome 資料模型"
+anchor_labs: [L1]
+knowledge_points: [F5, F6, F7, X1]
+symbols:
+  - sym: "\\mathcal{P}"
+    gloss_en: "predicate class set"
+    gloss_zh: "predicate 類別集合"
+  - sym: "C"
+    gloss_en: "number of predicate classes"
+    gloss_zh: "predicate 類別數"
+  - sym: "n_p"
+    gloss_en: "number of ground-truth triplets carrying predicate p"
+    gloss_zh: "標準答案中 predicate p 的三元組數量"
+  - sym: "N"
+    gloss_en: "total number of ground-truth triplets"
+    gloss_zh: "標準答案三元組總數"
+  - sym: "R_p"
+    gloss_en: "recall restricted to predicate p"
+    gloss_zh: "僅就 predicate p 計算的召回率"
+  - sym: "s"
+    gloss_en: "Zipf exponent of the predicate frequency law"
+    gloss_zh: "predicate 頻率分布的 Zipf 指數"
+  - sym: "\\gamma"
+    gloss_en: "how strongly a model's per-predicate recall follows frequency"
+    gloss_zh: "模型各 predicate 召回率隨頻率變化的強度"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場。本步驟只需確立一件事：Visual Genome 是三層分別蒐集的堆疊，關係層高度不完整，且未記錄者之中何者曾被考慮並排除亦無標示。此點為其後每一項指標的前提，宜明確標示。predicate 同義詞問題留至下一步驟，此處不展開。"
+  - id: s2
+    kind: math
+    seconds_budget: 180
+    presenter_notes_zh: "三分鐘。結論是合併同義詞可在模型完全不變的前提下抬高 mR@k。宜先於板書寫出合併前後的 predicate 類別數，再對照投影片的不等式。若現場對不等號方向存疑，可令其中一個 μ 為零以檢視極端情形。"
+  - id: s3
+    kind: math
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘。本步驟為 M04 與 L3 的前置推導：在 Zipf 分布與頭部偏置模型之下，R 與 mR 的比值可寫成調和數之比。s 與 γ 兩個參數須分別說明，前者屬資料、後者屬模型。時間不足時可略去封閉形式，保留 R ≥ mR 的結論。"
+  - id: s4
+    kind: prose
+    seconds_budget: 180
+    presenter_notes_zh: "三分鐘。此頁為命名慣例而非理論，宜快。要點在於三組不同的重新發布版本共用 `VG150` 一名而不共用測試集，故跨表比較不成立。請明確說明本專案一律使用 `vg150-sgb`，且 D-09 以 lint 而非人為記憶強制。若現場詢問何種分割較佳，答為本課程不作此判斷，只要求指明所用者。"
+  - id: s5
+    kind: lab
+    lab: L1
+    seconds_budget: 360
+    presenter_notes_zh: "L1 六分鐘。任務為補上邊並送出，觀察哪些已標註的邊未被找出。巡視時請留意被判為 spurious 而實際符合影像的提案，該類提案即為 s1 所述關係層不完整性的直接證據，宜於現場取一例公開說明。"
+  - id: s6
+    kind: checkpoint
+    presenter_notes_zh: "檢核點。完整回答分兩層：判斷該模型是否改進，需要合併前後的詞彙表與各 predicate 的樣本數；判斷該領域是否進展，則需要在同一固定詞彙表下的重複評測。現場多半只答出前者，此時請追問後者。"
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 三個層次，由不同標註者分別建立
+
+Visual Genome 並非單一標註，而是一組堆疊：帶有自由文字描述的區域、以框定位的物件、物件上的屬性，以及物件之間的關係。各層由不同的群眾工作者分別蒐集，彼此之間並無一致性要求。
+
+在任何模型登場之前，已產生兩項後果。其一，predicate 詞彙即為標註者當時所書寫的內容，因此 `on`、`on top of`、`sitting on`、`resting on` 同時存在，且彼此之間不具上下位關係。其二，關係層具有高度不完整性：標註者於每張影像僅記錄數條邊，而實際成立者可達數百條；未被記錄者之中，何者曾被考慮並排除，亦無任何標示。
+
+第二點於本課程中反覆出現，原因在於本領域所有指標皆將標註視同真值。
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+四個語意相同的 predicate，對指標而言即為四個相異類別。模型回答 `on` 而標註者書寫 `sitting on` 時，其扣分與回答 `eating` 完全相同。因此合併同義詞並非整理資料：在模型完全不變、亦未重新訓練的前提下，此一操作即改變指標數值。
+
+</Intuition>
+
+<Formal>
+
+$$
+p_1,p_2\mapsto\tilde p \;\Rightarrow\; \lvert\mathcal{P}^{\prime}\rvert\downarrow,\qquad mR@k=\frac{1}{\lvert\mathcal{P}^{\prime}\rvert}\sum_{p}R_p@k\ \uparrow
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\text{merge } p_1,p_2\mapsto\tilde p:\quad n_{\tilde p}&=n_{p_1}+n_{p_2}, &&C\mapsto C-1\\
+R_{\tilde p}@k &= \frac{\mu(G^{(p_1)}\cup G^{(p_2)},X_k)}{n_{p_1}+n_{p_2}} \;\ge\; \frac{\max_i \mu(G^{(p_i)},X_k)}{n_{p_1}+n_{p_2}}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{A prediction of } p_1 \text{ against ground truth } p_2 \text{ spent a ranked slot } \textit{and} \text{ left the truth unmatched.}
+\\ \text{After merging it is a match, so } mR \text{ rises with the model unchanged.}\end{gathered}
+$$
+
+兩篇論文若採用不同的合併方式，所報告的數值即不可比較，而兩者均無錯誤。此為「已發表數值之表格並不構成排名」的第一項理由。
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+<Intuition>
+
+predicate 的分布不僅不均勻，更近似 Zipf 分布：少數空間類 predicate 涵蓋大部分標註，其餘則相當稀少。僅學會頭部類別的模型，可取得偏高的 recall，卻對任何具有資訊量的關係一無所知。mean recall 即為使此一情形顯現而設；下列推導說明兩項指標在何種條件下相等。
+
+</Intuition>
+
+<Formal>
+
+$$
+n_p\propto p^{-s},\qquad R_p=\Bigl(\tfrac{n_p}{n_1}\Bigr)^{\gamma},\qquad R=\sum_p\frac{n_p}{N}R_p,\qquad mR=\frac{1}{C}\sum_p R_p
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+n_p &\propto p^{-s},\quad p=1,\dots,C &&\text{Zipf}\\
+R_p &= (n_p/n_1)^{\gamma}=p^{-s\gamma} &&\text{head-biased model}\\
+R &= \sum_p \frac{n_p}{N}R_p = \frac{\sum_p p^{-s(1+\gamma)}}{\sum_p p^{-s}} = \frac{H_C^{(s+s\gamma)}}{H_C^{(s)}} &&\text{generalized harmonic numbers}\\
+mR &= \frac{1}{C}\sum_p p^{-s\gamma} = \frac{H_C^{(s\gamma)}}{C}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}s=0 \;\Rightarrow\; n_p \text{ constant} \;\Rightarrow\; \operatorname{Cov}(n,R)=0 \;\Rightarrow\; R=mR \ \text{ exactly.}\end{gathered}
+$$
+
+此一條件宜反向閱讀：$R$ 與 $mR$ 之分離程度，恰等於模型各 predicate 召回率與 predicate 頻率之相關程度。兩者之差距並非對品質的第二次量測，而是對該相關性的量測。
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+## `VG150` 指涉三組不同的資料集
+
+$$
+\texttt{VG150}\ \mapsto\ \text{three distinct }(\mathcal{D}_{\text{train}},\mathcal{D}_{\text{val}},\mathcal{D}_{\text{test}})\ \Longrightarrow\ \text{numbers not comparable}
+$$
+
+Visual Genome 的 150 物件類別、50 predicate 子集，已由數種分割方式重新發布；這些分割共用同一名稱，卻不共用同一測試集。取自甲分割的數值與取自乙分割的數值並列於同一表格，並不構成比較，而兩篇論文的符號系統均未載明所採用者為何。
+
+因此本專案一律不使用裸寫的 `vg150`。資料集識別碼為 `vg150-sgb`，明確指出所依據的重新發布版本；決策 D-09 禁止程式庫任何位置使用簡寫形式，並以 lint 而非人為記憶強制執行——兩個名稱僅相差一個字元。
+
+</Step>
+
+<Step id="s5">
+
+## 實作單元的內容
+
+L1 提供一張物件已框出的影像，由學員補上邊。請建立數組三元組並送出，觀察哪些已標註的邊未被找出。接著提出更進一步的問題：在被判為 spurious 的提案之中，有多少實際上符合該影像，僅是未被標註記錄？
+
+</Step>
+
+<Step id="s6">
+
+## 檢核點
+
+設某篇論文合併 `on` 與 `sitting on`，並報告 mR@50 高於先前最佳值兩個百分點。請說明：欲判斷該模型是否有所改進，需要論文提供何種資訊；欲判斷該領域是否有所進展，又需要何種資訊。
+
+</Step>

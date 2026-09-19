@@ -1,0 +1,122 @@
+---
+id: m09
+order: 9
+title_en: "Open vocabulary: VS³, OvSGTR, PGSG"
+title_zh: "開放詞彙：VS³、OvSGTR、PGSG"
+anchor_labs: [L4]
+knowledge_points: [V1, V2, V3, V4, V5]
+symbols:
+  - sym: "\\mathcal{C}_{\\text{base}}"
+    gloss_en: "object classes seen during training"
+    gloss_zh: "訓練階段可見的物件類別"
+  - sym: "\\mathcal{C}_{\\text{novel}}"
+    gloss_en: "object classes held out from training"
+    gloss_zh: "自訓練階段保留的物件類別"
+claims:
+  - id: c-m09-splits
+    text_en: "On VG150 the training set falls to 50,107 images under OvD, 44,333 under OvR and 36,425 under OvD+R"
+    text_zh: "於 VG150 上，訓練集在 OvD 下降至 50,107 張影像，OvR 下為 44,333 張，OvD+R 下為 36,425 張"
+    source: ovsgtr-2024
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: sgdet
+    verified: false
+  - id: c-m09-novel
+    text_en: "Swin-T novel-split relation recall: 18.14 under OvD, 13.45 under OvR, 9.20 under OvD+R"
+    text_zh: "Swin-T 於 novel 分割上的關係召回率：OvD 為 18.14、OvR 為 13.45、OvD+R 為 9.20"
+    source: ovsgtr-2024
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: sgdet
+    verified: false
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場，並定位本單元於 M01 與 M11 之間：M01 說明 predicate 詞彙即標註者當時所書寫的內容，M11 將說明前沿 VLM 取得 0.032 係因其不知何種詞彙獲准使用。開放詞彙研究所探問者，即模型必須指認從未受訓指認之對象時將發生何事。宜明言其精微之處在於保留法本身而非方法。"
+  - id: s2
+    kind: math
+    seconds_budget: 360
+    presenter_notes_zh: "六分鐘。劃分為 base 與 novel、僅以 base 訓練，其陷阱在於代價：凡含有任一 novel 類別的影像須整張移除，故訓練資料的縮減速度快於所保留的比例。宜請現場先估計保留八成類別時所餘的影像比例，再揭示；此估計的誤差即本頁的教學效果。"
+  - id: s3
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘。資料洩漏此節為本單元的核心：若 grounding 預訓練語料已含所保留的類別，該模型根本未曾於 novel 類別上受測，而此非假設性問題。應提出的問題不是「其於 novel 類別上表現如何」，而是「該等類別對整條管線是否確為未見，包含自骨幹繼承的一切」。收束句宜保留：願意討論此點的論文，所應得的評價高於其數值本身所示。"
+  - id: s4
+    kind: checkpoint
+    presenter_notes_zh: "檢核點。OvR 與 OvD 為不同的保留設定，故 14.2 與 19.6 並非同一量。在對兩方法一無所知的前提下應預期 OvD 較高，因僅保留物件類別所移除的訓練影像少於同時保留 predicate 者。若現場僅答「設定不同」，請追問應預期何者較高及其理由。"
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 詞彙始終是問題所在
+
+M1 說明 predicate 詞彙即為標註者當時所書寫的內容；M11 將說明前沿 VLM 之所以取得 0.032，係因其不知何種詞彙獲准使用。開放詞彙研究位於此二觀察之間：其所探問者，為模型必須指認某一從未受訓指認之對象時將發生何事。
+
+其實驗設計為保留法，而精微之處正在於該保留法本身。
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+將類別集合劃分為 base 與 novel，僅以 base 訓練，並分別報告兩部分的結果。陷阱在於「僅以 base 訓練」的代價：凡含有任一 novel 類別的影像，均須整張自訓練集移除，故訓練資料的縮減速度快於所保留的比例。
+
+</Intuition>
+
+<Formal>
+
+$$
+\mathcal{C}=\mathcal{C}_{\text{base}}\sqcup\mathcal{C}_{\text{novel}},\quad \mathcal{P}=\mathcal{P}_{\text{base}}\sqcup\mathcal{P}_{\text{novel}};\qquad R \text{ reported on each part separately}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}\mathcal{C}=\mathcal{C}_{\text{base}}\sqcup\mathcal{C}_{\text{novel}},&\qquad \mathcal{P}=\mathcal{P}_{\text{base}}\sqcup\mathcal{P}_{\text{novel}}\\\mathcal{D}_{\text{train}}&=\bigl\{I : \text{every }t\in G_I\text{ uses base classes only}\bigr\}\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Holding out a class removes every image containing it, so }\lvert\mathcal{D}_{\text{train}}\rvert\text{ falls faster than the holdout fraction:}\\ \text{VG150}\to 50{,}107\ (\text{OvD}),\quad 44{,}333\ (\text{OvR}),\quad 36{,}425\ (\text{OvD+R}).\\[4pt]\text{Report }R\text{ on base and novel separately; one number hides which half failed.}\\ \text{Verified, Swin-T novel split: OvD }18.14,\quad\text{OvR }13.45,\quad\text{OvD+R }9.20\text{ (relations)}.\\[4pt]\text{Withholding }\textit{relations}\text{ hurts far more than withholding objects:}\\ \text{object names transfer through a pretrained text encoder, relations do not.}\end{gathered}
+$$
+
+由此可得三項推論，其中第三項將改變閱讀該領域文獻的方式。
+
+**base 與 novel 應分別報告。** 單一平均數值會遮蔽究竟哪一半失效，而兩者失效的原因並不相同。
+
+**三種設定彼此不可比較。** OvD 保留物件類別、OvR 保留關係類別、OvD+R 兩者皆保留，而三者對訓練集的縮減程度各不相同。以 OvD 評估的方法，與以 OvD+R 評估的方法並不構成競爭關係。
+
+**保留關係所造成的損害遠大於保留物件**，其原因即為本單元的核心發現：物件名稱可經由預訓練文字編碼器遷移，該編碼器曾於某處的圖說中見過該詞；關係則否。並不存在任何預訓練語料，其中 `meshed with` 如同 `wrench` 一般被錨定至影像。
+
+此一不對稱性，即為 VS³ 自 grounding 模型繼承視覺語意空間的理由、OvSGTR 分別對齊節點與邊的理由，以及 PGSG 生成新的 predicate *詞彙*而非自清單中選取的理由。
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## 使該設定失效的資料洩漏
+
+若某模型的 grounding 預訓練語料已包含所保留的類別，則該模型根本未曾於 novel 類別上受測。此非假設性問題：上述各方法所依據之 grounding 模型，其預訓練集規模龐大、取自網路爬取，且與 Visual Genome 並非互斥。
+
+閱讀開放詞彙的結果時，應提出的問題並非「其於 novel 類別上表現如何」，而是「該等 novel 類別對*整條管線*而言是否確為未見，包含自骨幹繼承的一切」。多數論文無法回答此一問題；願意討論此點者，所應得的評價高於其數值本身所示。
+
+</Step>
+
+<Step id="s4">
+
+## 檢核點
+
+某論文報告其於 OvR 下的 novel 類別關係召回率為 14.2，並與另一方法於 OvD 下的 19.6 相比較。請說明該比較的問題所在，並指出在對兩方法一無所知的前提下，預期何者數值較高。
+
+</Step>

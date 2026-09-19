@@ -1,0 +1,426 @@
+---
+id: m11
+order: 11
+title_en: "★ IndVisSGG, end to end"
+title_zh: "★ IndVisSGG 全貌解析"
+anchor_labs: [L5]
+knowledge_points: [L8, L9, L10, X7]
+symbols:
+  - sym: "O"
+    gloss_en: "the predefined object dictionary handed to the model"
+    gloss_zh: "提供給模型的預定義物件字典"
+  - sym: "P"
+    gloss_en: "the predefined predicate dictionary handed to the model"
+    gloss_zh: "提供給模型的預定義 predicate 字典"
+  - sym: "V_t"
+    gloss_en: "the video frame at timestamp t"
+    gloss_zh: "時間戳記 t 的影格"
+  - sym: "a_i"
+    gloss_en: "expert i's natural-language analysis accompanying its revision"
+    gloss_zh: "專家 i 隨修訂提出的自然語言分析"
+claims:
+  - id: c-m11-naive
+    text_en: "Asked plainly, the VLM scores R@20 = 0.032 on 10% of the PSG test set; with O, P and E it scores 23.040"
+    text_zh: "未加約束時，該 VLM 於 PSG 測試集 10% 子集上的 R@20 為 0.032；提供 O、P、E 後為 23.040"
+    source: indvissgg-2025
+    source_table: "Table 3"
+    constraint: unstated
+    protocol: unstated
+    verified: true
+  - id: c-m11-superadditive
+    text_en: "O alone gives R@20 = 1.787 and P alone 2.079, but the two together give 20.792"
+    text_zh: "僅提供 O 時 R@20 為 1.787，僅提供 P 時為 2.079，兩者併用則為 20.792"
+    source: indvissgg-2025
+    source_table: "Table 3"
+    constraint: unstated
+    protocol: unstated
+    verified: true
+  - id: c-m11-experts
+    text_en: "N=3 is not dominated by N=5: at N=5, mR@50 falls 25.480 to 24.383 and R@100 falls 30.142 to 30.020"
+    text_zh: "N=3 並未被 N=5 支配：於 N=5 時，mR@50 由 25.480 降至 24.383，R@100 由 30.142 降至 30.020"
+    source: indvissgg-2025
+    source_table: "Table 4"
+    constraint: unstated
+    protocol: unstated
+    verified: true
+  - id: c-m11-mr-gain
+    text_en: "On VG-150 the method improves mR@50 by 9.19 against R@50's 2.58; on PSG, 8.12 against 6.39"
+    text_zh: "於 VG-150 上，本方法的 mR@50 提升 9.19，而 R@50 僅提升 2.58；於 PSG 上則為 8.12 對 6.39"
+    source: indvissgg-2025
+    source_table: "Table 2"
+    constraint: unstated
+    protocol: unstated
+    verified: true
+  - id: c-m11-isg-density
+    text_en: "ISG holds 10K images with 688 object and 144 predicate classes at 17.6 predicates per image, against PSG's 49K, 133, 56 and 5.7"
+    text_zh: "ISG 收錄 10K 張影像，含 688 個物件類別與 144 個 predicate 類別，每張影像 17.6 個 predicate；PSG 則為 49K、133、56 與 5.7"
+    source: indvissgg-2025
+    source_table: "Table 1"
+    constraint: unstated
+    protocol: unstated
+    verified: true
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening, and this is the anchor module of the course, so give it the room. The number 0.032 should be on screen inside the first minute, with its cause named immediately: vocabulary, not vision. Say why the module sits at eleven — without M04 nobody can see that 0.032 is a statement about string equality, and without M06 nobody can see why a rise in mean recall means more than a rise in recall. If the room does not have both, repair that before going on."
+  - id: s2
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes. Name all four criticisms of §2.2 separately; they are four points and not a general complaint. The fourth is the one to stop on: in some PSG datasets the top three relation classes hold over half the samples while many rare ones sit below one per cent. That is the long tail, stated by the authors of the method under study, and it is exactly what mR@K was built for. Ask the room to recall the identity from M04 s4 here."
+  - id: s3
+    kind: math
+    seconds_budget: 420
+    presenter_notes_en: "Seven minutes, and clear the notation collision before anything else. The paper's E is the example set given to the model, not M00's relationship set; its N is the number of auditors, not M01 and M04's count of ground-truth triplets; and the q in the next step's reconstruction is the probability that one audit fixes an error, not M07's DETR query count. All three are quoted as the paper writes them, because that is what a reader will meet. Skip this and the next two pages will be a muddle. Then point out that (1) and (2) differ only in their arguments, so the ablation between them isolates exactly one variable."
+  - id: s4
+    kind: math
+    seconds_budget: 420
+    presenter_notes_en: "Seven minutes. Equation (3) shows step one's output back to the same model N times and asks each copy to audit it; (4) aggregates them. The reconstruction assumes each audit fixes an error independently with probability q and reads the effect of N off that. On the same page, say that the independence assumption is untested and almost certainly false — N audits from one model, one frame and one prompt are not independent draws. It returns in s8; plant it here."
+  - id: s5
+    kind: math
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes. The mechanism behind 0.032: a predicate outside the permitted vocabulary matches nothing and still spends its rank slot, so one mistake is charged twice. That follows directly from the third conjunct of M04's definition, and it is worth pointing back to it. If the room met this in M10 s2, compress it and call it the same phenomenon seen from the scoring side."
+  - id: s6
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes. If only one thing comes out of Table 2, make it this: mean recall rises far more than recall — 9.19 against 2.58 on VG, 8.12 against 6.39 on PSG — and a method that does that is recovering tail predicates, which is what the claimed mechanism predicts. Two more points that must not be dropped: the GPT-4V to Gemini gap is an uncontrolled comparison of two proprietary models at two moments, which the paper does not attribute and neither should the room; and the three datasets are three separate experiments, with different splits, vocabularies and image sources."
+  - id: s7
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes. ISG's case is density rather than size: 688 object classes against 133, 144 predicates against 56, 17.6 predicates per image against 5.7. Say plainly that it is available on request only, with no public release and no repository, so this course teaches it from published tables and figures, and flag the name collision with the unrelated ISG-Bench. The substitute is mini-ISG, built by the same method from openly licensed industrial frames — this project's teaching set and not the authors' dataset. That distinction returns in L8 and must not be blurred."
+  - id: s8
+    kind: prose
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes, and it is the page that matters most in the module. Take the four gaps one at a time, and give the ablation baseline the weight: row one of Table 3 is an unconstrained prompt, and the stronger naive baseline — generate free text, then project to O and P by nearest neighbour — is not reported. Without it Table 3 conflates two claims, that constraining the vocabulary works and that constraining it before generation works, and only the second is the method. This runs straight into L5; say outright that a student who runs the missing experiment has done something the paper did not."
+  - id: s9
+    kind: lab
+    lab: L5
+    seconds_budget: 600
+    presenter_notes_en: "Ten minutes on L5, the longest lab in the course. Table 3 and Table 4 are reproduced beside the student's own run, and the published figures and the student's come back in different fields and never appear inside one element — that is a design decision, not an implementation detail, and the reason is worth saying aloud: a number you produced and a number somebody else published are different kinds of object. Then the missing experiment of s8. If it lands near 20.792 the method's claim shrinks considerably, and that verdict belongs to the room rather than to the lectern."
+  - id: s10
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint, two sentences only. The first: the ratio measures the difference between supplying the permitted vocabulary and not supplying it — the effect of a vocabulary constraint on string-equality scoring. The second: it does not follow that the method made the model see 720 times better, nor that the ratio can be set beside any architectural improvement, because there is no architectural difference between the two rows. If the first sentence comes back without the second, ask for the second directly."
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## The sentence this module is built around
+
+A frontier vision-language model asked plainly for scene-graph triplets scores 0.032 on R@20 —
+not because it cannot see, but because it does not know which words are allowed.
+
+Everything that follows is an elaboration of that sentence. The paper's contribution is not
+architectural. It is a claim that constraining a VLM's output vocabulary, plus a self-audit,
+substitutes for a trained relation head, and every figure in its evaluation should be read against
+that claim and no other.
+
+You are eleven modules in for a reason. Without M4 you cannot see why 0.032 is a statement about
+string matching rather than evidence of a blind model; without M6 you cannot see why the mean
+recall gains matter more than the recall gains.
+
+</Step>
+
+<Step id="s2">
+
+## Why the prior art fails here — the paper's own argument
+
+§2.2 makes four specific complaints. They are four, not general dissatisfaction.
+
+**Boxes are loose.** A bounding box covers pixels belonging to other objects, and in overlapping
+regions the assignment is arbitrary. You met this bound in M2.
+
+**Boxes miss unbounded regions.** The paper's own example is a road area: critical to the scene and
+not a boxable object.
+
+**Box annotation carries junk.** Repeated markings of trees and sky contribute nothing and produce
+isolated nodes, and learning from them confuses the model.
+
+**Panoptic SGG fixes those three and creates a new one.** Per-pixel labelling is more faithful and
+far more expensive — and, in the authors' words, in some PSG datasets the top three relationship
+categories account for over 50 per cent of samples while many rare relations occupy less than
+1 per cent.
+
+Dwell on the last. That is the long-tail problem, stated by the authors of the method under study,
+and it is exactly what mR@K exists to expose. Having read it here, go back and read M4 again.
+
+</Step>
+
+<Step id="s3">
+
+**A note on notation before the equations.** This paper reuses two letters the course has already
+spent, and a third the course is about to spend. Its $E$ is the set of worked examples handed to the model, not the relationship set of a
+scene graph (M0). Its $N$ is the number of expert audits, not the count of ground-truth triplets
+(M1, M4). Both are quoted here exactly as the paper writes them, because a reader who meets the
+equations in the paper will meet these letters. The project's symbol table glosses each letter once,
+at its course-wide use, and a local meaning is stated where it occurs — here. Its $q$, in the audit reconstruction below, is the probability that one audit corrects an error; M7 spends the same letter on DETR's query count, which is the standard use.
+
+
+<Intuition>
+
+Equation (1) is the naive call: hand over the frame and an instruction. Equation (2) hands over the
+dictionaries first. The two differ by their arguments and by nothing else — same operator, same
+image, same prompt template — so the ablation between them isolates a single variable.
+
+</Intuition>
+
+<Formal>
+
+$$
+out_{trpl}=\mathrm{VLM}(V_t,\textit{Prompt}) \qquad (1)
+$$
+
+$$
+out^{s_1}_t=\mathrm{VLM}(V_t,\,O,\,P,\,E,\,\textit{Prompt}) \qquad (2)
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+(1)\ \ out_{trpl} &= \mathrm{VLM}(V_t,\textit{Prompt}) && R@20 = 0.032\\
+(2)\ \ out^{s_1}_t &= \mathrm{VLM}(V_t,O,\textit{Prompt}) && R@20 = 1.787\\
+(2)\ \ out^{s_1}_t &= \mathrm{VLM}(V_t,P,\textit{Prompt}) && R@20 = 2.079\\
+(2)\ \ out^{s_1}_t &= \mathrm{VLM}(V_t,O,P,\textit{Prompt}) && R@20 = 20.792\\
+(2)\ \ out^{s_1}_t &= \mathrm{VLM}(V_t,O,P,E,\textit{Prompt}) && R@20 = 23.040
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Same operator, same image, same prompt template. The only varying argument is } (O,P,E).
+\\ \text{Rows 2 and 3 are single-component ablations, not cumulative: } O \text{ alone, then } P \text{ alone.}
+\\ \text{The jump is superadditive: } 1.787 \text{ and } 2.079 \text{ apart, } 20.792 \text{ together.}
+\\ \text{Ratio between endpoints: } 23.040/0.032 = 720. \ \text{Architectural difference: none.}\end{gathered}
+$$
+
+The superadditivity is the most interesting quantitative fact in the paper and the text does not
+remark on it. Constraining one end of the triplet is nearly worthless; constraining both is
+transformative. Read Table 3 as the five-row factorial it is — an earlier summary of this paper
+presented it as a four-row cumulative sequence, which hides the $P$-alone row and with it the whole
+observation.
+
+The paper's own reading of rows 2 and 3 is that $P$ alone beats $O$ alone "because predicting
+relations is often more challenging than forecasting object categories". Defensible, and it rests
+on a 0.292-point difference at R@20 on a 10 per cent subset.
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+<Intuition>
+
+Step 1's output contains noise. Equation (3) shows it back to the same model $N$ times
+independently, with the frame still in hand, and asks each copy to audit it; equation (4)
+reconciles the audits into one graph with their reasoning available to the reconciler.
+
+</Intuition>
+
+<Formal>
+
+$$
+\bigl(out^{s_2}_t,a_i\bigr)=\mathrm{VLM}\bigl(V_t,O,P,E,\textit{Prompt},out^{s_1}_t\bigr),\ i\in\{1,\dots,N\} \qquad (3)
+$$
+
+$$
+out^{s_3}_t=\mathrm{VLM}\bigl(out^{s_2}_t,\alpha,\textit{Prompt}\bigr) \qquad (4)
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\text{step 2 draws } N \text{ i.i.d. audits } a_1,\dots,a_N \text{ of } out^{s_1}_t; \text{ step 3 aggregates them.}\\
+\text{If each audit corrects an error independently with probability } q,\\
+\Pr[\text{error survives } N \text{ audits}] = (1-q)^N \quad\text{(exponential in } N)\\
+\text{cost} = N+2 \ \text{VLM calls per frame} \quad\text{(linear in } N)
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Measured: } N=1,2,3,5 \Rightarrow R@20 = 21.323,\ 21.584,\ 23.158,\ 23.287.
+\\ \text{At } k=20 \text{ that favours } N=5 \text{, but not everywhere:}
+\\ mR@50 = 25.480 \text{ at } N=3 \text{ against } 24.383 \text{ at } N=5 \text{; } R@100 = 30.142 \text{ against } 30.020.
+\\ \text{So } N=3 \text{ is not dominated, and the recommendation rests on more than token cost.}
+\\ \text{An empirical claim with no accompanying theory — the independence assumption is untested.}\end{gathered}
+$$
+
+Two warnings, and both are about reading rather than about the method.
+
+**The exponential-versus-linear argument is ours, not the paper's.** The paper offers no theory for
+why $N$ audits help. The reconstruction above rests on independence, and three samples from one
+model on one frame are correlated, so the assumption is plainly false. Present it to a student as a
+hypothesis to break, never as the authors' reasoning.
+
+**A lab that shows only the `@20` column teaches the opposite of what the data says.** At $k=20$,
+$N=5$ wins on both axes. Across all six cutoffs it does not. This is why L5 commits all four rows
+at all six cutoffs, with a test asserting the two cutoffs where $N=5$ loses.
+
+The shape of the curve — steep from 1 to 3, then flat and inconsistent in sign from 3 to 5 — is
+what a variance-reduction mechanism looks like when it saturates. That supports the paper's choice
+without supplying the theory it lacks.
+
+</Implications>
+
+</Step>
+
+<Step id="s5">
+
+<Intuition>
+
+Why does 0.032 happen at all? Because a predicate outside the allowed vocabulary cannot match
+anything, and the slot it occupied is gone. One mistake, counted twice.
+
+</Intuition>
+
+<Formal>
+
+$$
+\hat p\notin\mathcal{P}\ \Longrightarrow\ \hat t\not\simeq t\ \ \forall t\in G\quad(\text{one ranked slot spent, and } t \text{ left unmatched})
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\hat p\notin\mathcal{P} \;&\Rightarrow\; \hat p\ne p \ \ \forall t\in G &&\text{Definition 5, third conjunct}\\
+&\Rightarrow\; \hat t\not\simeq t \ \ \forall t \;\Rightarrow\; \hat t \text{ contributes nothing to } \mu\\
+&\Rightarrow\; \hat t \text{ occupies a slot in } X_k \text{ and the true } t \text{ stays unmatched}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\textbf{The error is counted twice:} \text{ once as a wasted rank, once as a miss.}
+\\ \text{This is what LLM4SGG names } \textit{semantic over-simplification}, \text{ and why zero-shot}
+\\ \text{frontier VLMs score } R@50\approx 1\text{–}2 \text{ on VG-150 while describing the scene correctly.}\end{gathered}
+$$
+
+This is the third conjunct of the match relation you met in M3, doing exactly what it was defined
+to do. Nothing is broken. A metric that compares strings will punish a synonym, and M1 already told
+you the vocabulary is full of synonyms with no hierarchy.
+
+$O$ and $P$ are therefore not hints. They are a projection of free-text output onto a closed
+vocabulary, applied *before* generation rather than after — and whether the "before" matters is the
+paper's untested assumption. Step 8 returns to it.
+
+</Implications>
+
+</Step>
+
+<Step id="s6">
+
+## What Table 2 actually shows
+
+On VG-150 the method reports R@50 of 30.48 and mR@50 of 21.39; on PSG, 29.69 and 25.12.
+
+**The mean-recall gains dwarf the recall gains, and that is the real evidence.** On VG, mR@50
+improves by 9.19 against R@50's 2.58; on PSG, 8.12 against 6.39. A method that lifts mean recall
+far harder than recall is recovering *tail* predicates, which is consistent with the claimed
+mechanism: a fixed dictionary $P$ gives a rare predicate the same access to the output as a common
+one, and a frequency-trained classifier never does. If one thing is taught from Table 2, teach
+this.
+
+**GPT-4V beats Gemini-Pro-Vision on ISG at every cutoff**, and the gap widens with $K$ — 3.78
+points at R@20 becoming 11.71 at R@100. The paper attributes nothing to this, and neither should
+you: it is an uncontrolled comparison of two proprietary models at two moments in time.
+
+**Do not compare across the three datasets.** Different splits, different vocabularies, different
+image sources. The three blocks are three separate experiments that happen to share a row label.
+
+</Step>
+
+<Step id="s7">
+
+## ISG, and the industrial gap that produced it
+
+The dataset's argument is density, not scale. ISG holds 10K images against PSG's 49K, but carries
+688 object classes to PSG's 133, 144 predicate classes to 56, and 17.6 predicates per image
+against 5.7. It is the only row in the paper's Table 1 with a tick in the industrial column.
+
+Its construction is three steps: collection from five sources — CHICO, Ego4D, HA-ViD, IKEA ASM and
+CALVIN — with the top ten triplets labelled; automatic extraction of a concise object and predicate
+dictionary from noisy VLM-generated graphs; then manual filtering, alignment to $O$ and $P$, and
+verification.
+
+**ISG is request-only.** There is no public release and no repository; the data-availability
+statement commits only to release on request. This course therefore teaches ISG from the published
+tables and figures, labels it request-only, and warns about the unrelated `ISG-Bench` name
+collision. In its place the application ships a mini-ISG built by the same method from openly
+licensed industrial frames, labelled unambiguously as this project's teaching set and not the
+authors'.
+
+</Step>
+
+<Step id="s8">
+
+## What the paper does not establish
+
+State these explicitly. They are where the work is honest, and where it is thin.
+
+**The backbone is uncontrolled, and the paper says so.** Its stated limitation is that the backbone
+of different VLMs may influence performance. Both models tested are now superseded and neither is
+reproducible at the version tested, so every IndVisSGG figure in Table 2 measures a model that no
+longer exists in that form.
+
+**No theory for $N$.** Step 4 above. The independence assumption is untested and almost certainly
+false.
+
+**The ablation's baseline may be unfairly weak, and this is the most serious methodological gap.**
+Row 1 of Table 3 uses an unconstrained prompt. A stronger naive baseline exists and is not
+reported: free-text output followed by nearest-neighbour projection onto $O$ and $P$ *after*
+generation. Without it, Table 3 conflates two claims — that constraining the vocabulary helps, and
+that constraining it before generation helps — and only the second is the method. A student who
+runs that missing experiment in L5 has done something the paper did not.
+
+**Cross-method comparability.** Table 2's baselines are the paper's own re-implementations, and the
+paper states neither their detector backbones nor their epoch budgets. It names no evaluation
+protocol and no constraint mode anywhere either: the strings SGDet, PredCls and SGCls do not
+occur in it, and §5.1.3 says only that “both $O$ and $P$ are predetermined for all methods”. So
+the columns cannot be shown to be comparable, which is a stronger and less flattering statement
+than saying they differ. That is a field-wide problem rather than this paper's alone, and it is
+why this application renders per-paper tables behind a non-comparability banner and never merges
+them into one ranking.
+
+</Step>
+
+<Step id="s9">
+
+## In the lab
+
+L5 replays Tables 3 and 4 beside your own run. The published figures and your figures are returned
+in separate fields and never rendered inside one element, because a number you produced and a
+number someone else published are different kinds of thing.
+
+Then attempt the experiment the paper omits: free-text generation, projected onto $O$ and $P$
+afterwards. If it approaches 20.792, the method's claim narrows considerably.
+
+</Step>
+
+<Step id="s10">
+
+## Checkpoint
+
+Row 1 of Table 3 reads 0.032 and row 5 reads 23.040, a ratio of 720, with no architectural
+difference between them. Write two sentences: one stating what that ratio measures, and one
+stating what a reader would be wrong to conclude from it.
+
+</Step>

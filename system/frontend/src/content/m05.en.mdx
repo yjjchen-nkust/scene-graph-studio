@@ -1,0 +1,199 @@
+---
+id: m05
+order: 5
+title_en: "The two-stage era: IMP, Neural Motifs, VCTree, GPS-Net"
+title_zh: "兩階段時期：IMP、Neural Motifs、VCTree、GPS-Net"
+anchor_labs: [L4]
+knowledge_points: [T1, T2, T3, T4, T5, T6]
+symbols:
+  - sym: "b^{(t)}_i"
+    gloss_en: "node i's belief at message-passing round t"
+    gloss_zh: "節點 i 於第 t 輪訊息傳遞後的信念"
+  - sym: "w"
+    gloss_en: "the weight a node gives its neighbours' beliefs against its own"
+    gloss_zh: "節點賦予鄰居信念相對於自身信念的權重"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening, and one sentence has to land: everything between 2017 and 2021 is a variation on stage three, and every failure worth discussing is a consequence of stage two. Put the three stages on the board and leave them there for the whole module; every method that follows hangs off them."
+  - id: s2
+    kind: math
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes. Pair enumeration is quadratic in the detections while the true relations are linear, and that ratio is the entire cost structure of the two-stage design. Ask the room to estimate the number of decisions at N = 80 before showing it; the answer is worse than intuition says, and the size of that error is the lesson."
+  - id: s3
+    kind: math
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes. IMP's idea is right and its arithmetic has a trap in it: run the same averaging long enough and every node holds the same belief. Write the fixed-point derivation out and state plainly that the variance contracts by (1 − w) per step — that expression is what the checkpoint in s6 is asking about. If time is short, drop the rate and keep the consensus result."
+  - id: s4
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes across five methods, none of them opened up. Two things carry the page. The FREQ baseline that humiliated the field was published inside the Neural Motifs paper itself. And mean recall did not arrive until 2019, from KERN and VCTree independently, so everything before it was ranked by a metric that could not see the long tail. Close on the second and walk straight into M06."
+  - id: s5
+    kind: lab
+    lab: L4
+    seconds_budget: 420
+    presenter_notes_en: "Seven minutes on L4, and the order of looking matters. First where the models agree — the head predicates, the ones the frequency prior alone already gets. Then the tail. How little four years of architecture moved only shows up in that order; reversed, the point is lost."
+  - id: s6
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint. Acceptable answers include GPS-Net's node-priority loss, which stops a confident object being overwritten by an unconfident neighbour, and VCTree's dynamic tree, which restricts where messages can flow at all. The costs: the first needs a confidence estimate and a new hyperparameter, the second builds a structure per image and pays for it. If only the design comes back, ask for the cost."
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## Detect, enumerate, classify
+
+For five years the field had one architecture. Run a detector; take every ordered pair of
+detections; classify a relation on each pair. Everything between 2017 and 2021 is a variation on
+what happens in the third stage, and the interesting failures are all consequences of the second.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+Enumerating pairs is quadratic in the number of detections, and the relation classifier must
+decide on every one. The number of true relations is linear. That ratio is the whole economics of
+the two-stage design, and it is worse than it sounds.
+
+</Intuition>
+
+<Formal>
+
+$$
+\text{cost}=N(N-1)\lvert\mathcal{P}\rvert=O\!\left(N^{2}\lvert\mathcal{P}\rvert\right),\qquad \text{true relations}=O(N)
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\text{pairs} &= N(N-1) &&\text{ordered, } i\ne j\\
+\text{decisions} &= N(N-1)\lvert\mathcal{P}\rvert = O\bigl(N^2\lvert\mathcal{P}\rvert\bigr)\\
+\lvert E\rvert &= O(N) &&\text{true relations, empirically}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}N=80,\ \lvert\mathcal{P}\rvert=310:\quad 80\cdot 79\cdot 310 = 1{,}958{,}800 \ \text{decisions for} \approx 20 \ \text{relations}
+\\[4pt]
+\text{positive rate} \approx 1.0\times 10^{-5}. \text{ This ratio is the motivation for one-stage set prediction.}\end{gathered}
+$$
+
+One decision in a hundred thousand is positive. A classifier trained on that distribution learns
+to say "no relation" and is right almost always, which is why every two-stage method spends its
+capacity on pair *pruning* and on priors — and why the frequency baseline of M4 does so well.
+
+This ratio is also the motivation for the one-stage set prediction of M7. If the pairs are the
+problem, stop enumerating them.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+<Intuition>
+
+IMP's idea is that a relation's evidence lives partly in its neighbours, so let nodes exchange
+beliefs and iterate. The idea is right and the arithmetic has a trap: run the same averaging long
+enough and every node holds the same belief.
+
+</Intuition>
+
+<Formal>
+
+$$
+b^{(t+1)}_i=(1-w)\,b^{(0)}_i+w\,\overline{b^{(t)}_{\mathcal{N}(i)}}\ \xrightarrow[\ t\to\infty\ ]{w>0}\ \overline{b^{(0)}}\quad(\text{consensus; information destroyed})
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+b^{(t+1)}_i &= (1-w)\,b^{(0)}_i + w\,\overline{b^{(t)}} , \qquad \overline{b^{(t)}}=\tfrac{1}{n}\textstyle\sum_j b^{(t)}_j\\
+\overline{b^{(t+1)}} &= (1-w)\overline{b^{(0)}} + w\,\overline{b^{(t)}} \;\Rightarrow\; \overline{b^{(t)}}=\overline{b^{(0)}} \ \forall t
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{So } b^{(t)}_i = (1-w^t)\bigl[(1-w)b^{(0)}_i + w\overline{b^{(0)}}\bigr]\cdot\!\ldots\ \longrightarrow\
+b^{\ast}_i = (1-w)b^{(0)}_i + w\,\overline{b^{(0)}}
+\\[4pt]
+\text{Spread contracts by } (1-w) \text{ per step: } \ \operatorname{Var}(b^{(t)}) = (1-w)^{2}\operatorname{Var}(b^{(0)}) \text{ at the fixed point.}
+\\ w\to 1 \Rightarrow \text{every belief equals the graph mean and the model distinguishes nothing.}\end{gathered}
+$$
+
+The fixed point is a contraction, not a consensus that preserves anything. At $w \to 1$ every
+belief equals the graph mean and the model distinguishes nothing at all — it has averaged away the
+signal it was passing.
+
+Everything after IMP is an answer to this. Neural Motifs replaces free message passing with an
+LSTM over a fixed object ordering plus an explicit frequency bias. VCTree learns a tree rather than
+a complete graph, so the averaging is structured. GPS-Net adds direction awareness and a node
+priority so that not every neighbour counts equally. KERN and BGNN route by class and resample the
+tail.
+
+Read them as four attempts to stop the contraction without losing the context.
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+## What each one actually contributed
+
+**Neural Motifs (2018)** observed that object labels alone predict relations remarkably well, and
+built that in as an explicit frequency bias over a context LSTM. Its own FREQ baseline is the one
+that embarrassed the field, and it is published inside this paper.
+
+**VCTree (2019)** replaces the fixed ordering with a learned dynamic tree, so context flows along a
+structure chosen per image rather than a chain chosen by the implementer.
+
+**GPS-Net (2020)** adds three things the averaging above destroys: direction-aware message passing,
+a node-priority loss so that a confident object is not overwritten by an uncertain neighbour, and
+an adaptive reasoning module.
+
+**KERN and BGNN** attack the tail directly, routing messages by class and resampling the
+distribution. They are the bridge to M6, where debiasing becomes the whole agenda.
+
+Mean recall arrived in 2019, introduced independently by KERN and by VCTree. Everything before it
+was ranked on a metric that could not see the tail.
+
+</Step>
+
+<Step id="s5">
+
+## In the lab
+
+L4 runs the committed predictions of these models on one image side by side. Look first at where
+they agree: the head predicates, which the frequency prior alone would have got. Then look at the
+tail, and at how little separates four years of architecture.
+
+</Step>
+
+<Step id="s6">
+
+## Checkpoint
+
+The message-passing fixed point contracts belief variance by $(1-w)$ per step. Name one design in
+this module that avoids the contraction, and state what it gives up to do so.
+
+</Step>

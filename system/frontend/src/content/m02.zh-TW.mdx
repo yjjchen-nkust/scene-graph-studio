@@ -1,0 +1,136 @@
+---
+id: m02
+order: 2
+title_en: "Grounding: bounding boxes vs panoptic masks"
+title_zh: "定位方式：邊界框與全景遮罩"
+anchor_labs: [L1]
+knowledge_points: [F3, F4, X3]
+symbols:
+  - sym: "b"
+    gloss_en: "a bounding box"
+    gloss_zh: "邊界框"
+  - sym: "\\tau"
+    gloss_en: "the IoU threshold a match must reach"
+    gloss_zh: "判定配對成立所需的 IoU 門檻"
+  - sym: "A(\\cdot)"
+    gloss_en: "area of a region"
+    gloss_zh: "區域面積"
+claims: []
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場。本步驟只確立一件事：在任何配對或錯誤判定成立之前，必須先有一條規則決定兩個區域是否為同一物件，而該規則不屬於場景圖的定義，僅為含自由參數的慣例。該參數即為下一步驟的 τ。"
+  - id: s2
+    kind: math
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘。IoU 的尺度不變性是其被採用的理由，對尺寸差異的嚴苛則是其代價。宜先推導上界，說明中心相同而尺度比達一定程度的兩框無論位置多準確均無法通過門檻，再回到 τ 的選擇。此上界為 L2 中 τ 滑桿的解釋依據。"
+  - id: s3
+    kind: prose
+    seconds_budget: 180
+    presenter_notes_zh: "三分鐘。兩項要點：軸對齊矩形必然宣告超出物件實際佔據的面積；相互穿插的兩物件其框大幅重疊而物件本身未接觸。遮罩去除此一歧義，但引入標註成本與自身的配對規則兩項代價。`single_mpo` 與 `multi_mpo` 之分請留待 L6，此處只需指出該分別會改變已發表的數值。"
+  - id: s4
+    kind: prose
+    seconds_budget: 120
+    presenter_notes_zh: "兩分鐘。PSG 為本課程唯一具遮罩的 Tier-1 資料集，也是 L6 得以成立的前提。閱讀其表格前須知兩點：其物件詞彙含 stuff 類別，故 predicate 分布與 VG150 不可比較；其標註為 MIT 授權而影像為 COCO 照片，授權並不及於影像，本專案因此只提交標註、不散布影像。第二點與 `data/LICENCES.md` 的兩道閘門一致，宜一併提及。"
+  - id: s5
+    kind: lab
+    lab: L1
+    seconds_budget: 300
+    presenter_notes_zh: "L1 五分鐘，開啟一張 PSG 影像並開啟遮罩圖層。兩項任務：找出遮罩與框明顯不一致的物件，再找出框大幅重疊而遮罩並未接觸的配對。後者即為「指標改以遮罩計算則分數隨之改變」的實例，宜於現場取一例公開說明。"
+  - id: s6
+    kind: checkpoint
+    presenter_notes_zh: "檢核點。τ = 0.3 者數值較高，且此比較對兩模型之優劣不提供任何資訊。宜藉此追問：兩篇論文均於註腳載明門檻，仍不足以構成比較，缺少的是何者。答案為同一門檻下的重新評測。"
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 對指標而言，「同一個物件」的判定依據
+
+模型提出一個區域，標註持有另一個區域。在任何配對或錯誤判定成立之前，必須先有某一規則決定這兩個區域是否為同一物件。此一判定並不屬於場景圖的定義，而是一項慣例；該慣例含有自由參數，且該參數幾乎從未被明確載明。
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+Intersection over union 所問的是：兩區域在合併面積之中，彼此一致的比例為何。此一定義不受尺度影響，故廣為採用；但它對尺寸差異極為嚴苛：兩個中心相同而尺度差異達一定程度的框，無論位置多麼準確，均無法通過門檻。下列上界即說明「一定程度」為何。
+
+</Intuition>
+
+<Formal>
+
+$$
+\operatorname{IoU}(b,b^{\prime})=\frac{\lvert b\cap b^{\prime}\rvert}{\lvert b\cup b^{\prime}\rvert},\qquad \text{accept}\iff\operatorname{IoU}\ge\tau
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+A(b\cap b') &\le \min\bigl(A(b),A(b')\bigr) &&\text{the intersection lies inside both}\\
+A(b\cup b') &\ge \max\bigl(A(b),A(b')\bigr) &&\text{the union contains both}\\
+\operatorname{IoU} &= \frac{A(b\cap b')}{A(b\cup b')} \;\le\; \frac{\min(A(b),A(b'))}{\max(A(b),A(b'))} &&\text{divide the two bounds}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{With } A(b')=\lambda^2 A(b):\quad \operatorname{IoU}\le\min(\lambda^2,\lambda^{-2}),
+\quad\text{so } \lambda\ge\sqrt{2}\ \Rightarrow\ \operatorname{IoU}<\tfrac12 \text{ at } \tau=0.5.\end{gathered}
+$$
+
+各方向放大 1.42 倍的框，無論位置為何均遭拒絕。此一上界在位置問題之前即已成立，故因此受罰的模型，所被告知者並非「找錯了物件」，而是「邊界劃在另一個同樣站得住腳的位置」。
+
+此外，$\tau = 0.5$ 為慣例。`METRICS.md` 並未載明此值；領域普遍採用之；若學員誤以為該值屬於定義的一部分，則將誤讀所有已發表的表格。L2 的 τ 滑桿即為使此一參數顯現而非被預設而設。
+
+關於符號的補充說明。該上界中的 $\lambda$ 為區域性符號，其意義僅為兩框線性尺度之比值。M4 以同一字母表示頻率先驗與視覺模型之間的混合權重。此一衝突存在於原始文獻而非本課程，故符號表僅於後者——亦即具承載作用之用法——處統一登錄 $\lambda$。凡符號重複使用之處，均應依所屬單元解讀。
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## 框所無法表達的資訊
+
+邊界框為軸對齊矩形，因此對於非近似矩形的物件，其所宣告的面積必然超出該物件實際佔據的範圍。兩個相互穿插的物件——欄杆後方的人、雜亂桌面上的杯子——其框大幅重疊，而物件本身並未接觸。任何以框重疊為依據所評分的關係，均承襲此一誤差。
+
+全景遮罩將每一像素指派給恰好一個 segment，可去除上述歧義，但亦引入兩項自身的問題。遮罩的標註成本遠高於框，故具備遮罩的資料集規模較小；其次，遮罩重疊需要自身的配對規則，因為主體與客體共用邊界的方式，非兩個矩形所能呈現。
+
+該配對規則即 `single_mpo` 與 `multi_mpo` 之分，其差異會改變已發表的數值；L6 之設置，即在於以同一組固定預測分別於兩種規則下評分。
+
+</Step>
+
+<Step id="s4">
+
+## PSG：133 個類別、56 個 predicate、具遮罩
+
+Panoptic Scene Graph 資料集以全景 segment 而非框重新標註 COCO 影像：80 個 thing 類別與 53 個 stuff 類別，串接為單一長度 133 的索引清單，並含 56 個 predicate。此為本課程唯一具備遮罩的 Tier-1 資料集，亦為 L6 比較得以成立的前提。
+
+閱讀任何 PSG 表格之前，有兩點宜先知悉。其一，其物件詞彙包含 stuff——天空、道路、牆面——此類項目於以框為基礎的資料集中根本無法作為物件表示，故其 predicate 分布與 VG150 不可比較。其二，其影像為 COCO 照片，而標註所採用的 MIT 授權並不及於該等照片：本專案提交 PSG 標註，不散布任何 PSG 影像。
+
+</Step>
+
+<Step id="s5">
+
+## 實作單元的內容
+
+於 L1 開啟一張 PSG 影像並開啟遮罩圖層。請找出一個遮罩與框明顯不一致的物件，再找出一組框大幅重疊、而遮罩並未接觸的配對。該配對即為「若指標改以遮罩而非矩形計算，分數將隨之改變」者。
+
+</Step>
+
+<Step id="s6">
+
+## 檢核點
+
+某論文報告 τ = 0.5 下的 SGDet R@50，另一篇論文報告 τ = 0.3 下的同一指標，兩者均於註腳載明所用門檻。何者數值較高？此一比較對兩模型之優劣提供了何種資訊？
+
+</Step>

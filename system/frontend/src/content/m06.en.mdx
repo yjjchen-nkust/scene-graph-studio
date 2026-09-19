@@ -1,0 +1,152 @@
+---
+id: m06
+order: 6
+title_en: "The bias problem: TDE, CogTree, DLFE, NICE, IETrans, ST-SGG, PE-Net, RA-SGG"
+title_zh: "偏差問題：TDE、CogTree、DLFE、NICE、IETrans、ST-SGG、PE-Net、RA-SGG"
+anchor_labs: [L3]
+knowledge_points: [D1, D2, D3, D4, D5, D6]
+symbols:
+  - sym: "\\omega_p"
+    gloss_en: "the loss weight given to predicate p"
+    gloss_zh: "賦予 predicate p 的損失權重"
+  - sym: "\\beta"
+    gloss_en: "how strongly the loss weighting inverts predicate frequency"
+    gloss_zh: "損失權重反轉 predicate 頻率的強度"
+claims:
+  - id: c-m06-flowsg
+    text_en: "FlowSG reports R@50 = 36.5 and mR@50 = 18.4 together, which is the first time the trade-off stopped binding"
+    text_zh: "FlowSG 同時報告 R@50 為 36.5、mR@50 為 18.4，此為該權衡首次不再構成拘束"
+    source: flowsg-2026
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: predcls
+    verified: false
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening, and it opens on M04's identity: R − mR = Cov(n, R)/n̄. Say outright that the entire debiasing literature is about the sign of that one covariance and nothing else. Read with it in hand, everything from TDE in 2020 to RA-SGG in 2024 becomes legible. This page does not work for a room that has not had M04; check first."
+  - id: s2
+    kind: math
+    seconds_budget: 420
+    presenter_notes_en: "Seven minutes. Reweighting the loss does exactly what it says: recall rises on the rare classes and falls on the common ones, and since recall is dominated by the common classes that second half is the bill. Stress that the trade-off is arithmetic rather than a design flaw, so asking whether it can be avoided is already the wrong question."
+  - id: s3
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes, and what is being taught is the status of a claim rather than the claim. The one claim in this module records a 2026 report of both rising together and carries verified: false, because this course has not opened that table. Say what the flag means, and list the four conditions under which it could be checked: same split, same constraint mode, same k, same predicate merging. This page is NFR-2 demonstrated in front of the room."
+  - id: s4
+    kind: lab
+    lab: L3
+    seconds_budget: 420
+    presenter_notes_en: "Seven minutes on L3. The α slider runs from 1 to 0, which is R moving continuously into mR, over one fixed set of predictions. What to watch is the ranking changing as it moves: that reordering is the whole debiasing literature on one control. Ask the room to say where the crossing happens."
+  - id: s5
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint. What follows: the method does better on rare predicates. What does not: whether it is an improvement, or worth adopting — because the trade-off of s2 means R almost certainly fell and by how much was not reported. The number that settles it is R@50 under the same configuration. If the answer is just report R, ask why it has to come from the same configuration."
+---
+
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## Four years spent on the sign of one covariance
+
+M4 ended with an identity: $R - mR = \operatorname{Cov}(n, R)/\bar n$. The gap between recall and
+mean recall is the correlation between how often a predicate occurs and how well the model does on
+it, and nothing else.
+
+Read the debiasing literature with that identity in hand and its shape becomes clear. Every method
+from TDE in 2020 to RA-SGG in 2024 is an attempt to drive that covariance toward zero, and every
+one of them pays for it in $R$. The question is not whether they work but what they cost, and the
+answer is in the arithmetic rather than in any paper's abstract.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+Reweighting the loss to favour rare predicates does exactly what it says: rare recall rises,
+common recall falls. Since recall is dominated by the common classes, that second half is a direct
+cost, and the trade-off is not a design flaw but arithmetic.
+
+</Intuition>
+
+<Formal>
+
+$$
+\max_{\theta}\ mR@k\quad\text{s.t.}\quad R@k\ge R_0;\qquad \text{FlowSG: both rise, the constraint stops binding}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\text{debiasing reweights the loss: } \ \ell_\theta &= \textstyle\sum_p \omega_p\,\ell_p, \qquad \omega_p\propto n_p^{-\beta}\\
+\beta\uparrow \;&\Rightarrow\; R_p\uparrow \text{ for rare } p, \quad R_p\downarrow \text{ for common } p\\
+&\Rightarrow\; \operatorname{Cov}(n,R)\downarrow \;\Rightarrow\; R-mR \downarrow \quad\text{(Proposition 3)}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Since } R=\textstyle\sum_p \frac{n_p}{N}R_p \text{ is dominated by large } n_p, \text{ lowering common-class recall}
+\\ \text{costs } R \text{ directly. That is the trade-off, and why it held from TDE (2020) to RA-SGG (2024).}
+\\[4pt]
+\text{FlowSG (CVPR 2026) reports } 36.5\ R@50 \text{ and } 18.4\ mR@50 \text{ together: the constraint stopped binding.}\end{gathered}
+$$
+
+So the eight methods named in this module's title are eight points on one curve, and comparing
+them on $mR$ alone is meaningless: any of them can be pushed further up the $mR$ axis by raising
+$\beta$, at a cost in $R$ that the paper may or may not report.
+
+The four families are worth separating, because they intervene at four different places.
+**TDE** subtracts a counterfactual at inference, leaving training untouched. **CogTree and DLFE**
+work on the loss. **NICE** says the labels themselves are wrong and relabels. **IETrans and ST-SGG**
+change the data, transferring and self-training on the tail. **PE-Net** learns prototypes;
+**RA-SGG** treats the annotation as partial rather than complete.
+
+The last two are the interesting ones, because they stop treating the annotation as ground truth —
+which M3 told you it is not.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+## What would count as solving it
+
+A method escapes the trade-off if it raises $mR$ without lowering $R$ — that is, if it raises
+per-predicate recall on the tail without spending head recall. Nothing in the 2020–2024 sequence
+does that, which is why the constraint in the optimisation above binds throughout.
+
+This module's single claim records a 2026 report of both rising together, marked `verified: false`:
+this course has not opened that table. Treat it as a claim to check rather than a result to teach,
+and note what checking it would require — the same split, the same constraint mode, the same $k$,
+and the same predicate merging as whatever it is being compared against.
+
+</Step>
+
+<Step id="s4">
+
+## In the lab
+
+L3 puts $\alpha$ on a slider, moving continuously from $R$ at $\alpha = 1$ to $mR$ at
+$\alpha = 0$, over the same fixed predictions. Watch the ranking of the models change as you move
+it. That reordering is the entire debiasing literature in one control.
+
+</Step>
+
+<Step id="s5">
+
+## Checkpoint
+
+A method reports mR@50 four points above the previous best and does not report R@50. State what
+you can and cannot conclude, and give the one additional number that would settle it.
+
+</Step>

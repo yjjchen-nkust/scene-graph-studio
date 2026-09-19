@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="zh-TW" data-lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scene Graph Studio — 介面模擬 / UI Mockup</title>
+<style>
+/* Design tokens carried over from web/brief/index.html so the mockup reads as the same
+   product. No network requests: this file must open from disk on a machine with nothing
+   installed, which is the same constraint NFR-1 puts on the application itself. */
+:root{
+  --ground:#ECEFEC; --surface:#FAFBFA; --sunk:#DDE3DF;
+  --ink:#12191A; --muted:#6B7A78; --rule:#C6D0CB;
+  --accent:#0E6B6E; --accent-soft:#D6E8E6;
+  --warn:#8A6D1F; --warn-soft:#F0E6CB;
+  --m-match:#1F7A4D; --m-spur:#B3301F; --m-miss:#7F8D8B; --m-loc:#A9720C;
+  --shadow:0 1px 2px rgba(18,25,26,.06), 0 8px 24px -12px rgba(18,25,26,.18);
+  --serif:"Newsreader","Noto Sans TC",Georgia,"Times New Roman",serif;
+  --sans:"Archivo","Noto Sans TC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0D1413; --surface:#151E1D; --sunk:#0A100F;
+    --ink:#E6EDEB; --muted:#93A5A2; --rule:#2A3836;
+    --accent:#4FB3A8; --accent-soft:#12302E;
+    --warn:#D9B45F; --warn-soft:#2B2410;
+    --m-match:#54B37C; --m-spur:#E0725F; --m-miss:#8B9997; --m-loc:#D9A040;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.65 var(--sans)}
+/* Scoped under body deliberately. A bare [lang] selector also matches <html lang="zh-TW">
+   and hides the entire document; `display:revert` then restores each element's own default
+   (inline for span, block for p and div, table-cell for td) instead of forcing one. */
+body [lang]{display:none}
+html[data-lang="zh"] body [lang="zh"]{display:revert}
+html[data-lang="en"] body [lang="en"]{display:revert}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+header.top{border-bottom:1px solid var(--rule);background:var(--surface);position:sticky;top:0;z-index:20}
+header.top .wrap{display:flex;align-items:baseline;gap:18px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:-.01em}
+.brand small{display:block;font-family:var(--sans);font-size:12px;font-weight:400;color:var(--muted);letter-spacing:0}
+.spacer{flex:1}
+.btn{font:inherit;font-size:13px;padding:5px 11px;border:1px solid var(--rule);border-radius:6px;
+     background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--sunk)}
+.btn[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+nav.screens{border-bottom:1px solid var(--rule);background:var(--surface)}
+nav.screens .wrap{display:flex;gap:2px;overflow-x:auto;padding-top:0;padding-bottom:0}
+nav.screens a{padding:11px 13px;font-size:13px;color:var(--muted);text-decoration:none;
+  border-bottom:2px solid transparent;white-space:nowrap}
+nav.screens a:hover{color:var(--ink)}
+nav.screens a.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+main{padding:32px 0 80px}
+section.screen{display:none}
+section.screen.on{display:block}
+h2.sh{font-family:var(--serif);font-size:26px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin:0 0 22px;max-width:74ch}
+h3.sh{font-family:var(--serif);font-size:18px;margin:30px 0 8px}
+.note{font-size:13px;color:var(--muted);max-width:76ch}
+.spec{display:inline-block;font:11px/1 var(--mono);color:var(--accent);background:var(--accent-soft);
+  padding:3px 6px;border-radius:4px;margin-left:6px;vertical-align:2px}
+
+/* ---------- mock browser frame ---------- */
+.frame{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--surface);
+  box-shadow:var(--shadow);margin:14px 0 6px}
+.frame .bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--sunk);
+  border-bottom:1px solid var(--rule)}
+.frame .dots{display:flex;gap:5px}
+.frame .dots i{width:9px;height:9px;border-radius:50%;background:var(--rule);display:block}
+.frame .url{font:11px/1 var(--mono);color:var(--muted);background:var(--surface);
+  padding:5px 9px;border-radius:5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frame .body{padding:0}
+.cap{font-size:12.5px;color:var(--muted);margin:0 0 26px;max-width:80ch}
+
+/* ---------- study shell mock ---------- */
+.study{display:grid;grid-template-columns:186px 1fr;min-height:430px}
+.rail{border-right:1px solid var(--rule);background:var(--sunk);padding:12px 0;font-size:12.5px}
+.rail .grp{padding:8px 14px 4px;color:var(--muted);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+.rail a{display:flex;justify-content:space-between;gap:6px;padding:5px 14px;color:var(--ink);text-decoration:none}
+.rail a:hover{background:var(--surface)}
+.rail a.cur{background:var(--surface);border-left:3px solid var(--accent);padding-left:11px;font-weight:600}
+.rail .pct{color:var(--muted);font:10px/1.6 var(--mono)}
+.pane{padding:22px 26px}
+.crumb{font:11px/1 var(--mono);color:var(--muted);margin-bottom:10px}
+.pane h4{font-family:var(--serif);font-size:22px;margin:0 0 14px}
+
+.symtab{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 18px}
+.symtab th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;border-bottom:1px solid var(--rule);padding:5px 8px 5px 0}
+.symtab td{padding:5px 8px 5px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.symtab td:first-child{font-family:var(--mono);white-space:nowrap;width:1%}
+
+.four{border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin:10px 0 6px}
+.four > div{padding:12px 15px;border-bottom:1px solid var(--rule)}
+.four > div:last-child{border-bottom:0}
+.four .lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);
+  font-weight:700;margin-bottom:5px}
+.four .formal{background:var(--sunk);font-family:var(--mono);font-size:13px;text-align:center;padding:16px 15px}
+.four .worked{font-family:var(--mono);font-size:12.5px;white-space:pre-wrap}
+
+/* ---------- metric readout ---------- */
+.metrics{display:flex;flex-wrap:wrap;gap:22px;margin:12px 0}
+.mv{display:flex;flex-direction:column;gap:2px}
+.mv b{font:600 27px/1 var(--mono);letter-spacing:-.02em}
+.mv span{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.mv[data-fidelity="reconstructed"] b,.mv[data-verified="false"] b{
+  color:var(--warn);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:4px}
+.mv em{font-style:normal;font-size:10.5px;color:var(--warn);font-family:var(--sans)}
+.mv .na{color:var(--muted)}
+
+/* ---------- diff / overlay ---------- */
+.diffwrap{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+@media(max-width:820px){.diffwrap,.study{grid-template-columns:1fr}.rail{border-right:0;border-bottom:1px solid var(--rule)}}
+.canvas{border:1px solid var(--rule);border-radius:8px;background:var(--sunk);overflow:hidden}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;margin:10px 0 0}
+.legend i{display:inline-block;width:26px;height:0;border-top-width:3px;margin-right:6px;vertical-align:3px}
+.lg-match i{border-top:3px solid var(--m-match)}
+.lg-spur i{border-top:4px solid var(--m-spur)}
+.lg-miss i{border-top:3px dashed var(--m-miss)}
+.lg-loc i{border-top:3px dotted var(--m-loc)}
+
+/* ---------- controls ---------- */
+.ctrls{border:1px solid var(--rule);border-radius:8px;padding:14px 16px;background:var(--surface);font-size:13px}
+.ctrl{margin-bottom:14px}
+.ctrl:last-child{margin-bottom:0}
+.ctrl label{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:5px;font-weight:600}
+.knob{display:flex;gap:0;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.knob button{flex:1;font:inherit;font-size:12px;padding:6px 4px;border:0;border-right:1px solid var(--rule);
+  background:var(--surface);color:var(--ink);cursor:pointer}
+.knob button:last-child{border-right:0}
+.knob button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.slider{display:flex;align-items:center;gap:10px}
+.slider input{flex:1}
+.slider output{font-family:var(--mono);font-size:13px;min-width:3ch;text-align:right}
+.hint{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+
+/* ---------- lecture shell ---------- */
+.lect{background:var(--sunk);padding:34px 40px;min-height:380px;display:flex;flex-direction:column}
+.lect .tag{font:11px/1 var(--mono);color:var(--muted);letter-spacing:.08em}
+.lect h4{font-family:var(--serif);font-size:38px;line-height:1.2;margin:10px 0 18px;letter-spacing:-.02em}
+.lect p{font-size:24px;line-height:1.5;margin:0 0 14px;max-width:34ch}
+.lect .foot{margin-top:auto;display:flex;align-items:center;gap:16px;font:12px/1 var(--mono);color:var(--muted)}
+.lect .foot .timer{font-size:17px;color:var(--accent);font-weight:600}
+.presenter{background:#0D1413;color:#E6EDEB;padding:18px 20px;font-size:13px;min-height:200px}
+.presenter .h{font:10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#93A5A2;margin-bottom:10px}
+.presenter .now{font-size:15px;line-height:1.6;margin-bottom:16px}
+.presenter .next{color:#93A5A2;border-top:1px solid #2A3836;padding-top:11px;font-size:12.5px}
+.presenter .clock{float:right;font-family:var(--mono);color:#4FB3A8;font-size:20px;font-weight:600}
+
+/* ---------- labs grid ---------- */
+.labs{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px;margin:14px 0}
+.lab{border:1px solid var(--rule);border-radius:8px;padding:13px 15px;background:var(--surface)}
+.lab .id{font:11px/1 var(--mono);color:var(--accent);font-weight:700}
+.lab h5{margin:6px 0 5px;font-size:15px;font-family:var(--serif)}
+.lab p{margin:0 0 8px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.lab .does{font-size:12px;border-top:1px solid var(--rule);padding-top:7px}
+.lab.star{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-soft)}
+
+/* ---------- field map ---------- */
+.branches{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;margin:14px 0}
+.branch{border:1px solid var(--rule);border-radius:8px;background:var(--surface);overflow:hidden}
+.branch h6{margin:0;padding:8px 11px;font-size:11.5px;background:var(--sunk);border-bottom:1px solid var(--rule);
+  letter-spacing:.04em}
+.branch ul{list-style:none;margin:0;padding:7px 0}
+.branch li{padding:3px 11px;font-size:12.5px;display:flex;justify-content:space-between;gap:6px}
+.branch li .t{font:9.5px/1.5 var(--mono);color:var(--muted);border:1px solid var(--rule);
+  border-radius:3px;padding:1px 4px;flex:none}
+.branch li.a .t{color:var(--accent);border-color:var(--accent)}
+
+/* ---------- tables ---------- */
+table.data{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+table.data th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid var(--rule);padding:6px 10px 6px 0;font-weight:600}
+table.data td{padding:6px 10px 6px 0;border-bottom:1px solid var(--rule)}
+table.data td.n{font-family:var(--mono);text-align:right;padding-right:18px}
+.banner{border:1px solid var(--warn);background:var(--warn-soft);color:var(--warn);
+  border-radius:7px;padding:11px 14px;font-size:12.5px;line-height:1.55;margin:10px 0}
+.banner b{display:block;margin-bottom:3px}
+
+.warnrow{display:flex;gap:9px;align-items:flex-start;border:1px solid var(--rule);border-left:3px solid var(--accent);
+  background:var(--surface);border-radius:6px;padding:9px 12px;font-size:12.5px;margin:8px 0;line-height:1.55}
+.warnrow code{font-family:var(--mono);font-size:11.5px;color:var(--accent);flex:none}
+
+footer{border-top:1px solid var(--rule);background:var(--surface);padding:22px 0;font-size:12px;color:var(--muted)}
+footer .wrap{display:flex;gap:20px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap">
+  <div class="brand">
+    <span lang="zh">場景圖工坊</span><span lang="en">Scene Graph Studio</span>
+    <small><span lang="zh">介面模擬 ｜ 依 PRD 繪製，非實作畫面</span><span lang="en">UI mockup ｜ drawn from the PRD, not a running build</span></small>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn" id="lang-zh" aria-pressed="true">繁體中文</button>
+  <button class="btn" id="lang-en" aria-pressed="false">English</button>
+</div></header>
+
+<nav class="screens"><div class="wrap" id="nav"></div></nav>
+
+<main class="wrap">
+
+<!-- ============ 0 OVERVIEW ============ -->
+<section class="screen on" id="s-overview">
+  <h2 class="sh"><span lang="zh">這份模擬涵蓋什麼</span><span lang="en">What this mockup covers</span></h2>
+  <p class="sub">
+    <span lang="zh">每一頁對應 PRD 的一項功能，網址列寫的是 contracts §2.2 的實際路由。畫面為靜態模擬，數值取自本專案已建置的 golden vectors 與文獻中已查證的數字，不是即時運算結果。</span>
+    <span lang="en">Each screen maps to a PRD feature, and the address bar carries the real route from contracts §2.2. The screens are static: the numbers come from this project's built golden vectors and from figures verified against their source tables, not from a live computation.</span>
+  </p>
+
+  <table class="data">
+    <thead><tr>
+      <th><span lang="zh">畫面</span><span lang="en">Screen</span></th>
+      <th><span lang="zh">PRD 依據</span><span lang="en">PRD basis</span></th>
+      <th><span lang="zh">狀態</span><span lang="en">Status</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><span lang="zh">自學介面</span><span lang="en">Study shell</span></td><td>§6.1</td>
+          <td><span lang="zh">計畫 02</span><span lang="en">plan 02</span></td></tr>
+      <tr><td><span lang="zh">講課介面與講者視窗</span><span lang="en">Lecture shell + presenter</span></td><td>§6.1</td>
+          <td><span lang="zh">計畫 04</span><span lang="en">plan 04</span></td></tr>
+      <tr><td><span lang="zh">四色評分檢視</span><span lang="en">Four-colour scoring view</span></td><td>§6.2</td>
+          <td><span lang="zh">引擎已建置；畫面屬計畫 02</span><span lang="en">engine built; view is plan 02</span></td></tr>
+      <tr><td><span lang="zh">八項實作單元</span><span lang="en">Eight labs</span></td><td>§6.2</td>
+          <td><span lang="zh">計畫 02–04</span><span lang="en">plans 02–04</span></td></tr>
+      <tr><td><span lang="zh">領域地圖與論文卡</span><span lang="en">Field map + paper cards</span></td><td>§6.3</td>
+          <td><span lang="zh">計畫 02（35 張，兩層級）</span><span lang="en">plan 02 (35 cards, two tiers)</span></td></tr>
+      <tr><td><span lang="zh">凍結排行榜</span><span lang="en">Frozen leaderboards</span></td><td>§6.4</td>
+          <td><span lang="zh">計畫 02</span><span lang="en">plan 02</span></td></tr>
+      <tr><td><span lang="zh">離線與誠實呈現</span><span lang="en">Offline &amp; honest numbers</span></td><td>§8 · NFR-1 · NFR-2</td>
+          <td><span lang="zh">已建置</span><span lang="en">built</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="warnrow"><code>NFR-2</code>
+    <div><span lang="zh">畫面中每一個數字都帶著 <code>k</code>、protocol、constraint 與出處。介面沒有任何一條程式路徑能把純數字當作指標呈現 —— 這是型別層級的限制，不是慣例。</span>
+    <span lang="en">Every figure on these screens carries its <code>k</code>, protocol, constraint and source. No code path in the interface can render a bare number as a metric — that is enforced by the type, not by convention.</span></div></div>
+</section>
+
+<!-- ============ 1 STUDY SHELL ============ -->
+<section class="screen" id="s-study">
+  <h2 class="sh"><span lang="zh">自學介面</span><span lang="en">Study shell</span><span class="spec">PRD §6.1</span></h2>
+  <p class="sub">
+    <span lang="zh">左側章節欄、每章進度、回到上次位置。數學內容依 SRS §11.2 的四段式：直覺 → 形式敘述 → 實例演算 → 意涵，四段缺一則內容檢查不通過。</span>
+    <span lang="en">Chapter rail, per-module progress, resume where you left off. Mathematics follows the four-part contract of SRS §11.2 — intuition, formal statement, worked example, implications — and a step missing any of the four fails the content lint.</span>
+  </p>
+
+  <div class="frame">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="url">127.0.0.1:5173/m/m04</span></div>
+    <div class="body"><div class="study">
+      <div class="rail">
+        <div class="grp"><span lang="zh">課程模組</span><span lang="en">Modules</span></div>
+        <a href="#s-study"><span lang="zh">M0 為何需要場景圖</span><span lang="en">M0 Why scene graphs</span><span class="pct">100%</span></a>
+        <a href="#s-study"><span lang="zh">M1 三元組與資料模型</span><span lang="en">M1 The triplet</span><span class="pct">100%</span></a>
+        <a href="#s-study"><span lang="zh">M2 定位：box 與 mask</span><span lang="en">M2 Grounding</span><span class="pct">100%</span></a>
+        <a href="#s-study"><span lang="zh">M3 三種 protocol</span><span lang="en">M3 Protocols</span><span class="pct">62%</span></a>
+        <a href="#s-study" class="cur"><span lang="zh">M4 評測指標</span><span lang="en">M4 Metrics</span><span class="pct">18%</span></a>
+        <a href="#s-study"><span lang="zh">M5 兩階段方法</span><span lang="en">M5 Two-stage</span><span class="pct">0%</span></a>
+        <a href="#s-study"><span lang="zh">M6 偏差問題</span><span lang="en">M6 The bias problem</span><span class="pct">0%</span></a>
+        <div class="grp"><span lang="zh">錨定論文</span><span lang="en">Anchor</span></div>
+        <a href="#s-study"><span lang="zh">M11 ★ IndVisSGG</span><span lang="en">M11 ★ IndVisSGG</span><span class="pct">0%</span></a>
+      </div>
+      <div class="pane">
+        <div class="crumb">M4 · <span lang="zh">步驟 2／4 · 數學</span><span lang="en">step 2 of 4 · math</span></div>
+        <h4><span lang="zh">評測指標：R@K、mR@K、ng-R@K、zR@K</span><span lang="en">Metrics: R@K, mR@K, ng-R@K, zR@K</span></h4>
+
+        <table class="symtab">
+          <thead><tr><th><span lang="zh">符號</span><span lang="en">Symbol</span></th>
+            <th><span lang="zh">意義</span><span lang="en">Gloss</span></th></tr></thead>
+          <tbody>
+            <tr><td>K</td><td><span lang="zh">排序截斷位置</span><span lang="en">rank cutoff</span></td></tr>
+            <tr><td>𝒫</td><td><span lang="zh">predicate 類別集合</span><span lang="en">predicate class set</span></td></tr>
+            <tr><td>n_p</td><td><span lang="zh">類別 p 的 ground-truth 實例數</span><span lang="en">ground-truth instances of class p</span></td></tr>
+            <tr><td>τ</td><td><span lang="zh">IoU 門檻，預設 0.5</span><span lang="en">IoU threshold, default 0.5</span></td></tr>
+          </tbody>
+        </table>
+
+        <div class="four">
+          <div><div class="lbl"><span lang="zh">直覺</span><span lang="en">Intuition</span></div>
+            <span lang="zh">R@K 問的是「模型前 K 個猜測裡，抓回了多少應該抓回的關係」。它沒有任何 precision 項：多猜不會受罰。</span>
+            <span lang="en">R@K asks how much of what should have been found was found inside the model's top K guesses. There is no precision term anywhere: guessing more never costs anything.</span></div>
+          <div class="formal">R@k = |G ∩ X_k| / |G| &nbsp;&nbsp;&nbsp; k′ ≥ k ⟹ R@k′ ≥ R@k</div>
+          <div><div class="lbl"><span lang="zh">實例演算</span><span lang="en">Worked example</span></div>
+            <div class="worked">GT = 10 · matched = 9 → R@20 = 0.900
+per-class: on 9/9 = 1.000 · rare 0/1 = 0.000
+mR@20 = (1.000 + 0.000) / 2 = 0.500</div></div>
+          <div><div class="lbl"><span lang="zh">意涵</span><span lang="en">Implications</span></div>
+            <span lang="zh">只出現一次的類別，在 mR 裡與出現九次的類別等重。整個偏差問題就是一個共變異數的正負號：R@k − mR@k = Cov(n, R)/n̄。</span>
+            <span lang="en">A class with one instance weighs exactly as much as one with nine. The whole bias problem is the sign of a single covariance: R@k − mR@k = Cov(n, R)/n̄.</span></div>
+        </div>
+        <p class="hint"><span lang="zh">此頁引用知識點 E5、E6；數值取自 golden vector <code>gv-007</code>。</span>
+          <span lang="en">This page cites knowledge points E5 and E6; the figures are golden vector <code>gv-007</code>.</span></p>
+      </div>
+    </div></div>
+  </div>
+  <p class="cap"><span lang="zh">章節欄的百分比與「回到上次位置」寫入 <code>localStorage</code>，鍵名帶版本（<code>sgs:v1:progress</code>）；讀取失敗時回傳型別預設值，無痕視窗下介面照常運作。</span>
+    <span lang="en">Rail progress and resume position persist to versioned <code>localStorage</code> keys (<code>sgs:v1:progress</code>). Every read returns a typed default on failure, so the interface works unchanged in a private window.</span></p>
+</section>
+
+<!-- ============ 2 LECTURE SHELL ============ -->
+<section class="screen" id="s-lecture">
+  <h2 class="sh"><span lang="zh">講課介面與講者視窗</span><span lang="en">Lecture shell and presenter window</span><span class="spec">PRD §6.1 · NFR-5</span></h2>
+  <p class="sub">
+    <span lang="zh">同一份內容、第二種外殼：單步顯示、字級至少 24px、對比至少 7:1、鍵盤操作。講者視窗是另開的瀏覽器視窗，經 <code>BroadcastChannel</code> 接收目前位置與剩餘時間。</span>
+    <span lang="en">One content base, a second shell: one step at a time, at least 24px base type, contrast of at least 7:1, driven by keyboard. The presenter window is a second browser window fed position and remaining time over <code>BroadcastChannel</code>.</span>
+  </p>
+
+  <div class="frame">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="url">127.0.0.1:5173/lecture/m/m04/3</span></div>
+    <div class="body"><div class="lect">
+      <div class="tag">M4 · <span lang="zh">步驟 3／9</span><span lang="en">STEP 3 OF 9</span></div>
+      <h4><span lang="zh">沒讀到任何像素的預測器</span><span lang="en">The predictor that reads no pixels</span></h4>
+      <p><span lang="zh">FREQ 只用 (subject 類別, object 類別) 的共現先驗。</span>
+        <span lang="en">FREQ uses only the co-occurrence prior over (subject class, object class).</span></p>
+      <div class="metrics">
+        <div class="mv"><b>16.0</b><span>mR@100 · predcls · graph</span><span>FREQ</span></div>
+        <div class="mv"><b>15.3</b><span>mR@100 · predcls · graph</span><span>MOTIFS</span></div>
+        <div class="mv"><b>10.5</b><span>mR@100 · predcls · graph</span><span>IMP⁺</span></div>
+      </div>
+      <div class="foot">
+        <span class="timer">04:12</span>
+        <span lang="zh">← → 切換步驟</span><span lang="en">← → to step</span>
+        <span>·</span>
+        <span lang="zh">數字出處：Neural Motifs, CVPR 2018, Table 1（已查證）</span>
+        <span lang="en">Source: Neural Motifs, CVPR 2018, Table 1 (verified)</span>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="frame" style="max-width:560px">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="url">127.0.0.1:5173/lecture/notes</span></div>
+    <div class="body"><div class="presenter">
+      <span class="clock">04:12</span>
+      <div class="h"><span lang="zh">講者備註</span><span lang="en">Presenter notes</span></div>
+      <div class="now"><span lang="zh">先問學員猜哪一個贏。等他們答完再翻。這是本領域的立身難堪之處，也是 mR@K 存在的唯一理由 —— 不要淡化。</span>
+        <span lang="en">Ask the room to guess which wins before advancing. This is the field's founding embarrassment and the only reason mR@K exists — do not soften it.</span></div>
+      <div class="next"><span lang="zh">下一步 · L3 長尾實作：學員自己跑一次 FREQ</span>
+        <span lang="en">Next · L3 Long-Tail Lab: they run FREQ themselves</span></div>
+    </div></div>
+  </div>
+  <p class="cap"><span lang="zh">計時器超過該步驟的預算後轉紅但不停止；投影片位置寫在網址裡，任何一步都可加入書籤。</span>
+    <span lang="en">The timer turns red past the step's budget but does not stop. The position lives in the URL, so any step is bookmarkable mid-lecture.</span></p>
+</section>
+
+<!-- ============ 3 SCORING VIEW ============ -->
+<section class="screen" id="s-diff">
+  <h2 class="sh"><span lang="zh">四色評分檢視</span><span lang="en">The four-colour scoring view</span><span class="spec">PRD §6.2</span></h2>
+  <p class="sub">
+    <span lang="zh">L1、L4、L5、L8 共用這一個檢視。把「定位失敗」與「分類失敗」在視覺上分開，是本教材可用的最高價值教學動作 —— 因為三種 protocol 存在的目的正是分離這兩件事。</span>
+    <span lang="en">Shared by L1, L4, L5 and L8. Separating localization failure from classification failure visually is the single highest-value pedagogical move available here, because that distinction is precisely what the three evaluation protocols exist to isolate.</span>
+  </p>
+
+  <div class="frame">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="url">127.0.0.1:5173/lab/L1?ds=placeholder&amp;img=ph-001&amp;s=2&amp;o=1&amp;p=on</span></div>
+    <div class="body" style="padding:16px"><div class="diffwrap">
+      <div>
+        <div class="canvas">
+          <svg viewBox="0 0 640 480" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:auto">
+            <rect width="640" height="480" fill="#F4F6F4"/>
+            <!-- objects, matching the committed placeholder frame ph-001 -->
+            <g stroke="#12191A" stroke-width="2">
+              <rect x="60" y="300" width="420" height="110" fill="#96785080"/>
+              <rect x="140" y="80" width="110" height="235" fill="#465AA080"/>
+              <rect x="250" y="240" width="90" height="70" fill="#C8A04680"/>
+              <rect x="190" y="205" width="45" height="40" fill="#BE6E6E80"/>
+              <rect x="100" y="268" width="70" height="24" fill="#6E6E7880"/>
+            </g>
+            <g font-family="IBM Plex Mono, monospace" font-size="12" fill="#12191A">
+              <text x="66" y="318">table</text><text x="146" y="98">person</text>
+              <text x="256" y="258">box</text><text x="196" y="223">glove</text>
+              <text x="106" y="284">wrench</text>
+            </g>
+            <defs>
+              <marker id="ah-m" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#1F7A4D"/></marker>
+              <marker id="ah-s" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8" fill="none" stroke="#B3301F" stroke-width="1.6"/></marker>
+              <marker id="ah-x" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8" fill="none" stroke="#7F8D8B" stroke-width="1.4"/></marker>
+              <marker id="ah-l" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="none" stroke="#A9720C" stroke-width="1.6"/></marker>
+            </defs>
+            <!-- match: box -> table -->
+            <path d="M 295 275 L 270 355" stroke="#1F7A4D" stroke-width="3" fill="none" marker-end="url(#ah-m)"/>
+            <text x="300" y="322" font-size="13" font-family="IBM Plex Mono, monospace" fill="#1F7A4D">on</text>
+            <!-- localization: wrench -> table, right name wrong place -->
+            <path d="M 135 280 L 200 352" stroke="#A9720C" stroke-width="3" stroke-dasharray="2 3" fill="none" marker-end="url(#ah-l)"/>
+            <text x="120" y="330" font-size="13" font-family="IBM Plex Mono, monospace" fill="#A9720C">resting against</text>
+            <!-- spurious: person -> box -->
+            <path d="M 195 200 L 280 245" stroke="#B3301F" stroke-width="4" fill="none" marker-end="url(#ah-s)"/>
+            <text x="196" y="196" font-size="13" font-family="IBM Plex Mono, monospace" fill="#B3301F">holding</text>
+            <!-- missed: person -> glove -->
+            <path d="M 190 190 L 206 210" stroke="#7F8D8B" stroke-width="3" stroke-dasharray="6 4" fill="none" marker-end="url(#ah-x)"/>
+            <text x="120" y="176" font-size="13" font-family="IBM Plex Mono, monospace" fill="#7F8D8B">wearing</text>
+          </svg>
+        </div>
+        <div class="legend">
+          <span class="lg-match"><i></i><span lang="zh">命中</span><span lang="en">match</span></span>
+          <span class="lg-spur"><i></i><span lang="zh">多餘的邊</span><span lang="en">spurious</span></span>
+          <span class="lg-miss"><i></i><span lang="zh">漏掉的 ground truth</span><span lang="en">missed ground truth</span></span>
+          <span class="lg-loc"><i></i><span lang="zh">名稱對、位置錯</span><span lang="en">right name, wrong place</span></span>
+        </div>
+      </div>
+
+      <div class="ctrls">
+        <div class="metrics" style="margin-top:0">
+          <div class="mv"><b>25.0</b><span>R@20 · predcls · graph</span></div>
+          <div class="mv"><b>16.7</b><span>mR@20 · predcls · graph</span></div>
+        </div>
+        <div class="metrics">
+          <div class="mv"><b>50.0</b><span>ngR@20 · predcls · none</span></div>
+          <div class="mv"><b class="na">—</b><span>zR@20 · predcls · graph</span>
+            <em><span lang="zh">未提供訓練集三元組</span><span lang="en">no training split supplied</span></em></div>
+        </div>
+        <div class="warnrow" style="margin:14px 0 0"><code>gt_boxes_not_pairs</code>
+          <div><span lang="zh">PredCls 與 SGCls 提供的是 ground-truth boxes，不是 ground-truth pairs。</span>
+            <span lang="en">PredCls and SGCls supply ground-truth boxes, not ground-truth pairs.</span></div></div>
+        <p class="hint"><span lang="zh">此警告在每一次 predcls／sgcls 回應中無條件出現。SRS §4.4 指出這是本領域最常見的誤讀，因此學員不可能看到 PredCls 數字而沒看到它。</span>
+          <span lang="en">Emitted on every predcls and sgcls response without exception. SRS §4.4 names this the most common misreading in the field, so a student cannot see a PredCls number without seeing it.</span></p>
+      </div>
+    </div></div>
+  </div>
+  <p class="cap"><span lang="zh">色彩不是唯一通道：命中為實線實心箭頭、多餘為雙倍粗實線空心箭頭、漏掉為灰色虛線、定位失敗為點線空心箭頭。灰階列印仍可判讀（NFR-5）。</span>
+    <span lang="en">Hue is never the only channel: match is a solid stroke with a filled arrowhead, spurious a doubled stroke with an open one, missed a grey dash, localization a dotted stroke with a hollow head. The diff reads in greyscale (NFR-5).</span></p>
+</section>
+
+<!-- ============ 4 LABS ============ -->
+<section class="screen" id="s-labs">
+  <h2 class="sh"><span lang="zh">八項實作單元</span><span lang="en">The eight labs</span><span class="spec">PRD §6.2</span></h2>
+  <p class="sub">
+    <span lang="zh">每一項的狀態列出實際建置階段。L5 是錨定論文的重建，最貼近本課程的獨有內容。</span>
+    <span lang="en">Each carries the phase that actually builds it. L5 is the reconstruction of the anchor paper and is the part most specific to this course.</span>
+  </p>
+
+  <div class="labs">
+    <div class="lab"><div class="id">L1 · <span lang="zh">計畫 02</span><span lang="en">plan 02</span></div>
+      <h5><span lang="zh">三元組建構器</span><span lang="en">Triplet Builder</span></h5>
+      <p><span lang="zh">點兩個 box、選一個 predicate、送出評分。</span><span lang="en">Click two boxes, choose a predicate, submit for scoring.</span></p>
+      <div class="does"><span lang="zh">教：三元組資料模型與定位</span><span lang="en">Teaches: the triplet model and grounding</span></div></div>
+
+    <div class="lab"><div class="id">L2 · <span lang="zh">計畫 02</span><span lang="en">plan 02</span></div>
+      <h5><span lang="zh">指標探索器</span><span lang="en">Metric Explorer</span></h5>
+      <p><span lang="zh">拖 K、切 constraint、換 protocol，看四個指標同時移動。</span><span lang="en">Drag K, flip the constraint, switch protocol; watch four metrics move.</span></p>
+      <div class="does"><span lang="zh">教：為何論文要報兩個數字</span><span lang="en">Teaches: why papers report two numbers</span></div></div>
+
+    <div class="lab"><div class="id">L3 · <span lang="zh">計畫 04</span><span lang="en">plan 04</span></div>
+      <h5><span lang="zh">長尾實驗室</span><span lang="en">Long-Tail Lab</span></h5>
+      <p><span lang="zh">在瀏覽器裡跑共現預測器，與真實模型對比。</span><span lang="en">Run the co-occurrence predictor live and compare it with a real model.</span></p>
+      <div class="does"><span lang="zh">教：mR@K 為何存在</span><span lang="en">Teaches: why mean Recall exists</span></div></div>
+
+    <div class="lab"><div class="id">L4 · <span lang="zh">計畫 03</span><span lang="en">plan 03</span></div>
+      <h5><span lang="zh">方法比較器</span><span lang="en">Method Comparator</span></h5>
+      <p><span lang="zh">同一張影像穿過多個模型，每一欄都標示數據來源層級。</span><span lang="en">One image through several models, each column carrying its provenance.</span></p>
+      <div class="does"><span lang="zh">教：兩階段、單階段與 VLM 的差別</span><span lang="en">Teaches: two-stage vs one-stage vs VLM</span></div></div>
+
+    <div class="lab star"><div class="id">L5 ★ · <span lang="zh">計畫 03</span><span lang="en">plan 03</span></div>
+      <h5><span lang="zh">IndVisSGG 重建</span><span lang="en">IndVisSGG Replica</span></h5>
+      <p><span lang="zh">編輯 TEC、設定專家數、跑三個步驟、重播消融實驗。</span><span lang="en">Edit the criteria, set the expert count, run all three steps, replay the ablations.</span></p>
+      <div class="does"><span lang="zh">教：以重建的方式讀懂錨定論文</span><span lang="en">Teaches: the anchor paper, by reconstruction</span></div></div>
+
+    <div class="lab"><div class="id">L6 · <span lang="zh">計畫 03</span><span lang="en">plan 03</span></div>
+      <h5><span lang="zh">評測協定鑑識</span><span lang="en">Protocol Forensics</span></h5>
+      <p><span lang="zh">同一批預測，在兩種 mask 配對協定下各評一次。</span><span lang="en">Score identical predictions under both mask-pairing protocols.</span></p>
+      <div class="does"><span lang="zh">教：一個排行榜如何錯了兩年</span><span lang="en">Teaches: how a benchmark stayed wrong for two years</span></div></div>
+
+    <div class="lab"><div class="id">L7 · <span lang="zh">計畫 04</span><span lang="en">plan 04</span></div>
+      <h5><span lang="zh">句子轉圖</span><span lang="en">Caption → Graph</span></h5>
+      <p><span lang="zh">打一句話，看名詞變節點、動詞變邊。</span><span lang="en">Type a sentence; watch nouns become nodes and verbs become edges.</span></p>
+      <div class="does"><span lang="zh">教：語言結構與圖結構的對應</span><span lang="en">Teaches: language structure ↔ graph structure</span></div></div>
+
+    <div class="lab"><div class="id">L8 · <span lang="zh">計畫 04</span><span lang="en">plan 04</span></div>
+      <h5><span lang="zh">mini-ISG 標註器</span><span lang="en">Mini-ISG Annotator</span></h5>
+      <p><span lang="zh">先讓 VLM 起草，再逐項手動修正，並計算修正次數。</span><span lang="en">Draft with a VLM, then hand-correct, with every correction counted.</span></p>
+      <div class="does"><span lang="zh">教：標註的真實成本</span><span lang="en">Teaches: what annotation actually costs</span></div></div>
+  </div>
+
+  <h3 class="sh"><span lang="zh">L2 的控制面板</span><span lang="en">L2's control surface</span></h3>
+  <div class="frame">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="url">127.0.0.1:5173/lab/L2?ds=vg150-sgb&amp;img=2317469&amp;k=50&amp;protocol=sgdet&amp;constraint=none&amp;tau=0.5</span></div>
+    <div class="body" style="padding:16px"><div class="diffwrap">
+      <div class="ctrls">
+        <div class="ctrl"><label>K</label>
+          <div class="slider"><input type="range" min="1" max="100" value="50" disabled><output>50</output></div>
+          <div class="hint"><span lang="zh">刻度落在 20、50、100</span><span lang="en">ticks at 20, 50, 100</span></div></div>
+        <div class="ctrl"><label><span lang="zh">Constraint 模式</span><span lang="en">Constraint mode</span></label>
+          <div class="knob"><button>graph</button><button aria-pressed="true">none</button><button>semi</button></div></div>
+        <div class="ctrl"><label>Protocol</label>
+          <div class="knob"><button>predcls</button><button>sgcls</button><button aria-pressed="true">sgdet</button></div></div>
+        <div class="ctrl"><label>τ &nbsp;<span lang="zh">IoU 門檻</span><span lang="en">IoU threshold</span></label>
+          <div class="slider"><input type="range" min="0" max="100" value="50" disabled><output>0.50</output></div>
+          <div class="hint"><span lang="zh">0.5 是自 Xu 等人以來的領域慣例，<b>並未</b>寫在 <code>METRICS.md</code> 裡。因此這裡把它做成標示清楚、可調整的參數，而不是藏起來的常識。</span>
+            <span lang="en">0.5 is field convention inherited from Xu et al. and is <b>not</b> stated in <code>METRICS.md</code>. It is exposed here as a labelled, adjustable parameter rather than concealed as folklore.</span></div></div>
+        <div class="ctrl"><label><span lang="zh">Mask 配對</span><span lang="en">Mask pairing</span></label>
+          <div class="knob"><button aria-pressed="true">single_mpo</button><button>multi_mpo</button></div>
+          <div class="hint"><span lang="zh">本張影像沒有 mask，此開關停用。</span><span lang="en">Disabled: this image carries no masks.</span></div></div>
+      </div>
+      <div>
+        <div class="metrics" style="margin-top:0">
+          <div class="mv"><b>0.0</b><span>R@20 · sgdet · graph</span></div>
+          <div class="mv"><b>100.0</b><span>ngR@20 · sgdet · none</span></div>
+        </div>
+        <p class="hint" style="margin-top:14px"><span lang="zh">同一批預測，只切換 graph constraint，R 與 ng-R 之間就出現 0 與 100 的落差 —— 這是 golden vector <code>gv-010</code>，也是課程裡用來說明「跨論文數字不可比」的那一個。真實模型上的落差是十到二十個百分點。</span>
+          <span lang="en">Identical predictions, one switch: the gap between R and ng-R runs from 0 to 100. That is golden vector <code>gv-010</code>, and the fixture the course leans on to show why cross-paper numbers are not comparable. On a real model the swing is ten to twenty points.</span></p>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============ 5 FIELD MAP ============ -->
+<section class="screen" id="s-map">
+  <h2 class="sh"><span lang="zh">領域地圖與論文卡</span><span lang="en">Field map and paper cards</span><span class="spec">PRD §6.3 · D-21</span></h2>
+  <p class="sub">
+    <span lang="zh">35 張卡片、八個分支，分兩個層級：<b>A 層</b>（約 12 篇，實際被評分或被引用數字者）帶完整的已查證數值；<b>B 層</b>帶場次、DOI、核心想法、前作，以及它修好了前作的哪一個缺陷。沒有「未查證」這一層 —— 沒查過的數字就不收。</span>
+    <span lang="en">35 cards across eight branches, in two tiers. <b>Tier A</b> (~12, the methods actually scored or quoted) carries full verified numbers. <b>Tier B</b> carries venue, DOI, core idea, predecessor, and the specific defect it fixes. There is no unverified tier — a number we have not checked is not carried at all.</span>
+  </p>
+
+  <div class="frame">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="url">127.0.0.1:5173/map?branch=debiasing&amp;tier=all</span></div>
+    <div class="body" style="padding:16px">
+      <div class="branches">
+        <div class="branch"><h6><span lang="zh">兩階段</span><span lang="en">Two-stage</span></h6><ul>
+          <li class="a">IMP <span class="t">A</span></li><li class="a">Neural Motifs <span class="t">A</span></li>
+          <li class="a">VCTree <span class="t">A</span></li><li>GPS-Net <span class="t">B</span></li></ul></div>
+        <div class="branch"><h6><span lang="zh">去偏差</span><span lang="en">Debiasing</span></h6><ul>
+          <li class="a">MOTIFS-TDE <span class="t">A</span></li><li>CogTree <span class="t">B</span></li>
+          <li>DLFE <span class="t">B</span></li><li>NICE <span class="t">B</span></li>
+          <li>IETrans <span class="t">B</span></li><li>ST-SGG <span class="t">B</span></li>
+          <li>PE-Net <span class="t">B</span></li><li>RA-SGG <span class="t">B</span></li></ul></div>
+        <div class="branch"><h6><span lang="zh">單階段</span><span lang="en">One-stage</span></h6><ul>
+          <li>FCSGG <span class="t">B</span></li><li class="a">RelTR <span class="t">A</span></li>
+          <li class="a">SGTR <span class="t">A</span></li><li class="a">EGTR <span class="t">A</span></li>
+          <li>DSGG <span class="t">B</span></li><li>SpeaQ <span class="t">B</span></li>
+          <li>Hydra-SGG <span class="t">B</span></li><li>REACT <span class="t">B</span></li></ul></div>
+        <div class="branch"><h6>Panoptic</h6><ul>
+          <li class="a">PSGFormer <span class="t">A</span></li><li class="a">PSGTR <span class="t">A</span></li>
+          <li class="a">HiLo <span class="t">A</span></li></ul></div>
+        <div class="branch"><h6><span lang="zh">開放詞彙</span><span lang="en">Open vocabulary</span></h6><ul>
+          <li>VS³ <span class="t">B</span></li><li>OvSGTR <span class="t">B</span></li><li>PGSG <span class="t">B</span></li></ul></div>
+        <div class="branch"><h6>LLM / VLM</h6><ul>
+          <li class="a">IndVisSGG ★ <span class="t">A</span></li><li>LLM4SGG <span class="t">B</span></li>
+          <li>R1-SGG <span class="t">B</span></li></ul></div>
+        <div class="branch"><h6><span lang="zh">影片</span><span lang="en">Video</span></h6><ul>
+          <li class="a">STTran <span class="t">A</span></li><li>TEMPURA <span class="t">B</span></li>
+          <li>OED <span class="t">B</span></li><li>DiffVsgg <span class="t">B</span></li><li>UNO <span class="t">B</span></li></ul></div>
+        <div class="branch"><h6><span lang="zh">3D 與具身</span><span lang="en">3D &amp; embodied</span></h6><ul>
+          <li>3DSSG <span class="t">B</span></li><li>Hydra <span class="t">B</span></li>
+          <li>ConceptGraphs <span class="t">B</span></li><li>Clio <span class="t">B</span></li>
+          <li>SayPlan <span class="t">B</span></li></ul></div>
+      </div>
+
+      <h3 class="sh" style="margin-top:22px"><span lang="zh">論文卡（A 層）</span><span lang="en">A paper card, tier A</span></h3>
+      <div class="lab star" style="max-width:640px">
+        <div class="id">MOTIFS-TDE · CVPR 2020 · doi:10.1109/CVPR42600.2020.00377</div>
+        <h5><span lang="zh">以因果推論移除訓練分布造成的偏差</span><span lang="en">Unbiased SGG from biased training</span></h5>
+        <p><span lang="zh"><b>核心想法。</b>在推論時從預測中扣除「只看標籤共現就能得到的部分」，留下真正由畫面支持的部分。</span>
+          <span lang="en"><b>Core idea.</b> Subtract, at inference time, the part of the prediction obtainable from label co-occurrence alone, leaving what the pixels actually support.</span></p>
+        <p><span lang="zh"><b>前作與其缺陷。</b>Neural Motifs —— 它的頻率先驗強到讓一個完全不看畫面的預測器在 mR@100 上勝過它。</span>
+          <span lang="en"><b>Predecessor and its defect.</b> Neural Motifs, whose frequency prior is strong enough that a predictor reading no pixels at all beats it on mR@100.</span></p>
+        <table class="data" style="margin-bottom:0"><tbody>
+          <tr><td>mR@50 · predcls · graph</td><td class="n">25.5</td><td style="font-size:11px;color:var(--muted)">Table 4</td></tr>
+          <tr><td>mR@50 · sgdet · graph</td><td class="n">8.2</td><td style="font-size:11px;color:var(--muted)">Table 4</td></tr>
+        </tbody></table>
+      </div>
+      <p class="hint"><span lang="zh">每一個數值旁都記著它是從哪一張表讀出來的。這不是註腳，而是 <code>papers.json</code> 的必填欄位，內容檢查會擋下沒有 <code>source_table</code> 的數字。</span>
+        <span lang="en">Every figure records the table it was read from. That is not a footnote but a required field in <code>papers.json</code>; the content lint rejects a number without its <code>source_table</code>.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6 LEADERBOARDS ============ -->
+<section class="screen" id="s-board">
+  <h2 class="sh"><span lang="zh">凍結排行榜</span><span lang="en">Frozen leaderboards</span><span class="spec">PRD §6.4</span></h2>
+  <p class="sub">
+    <span lang="zh">每篇論文一張表，永不合併成單一排名。不可比對的告示置於表格上方，不可收合。</span>
+    <span lang="en">One table per paper, never merged into a single ranking. The non-comparability banner sits above the table and does not collapse.</span>
+  </p>
+
+  <div class="frame">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="url">127.0.0.1:5173/leaderboards?dataset=psg&amp;protocol=sgdet</span></div>
+    <div class="body" style="padding:16px">
+      <div class="banner">
+        <b><span lang="zh">這些數字不可跨列比較</span><span lang="en">These numbers are not comparable across rows</span></b>
+        <span lang="zh">各列的 detector backbone、程式基底與訓練回合數皆不同，且取自各自論文的表格。</span>
+        <span lang="en">Each row uses a different detector backbone, codebase and epoch budget, and is quoted from its own paper's table.</span>
+      </div>
+      <table class="data">
+        <thead><tr>
+          <th><span lang="zh">方法</span><span lang="en">Method</span></th>
+          <th>Backbone</th><th><span lang="zh">程式基底</span><span lang="en">Codebase</span></th>
+          <th style="text-align:right">mR@50<br><span style="text-transform:none;letter-spacing:0">multi_mpo</span></th>
+          <th style="text-align:right">mR@50<br><span style="text-transform:none;letter-spacing:0">single_mpo</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td>PSGTR</td><td>ResNet-50</td><td>OpenPSG</td><td class="n">20.8</td><td class="n" style="color:var(--m-spur)">11.62</td></tr>
+          <tr><td>PSGFormer</td><td>ResNet-50</td><td>OpenPSG</td><td class="n">17.0</td><td class="n" style="color:var(--m-spur)">8.20</td></tr>
+          <tr><td>HiLo</td><td>ResNet-50</td><td>HiLo</td><td class="n">30.3</td><td class="n" style="color:var(--m-spur)">18.33</td></tr>
+          <tr><td>VCTree</td><td>ResNet-50</td><td>OpenPSG</td><td class="n">20.5</td><td class="n" style="color:var(--m-match)">20.4</td></tr>
+        </tbody>
+      </table>
+      <p class="hint"><span lang="zh">單階段方法可以自由輸出重複的 mask，因此在舊協定下多配對不花成本卻有回報；兩階段方法每個實例只出一個 mask，兩種協定下幾乎不動。一個公開排行榜以錯誤的排序存在了兩年。</span>
+        <span lang="en">A one-stage model emits duplicate masks freely, so multiple pairings cost it nothing and pay under the original protocol. A two-stage model emits one mask per instance and barely moves. A public ranking stood in the wrong order for two years.</span></p>
+      <div class="warnrow"><code>2025-07-24</code>
+        <div><span lang="zh">自 Papers With Code 於此日關閉後，本領域再無任何維護中的公開排行榜。此處的表格是凍結快照，不是即時排名。</span>
+          <span lang="en">Since Papers With Code was sunset on this date, no maintained public leaderboard for this field exists. These tables are frozen snapshots, not a live ranking.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7 HONESTY ============ -->
+<section class="screen" id="s-honest">
+  <h2 class="sh"><span lang="zh">離線運作與誠實呈現</span><span lang="en">Offline, and honest about it</span><span class="spec">NFR-1 · NFR-2 · D-07</span></h2>
+  <p class="sub">
+    <span lang="zh">所有 P0 功能在斷網、且未安裝 <code>torch</code> 的情況下都必須運作。只有即時推論與即時 VLM 可以降級，且降級時說明原因，不丟出錯誤堆疊。</span>
+    <span lang="en">Every P0 feature works with the network down and <code>torch</code> uninstalled. Live inference and the live VLM are the only degradable paths, and they degrade with a stated reason rather than a stack trace.</span>
+  </p>
+
+  <div class="frame">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="url">127.0.0.1:5173/lab/L4?ds=placeholder&amp;img=ph-002</span></div>
+    <div class="body" style="padding:16px">
+      <table class="data">
+        <thead><tr>
+          <th><span lang="zh">模型</span><span lang="en">Model</span></th>
+          <th><span lang="zh">來源層級</span><span lang="en">Fidelity</span></th>
+          <th style="text-align:right">R@50</th>
+          <th><span lang="zh">即時推論</span><span lang="en">Live inference</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td>RelTR</td><td><span lang="zh">實測</span><span lang="en">measured</span></td><td class="n">24.1</td>
+            <td style="font-size:12px"><span lang="zh">可用 · 每張約 6.4 秒（實測）</span><span lang="en">available · ~6.4s/image, measured</span></td></tr>
+          <tr><td>EGTR</td><td><span lang="zh">實測</span><span lang="en">measured</span></td><td class="n">26.3</td>
+            <td style="font-size:12px;color:var(--muted)"><span lang="zh">僅提供預先計算結果</span><span lang="en">committed predictions only</span></td></tr>
+          <tr><td>Neural Motifs</td>
+            <td><span lang="zh" style="color:var(--warn)">重建</span><span lang="en" style="color:var(--warn)">reconstructed</span></td>
+            <td class="n" style="color:var(--warn);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:4px">20.0</td>
+            <td style="font-size:12px;color:var(--muted)"><span lang="zh">不可用 —— 需要 <code>maskrcnn-benchmark</code>，該套件已停止維護，且綁定本專案不安裝的 PyTorch 與 CUDA 世代。</span>
+              <span lang="en">Unavailable — needs <code>maskrcnn-benchmark</code>, which is unmaintained and pinned to a PyTorch and CUDA generation this project does not install.</span></td></tr>
+        </tbody>
+      </table>
+      <div class="warnrow" style="border-left-color:var(--warn)"><code>reconstructed</code>
+        <div><span lang="zh">重建的預測檔是為了重現該模型在文獻中記載的行為而以腳本產生的，<b>不是</b>該模型的輸出；沒有任何 Neural Motifs 權重被執行過。此註記為必填欄位，缺少時結構驗證不通過。</span>
+          <span lang="en">A reconstructed prediction file is scripted to reproduce the model's documented behaviour. It is <b>not</b> that model's output; no Neural Motifs checkpoint was ever run. The note is a required field — a reconstructed graph without one fails validation.</span></div></div>
+
+      <h3 class="sh"><span lang="zh">本機狀態</span><span lang="en">This machine</span></h3>
+      <table class="data" style="max-width:520px"><tbody>
+        <tr><td>PyTorch</td><td class="n">2.11.0+cpu</td></tr>
+        <tr><td><span lang="zh">推論裝置</span><span lang="en">Inference device</span></td><td class="n">cpu</td></tr>
+        <tr><td><span lang="zh">可即時執行的模型</span><span lang="en">Live-capable models</span></td><td class="n">reltr</td></tr>
+        <tr><td><span lang="zh">VLM 供應者</span><span lang="en">VLM provider</span></td><td class="n">transcript</td></tr>
+        <tr><td><span lang="zh">已解壓縮的切片</span><span lang="en">Slices unpacked</span></td><td class="n">placeholder</td></tr>
+      </tbody></table>
+      <p class="hint"><span lang="zh">全新 clone 不需要任何資料即可運作：已納入版控的 placeholder 切片（六張合成影像）足以跑完每一項實作單元。</span>
+        <span lang="en">A fresh clone works with no data of any kind: the committed placeholder slice — six synthetic frames — is enough to run every lab.</span></p>
+    </div>
+  </div>
+
+  <h3 class="sh"><span lang="zh">不會宣稱的事</span><span lang="en">What this will not claim</span></h3>
+  <p class="note"><span lang="zh">錨定論文所述的 ISG 資料集並未公開發布 —— 2026 年 9 月查證。本教材依已發表的表格講授它，標示為「需來函索取」，並提醒 Hugging Face 上的 <code>ISG-Bench</code> 是同名不同物。替代品是以相同方法、由授權開放的工業影像自建的 mini-ISG，明確標示為<b>本專案的</b>教學集，不是作者的 ISG。</span>
+    <span lang="en">The ISG dataset described in the anchor paper has no public release — verified September 2026. This material teaches it from the published tables, labels it request-only, and warns that <code>ISG-Bench</code> on Hugging Face is a name collision. In its place a mini-ISG is built by the same method from openly licensed industrial frames, labelled unambiguously as <b>our</b> teaching set and not the authors'.</span></p>
+</section>
+
+</main>
+
+<footer><div class="wrap">
+  <span lang="zh">介面模擬 · 2026-09-16 · 依 PRD 與 contracts §2.2 路由繪製</span>
+  <span lang="en">UI mockup · 2026-09-16 · drawn from the PRD and the contracts §2.2 routes</span>
+  <span class="spacer"></span>
+  <span lang="zh">錨定論文：Wang 等，IndVisSGG，Adv. Eng. Informatics 65 (2025) 103107</span>
+  <span lang="en">Anchor: Wang et al., IndVisSGG, Adv. Eng. Informatics 65 (2025) 103107</span>
+</div></footer>
+
+<script>
+(function () {
+  var SCREENS = [
+    ['s-overview', '總覽', 'Overview'],
+    ['s-study', '自學介面', 'Study shell'],
+    ['s-lecture', '講課介面', 'Lecture shell'],
+    ['s-diff', '評分檢視', 'Scoring view'],
+    ['s-labs', '實作 L1–L8', 'Labs L1–L8'],
+    ['s-map', '領域地圖', 'Field map'],
+    ['s-board', '排行榜', 'Leaderboards'],
+    ['s-honest', '離線與誠實', 'Offline & honesty']
+  ];
+
+  var nav = document.getElementById('nav');
+  SCREENS.forEach(function (s, i) {
+    var a = document.createElement('a');
+    a.href = '#' + s[0];
+    a.dataset.target = s[0];
+    a.innerHTML = '<span lang="zh">' + s[1] + '</span><span lang="en">' + s[2] + '</span>';
+    if (i === 0) a.className = 'on';
+    nav.appendChild(a);
+  });
+
+  function show(id) {
+    var found = false;
+    SCREENS.forEach(function (s) {
+      var on = s[0] === id;
+      if (on) found = true;
+      document.getElementById(s[0]).classList.toggle('on', on);
+    });
+    if (!found) return show(SCREENS[0][0]);
+    Array.prototype.forEach.call(nav.children, function (a) {
+      a.classList.toggle('on', a.dataset.target === id);
+    });
+    if (typeof window.scrollTo === 'function') {
+      try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (e) { /* jsdom, or no visual viewport */ }
+    }
+  }
+
+  window.addEventListener('hashchange', function () {
+    show(location.hash.slice(1) || SCREENS[0][0]);
+  });
+  if (location.hash) show(location.hash.slice(1));
+
+  // Language toggle, same span-swap convention as web/knowledge-map, persisted the same way.
+  var zh = document.getElementById('lang-zh'), en = document.getElementById('lang-en');
+  function setLang(l) {
+    document.documentElement.setAttribute('data-lang', l);
+    document.documentElement.setAttribute('lang', l === 'zh' ? 'zh-TW' : 'en-GB');
+    zh.setAttribute('aria-pressed', l === 'zh');
+    en.setAttribute('aria-pressed', l === 'en');
+    try { localStorage.setItem('sgs-mockup-lang', l); } catch (e) { /* private window */ }
+  }
+  zh.onclick = function () { setLang('zh'); };
+  en.onclick = function () { setLang('en'); };
+  var saved = 'zh';
+  try { saved = localStorage.getItem('sgs-mockup-lang') || 'zh'; } catch (e) { /* ignore */ }
+  setLang(saved);
+})();
+</script>
+</body>
+</html>

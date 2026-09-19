@@ -1,0 +1,46 @@
+{
+  "name": "scene-graph-studio",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "node tools/start.mjs",
+    "setup": "npm install && node tools/py.mjs -m pip install -r backend/requirements.txt && node tools/py.mjs backend/scripts/make_placeholders.py",
+    "dev": "npm run dev --workspace frontend",
+    "ci": "npm run harvest && npm run test:py && npm run build:metrics && npm run test:ts && npm run lint:py && npm run lint:parity && npm run lint:i18n && npm run lint:content && npm run lint:frozen && npm run lint:mockup && npm run lint:standalone && npm run build:frontend",
+    "test:py": "node tools/py.mjs -m pytest backend/tests -q",
+    "test:ts": "vitest run",
+    "build:metrics": "tsc -p packages/sgg-metrics/tsconfig.build.json",
+    "build:frontend": "npm run build --workspace frontend",
+    "lint:parity": "node tools/parity.mjs",
+    "lint:i18n": "node tools/i18n_parity.mjs",
+    "lint:content": "node tools/content_lint.mjs",
+    "harvest": "node tools/harvest.mjs",
+    "lint:frozen": "node tools/audit.js && node tools/check.js",
+    "lint:mockup": "node tools/test/mockup.check.mjs",
+    "build:standalone": "node tools/build_standalone.mjs",
+    "lint:standalone": "node tools/build_standalone.mjs --check && node tools/test/standalone.check.mjs",
+    "test:e2e": "playwright test",
+    "check:offline": "node tools/offline_check.mjs",
+    "check:perf": "node tools/perf_check.mjs",
+    "lint:py": "node tools/py.mjs -m ruff check backend tools",
+    "check:pins": "node tools/py.mjs backend/scripts/check_pins.py"
+  },
+  "devDependencies": {
+    "mathjax-full": "^3.2.1",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  },
+  "overrides": {
+    "@xmldom/xmldom": "0.9.12"
+  }
+}

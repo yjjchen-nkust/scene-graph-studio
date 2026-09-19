@@ -1,0 +1,347 @@
+---
+id: m11
+order: 11
+title_en: "★ IndVisSGG, end to end"
+title_zh: "★ IndVisSGG 全貌解析"
+anchor_labs: [L5]
+knowledge_points: [L8, L9, L10, X7]
+symbols:
+  - sym: "O"
+    gloss_en: "the predefined object dictionary handed to the model"
+    gloss_zh: "提供給模型的預定義物件字典"
+  - sym: "P"
+    gloss_en: "the predefined predicate dictionary handed to the model"
+    gloss_zh: "提供給模型的預定義 predicate 字典"
+  - sym: "V_t"
+    gloss_en: "the video frame at timestamp t"
+    gloss_zh: "時間戳記 t 的影格"
+  - sym: "a_i"
+    gloss_en: "expert i's natural-language analysis accompanying its revision"
+    gloss_zh: "專家 i 隨修訂提出的自然語言分析"
+claims:
+  - id: c-m11-naive
+    text_en: "Asked plainly, the VLM scores R@20 = 0.032 on 10% of the PSG test set; with O, P and E it scores 23.040"
+    text_zh: "未加約束時，該 VLM 於 PSG 測試集 10% 子集上的 R@20 為 0.032；提供 O、P、E 後為 23.040"
+    source: indvissgg-2025
+    source_table: "Table 3"
+    constraint: unstated
+    protocol: unstated
+    verified: true
+  - id: c-m11-superadditive
+    text_en: "O alone gives R@20 = 1.787 and P alone 2.079, but the two together give 20.792"
+    text_zh: "僅提供 O 時 R@20 為 1.787，僅提供 P 時為 2.079，兩者併用則為 20.792"
+    source: indvissgg-2025
+    source_table: "Table 3"
+    constraint: unstated
+    protocol: unstated
+    verified: true
+  - id: c-m11-experts
+    text_en: "N=3 is not dominated by N=5: at N=5, mR@50 falls 25.480 to 24.383 and R@100 falls 30.142 to 30.020"
+    text_zh: "N=3 並未被 N=5 支配：於 N=5 時，mR@50 由 25.480 降至 24.383，R@100 由 30.142 降至 30.020"
+    source: indvissgg-2025
+    source_table: "Table 4"
+    constraint: unstated
+    protocol: unstated
+    verified: true
+  - id: c-m11-mr-gain
+    text_en: "On VG-150 the method improves mR@50 by 9.19 against R@50's 2.58; on PSG, 8.12 against 6.39"
+    text_zh: "於 VG-150 上，本方法的 mR@50 提升 9.19，而 R@50 僅提升 2.58；於 PSG 上則為 8.12 對 6.39"
+    source: indvissgg-2025
+    source_table: "Table 2"
+    constraint: unstated
+    protocol: unstated
+    verified: true
+  - id: c-m11-isg-density
+    text_en: "ISG holds 10K images with 688 object and 144 predicate classes at 17.6 predicates per image, against PSG's 49K, 133, 56 and 5.7"
+    text_zh: "ISG 收錄 10K 張影像，含 688 個物件類別與 144 個 predicate 類別，每張影像 17.6 個 predicate；PSG 則為 49K、133、56 與 5.7"
+    source: indvissgg-2025
+    source_table: "Table 1"
+    constraint: unstated
+    protocol: unstated
+    verified: true
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場，本課程的主軸單元，宜留足全場時間。0.032 一數須於第一分鐘內出現，並立即說明其成因不在視覺而在詞彙。另請明言本單元置於第十一位的理由：若無 M04，讀者無從理解 0.032 何以是關於字串比對的陳述；若無 M06，讀者無從理解 mean recall 的提升何以比 recall 的提升更具意義。此二前提若現場未具備，宜先行補足再繼續。"
+  - id: s2
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘。§2.2 的四項批評須逐項點名，不宜化約為籠統的不滿。第四項最值得停留：於部分 PSG 資料集中，前三個關係類別佔樣本數逾 50%，而許多稀有關係低於 1%——此為長尾問題，且由所研究方法的作者本人陳述，所指者恰為 mR@K 設立之目的。此處宜請現場回想 M04 s4 的恆等式。"
+  - id: s3
+    kind: math
+    seconds_budget: 420
+    presenter_notes_zh: "七分鐘。開講前務必先處理符號衝突：該論文的 E 指提供給模型的範例集合而非 M00 的關係集合，其 N 指審查專家數量而非 M01、M04 的標準答案三元組總數，而下一步驟重建中的 q 指單次審查修正錯誤的機率而非 M07 的 DETR query 數量。三者均依論文原樣引用，理由是讀者閱讀該論文時將遇到這兩個字母。此段若略過，其後兩頁必然混亂。式 (1) 與式 (2) 僅於引數上不同，故兩者之間的消融恰好隔離單一變數，此點宜明確指出。"
+  - id: s4
+    kind: math
+    seconds_budget: 420
+    presenter_notes_zh: "七分鐘。式 (3) 將步驟一的輸出回示同一模型 N 次並要求審查，式 (4) 整合各審查結果。重建部分假設各次審查獨立地以機率 q 修正某一錯誤，據此得出 N 的效果。務必於同一頁指出該獨立性假設未經檢驗且幾可確定不成立——同一模型、同一影格、同一提示所產生的 N 份審查並非獨立樣本。此點於 s8 再次出現，此處先行埋下。"
+  - id: s5
+    kind: math
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘。0.032 的機制：不在允許詞彙內的 predicate 無法與任何項目配對，且其所佔用的排序位置亦隨之消耗，單一錯誤計入兩次。此為 M04 定義第三合取項的直接後果，宜回指。若現場已於 M10 s2 見過此現象，此處可壓縮並改以「同一現象、自評分端觀之」帶過。"
+  - id: s6
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘。若僅能自 Table 2 教授一件事，即為：mean recall 的提升幅度遠超過 recall——VG 上 9.19 對 2.58，PSG 上 8.12 對 6.39——凡如此者即正在恢復長尾 predicate，與所主張的機制一致。另兩點須一併說明且不得省略：GPT-4V 對 Gemini 的差距為兩個專有模型於兩個時間點上的非受控比較，論文未作歸因而讀者亦不應作出歸因；三個資料集之間不得互相比較，分割、詞彙、影像來源均不相同。"
+  - id: s7
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘。ISG 的論據為密度而非規模：688 對 133 個物件類別、144 對 56 個 predicate、每張影像 17.6 對 5.7 個 predicate。須明白說明其僅供請求取得、並無公開發布與程式庫，故本課程依已發表的表格與圖示教授，並提醒其與不相關的 ISG-Bench 之名稱衝突。作為替代，本應用提供以相同方法自開放授權產業影格建置的 mini-ISG，其為本專案的教學資料集而非原作者之資料集——此一區別於 L8 再次出現，不得含混。"
+  - id: s8
+    kind: prose
+    seconds_budget: 360
+    presenter_notes_zh: "六分鐘，本單元最重要的一頁。四項缺口須逐項陳述，其中消融基線一項最為嚴重：Table 3 第一列為未加約束的提示，而更強的樸素基線——先自由生成文字、其後以最近鄰投影至 O 與 P——並未被報告。缺少該基線，Table 3 即混淆兩項主張：約束詞彙有效，以及於生成之前約束詞彙有效，而僅後者為該方法本身。此段直接接往 L5，宜明言學員若執行該項缺失的實驗，即完成了該論文未曾完成之事。"
+  - id: s9
+    kind: lab
+    lab: L5
+    seconds_budget: 600
+    presenter_notes_zh: "L5 十分鐘，本課程最長的實作。Table 3 與 Table 4 與學員自身的執行結果並列重現，且已發表數值與學員數值分屬不同欄位回傳、絕不呈現於同一元素之內——此為設計而非實作細節，宜於現場點明其理由：學員自行產生的數值與他人已發表的數值屬不同性質的對象。其後的任務即 s8 所述缺失的實驗。若其結果接近 20.792，該方法的主張範圍將大幅縮小；此一判斷應由學員作出，不宜由講者預先給出。"
+  - id: s10
+    kind: checkpoint
+    presenter_notes_zh: "檢核點，限兩句作答。第一句：該比值所量測者為提供允許詞彙與不提供允許詞彙之差，亦即詞彙約束對字串比對式評分的效果。第二句：不應導出的結論為該方法使模型的視覺理解能力提升 720 倍，或該比值可與任何架構改進的幅度相比較——兩列之間並無任何架構差異。若現場答出第一句而未答第二句，請直接追問第二句。"
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 本單元所環繞的一句話
+
+前沿視覺語言模型在未加約束的情況下被要求輸出場景圖三元組，其 R@20 為 0.032——其原因並非模型無法看見，而是模型不知道哪些詞彙是被允許的。
+
+其後全部內容，均為此一陳述的展開。該論文的貢獻並非架構性的，而是一項主張：約束 VLM 的輸出詞彙，並輔以自我審查，可取代經訓練的關係分類頭。其評估中的每一項數值，均應依此一主張而非其他主張加以解讀。
+
+本單元置於第十一位有其理由。若無 M4，讀者無從理解 0.032 何以是關於字串比對的陳述，而非模型視覺失效的證據；若無 M6，讀者無從理解 mean recall 的提升何以比 recall 的提升更具意義。
+
+</Step>
+
+<Step id="s2">
+
+## 既有方法於此失效的理由：該論文自身的論證
+
+§2.2 提出四項具體批評。此為四項，而非籠統的不滿。
+
+**框過於寬鬆。** 邊界框涵蓋屬於其他物件的像素，於重疊區域中其歸屬為任意。此一界限已於 M2 說明。
+
+**框無法涵蓋無邊界區域。** 論文自身所舉之例為道路區域：其對理解場景至為關鍵，卻非可框定之物件。
+
+**框標註夾帶無效資訊。** 對樹木與天空的重複標記毫無貢獻，且產生孤立節點；由此學習將使模型產生混淆。
+
+**Panoptic SGG 解決前三項並產生新問題。** 逐像素標註更為忠實，成本亦遠為高昂；且依作者所述，於部分 PSG 資料集中，前三個關係類別佔樣本數逾 50%，而許多稀有關係所佔比例低於 1%。
+
+末項宜細加思考。此即長尾問題，且由所研究方法的作者本人陳述；其所指者，恰為 mR@K 設立之目的。讀畢此處，宜回頭重讀 M4。
+
+</Step>
+
+<Step id="s3">
+
+**進入各式之前，關於符號的說明。** 該論文重複使用了本課程已指派意義的兩個字母，另有一個字母將於後續單元指派。其 $E$ 指提供給模型的範例集合，而非場景圖的關係集合（M0）；其 $N$ 指審查專家的數量，而非標準答案三元組的總數（M1、M4）。此處均依論文原樣引用，因為讀者於閱讀該論文各式時將遇到這兩個字母。本專案的符號表就每一字母僅於其課程層級的用法處登錄一次，區域性意義則於出現之處說明——即此處。下文審查機制重建中的 $q$ 指單次審查修正某一錯誤的機率；M7 則以同一字母表示 DETR 的 query 數量，後者為標準用法。
+
+
+<Intuition>
+
+式 (1) 為未加約束的呼叫：僅提供影格與指令。式 (2) 則先行提供字典。兩者僅於引數上不同，其餘完全相同——同一運算子、同一影像、同一提示樣板——故兩者之間的消融實驗恰好隔離單一變數。
+
+</Intuition>
+
+<Formal>
+
+$$
+out_{trpl}=\mathrm{VLM}(V_t,\textit{Prompt}) \qquad (1)
+$$
+
+$$
+out^{s_1}_t=\mathrm{VLM}(V_t,\,O,\,P,\,E,\,\textit{Prompt}) \qquad (2)
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+(1)\ \ out_{trpl} &= \mathrm{VLM}(V_t,\textit{Prompt}) && R@20 = 0.032\\
+(2)\ \ out^{s_1}_t &= \mathrm{VLM}(V_t,O,\textit{Prompt}) && R@20 = 1.787\\
+(2)\ \ out^{s_1}_t &= \mathrm{VLM}(V_t,P,\textit{Prompt}) && R@20 = 2.079\\
+(2)\ \ out^{s_1}_t &= \mathrm{VLM}(V_t,O,P,\textit{Prompt}) && R@20 = 20.792\\
+(2)\ \ out^{s_1}_t &= \mathrm{VLM}(V_t,O,P,E,\textit{Prompt}) && R@20 = 23.040
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Same operator, same image, same prompt template. The only varying argument is } (O,P,E).
+\\ \text{Rows 2 and 3 are single-component ablations, not cumulative: } O \text{ alone, then } P \text{ alone.}
+\\ \text{The jump is superadditive: } 1.787 \text{ and } 2.079 \text{ apart, } 20.792 \text{ together.}
+\\ \text{Ratio between endpoints: } 23.040/0.032 = 720. \ \text{Architectural difference: none.}\end{gathered}
+$$
+
+此一超加成性為該論文中最值得注意的量化事實，而其內文並未論及。約束三元組的一端幾無作用，同時約束兩端則具決定性影響。Table 3 應依其本來面貌閱讀，即五列的因子設計；本論文先前的某份摘要將其呈現為四列的累加序列，因而遮蔽了「僅提供 $P$」該一列，連同上述觀察一併消失。
+
+論文對第二、三列的解讀為：僅提供 $P$ 優於僅提供 $O$，「因為預測關係通常較預測物件類別更為困難」。此一說法站得住腳，惟其依據為 10% 子集上 R@20 的 0.292 個百分點差異。
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+<Intuition>
+
+步驟一的輸出含有雜訊。式 (3) 於影格仍在手的前提下，將該輸出獨立地回示同一模型 $N$ 次，並要求各副本予以審查；式 (4) 則將各審查結果連同其推理依據，整合為單一圖。
+
+</Intuition>
+
+<Formal>
+
+$$
+\bigl(out^{s_2}_t,a_i\bigr)=\mathrm{VLM}\bigl(V_t,O,P,E,\textit{Prompt},out^{s_1}_t\bigr),\ i\in\{1,\dots,N\} \qquad (3)
+$$
+
+$$
+out^{s_3}_t=\mathrm{VLM}\bigl(out^{s_2}_t,\alpha,\textit{Prompt}\bigr) \qquad (4)
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\text{step 2 draws } N \text{ i.i.d. audits } a_1,\dots,a_N \text{ of } out^{s_1}_t; \text{ step 3 aggregates them.}\\
+\text{If each audit corrects an error independently with probability } q,\\
+\Pr[\text{error survives } N \text{ audits}] = (1-q)^N \quad\text{(exponential in } N)\\
+\text{cost} = N+2 \ \text{VLM calls per frame} \quad\text{(linear in } N)
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Measured: } N=1,2,3,5 \Rightarrow R@20 = 21.323,\ 21.584,\ 23.158,\ 23.287.
+\\ \text{At } k=20 \text{ that favours } N=5 \text{, but not everywhere:}
+\\ mR@50 = 25.480 \text{ at } N=3 \text{ against } 24.383 \text{ at } N=5 \text{; } R@100 = 30.142 \text{ against } 30.020.
+\\ \text{So } N=3 \text{ is not dominated, and the recommendation rests on more than token cost.}
+\\ \text{An empirical claim with no accompanying theory — the independence assumption is untested.}\end{gathered}
+$$
+
+以下兩點警示，均關於閱讀方式而非方法本身。
+
+**上述指數對線性的論證出自本課程，而非該論文。** 該論文並未就 $N$ 次審查何以有效提出任何理論。前述重建依賴獨立性假設，而同一模型於同一影格上的三次取樣具相關性，故該假設顯然不成立。對學員應以「可供檢驗並推翻的假說」呈現，不得呈現為作者本身的推理。
+
+**僅顯示 `@20` 欄位的實作單元，所教授者與資料所示恰好相反。** 於 $k=20$ 時 $N=5$ 於兩軸均勝出；就全部六個截斷位置而言則否。此即 L5 提交全部四列、全部六個截斷位置，並以測試斷言 $N=5$ 落後的兩個截斷位置之理由。
+
+該曲線的形狀——由 1 至 3 陡升，由 3 至 5 平緩且正負不定——正是變異數縮減機制趨於飽和時的形態。此一觀察支持論文的選擇，卻未能補上其所欠缺的理論。
+
+</Implications>
+
+</Step>
+
+<Step id="s5">
+
+<Intuition>
+
+0.032 何以發生？因為不在允許詞彙內的 predicate 無法與任何項目配對，而其所佔用的排序位置亦隨之消耗。單一錯誤，計入兩次。
+
+</Intuition>
+
+<Formal>
+
+$$
+\hat p\notin\mathcal{P}\ \Longrightarrow\ \hat t\not\simeq t\ \ \forall t\in G\quad(\text{one ranked slot spent, and } t \text{ left unmatched})
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\hat p\notin\mathcal{P} \;&\Rightarrow\; \hat p\ne p \ \ \forall t\in G &&\text{Definition 5, third conjunct}\\
+&\Rightarrow\; \hat t\not\simeq t \ \ \forall t \;\Rightarrow\; \hat t \text{ contributes nothing to } \mu\\
+&\Rightarrow\; \hat t \text{ occupies a slot in } X_k \text{ and the true } t \text{ stays unmatched}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\textbf{The error is counted twice:} \text{ once as a wasted rank, once as a miss.}
+\\ \text{This is what LLM4SGG names } \textit{semantic over-simplification}, \text{ and why zero-shot}
+\\ \text{frontier VLMs score } R@50\approx 1\text{–}2 \text{ on VG-150 while describing the scene correctly.}\end{gathered}
+$$
+
+此即 M3 所述配對關係的第三個連言項，其運作方式與定義完全一致。並無任何環節失效：以字串比對為依據的指標，必然懲罰同義詞；而 M1 已說明該詞彙充滿不具上下位關係的同義詞。
+
+因此 $O$ 與 $P$ 並非提示，而是將自由文字輸出投影至封閉詞彙之上的操作，且該操作施行於生成之前而非之後——「之前」是否具關鍵作用，則為該論文未經檢驗的假設。第八節將回到此點。
+
+</Implications>
+
+</Step>
+
+<Step id="s6">
+
+## Table 2 實際所呈現者
+
+於 VG-150 上，本方法報告 R@50 為 30.48、mR@50 為 21.39；於 PSG 上則為 29.69 與 25.12。
+
+**mean recall 的提升幅度遠超過 recall，此即真正的證據所在。** 於 VG 上，mR@50 提升 9.19，而 R@50 僅提升 2.58；於 PSG 上則為 8.12 對 6.39。凡 mean recall 之提升遠大於 recall 者，即為正在恢復長尾 predicate，此與所主張的機制一致：固定字典 $P$ 使稀有 predicate 獲得與常見者相同的輸出機會，而依頻率訓練的分類器從不如此。若僅能自 Table 2 教授一件事，即為此點。
+
+**於 ISG 上，GPT-4V 於每一截斷位置均勝過 Gemini-Pro-Vision**，且差距隨 $K$ 擴大——R@20 的 3.78 個百分點至 R@100 成為 11.71 個百分點。論文對此未作任何歸因，讀者亦不應作出歸因：此為兩個專有模型於兩個時間點上的非受控比較。
+
+**三個資料集之間不得互相比較。** 分割方式、詞彙、影像來源均不相同。三個區塊為三項各自獨立的實驗，僅是共用同一列標籤。
+
+</Step>
+
+<Step id="s7">
+
+## ISG，以及產生該資料集的產業落差
+
+該資料集的論據為密度而非規模。ISG 收錄 10K 張影像，PSG 為 49K；然其物件類別為 688 對 133，predicate 類別為 144 對 56，每張影像的 predicate 數為 17.6 對 5.7。其為論文 Table 1 中唯一於產業欄位標記為是的一列。
+
+其建置分為三步：自五個來源蒐集資料——CHICO、Ego4D、HA-ViD、IKEA ASM 與 CALVIN——並標註前十個三元組；自 VLM 產生的雜訊圖中自動萃取精簡的物件與 predicate 字典；其後以人工進行過濾、對齊至 $O$ 與 $P$，並加以驗證。
+
+**ISG 僅供請求取得。** 並無公開發布，亦無程式庫；其資料可得性聲明僅承諾依請求提供。因此本課程依已發表的表格與圖示教授 ISG，明確標示其為請求取得，並提醒其與不相關的 `ISG-Bench` 之名稱衝突。作為替代，本應用提供以相同方法、自開放授權的產業影格所建置的 mini-ISG，並明確標示其為本專案的教學資料集，而非原作者之資料集。
+
+</Step>
+
+<Step id="s8">
+
+## 該論文未能確立者
+
+以下各點宜明白陳述。此處既是該研究誠實之所在，亦是其單薄之所在。
+
+**骨幹模型未受控制，且論文自承此點。** 其所載限制為：不同 VLM 的骨幹可能影響效能。所測試的兩個模型現均已被取代，且於所測試的版本上皆無法重現，故 Table 2 中 IndVisSGG 的每一數值，所量測者皆為一個已不復以該形態存在的模型。
+
+**$N$ 並無理論支撐。** 見前述第四節。其獨立性假設未經檢驗，且幾可確定不成立。
+
+**消融實驗的基線可能過弱，此為最嚴重的方法學缺口。** Table 3 第一列採用未加約束的提示。另有一更強的樸素基線並未被報告：先自由生成文字，其後再以最近鄰投影至 $O$ 與 $P$。缺少該基線，Table 3 即混淆兩項主張——約束詞彙有效，以及於生成之前約束詞彙有效——而僅後者為該方法本身。學員若於 L5 中執行該項缺失的實驗，即完成了該論文未曾完成之事。
+
+**跨方法可比較性。** Table 2 的基線為該論文自行重新實作之結果，論文既未載明其偵測器骨幹，亦未載明其訓練輪數預算；全文亦未載明任何評估協定與 constraint 模式：SGDet、PredCls 與 SGCls 等字樣均未出現，§5.1.3 僅述「both $O$ and $P$ are predetermined for all methods」。因此各欄無法被證明可比，此一陳述較「各欄互有差異」更為嚴格。此為全領域共通的問題，非該論文所獨有；此亦為本應用以「不可比較」標示呈現各論文表格、且絕不將其合併為單一排名的理由。
+
+</Step>
+
+<Step id="s9">
+
+## 實作單元的內容
+
+L5 將 Table 3 與 Table 4 與學員自身的執行結果並列重現。已發表數值與學員數值分屬不同欄位回傳，且絕不呈現於同一元素之內——學員自行產生的數值與他人已發表的數值，屬不同性質的對象。
+
+其後請嘗試該論文所省略的實驗：先自由生成文字，其後再投影至 $O$ 與 $P$。若其結果接近 20.792，則該方法的主張範圍將大幅縮小。
+
+</Step>
+
+<Step id="s10">
+
+## 檢核點
+
+Table 3 第一列為 0.032，第五列為 23.040，比值為 720，而兩者之間並無任何架構差異。請以兩句話作答：其一說明該比值所量測者為何，其二說明讀者由該比值所不應導出的結論為何。
+
+</Step>

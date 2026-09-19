@@ -1,0 +1,468 @@
+---
+id: m04
+order: 4
+title_en: "Metrics: R@K, mR@K, ng-R@K, zR@K — and the frequency baseline that humiliated the field"
+title_zh: "評測指標：R@K、mR@K、ng-R@K、zR@K，以及使該領域難堪的頻率基線"
+anchor_labs: [L2, L3]
+knowledge_points: [E3, E4, E5, E6, E7, E8, E9, E11, E13, E14, E15, E16, X2]
+symbols:
+  - sym: "k"
+    gloss_en: "rank cutoff"
+    gloss_zh: "排序截斷位置"
+  - sym: "X_k"
+    gloss_en: "the top-k predictions after the constraint mode has been applied"
+    gloss_zh: "套用約束模式後的前 k 筆預測"
+  - sym: "\\lvert G\\rvert"
+    gloss_en: "number of ground-truth triplets in the image"
+    gloss_zh: "影像中標準答案三元組的數量"
+  - sym: "\\mu"
+    gloss_en: "size of the matching between predictions and ground truth"
+    gloss_zh: "預測與標準答案之間配對的大小"
+  - sym: "\\pi"
+    gloss_en: "the map sending a triplet to its ordered subject-object pair"
+    gloss_zh: "將三元組映至其有序主客體配對的函數"
+  - sym: "\\sigma"
+    gloss_en: "the score a model assigns a triplet"
+    gloss_zh: "模型賦予三元組的分數"
+  - sym: "\\alpha"
+    gloss_en: "the exponent weighting per-predicate recall by frequency"
+    gloss_zh: "各 predicate 召回率依頻率加權的指數"
+  - sym: "\\lambda"
+    gloss_en: "the mixing weight between the frequency prior and the visual model"
+    gloss_zh: "頻率先驗與視覺模型之間的混合權重"
+  - sym: "\\mathcal{P}"
+    gloss_en: "predicate class set"
+    gloss_zh: "predicate 類別集合"
+  - sym: "C"
+    gloss_en: "number of predicate classes"
+    gloss_zh: "predicate 類別數"
+  - sym: "n_p"
+    gloss_en: "number of ground-truth triplets carrying predicate p"
+    gloss_zh: "標準答案中 predicate p 的三元組數量"
+  - sym: "N"
+    gloss_en: "total number of ground-truth triplets"
+    gloss_zh: "標準答案三元組總數"
+  - sym: "R_p"
+    gloss_en: "recall restricted to predicate p"
+    gloss_zh: "僅就 predicate p 計算的召回率"
+claims:
+  - id: c-m04-freq
+    text_en: "On VG150 PredCls, FREQ reaches mR@100 = 16.0, above MOTIFS at 15.3 and IMP+ at 10.5"
+    text_zh: "於 VG150 PredCls 上，FREQ 的 mR@100 為 16.0，高於 MOTIFS 的 15.3 與 IMP+ 的 10.5"
+    source: tde-2020
+    source_table: "Table 1"
+    constraint: graph
+    protocol: predcls
+    verified: true
+  - id: c-m04-freq-kern
+    text_en: "KERN's own Table 1 puts the same FREQ and MOTIFS at 15.8 and 14.4"
+    text_zh: "KERN 自身的 Table 1 將同樣的 FREQ 與 MOTIFS 記為 15.8 與 14.4"
+    source: kern-2019
+    source_table: "Table 1"
+    constraint: graph
+    protocol: predcls
+    verified: true
+  - id: c-m04-sttran-constraint
+    text_en: "STTran on Action Genome moves from PredCls R@50 = 71.8 constrained to 99.1 unconstrained"
+    text_zh: "STTran 於 Action Genome 上，PredCls R@50 由約束模式的 71.8 變為無約束的 99.1"
+    source: sttran-2021
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: predcls
+    verified: false
+  - id: c-m04-mpo
+    text_en: "Under the corrected mask pairing, PSGTR mR@50 falls 20.8 to 11.62 and HiLo 30.3 to 18.33, while two-stage methods barely move"
+    text_zh: "改用修正後的遮罩配對規則，PSGTR 的 mR@50 由 20.8 降至 11.62、HiLo 由 30.3 降至 18.33，兩階段方法幾乎不變"
+    source: psg-fair-ranking-2024
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: sgdet
+    verified: false
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場，本單元最長，宜嚴格控時。要點為：本領域只報告召回率，而精確率的缺席屬結構性因素——標註不完整，故以此標註計算的精確率不具意義。其後四項指標為一連串修補，彼此揭露前一項所遮蔽者而無取代關係。此一框架宜先立起，其後七個推導始有歸屬。"
+  - id: s2
+    kind: math
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘。R@k 的單調性與「錯誤猜測不計代價」兩點須一併說明：提高 k 不可能使其下降，而模型輸出第五十順位的猜測亦無任何損失。此為其後每一項修補的起點。"
+  - id: s3
+    kind: math
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘。graph constraint 規定每一有序配對至多一個 predicate；取消後各配對的次順位亦進入排序。宜強調模型毫無改變，改變者為解讀輸出的規則，且效果並不輕微。此點與 L2 的約束模式旋鈕直接對應。"
+  - id: s4
+    kind: math
+    seconds_budget: 360
+    presenter_notes_zh: "六分鐘，本單元的核心。R 與 mR 為同一平均值於 α = 1 與 α = 0 兩種權重下的結果，二者之差恰為單一共變異數，此恆等式即偏差問題的完整陳述。宜將推導寫完，不宜跳步；L3 的識別式面板顯示的即為此數，M06 全單元亦以此為前提。"
+  - id: s5
+    kind: math
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘。ng-R@k 將 s3 的約束由開關改為程度：每一配對容許 m 個 predicate。提高 m 僅能增加候選，故指標隨之上升，並於 m 超過模型實際能區分的次順位數量時停止。若 s3 已充分說明，此處可壓縮。"
+  - id: s6
+    kind: math
+    seconds_budget: 420
+    presenter_notes_zh: "七分鐘，本單元最重要的一頁。頻率基線完全不讀取像素，僅依主客體類別輸出最常見的 predicate。宜先請現場預測該基線的 R 值，再揭示，落差即為本頁的教學效果。混合權重 λ 之下 R 與 mR 的走向相反，此即 L3 所重現者。"
+  - id: s7
+    kind: math
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘。遮罩資料集上出現一項與模型無關的自由參數：同一主客體配對可否經由多個遮罩重複計入。允許多次計入對單階段模型不構成成本而獲利可觀，此即 `single_mpo` 與 `multi_mpo` 之分，L6 以固定預測分別評分加以呈現。"
+  - id: s8
+    kind: math
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘。VRD 於另一位置承載同樣的風險：其 recall 容許每一有序配對具備多個 predicate，該數量為自由參數且論文通常未載明。k = 1 等同 graph constraint，k = 70 則等同完全無約束。本專案不使用 VRD，其授權閘門亦為關閉，可一併說明。"
+  - id: s9
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘，四項並列，每項約一分鐘，不宜展開。zero-shot recall 所揭露的崩潰於 R 與 mR 中皆不可見；Open Images 採用另一套指標家族故完全不可比較；六項未載明的參數為跨論文比較的預設失敗情境，本應用將其中四項附加於每一 MetricValue；本領域並無校準相關指標。第三項與 `MetricReadout` 的設計直接相關，宜明確連結。"
+  - id: s10
+    kind: lab
+    lab: L2
+    seconds_budget: 480
+    presenter_notes_zh: "L2 與 L3 共八分鐘。L2 的任務為找出 R 與 mR 兩條曲線相距最遠的設定，並說明該落差所量測者為何——其所量測者並非模型品質，此句宜當場覆述。L3 則使 s6 的推導成為可親自觀察之現象。時間不足時保留 L3。"
+  - id: s11
+    kind: checkpoint
+    presenter_notes_zh: "檢核點。應列出的問題即 s9 的六項參數：分割、約束模式、τ、遮罩配對規則、predicate 合併方式、k。論文可能已回答者通常為分割與約束模式兩項，其餘四項多半未載明。請要求現場將問題分為「論文可能已答」與「必須另行詢問」兩類，而非僅列舉。"
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## 四項指標，因為一項並不足夠
+
+在排序截斷位置上的召回率，是本領域唯一報告的指標。它並無對應的精確率，而此一缺席屬結構性因素而非疏漏：標註本身並不完整（M3），故未見於標準答案的預測，可能為錯誤，亦可能為真而未被記錄；以此種標註計算的任何精確率數值，均不具意義。
+
+其後的發展為一連串修補。mean recall 之出現，係因 recall 無法區分「理解關係的模型」與「背下分布頭部的模型」。no-graph recall 之出現，係因約束模式正在無聲地改變已發表的數值。zero-shot recall 之出現，係因模型可在已見過上千次的三元組上取得高分。每一次修補均揭露前一項指標所遮蔽者，且彼此之間並無取代關係。
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+$k$ 位置上的召回率，計算標準答案之中有多少出現於模型前 $k$ 筆猜測。提高 $k$ 不可能使其下降，且任何環節均不對錯誤猜測收取代價。模型輸出其第五十順位的猜測，並不因此付出任何損失。
+
+</Intuition>
+
+<Formal>
+
+$$
+R@k=\frac{\lvert G\cap X_k\rvert}{\lvert G\rvert},\qquad k^{\prime}\ge k\Rightarrow R@k^{\prime}\ge R@k \quad(\text{monotone; no precision term exists})
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+k'\ge k &\Rightarrow X_k\subseteq X_{k'} &&\text{the ranking is a prefix order}\\
+&\Rightarrow \mu(G,X_k)\le\mu(G,X_{k'}) &&\text{a maximum matching cannot shrink}\\
+&\Rightarrow R@k\le R@k' &&\text{divide by } N
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Monotone in } k \text{ with no offsetting term: emitting more guesses never costs anything.}
+\\ \text{There is no precision anywhere in this literature.}\end{gathered}
+$$
+
+因此 $k$ 並非呈現形式上的細節。R@20 與 R@100 為不同的量，混用兩者的表格並不構成表格。此為本應用中每一數值必須隨附的四項參數之首，亦即 `MetricReadout` 拒絕接受裸寫 `number` 的理由。
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+<Intuition>
+
+graph constraint 規定模型於每一有序配對上至多放置一個 predicate。取消此一限制，則各配對的第二順位亦進入排序。模型本身毫無改變，改變的是解讀其輸出的規則。其效果並不輕微。
+
+</Intuition>
+
+<Formal>
+
+$$
+\pi(\langle s,p,o\rangle)=(s,o);\qquad \text{graph constraint}\iff\forall\,t\ne t^{\prime}\in X_k:\ \pi(t)\ne\pi(t^{\prime})
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+X_k &= \{t\in X_k^{\mathrm{ng}} : \sigma(t)=\max_{p}\sigma(\langle s,p,o\rangle)\} &&\text{constraint keeps the arg-max per pair}\\
+&\Rightarrow X_k\subseteq X_k^{\mathrm{ng}}\\
+&\Rightarrow \mu(G,X_k)\le\mu(G,X_k^{\mathrm{ng}}) \;\Rightarrow\; R@k\le \mathrm{ngR}@k
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{The inequality is strict whenever a ground-truth predicate is any pair's runner-up.}
+\\ \text{STTran on Action Genome: PredCls } R@50 = 71.8 \text{ constrained}, \; 99.1 \text{ unconstrained.}\end{gathered}
+$$
+
+單一開關，相差二十七個百分點。論文經常未載明所採用的模式，故同一表格中的兩個數值，未必量測同一對象。本單元 frontmatter 中的 claim `c-m04-sttran-constraint` 收錄該組數值並標記 `verified: false`：本課程所承接的出處註記並未指明表格編號，在有人實際查閱該論文之前，此一數值屬轉述而非查證所得。
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+<Intuition>
+
+mean recall 對每一 predicate 等權加總，而非依出現頻率加權。兩項指標實為同一平均值於不同權重下的結果，而兩者之差恰為單一共變異數。此一恆等式即為偏差問題的完整陳述。
+
+</Intuition>
+
+<Formal>
+
+$$
+w_p\propto n_p^{\alpha};\qquad \underbrace{R@k=\sum_p\frac{n_p}{\lvert G\rvert}R_p@k}_{\alpha=1}\qquad \underbrace{mR@k=\sum_p\frac{1}{\lvert\mathcal{P}^{\prime}\rvert}R_p@k}_{\alpha=0}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+R@k-mR@k &= \sum_p \frac{n_p}{N}R_p - \frac{1}{C}\sum_p R_p &&\text{Definition 9}\\
+&= \frac{1}{N}\sum_p\Bigl(n_p-\frac{N}{C}\Bigr)R_p = \frac{1}{N}\sum_p (n_p-\bar n)R_p &&\bar n=N/C\\
+&= \frac{1}{N}\sum_p (n_p-\bar n)(R_p-\bar R) &&\textstyle\sum_p(n_p-\bar n)=0\\
+&= \frac{C}{N}\operatorname{Cov}(n,R) = \frac{\operatorname{Cov}(n,R)}{\bar n}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{The slider moves } \alpha \text{ in } w_p(\alpha)\propto n_p^{\alpha}. \;\; \alpha=1 \text{ gives } R, \;\; \alpha=0 \text{ gives } mR.
+\\ \text{The whole bias problem is the sign of one covariance.}\end{gathered}
+$$
+
+第三行宜細讀：引入 $\bar R$ 之步驟得以成立，係因 $\sum_p(n_p-\bar n)=0$，故自 $R_p$ 減去一常數並不影響結果。所餘者恰為 $\operatorname{Cov}(n,R)$ 除以 predicate 的平均頻率。
+
+其推論宜明白陳述。$R > mR$ 表示模型在高頻 predicate 上的表現優於低頻者；此一陳述並未指出模型良窳。該差值為對相關性的量測，而 M6 所述者，即為某一領域試圖將此相關性驅近於零的歷程。
+
+</Implications>
+
+</Step>
+
+<Step id="s5">
+
+<Intuition>
+
+no-graph recall 係將第三節的約束以程度而非開關方式放寬：每一配對容許 $m$ 個 predicate 而非一個。提高 $m$ 僅能增加候選，故指標隨之上升；當 $m$ 超過模型實際能區分的次順位 predicate 數量時，即停止上升。
+
+</Intuition>
+
+<Formal>
+
+$$
+\mathrm{ngR}@k:\ \pi \text{ need not be injective};\qquad \lvert\{t\in X_k:\pi(t)=(s,o)\}\rvert\le n_{\text{pair}}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+X_k^{\mathrm{ng}}(m) &= \bigcup_{(s,o)}\bigl\{\text{top-}m\text{ predicates for }(s,o)\bigr\}\cap X_k\\
+m'\ge m &\Rightarrow X_k^{\mathrm{ng}}(m)\subseteq X_k^{\mathrm{ng}}(m') \Rightarrow \mathrm{ngR}(m)\le \mathrm{ngR}(m')
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Saturates once } m \text{ exceeds the number of runner-up predicates the model actually carries.}
+\\ \text{A real model carries } \lvert\mathcal{P}\rvert=50, \text{ so the gap keeps widening to } m=50.\end{gathered}
+$$
+
+本應用的第三種模式 `semi` 位於兩者之間，將 $m$ 固定為一較小之值。此非為折衷而折衷：M12 說明影片研究採用此一模式的理由在於，一組配對確實可能於時間軸上同時具備兩種關係。
+
+</Implications>
+
+</Step>
+
+<Step id="s6">
+
+<Intuition>
+
+以下為形塑本領域的結果。設有一預測器完全不讀取像素：給定主體與客體之類別，輸出該類別配對上最常見的 predicate。將其與視覺模型混合，並觀察各項指標隨混合權重變化的情形。
+
+</Intuition>
+
+<Formal>
+
+$$
+R_p(\lambda)=(1-\lambda)\underbrace{\Pr[p\mid c_s,c_o]}_{\text{no pixels consulted}}+\lambda\underbrace{f_\theta(V,s,o)}_{\text{visual model}}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+R_p(\lambda) &= (1-\lambda)\,\pi_p + \lambda\, f_p, \qquad \pi_p=\Pr[p\mid c_s,c_o],\ f_p=f_\theta(V,s,o)\\
+R(\lambda) &= \sum_p \tfrac{n_p}{N}R_p(\lambda) = (1-\lambda)\textstyle\sum_p \tfrac{n_p}{N}\pi_p + \lambda\sum_p \tfrac{n_p}{N}f_p\\
+mR(\lambda) &= (1-\lambda)\,\overline{\pi} + \lambda\,\overline{f}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Both are affine in } \lambda. \text{ At } \lambda=0 \text{ the predictor reads no pixels, yet}
+\\ \operatorname{Cov}(n,\pi)\gg 0 \text{ by construction, so } R \text{ is high and } mR \text{ is near zero.}
+\\[4pt]
+\text{VG150, PredCls } mR@100: \ \text{FREQ } 16.0 \; > \; \text{MOTIFS } 15.3 \; > \; \text{IMP}^{+}\ 10.5.\end{gathered}
+$$
+
+關於末行，有三點須說明，依常被誤解的程度排列。
+
+**該基線發表於它所難堪的那篇論文之內。** Zellers 等人將 FREQ 置於 Neural Motifs 論文本身（CVPR 2018），且其於 $R@K$ 上勝過同期的學習式模型。
+
+**mean recall 當時尚未存在。** 該指標要到一年後，才由 KERN 與 VCTree（皆為 CVPR 2019）各自獨立提出，理由正是 $R@K$ 無法區分理解與記憶。將 mR 歸屬於 2018 年的論文，係顛倒了時序與論證。
+
+**請讀該列，而非標題。** 該數值對應 IMP*+* 而非 IMP。且 KERN 自身的 Table 1 將同樣的 FREQ 與 MOTIFS 記為 15.8 與 14.4。兩張表、兩組答案、同樣兩個方法——此即本單元 frontmatter 於每一 claim 上均載明 `source_table` 的理由，亦即未附出處表格的 mean recall 數值尚不構成事實的理由。
+
+</Implications>
+
+</Step>
+
+<Step id="s7">
+
+<Intuition>
+
+於具備遮罩的資料集上，另有一項與模型無關的參數出現：同一主客體配對是否可經由多個遮罩重複計入，抑或僅能計入一次。允許多次計入，對單階段模型不構成任何成本，且獲利可觀。
+
+</Intuition>
+
+<Formal>
+
+$$
+\text{MultiMPO permits }\lvert\{m:\pi(m)=(s,o)\}\rvert>1 \;\Longrightarrow\; \widehat{mR}=\rho\cdot mR,\quad\rho>1
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\text{SingleMPO}&: \ \lvert\{m:\pi(m)=(s,o)\}\rvert = 1\\
+\text{MultiMPO}&: \ \lvert\{m:\pi(m)=(s,o)\}\rvert = d \ge 1 \ \text{permitted}\\
+\widehat{\mu} &= \textstyle\sum_{(s,o)}\min\bigl(d,\ \text{true matches at }(s,o)\bigr) \;\ge\; \mu
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{A one-stage model emits duplicate masks freely, so } d>1 \text{ costs it nothing and pays.}
+\\ \text{A two-stage model emits one mask per instance, so } d=1 \text{ regardless.}
+\\[4pt]
+\text{Measured: PSGTR } 20.8\to 11.62,\quad \text{HiLo } 30.3\to 18.33,\quad \text{VCTree } \approx\text{unchanged.}\end{gathered}
+$$
+
+此處重點在於不對稱性。一項規則若對某一架構不構成成本、對另一架構亦無可損失，即非中性規則；其所開啟的落差延續多年方被指認。L6 以同一組固定預測分別於兩種配對規則下評分，使該差異成為學員親自產生之結果，而非閱讀所得之敘述。
+
+</Implications>
+
+</Step>
+
+<Step id="s8">
+
+<Intuition>
+
+VRD 於另一位置承載同樣的風險。其 recall 容許每一有序配對具備多個 predicate，該數量為自由參數，而論文通常未載明所採用之值。
+
+</Intuition>
+
+<Formal>
+
+$$
+R@k \text{ on VRD depends on } k=\lvert\{p:\langle s,p,o\rangle\in X\}\rvert\in\{1,10,70\},\ \text{usually undeclared}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+R@k \text{ on VRD admits } k \text{ predicates per ordered pair}, \ k\in\{1,10,70\}\\
+k=1 &\equiv \text{graph constraint} \qquad k=\lvert\mathcal{P}\rvert=70 \equiv \text{no constraint at all}\\
+k=70 &\Rightarrow \text{every predicate enters for every pair} \Rightarrow R@k \to PR@k
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{At } k=70 \text{ the metric measures pair detection, not relation classification (Proposition 4c).}
+\\ \text{Papers routinely omit } k, \text{ so VRD numbers are not comparable across papers by default.}\end{gathered}
+$$
+
+於該範圍的上限，指標已悄然轉為另一項指標。每一配對均納入全部 predicate，故模型是否將正確關係排於首位已不影響分數，所餘者僅為是否找出該配對。此一極限即為 $PR@k$，即 phrase recall；而 $R \le PR$ 之界限成立的理由，與協定大小關係成立的理由相同：較易之問題為較難之問題的鬆弛。
+
+</Implications>
+
+</Step>
+
+<Step id="s9">
+
+## 數值所未說明的另外四件事
+
+**zero-shot recall** 將標準答案限縮為類別組合於訓練階段從未出現的三元組。多數模型於此崩潰，而該崩潰於 $R$ 與 $mR$ 中皆不可見，因為 zero-shot 三元組僅佔總量的一小部分。
+
+**Open Images 採用另一套指標家族**——relationship detection mAP、phrase detection mAP 與 recall 之加權組合——故該排行榜上的數值，與 VG150 的數值完全不可比較，與協定及約束模式無關。
+
+**跨論文比較為預設的失敗情境。** 分割方式、約束模式、$\tau$、遮罩配對規則、predicate 合併方式、$k$：六項參數，每一項均改變數值，且每一項均經常未被載明。本應用將其中四項附加於每一 `MetricValue`，即基於此一理由，其餘各項則標示於警示清單中。
+
+**本領域並無校準相關指標。** 現行標準 SGG 指標均未探究模型的信心值是否具有意義。首位猜測正確率為 40% 的模型與 90% 的模型，可取得相同的 $R@50$。
+
+</Step>
+
+<Step id="s10">
+
+## 實作單元的內容
+
+L2 將 $k$、協定、約束模式與 $\tau$ 置於控制項上，並於同一座標軸繪製 $R$ 與 $mR$ 對 $K$ 的曲線。請找出兩條曲線相距最遠的設定，並說明該落差所量測者為何——其所量測者並非模型品質。
+
+L3 則於同一切片上，以頻率基線對照學習式模型，使上述最後一項推導成為可親自觀察之現象，而非被告知之結論。
+
+</Step>
+
+<Step id="s11">
+
+## 檢核點
+
+某論文報告 VG150 PredCls 上的 mR@100 為 17.2，並宣稱勝過基線的 16.0 而達到新的最佳水準。請列出接受此一比較之前必須先行釐清的全部問題，並指出其中哪些問題該論文可能已經回答。
+
+</Step>

@@ -1,0 +1,1127 @@
+<title>Scene Graph Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  svg: { fontCache:'local' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js"></script>
+
+<style>
+:root{
+  --ground:#ECEFEC; --surface:#FAFBFA; --surface-2:#E1E7E3; --sunk:#DDE3DF;
+  --ink:#12191A; --ink-2:#3C4A4B; --muted:#6B7A78; --rule:#C6D0CB;
+  --accent:#0E6B6E; --accent-2:#0A5052; --accent-soft:#D6E8E6;
+  --warn:#8A6D1F; --warn-soft:#F0E6CB;
+  --m-match:#1F7A4D; --m-spur:#B3301F; --m-miss:#7F8D8B; --m-loc:#A9720C;
+  --shadow:0 1px 2px rgba(18,25,26,.06), 0 8px 24px -12px rgba(18,25,26,.18);
+  --serif:"Newsreader","Noto Sans TC",Georgia,"Times New Roman",serif;
+  --sans:"Archivo","Noto Sans TC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0D1413; --surface:#151E1D; --surface-2:#1D2726; --sunk:#111917;
+    --ink:#E7EEEB; --ink-2:#B2C0BC; --muted:#84928F; --rule:#2A3735;
+    --accent:#52C0B7; --accent-2:#7FD6CD; --accent-soft:#12302E;
+    --warn:#D6AE52; --warn-soft:#2E2718;
+    --m-match:#4FBF7E; --m-spur:#E8705C; --m-miss:#7E8C8A; --m-loc:#E0AE4A;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0D1413; --surface:#151E1D; --surface-2:#1D2726; --sunk:#111917;
+  --ink:#E7EEEB; --ink-2:#B2C0BC; --muted:#84928F; --rule:#2A3735;
+  --accent:#52C0B7; --accent-2:#7FD6CD; --accent-soft:#12302E;
+  --warn:#D6AE52; --warn-soft:#2E2718;
+  --m-match:#4FBF7E; --m-spur:#E8705C; --m-miss:#7E8C8A; --m-loc:#E0AE4A;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--serif); font-size:17px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+:root[data-lang="zh"] [lang="en"]{display:none}
+:root:not([data-lang="zh"]) [lang="zh"]{display:none}
+:root[data-lang="zh"] body{font-size:16.5px; line-height:1.85}
+
+.wrap{max-width:1180px; margin:0 auto; padding-inline:24px; padding-block:0}
+.col{max-width:68ch; margin-inline:auto}
+
+/* ---------- top bar ---------- */
+.bar{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:50;
+  background:color-mix(in srgb, var(--ground) 88%, transparent);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--rule);
+}
+.bar-in{max-width:1180px; margin:0 auto; padding:10px 24px;
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+.mark{font-family:var(--sans); font-weight:700; font-size:14px; letter-spacing:-.01em;
+  display:flex; align-items:center; gap:9px; margin-right:auto}
+.mark svg{display:block}
+.seg{display:flex; border:1px solid var(--rule); border-radius:999px; overflow:hidden; background:var(--surface)}
+.seg button{
+  font-family:var(--sans); font-size:12px; font-weight:600; letter-spacing:.02em;
+  padding:6px 13px; border:0; background:transparent; color:var(--muted); cursor:pointer;
+}
+.seg button[aria-pressed="true"]{background:var(--accent); color:var(--surface)}
+.seg button:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+
+/* ---------- type ---------- */
+.eyebrow{
+  font-family:var(--sans); font-size:11px; font-weight:600; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 10px;
+}
+h1{font-family:var(--sans); font-weight:700; font-size:clamp(34px,5.4vw,58px);
+  line-height:1.03; letter-spacing:-.03em; text-wrap:balance; margin:0 0 18px}
+h2{font-family:var(--sans); font-weight:600; font-size:clamp(22px,2.7vw,29px);
+  line-height:1.16; letter-spacing:-.02em; text-wrap:balance; margin:0 0 6px}
+h3{font-family:var(--sans); font-weight:600; font-size:17px; letter-spacing:-.005em;
+  margin:0 0 6px; text-wrap:balance}
+p{margin:0 0 18px}
+a{color:var(--accent); text-underline-offset:2px; text-decoration-thickness:1px}
+strong{font-weight:600; color:var(--ink)}
+code,.mono{font-family:var(--mono); font-size:.86em}
+code{background:var(--surface-2); padding:1px 5px; border-radius:4px}
+.lede{font-size:clamp(19px,2.1vw,22px); line-height:1.5; color:var(--ink-2)}
+
+/* ---------- section scaffolding (numbers encode real order) ---------- */
+section{padding-block:clamp(44px,6vw,76px); border-top:1px solid var(--rule)}
+section:first-of-type{border-top:0}
+.sec-head{display:grid; grid-template-columns:auto 1fr; gap:18px; align-items:start;
+  max-width:68ch; margin:0 auto clamp(24px,3vw,36px)}
+.sec-num{font-family:var(--mono); font-size:12px; font-weight:500; color:var(--muted);
+  padding-top:.5em; font-variant-numeric:tabular-nums}
+.sec-sub{color:var(--muted); font-size:15px; margin:4px 0 0; font-family:var(--sans)}
+
+/* ---------- hero ---------- */
+.hero{padding-block:clamp(48px,7vw,86px) clamp(36px,4vw,54px)}
+.meta-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
+  gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:3px;
+  margin-top:34px; overflow:hidden}
+.meta-cell{background:var(--surface); padding:13px 15px}
+.meta-k{font-family:var(--sans); font-size:10px; font-weight:600; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--muted); margin:0 0 3px}
+.meta-v{font-family:var(--mono); font-size:13px; color:var(--ink); margin:0; line-height:1.45}
+
+/* ---------- figure breakout ---------- */
+.figure{background:var(--surface); border:1px solid var(--rule); border-radius:4px;
+  box-shadow:var(--shadow); overflow:hidden}
+.fig-head{padding:16px 20px; border-bottom:1px solid var(--rule);
+  display:flex; gap:14px; align-items:baseline; flex-wrap:wrap}
+.fig-title{font-family:var(--sans); font-weight:600; font-size:14px; letter-spacing:-.005em; margin:0}
+.fig-note{font-family:var(--sans); font-size:12.5px; color:var(--muted); margin:0}
+figcaption{font-family:var(--sans); font-size:13px; color:var(--muted); line-height:1.55;
+  max-width:68ch; margin:14px auto 0}
+
+/* ---------- the live demo ---------- */
+.demo{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+@media (max-width:860px){.demo{grid-template-columns:1fr}}
+.demo-vis{padding:18px 20px; border-right:1px solid var(--rule); background:var(--sunk)}
+@media (max-width:860px){.demo-vis{border-right:0; border-bottom:1px solid var(--rule)}}
+.demo-side{padding:18px 20px; display:flex; flex-direction:column; gap:16px; min-width:0}
+.vis-label{font-family:var(--sans); font-size:10px; font-weight:600; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--muted); margin:0 0 8px}
+.vis-box{background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:6px}
+.vis-box + .vis-label{margin-top:16px}
+svg.stage{display:block; width:100%; height:auto}
+
+.ctrls{display:flex; flex-direction:column; gap:13px}
+.ctrl-row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.ctrl-lab{font-family:var(--sans); font-size:12px; font-weight:600; color:var(--ink-2);
+  letter-spacing:.01em; white-space:nowrap}
+input[type=range]{flex:1; min-width:120px; accent-color:var(--accent); height:20px}
+.kval{font-family:var(--mono); font-size:13px; font-weight:600; color:var(--accent);
+  font-variant-numeric:tabular-nums; min-width:2.2em}
+.switch{display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+  font-family:var(--sans); font-size:12px; color:var(--ink-2)}
+.switch input{accent-color:var(--accent); width:15px; height:15px; margin:0}
+
+.scores{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--rule);
+  border:1px solid var(--rule); border-radius:3px; overflow:hidden}
+.score{background:var(--surface-2); padding:11px 13px}
+.score-k{font-family:var(--sans); font-size:10px; font-weight:600; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--muted); margin:0 0 2px}
+.score-v{font-family:var(--mono); font-size:26px; font-weight:600; line-height:1;
+  color:var(--ink); font-variant-numeric:tabular-nums; margin:0}
+.score-n{font-family:var(--mono); font-size:11px; color:var(--muted); margin:4px 0 0}
+
+.triplets{border:1px solid var(--rule); border-radius:3px; overflow:hidden auto;
+  max-height:330px; background:var(--surface)}
+.trow{display:grid; grid-template-columns:2.1em 1fr auto; gap:9px; align-items:center;
+  padding:6px 11px; border-bottom:1px solid var(--rule); cursor:default;
+  font-family:var(--mono); font-size:12px; line-height:1.35}
+.trow:last-child{border-bottom:0}
+.trow:hover{background:var(--surface-2)}
+.trow[data-out="1"]{opacity:.32}
+.trank{color:var(--muted); font-variant-numeric:tabular-nums}
+.tscore{color:var(--muted); font-variant-numeric:tabular-nums; font-size:11px}
+.tpred{color:var(--accent); font-weight:500}
+.chip{display:inline-block; font-family:var(--sans); font-size:9.5px; font-weight:600;
+  letter-spacing:.07em; text-transform:uppercase; padding:2px 6px; border-radius:2px;
+  border:1px solid currentColor}
+.c-match{color:var(--m-match)} .c-spur{color:var(--m-spur)}
+.c-miss{color:var(--m-miss)} .c-loc{color:var(--m-loc)}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-family:var(--sans); font-size:11.5px;
+  color:var(--muted); padding:11px 20px; border-top:1px solid var(--rule); background:var(--surface-2)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.swatch{width:11px; height:11px; border-radius:2px; flex:none}
+
+/* ---------- content blocks ---------- */
+.stack{display:grid; gap:1px; background:var(--rule); border:1px solid var(--rule);
+  border-radius:4px; overflow:hidden}
+.item{background:var(--surface); padding:17px 20px; display:grid;
+  grid-template-columns:auto 1fr; gap:16px; align-items:start}
+.item-n{font-family:var(--mono); font-size:11.5px; font-weight:500; color:var(--accent);
+  padding-top:.25em; font-variant-numeric:tabular-nums; white-space:nowrap}
+.item p{margin:0; font-size:15.5px; line-height:1.55; color:var(--ink-2)}
+.item h3 + p{margin-top:3px}
+
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(248px,1fr)); gap:14px}
+.card{background:var(--surface); border:1px solid var(--rule); border-radius:4px; padding:17px 19px}
+.card h3{color:var(--ink)}
+.card p{margin:0; font-size:15px; line-height:1.55; color:var(--ink-2)}
+.card .tag{font-family:var(--mono); font-size:10.5px; color:var(--muted); display:block; margin-bottom:7px}
+
+.tablewrap{overflow-x:auto; border:1px solid var(--rule); border-radius:4px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+th,td{text-align:left; padding:9px 14px; border-bottom:1px solid var(--rule); vertical-align:top}
+th{font-family:var(--sans); font-size:10.5px; font-weight:600; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--muted); background:var(--surface-2); white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap}
+.drop{color:var(--m-spur); font-weight:600}
+
+.callout{border-left:3px solid var(--warn); background:var(--warn-soft);
+  padding:15px 19px; border-radius:0 4px 4px 0; margin:0 0 18px}
+.callout p{margin:0; font-size:15.5px; line-height:1.55}
+.callout .h{font-family:var(--sans); font-weight:600; font-size:12px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--warn); display:block; margin-bottom:5px}
+
+.q{background:var(--surface); border:1px solid var(--rule); border-radius:4px;
+  padding:19px 22px; display:grid; grid-template-columns:auto 1fr; gap:16px}
+.q + .q{margin-top:12px}
+.q-n{font-family:var(--sans); font-weight:700; font-size:20px; color:var(--accent-soft);
+  -webkit-text-stroke:1px var(--accent); line-height:1}
+.q p{margin:6px 0 0; font-size:15.5px; color:var(--ink-2); line-height:1.55}
+
+footer{border-top:1px solid var(--rule); padding-block:32px 46px;
+  font-family:var(--sans); font-size:12.5px; color:var(--muted)}
+footer a{color:var(--muted)}
+
+/* ---------- mathematics ---------- */
+mjx-container[display="true"]{
+  margin:0!important; padding:14px 4px; overflow-x:auto; overflow-y:hidden;
+}
+mjx-container{color:var(--ink)}
+.mathblock{background:var(--surface); border:1px solid var(--rule); border-left:3px solid var(--accent);
+  border-radius:0 4px 4px 0; padding:4px 18px; margin:0 0 18px; overflow-x:auto}
+.mathblock.plain{border-left-color:var(--rule)}
+.defs{display:grid; grid-template-columns:auto 1fr; gap:7px 16px; align-items:baseline;
+  font-size:15px; margin:0 0 20px; padding:16px 19px; background:var(--surface-2);
+  border-radius:4px; line-height:1.5}
+.defs dt{font-family:var(--mono); font-size:13px; color:var(--accent); white-space:nowrap}
+.defs dd{margin:0; color:var(--ink-2)}
+.mathnote{font-family:var(--sans); font-size:13.5px; color:var(--muted);
+  border-top:1px solid var(--rule); padding-top:11px; margin:-6px 0 20px; line-height:1.55}
+.mathnote b{color:var(--ink-2); font-weight:600}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="bar">
+  <div class="bar-in">
+    <span class="mark">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M5 5.5 L15 5.5 M5 5.5 L10 14.5 M15 5.5 L10 14.5" stroke="currentColor" stroke-width="1.1" fill="none" opacity=".45"/>
+        <circle cx="5" cy="5.5" r="2.3" fill="currentColor"/>
+        <circle cx="15" cy="5.5" r="2.3" fill="currentColor"/>
+        <circle cx="10" cy="14.5" r="2.3" fill="currentColor"/>
+      </svg>
+      Scene Graph Studio
+    </span>
+    <div class="seg" role="group" aria-label="Language">
+      <button id="lang-en" type="button" aria-pressed="true">EN</button>
+      <button id="lang-zh" type="button" aria-pressed="false">繁中</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<section class="hero">
+  <div class="col">
+    <p class="eyebrow">
+      <span lang="en">Design brief · 15 Sep 2026 · revised 16 Sep 2026, phases 1–2 built</span>
+      <span lang="zh">設計綱要 · 2026 年 9 月 15 日 · 2026 年 9 月 16 日修訂，階段 1–2 已完成</span>
+    </p>
+    <h1>
+      <span lang="en">Scene Graph Studio</span>
+      <span lang="zh">場景圖工坊</span>
+    </h1>
+    <p class="lede">
+      <span lang="en">A bilingual, locally-run application that teaches scene graph generation from first principles to the 2026 frontier — with <em>IndVisSGG</em> as its anchor case study, and the field&rsquo;s own measurement failures as its best lessons.</span>
+      <span lang="zh">一套雙語、在本機執行的教學應用程式，從第一原理講到 2026 年的前沿研究。以 <em>IndVisSGG</em> 為核心案例，並把這個領域自身的評測失誤當作最好的教材。</span>
+    </p>
+
+    <div class="meta-grid">
+      <div class="meta-cell">
+        <p class="meta-k"><span lang="en">Anchor paper</span><span lang="zh">核心論文</span></p>
+        <p class="meta-v">Wang, Yan, Li, Liu · AEI 65 (2025) 103107</p>
+      </div>
+      <div class="meta-cell">
+        <p class="meta-k"><span lang="en">Shape</span><span lang="zh">形式</span></p>
+        <p class="meta-v">FastAPI + React 19 + TypeScript</p>
+      </div>
+      <div class="meta-cell">
+        <p class="meta-k"><span lang="en">Scale</span><span lang="zh">規模</span></p>
+        <p class="meta-v">15 modules · 8 labs · 2 shells</p>
+      </div>
+      <div class="meta-cell">
+        <p class="meta-k"><span lang="en">Audience</span><span lang="zh">對象</span></p>
+        <p class="meta-v">大語言模型技術與應用 2026</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 01 ══════════ -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">01</span>
+    <div>
+      <h2><span lang="en">Why this needs building</span><span lang="zh">為什麼要做這個</span></h2>
+      <p class="sec-sub"><span lang="en">Four hazards a student cannot navigate alone</span><span lang="zh">學生無法獨自繞過的四個陷阱</span></p>
+    </div>
+  </div>
+
+  <div class="col">
+    <p>
+      <span lang="en">Scene graphs sit where object detection, relational reasoning, and language meet. The literature around them is unusually treacherous, and a student reading <em>IndVisSGG</em> cannot evaluate its claims without that context.</span>
+      <span lang="zh">Scene graph 位於 object detection、關係推理與語言的交會處。這個領域的文獻異常難走，學生若沒有這些背景，根本無法評斷 <em>IndVisSGG</em> 的主張是否成立。</span>
+    </p>
+  </div>
+
+  <div class="col" style="margin-top:26px">
+    <div class="stack">
+      <div class="item">
+        <span class="item-n">01</span>
+        <div>
+          <h3><span lang="en">Three datasets share one name</span><span lang="zh">三個資料集共用同一個名字</span></h3>
+          <p><span lang="en">&ldquo;VG150&rdquo; denotes three mutually incompatible splits — Xu et al. at 75,651/32,422, the Neural-Motifs lineage at 57,723 + 5,000 val/26,446, and the SGG-Benchmark re-export at 73,538/4,844/27,032. Papers rarely say which they used.</span>
+          <span lang="zh">「VG150」指的是三種彼此不相容的切分：Xu et al. 的 75,651/32,422、Neural-Motifs 系列的 57,723 + 5,000 val/26,446、以及 SGG-Benchmark 重新匯出的 73,538/4,844/27,032。論文很少交代自己用的是哪一種。</span></p>
+        </div>
+      </div>
+      <div class="item">
+        <span class="item-n">02</span>
+        <div>
+          <h3><span lang="en">The headline metric rewards guessing <code>on</code></span><span lang="zh">主要指標鼓勵模型猜 <code>on</code></span></h3>
+          <p><span lang="en">A predictor using only subject–object co-occurrence — no pixels at all — scores PredCls mR@100 of 16.0, ahead of MOTIFS at 15.3 and IMP+ at 10.5 (Tang et al., <strong>Table 1</strong>, <a href="https://arxiv.org/abs/2002.11949">arXiv 2002.11949</a>). Published inside the Neural Motifs paper itself, it is the field&rsquo;s founding embarrassment and the reason mean Recall was introduced a year later. KERN&rsquo;s Table 1 puts the same two at 15.8 and 14.4 — two tables, two answers, which is why every figure here names its table.</span>
+          <span lang="zh">一個只用 subject–object 共現統計、完全不看像素的預測器，PredCls mR@100 可以拿到 16.0，領先 MOTIFS 的 15.3 與 IMP+ 的 10.5（Tang 等人，<strong>Table 1</strong>，<a href="https://arxiv.org/abs/2002.11949">arXiv 2002.11949</a>）。它發表在 Neural Motifs 論文自身之內，是這個領域的原始難堪，也是 mean Recall 一年後被提出的理由。KERN 的 Table 1 把同樣兩者記為 15.8 與 14.4——兩張表、兩組答案，這正是本文件每個數值都指名出處表格的原因。</span></p>
+        </div>
+      </div>
+      <div class="item">
+        <span class="item-n">03</span>
+        <div>
+          <h3><span lang="en">A benchmark stayed wrong for two years</span><span lang="zh">一個基準錯了兩年沒人發現</span></h3>
+          <p><span lang="en">The original PSG ranking permitted duplicate masks and multiple predicate distributions per pair — farmable. Under the corrected protocol, one-stage methods lost up to 19.3 mR@50 points; two-stage methods barely moved.</span>
+          <span lang="zh">原本的 PSG 排名允許重複的 mask 與同一配對的多個 predicate 分布，可以被刷分。改用修正後的協定，one-stage 方法最多掉了 19.3 個 mR@50，two-stage 方法幾乎沒變。</span></p>
+        </div>
+      </div>
+      <div class="item">
+        <span class="item-n">04</span>
+        <div>
+          <h3><span lang="en">The leaderboard is gone</span><span lang="zh">排行榜已經消失</span></h3>
+          <p><span lang="en">Papers With Code was sunset on 24 July 2025 and nothing replaced it. There is also no maintained live public SGG demo anywhere: PSG&rsquo;s Hugging Face Space has sat in <code>BUILD_ERROR</code> since August 2022, <code>psgdataset.org</code> fails DNS, and RelTR is Colab-only.</span>
+          <span lang="zh">Papers With Code 已於 2025 年 7 月 24 日關閉，沒有任何替代品。目前也沒有任何仍在維護的公開 SGG demo：PSG 的 Hugging Face Space 自 2022 年 8 月起就是 <code>BUILD_ERROR</code>，<code>psgdataset.org</code> 的 DNS 解析失敗，RelTR 只剩 Colab。</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 02 — THE LIVE FIGURE ══════════ -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">02</span>
+    <div>
+      <h2><span lang="en">The product in miniature</span><span lang="zh">產品的縮影</span></h2>
+      <p class="sec-sub"><span lang="en">One industrial frame, one model&rsquo;s predictions, and the two numbers that disagree</span><span lang="zh">一個工業場景、一組模型預測，以及兩個互相矛盾的數字</span></p>
+    </div>
+  </div>
+
+  <figure style="margin:0">
+    <div class="figure">
+      <div class="fig-head">
+        <p class="fig-title"><span lang="en">Lab L2 — Metric Explorer</span><span lang="zh">Lab L2 — 指標探索器</span></p>
+        <p class="fig-note"><span lang="en">Working prototype. Drag K. Turn the graph constraint off.</span><span lang="zh">可操作原型。拖動 K，然後關掉 graph constraint。</span></p>
+      </div>
+
+      <div class="demo">
+        <div class="demo-vis">
+          <p class="vis-label"><span lang="en">Frame · grounded objects</span><span lang="zh">影格 · 已定位物件</span></p>
+          <div class="vis-box">
+            <svg class="stage" id="scene" viewBox="0 0 680 384" role="img"
+                 aria-label="Schematic industrial workspace with labelled bounding boxes"></svg>
+          </div>
+
+          <p class="vis-label"><span lang="en">Scene graph · diff against ground truth</span><span lang="zh">場景圖 · 與 ground truth 的差異</span></p>
+          <div class="vis-box">
+            <svg class="stage" id="graph" viewBox="0 0 680 330" role="img"
+                 aria-label="Scene graph with edges coloured by evaluation verdict"></svg>
+          </div>
+        </div>
+
+        <div class="demo-side">
+          <div class="ctrls">
+            <div class="ctrl-row">
+              <label class="ctrl-lab" for="kslider">K</label>
+              <input type="range" id="kslider" min="1" max="20" value="10" step="1">
+              <span class="kval" id="kval">10</span>
+            </div>
+            <div class="ctrl-row">
+              <label class="switch" for="gcon">
+                <input type="checkbox" id="gcon" checked>
+                <span lang="en">Graph constraint &mdash; one predicate per ordered pair</span>
+                <span lang="zh">Graph constraint &mdash; 每個有序配對只留一個 predicate</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="scores">
+            <div class="score">
+              <p class="score-k">R@<span id="kl1">10</span></p>
+              <p class="score-v" id="rk">0.600</p>
+              <p class="score-n" id="rkn">6 / 10 triplets</p>
+            </div>
+            <div class="score">
+              <p class="score-k">mR@<span id="kl2">10</span></p>
+              <p class="score-v" id="mrk">0.524</p>
+              <p class="score-n" id="mrkn">mean over 7 predicates</p>
+            </div>
+          </div>
+
+          <div class="triplets" id="triplets"></div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--m-match)"></i><span lang="en">matched</span><span lang="zh">命中</span></span>
+        <span><i class="swatch" style="background:var(--m-spur)"></i><span lang="en">spurious edge</span><span lang="zh">多餘的邊</span></span>
+        <span><i class="swatch" style="background:var(--m-miss)"></i><span lang="en">missed ground truth</span><span lang="zh">漏掉的 ground truth</span></span>
+        <span><i class="swatch" style="background:var(--m-loc)"></i><span lang="en">right predicate, IoU &lt; 0.5</span><span lang="zh">predicate 正確但 IoU &lt; 0.5</span></span>
+      </div>
+    </div>
+
+    <figcaption>
+      <span lang="en">Synthetic data, chosen to expose the two effects the course turns on. <strong>Head-predicate bias:</strong> the model is confident on every <code>on</code> and <code>near</code> and diffident everywhere else. At \(K=10\) under the graph constraint this yields \(R@10 = 0.600\) against \(mR@10 \approx 0.524\) — the gap is entirely the three tail predicates it never recovers. <strong>The constraint gap:</strong> switching the constraint off admits each pair&rsquo;s second-choice predicate, recovering both <code>robot arm above table</code> and <code>person picking up box</code>. At a fixed \(K=20\) that moves \(R\) from \(0.600\) to \(0.800\) and \(mR\) from \(0.524\) to \(0.810\), with the model unchanged. Note that \(mR\) ends up <em>above</em> \(R\) — the unweighted mean rewards tail recovery, which is exactly what it was designed to do.</span>
+      <span lang="zh">這裡用的是合成資料，刻意用來凸顯本課程的兩個核心現象。<strong>Head predicate 偏差：</strong>模型對每個 <code>on</code> 和 <code>near</code> 都很有信心，其餘一律沒把握。在 \(K=10\) 且開啟 graph constraint 時，\(R@10 = 0.600\)，但 \(mR@10 \approx 0.524\)——差距完全來自那三個始終救不回來的 tail predicate。<strong>Constraint gap：</strong>關掉 constraint 後，每個配對的第二順位 predicate 也會進入排名，於是同時救回 <code>robot arm above table</code> 與 <code>person picking up box</code>。在固定 \(K=20\) 的條件下，\(R\) 從 \(0.600\) 升到 \(0.800\)，\(mR\) 從 \(0.524\) 升到 \(0.810\)，而模型本身完全沒變。注意此時 \(mR\) 反而<em>高於</em> \(R\)——未加權平均會獎勵 tail 的回收，而這正是它被設計出來的目的。</span>
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ══════════ 03 — MATHEMATICS ══════════ -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">03</span>
+    <div>
+      <h2><span lang="en">The mathematics, stated properly</span><span lang="zh">完整寫清楚的數學</span></h2>
+      <p class="sec-sub"><span lang="en">Every symbol defined before use; every metric given its formal statement</span><span lang="zh">每個符號先定義再使用；每個指標都給出形式化定義</span></p>
+    </div>
+  </div>
+
+  <div class="col">
+    <p>
+      <span lang="en">Until 2024 the field&rsquo;s metrics circulated as <em>verbal</em> definitions. Lorenz et al. (CVPRW 2024) pointed this out, gave the first rigorous statements, and showed that published implementations disagree as a result. Everything below follows their formulation. It is also the specification the app&rsquo;s evaluation engine is written against.</span>
+      <span lang="zh">直到 2024 年，這個領域的指標都只以<em>文字敘述</em>流通。Lorenz 等人（CVPRW 2024）指出了這一點，首次給出嚴謹的形式化定義，並證明已發表的實作因此彼此不一致。以下全部採用他們的表述，這也是本應用程式評測引擎的撰寫依據。</span>
+    </p>
+
+    <h3 style="margin-top:28px"><span lang="en">Symbols</span><span lang="zh">符號</span></h3>
+    <dl class="defs">
+      <dt>\(\mathcal{C},\ \mathcal{P}\)</dt>
+      <dd><span lang="en">object class and predicate vocabularies. On VG150, \(|\mathcal{C}|=150\) and \(|\mathcal{P}|=50\).</span><span lang="zh">物件類別詞彙與 predicate 詞彙。在 VG150 上，\(|\mathcal{C}|=150\)、\(|\mathcal{P}|=50\)。</span></dd>
+      <dt>\(v=(c,b)\)</dt>
+      <dd><span lang="en">a grounded object: class \(c\in\mathcal{C}\) and box \(b\in\mathbb{R}^4\).</span><span lang="zh">一個已定位的物件：類別 \(c\in\mathcal{C}\) 與 box \(b\in\mathbb{R}^4\)。</span></dd>
+      <dt>\(t=\langle s,p,o\rangle\)</dt>
+      <dd><span lang="en">a triplet: subject \(s\), predicate \(p\in\mathcal{P}\), object \(o\).</span><span lang="zh">一個三元組：subject \(s\)、predicate \(p\in\mathcal{P}\)、object \(o\)。</span></dd>
+      <dt>\(G=(V,E,T)\)</dt>
+      <dd><span lang="en">the ground-truth scene graph over timespan \(T\); \(E\subseteq V\times\mathcal{P}\times V\). For a single image \(T\) collapses to a point. This is the anchor paper&rsquo;s own notation.</span><span lang="zh">時間跨度 \(T\) 上的 ground-truth 場景圖；\(E\subseteq V\times\mathcal{P}\times V\)。單張影像時 \(T\) 退化為一個點。這是核心論文自己使用的記法。</span></dd>
+      <dt>\(\hat{T}=\{(\hat t_i,\sigma_i)\}\)</dt>
+      <dd><span lang="en">the model&rsquo;s scored predictions, \(\sigma_i\in[0,1]\).</span><span lang="zh">模型輸出的帶分數預測，\(\sigma_i\in[0,1]\)。</span></dd>
+      <dt>\(X_k\)</dt>
+      <dd><span lang="en">the first \(k\) predictions after sorting \(\hat T\) by \(\sigma\) descending.</span><span lang="zh">將 \(\hat T\) 依 \(\sigma\) 遞減排序後的前 \(k\) 筆。</span></dd>
+      <dt>\(\tau\)</dt>
+      <dd><span lang="en">the localization threshold, \(\tau=0.5\) by convention.</span><span lang="zh">定位門檻，慣例為 \(\tau=0.5\)。</span></dd>
+    </dl>
+
+    <h3><span lang="en">1 · When does a prediction count?</span><span lang="zh">1 · 什麼情況算預測正確？</span></h3>
+    <p>
+      <span lang="en">Intersection over union measures box agreement — the shared area divided by the total area covered:</span>
+      <span lang="zh">Intersection over union 衡量兩個 box 的吻合程度——交集面積除以聯集面積：</span>
+    </p>
+    <div class="mathblock plain">\[ \operatorname{IoU}(b,b') \;=\; \frac{\lvert b\cap b'\rvert}{\lvert b\cup b'\rvert} \;\in\;[0,1] \]</div>
+    <p>
+      <span lang="en">A predicted triplet \(\hat t\) <strong>matches</strong> a ground-truth triplet \(t\), written \(\hat t\simeq t\), when all five conditions hold at once:</span>
+      <span lang="zh">當以下五個條件同時成立時，預測三元組 \(\hat t\) <strong>命中</strong> ground-truth 三元組 \(t\)，記作 \(\hat t\simeq t\)：</span>
+    </p>
+    <div class="mathblock">\[
+      \hat t \simeq t \iff
+      \underbrace{c_{\hat s}=c_s \;\wedge\; c_{\hat o}=c_o \;\wedge\; \hat p = p}_{\text{classification}}
+      \;\wedge\;
+      \underbrace{\operatorname{IoU}(b_{\hat s},b_s)\ge\tau \;\wedge\; \operatorname{IoU}(b_{\hat o},b_o)\ge\tau}_{\text{localization}}
+    \]</div>
+    <p class="mathnote">
+      <b><span lang="en">Why the app draws four colours, not two.</span><span lang="zh">為什麼介面用四種顏色而不是兩種。</span></b>
+      <span lang="en">The conjunction splits cleanly into a classification half and a localization half. A prediction can fail either one independently — and the diff view colours those two failures differently, because they are the exact distinction the three evaluation protocols exist to isolate.</span>
+      <span lang="zh">這個合取式乾淨地分成「分類」與「定位」兩半，預測可以只在其中一半失敗。差異檢視把這兩種失敗畫成不同顏色，因為這正是三種評測 protocol 存在的目的所在。</span>
+    </p>
+    <p class="mathnote">
+      <b><span lang="en">A subtlety worth a slide.</span><span lang="zh">值得用一張投影片講的細節。</span></b>
+      <span lang="en">\(\simeq\) is <em>not</em> an equivalence relation — it is not transitive, and two distinct predictions can both match the same ground-truth triplet. So &ldquo;\(\cap\)&rdquo; below is not set intersection; it is the size of a maximum partial injection \(M\subseteq X_k\times G\) with \((\hat t,t)\in M\Rightarrow \hat t\simeq t\). Every implementation approximates \(M\) greedily in score order. Exact maximum bipartite matching would cost \(O(|E|\sqrt{|V|})\) by Hopcroft–Karp; greedy coincides with the optimum whenever \(\simeq\) is near-bijective, which it almost always is. <em>That coincidence is an assumption, not a theorem — and it is a proof obligation the engine&rsquo;s test suite has to discharge on adversarial fixtures.</em></span>
+      <span lang="zh">\(\simeq\) <em>不是</em>等價關係——它不具傳遞性，而且兩個不同的預測可能命中同一個 ground-truth 三元組。因此下面的「\(\cap\)」並不是集合交集，而是最大部分單射 \(M\subseteq X_k\times G\)（滿足 \((\hat t,t)\in M\Rightarrow \hat t\simeq t\)）的大小。所有實作都用依分數排序的貪婪法近似 \(M\)。精確的最大二分匹配用 Hopcroft–Karp 需要 \(O(|E|\sqrt{|V|})\)；當 \(\simeq\) 接近雙射時貪婪法與最佳解一致，而實務上幾乎總是如此。<em>但這個一致性是假設而非定理——它是評測引擎的測試套件必須在對抗性樣本上證明的義務。</em></span>
+    </p>
+
+    <h3><span lang="en">2 · The graph constraint</span><span lang="zh">2 · Graph constraint</span></h3>
+    <p>
+      <span lang="en">Let \(\pi(\langle s,p,o\rangle)=(s,o)\) project a triplet onto its ordered pair. The graph constraint is the requirement that \(\pi\) be injective on the candidate set:</span>
+      <span lang="zh">令 \(\pi(\langle s,p,o\rangle)=(s,o)\) 把三元組投影到它的有序配對。Graph constraint 就是要求 \(\pi\) 在候選集合上為單射：</span>
+    </p>
+    <div class="mathblock">\[ \forall\, t,t'\in X_k:\quad t\neq t' \;\Longrightarrow\; \pi(t)\neq\pi(t') \]</div>
+    <p>
+      <span lang="en">In practice: for each ordered pair keep only \(\arg\max_{p}\sigma(\langle s,p,o\rangle)\). Dropping the requirement gives the <em>no-constraint</em> variant, written \(\mathrm{ngR}@k\). Action Genome adds a third, <em>semi-constraint</em> mode. The three are not comparable, and the difference routinely runs to ten or twenty points.</span>
+      <span lang="zh">實務做法：每個有序配對只保留 \(\arg\max_{p}\sigma(\langle s,p,o\rangle)\)。拿掉這個要求就得到 <em>no-constraint</em> 版本，記作 \(\mathrm{ngR}@k\)。Action Genome 另外加了第三種 <em>semi-constraint</em> 模式。三者彼此不可比較，差距動輒十到二十個百分點。</span>
+    </p>
+
+    <h3><span lang="en">3 · The two recalls</span><span lang="zh">3 · 兩種 recall</span></h3>
+    <div class="mathblock">\[ R@k \;=\; \frac{\lvert G\cap X_k\rvert}{\lvert G\rvert} \]</div>
+    <p>
+      <span lang="en">Write \(G^{(p)}=\{t\in G:\operatorname{pred}(t)=p\}\) for the ground-truth triplets carrying predicate \(p\), and \(\mathcal{P}'=\{p:G^{(p)}\neq\varnothing\}\) for the predicates actually present. Then</span>
+      <span lang="zh">令 \(G^{(p)}=\{t\in G:\operatorname{pred}(t)=p\}\) 表示帶有 predicate \(p\) 的 ground-truth 三元組，\(\mathcal{P}'=\{p:G^{(p)}\neq\varnothing\}\) 表示實際出現過的 predicate。則</span>
+    </p>
+    <div class="mathblock">\[ mR@k \;=\; \frac{1}{\lvert\mathcal{P}'\rvert}\sum_{p\in\mathcal{P}'} \frac{\lvert G^{(p)}\cap X_k^{(p)}\rvert}{\lvert G^{(p)}\rvert} \;=\; \frac{1}{\lvert\mathcal{P}'\rvert}\sum_{p\in\mathcal{P}'} R_p@k \]</div>
+
+    <h3><span lang="en">4 · The identity that explains the whole field</span><span lang="zh">4 · 解釋整個領域的那個恆等式</span></h3>
+    <p>
+      <span lang="en">Let \(n_p=\lvert G^{(p)}\rvert\). Partitioning \(G\) by predicate and summing gives, immediately,</span>
+      <span lang="zh">令 \(n_p=\lvert G^{(p)}\rvert\)。把 \(G\) 依 predicate 分割後求和，立刻得到</span>
+    </p>
+    <div class="mathblock">\[ R@k \;=\; \sum_{p\in\mathcal{P}'} \frac{n_p}{\lvert G\rvert}\, R_p@k \qquad\text{versus}\qquad mR@k \;=\; \sum_{p\in\mathcal{P}'} \frac{1}{\lvert\mathcal{P}'\rvert}\, R_p@k \]</div>
+    <p>
+      <span lang="en"><strong>The two metrics average the same per-predicate recalls \(R_p@k\) under different weights.</strong> \(R@k\) weights by ground-truth frequency \(n_p/\lvert G\rvert\); \(mR@k\) weights every predicate equally at \(1/\lvert\mathcal{P}'\rvert\). Nothing else differs.</span>
+      <span lang="zh"><strong>兩個指標平均的是<em>同一組</em>各 predicate 的 recall \(R_p@k\)，只是權重不同。</strong>\(R@k\) 用 ground-truth 頻率 \(n_p/\lvert G\rvert\) 加權；\(mR@k\) 則給每個 predicate 相同的權重 \(1/\lvert\mathcal{P}'\rvert\)。除此之外毫無差別。</span>
+    </p>
+    <p>
+      <span lang="en">Two consequences follow without further argument. First, on VG150 a handful of predicates — <code>on</code>, <code>has</code>, <code>wearing</code>, <code>of</code>, <code>in</code>, <code>near</code> — carry most of the mass, so a model that does well on those alone maximizes \(R@k\) while \(mR@k\) stays near zero. That is precisely the frequency baseline. Second, \(mR@k>R@k\) is perfectly possible: it happens exactly when the model does <em>better</em> on rare predicates than on common ones. The prototype above reaches that state once the constraint is lifted.</span>
+      <span lang="zh">由此立刻得到兩個結論。其一，在 VG150 上少數幾個 predicate（<code>on</code>、<code>has</code>、<code>wearing</code>、<code>of</code>、<code>in</code>、<code>near</code>）佔了絕大部分質量，因此只要在這幾個上表現好，就能把 \(R@k\) 推高，而 \(mR@k\) 仍接近零——這正是 frequency baseline 的作法。其二，\(mR@k>R@k\) 完全可能發生：恰好當模型在罕見 predicate 上的表現<em>優於</em>常見 predicate 時。上方的原型一旦關掉 constraint 就會進入這個狀態。</span>
+    </p>
+
+    <h3><span lang="en">5 · Worked example — the prototype above, by hand</span><span lang="zh">5 · 手算範例 —— 就是上面那個原型</span></h3>
+    <p>
+      <span lang="en">Ten ground-truth triplets, \(\lvert G\rvert=10\), over \(\lvert\mathcal{P}'\rvert=7\) predicates with counts \(n_{\texttt{on}}=3\), \(n_{\texttt{near}}=2\), and \(n_p=1\) for the other five.</span>
+      <span lang="zh">十個 ground-truth 三元組，\(\lvert G\rvert=10\)，涵蓋 \(\lvert\mathcal{P}'\rvert=7\) 個 predicate，其中 \(n_{\texttt{on}}=3\)、\(n_{\texttt{near}}=2\)，其餘五個皆為 \(n_p=1\)。</span>
+    </p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>\(p\)</th><th>\(n_p\)</th>
+          <th>\(R_p@20\) <span lang="en">constrained</span><span lang="zh">開啟 constraint</span></th>
+          <th>\(R_p@20\) <span lang="en">no constraint</span><span lang="zh">關閉 constraint</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><code>on</code></td><td class="num">3</td><td class="num">2/3</td><td class="num">2/3</td></tr>
+          <tr><td><code>near</code></td><td class="num">2</td><td class="num">1</td><td class="num">1</td></tr>
+          <tr><td><code>in front of</code></td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+          <tr><td><code>attached to</code></td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+          <tr><td><code>above</code></td><td class="num">1</td><td class="num">0</td><td class="num" style="color:var(--m-match); font-weight:600">1</td></tr>
+          <tr><td><code>picking up</code></td><td class="num">1</td><td class="num">0</td><td class="num" style="color:var(--m-match); font-weight:600">1</td></tr>
+          <tr><td><code>wearing</code></td><td class="num">1</td><td class="num">0</td><td class="num">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:18px">
+      <span lang="en">Under the constraint, \(\texttt{above}\) and \(\texttt{picking up}\) are suppressed because a higher-scoring predicate already occupies their pair, and \(\texttt{wearing}\) fails on \(\operatorname{IoU}=0.43<\tau\). Applying both formulas:</span>
+      <span lang="zh">開啟 constraint 時，\(\texttt{above}\) 與 \(\texttt{picking up}\) 被壓掉，因為分數更高的 predicate 已經佔住了它們的配對；\(\texttt{wearing}\) 則因 \(\operatorname{IoU}=0.43<\tau\) 而失敗。代入兩個公式：</span>
+    </p>
+    <div class="mathblock">\[
+      \begin{aligned}
+      R@20 &amp;= \tfrac{3}{10}\!\cdot\!\tfrac{2}{3} + \tfrac{2}{10}\!\cdot\!1 + \tfrac{1}{10}\!\cdot\!1 + \tfrac{1}{10}\!\cdot\!1 + 0 + 0 + 0 &amp;&amp;= 0.600\\[4pt]
+      mR@20 &amp;= \tfrac{1}{7}\left(\tfrac{2}{3} + 1 + 1 + 1 + 0 + 0 + 0\right) &amp;&amp;\approx 0.524
+      \end{aligned}
+    \]</div>
+    <p>
+      <span lang="en">Lift the constraint. The model is unchanged; only the candidate set grows:</span>
+      <span lang="zh">關掉 constraint。模型完全沒變，只是候選集合變大：</span>
+    </p>
+    <div class="mathblock">\[
+      \begin{aligned}
+      \mathrm{ngR}@20 &amp;= \tfrac{3}{10}\!\cdot\!\tfrac{2}{3} + \tfrac{2}{10}\!\cdot\!1 + \tfrac{1}{10}\!\cdot\!1 \cdot 4 + 0 &amp;&amp;= 0.800\\[4pt]
+      \mathrm{mNgR}@20 &amp;= \tfrac{1}{7}\left(\tfrac{2}{3} + 1 + 1 + 1 + 1 + 1 + 0\right) &amp;&amp;\approx 0.810
+      \end{aligned}
+    \]</div>
+    <p class="mathnote">
+      <b><span lang="en">Read the second line again.</span><span lang="zh">請再讀一次第二行。</span></b>
+      <span lang="en">\(mR\) overtakes \(R\), \(0.810 > 0.800\), because the two recovered triplets are both singleton classes and the unweighted mean pays them seven times what the frequency-weighted mean pays. The same two predictions move \(R\) by \(0.200\) and \(mR\) by \(0.286\). No model changed. Only the counting rule did.</span>
+      <span lang="zh">\(mR\) 超過了 \(R\)，\(0.810 > 0.800\)，因為救回來的那兩個三元組都屬於只有一個實例的類別，而未加權平均給它們的權重是頻率加權平均的七倍。同樣兩筆預測讓 \(R\) 上升 \(0.200\)、讓 \(mR\) 上升 \(0.286\)。模型沒有任何改變，改變的只有計數規則。</span>
+    </p>
+
+    <h3><span lang="en">6 · The remaining metrics, and one invariant</span><span lang="zh">6 · 其餘指標，以及一個不變量</span></h3>
+    <p>
+      <span lang="en">Zero-shot recall is <em>not</em> a separate metric. Let \(\mathcal{T}_{\text{train}}\) be the set of class-level triplet types \((c_s,p,c_o)\) seen in training; then \(zR@k\) is simply \(R@k\) evaluated on the filtered ground truth \(G_z=\{t\in G:(c_s,p,c_o)\notin\mathcal{T}_{\text{train}}\}\). Pair recall drops the predicate entirely, \(PR@k=\lvert\pi(G)\cap\pi(X_k)\rvert/\lvert\pi(G)\rvert\), and bounds \(R@k\le PR@k\) — which is how Pair-Net identified pair detection, not relation classification, as the real bottleneck in panoptic SGG.</span>
+      <span lang="zh">Zero-shot recall <em>不是</em>獨立的指標。令 \(\mathcal{T}_{\text{train}}\) 為訓練時見過的類別層級三元組型態 \((c_s,p,c_o)\) 的集合；則 \(zR@k\) 就只是在過濾後的 ground truth \(G_z=\{t\in G:(c_s,p,c_o)\notin\mathcal{T}_{\text{train}}\}\) 上計算的 \(R@k\)。Pair recall 則完全捨棄 predicate，\(PR@k=\lvert\pi(G)\cap\pi(X_k)\rvert/\lvert\pi(G)\rvert\)，並給出上界 \(R@k\le PR@k\)——Pair-Net 正是靠這個界指出 panoptic SGG 真正的瓶頸在配對偵測，而不在關係分類。</span>
+    </p>
+    <p>
+      <span lang="en">The three protocols differ only in what is given. PredCls supplies \(V\) complete with labels; SGCls supplies boxes but withholds labels; SGDet supplies nothing. Each strictly enlarges the search space, which yields an invariant the test suite asserts on every fixture:</span>
+      <span lang="zh">三種 protocol 的差別只在於「給了什麼」。PredCls 提供完整含標籤的 \(V\)；SGCls 提供 box 但不給標籤；SGDet 什麼都不給。每一種都嚴格擴大了搜尋空間，因此得到一個測試套件會在每個樣本上檢驗的不變量：</span>
+    </p>
+    <div class="mathblock">\[ R_{\text{SGDet}}@k \;\le\; R_{\text{SGCls}}@k \;\le\; R_{\text{PredCls}}@k \]</div>
+    <p class="mathnote">
+      <b><span lang="en">The misreading this catches.</span><span lang="zh">這條式子能擋下的誤解。</span></b>
+      <span lang="en">PredCls and SGCls hand the model ground-truth <em>boxes</em> — never ground-truth <em>pairs</em>. The model still has to decide which of the \(\lvert V\rvert^2\) ordered pairs are related at all. This is the most common misreading in the field, and it is a designed quiz item.</span>
+      <span lang="zh">PredCls 與 SGCls 給的是 ground-truth <em>box</em>，絕不是 ground-truth <em>配對</em>。模型仍必須自行判斷 \(\lvert V\rvert^2\) 個有序配對中哪些真的存在關係。這是這個領域最常見的誤讀，也是刻意設計的測驗題目。</span>
+    </p>
+
+    <h3><span lang="en">7 · The anchor paper&rsquo;s own equations</span><span lang="zh">7 · 核心論文自己的方程式</span></h3>
+    <p>
+      <span lang="en">IndVisSGG replaces the learned relation head with a prompted vision-language model \(\mathrm{VLM}(\cdot)\). Let \(V_t\) be the visual input at timestamp \(t\), and let the Triplets Extraction Criteria comprise a predefined object set \(O\), predicate set \(P\), and worked examples \(E\). The naive call is</span>
+      <span lang="zh">IndVisSGG 用一個被提示的 vision-language model \(\mathrm{VLM}(\cdot)\) 取代了學習出來的關係預測頭。令 \(V_t\) 為時間戳 \(t\) 的視覺輸入，Triplets Extraction Criteria 由預先定義的物件集合 \(O\)、predicate 集合 \(P\) 與範例 \(E\) 組成。最樸素的呼叫是</span>
+    </p>
+    <div class="mathblock plain">\[ out_{trpl} \;=\; \mathrm{VLM}(V_t,\ \textit{Prompt}) \tag{1} \]</div>
+    <p><span lang="en">which produces unconstrained free-text relations. Supplying the criteria constrains the output vocabulary:</span><span lang="zh">這會產生不受約束的自由文字關係。提供 criteria 之後就能約束輸出詞彙：</span></p>
+    <div class="mathblock plain">\[ out^{s_1}_t \;=\; \mathrm{VLM}(V_t,\ O,\ P,\ E,\ \textit{Prompt}) \tag{2} \]</div>
+    <p><span lang="en">Step two runs \(N\) independent experts, each auditing step one&rsquo;s output and returning both a revision and an analysis \(a_i\):</span><span lang="zh">第二步跑 \(N\) 個獨立的 expert，各自審查第一步的輸出，回傳修正結果與一份分析 \(a_i\)：</span></p>
+    <div class="mathblock plain">\[ \bigl(out^{s_2}_t,\ a_i\bigr) \;=\; \mathrm{VLM}\bigl(V_t,\ O,\ P,\ E,\ \textit{Prompt},\ out^{s_1}_t\bigr),\qquad i\in\{1,\dots,N\} \tag{3} \]</div>
+    <p><span lang="en">Step three reconciles them, with \(\alpha\) collecting the experts&rsquo; analyses:</span><span lang="zh">第三步進行整合，\(\alpha\) 匯集所有 expert 的分析：</span></p>
+    <div class="mathblock plain">\[ out^{s_3}_t \;=\; \mathrm{VLM}\bigl(out^{s_2}_t,\ \alpha,\ \textit{Prompt}\bigr), \qquad \{out^{s_2}_t,\alpha\}=\bigl\{out^{s_2}_t,\ a_i \;\big|\; i\in\{1,\dots,N\}\bigr\} \tag{4} \]</div>
+    <p class="mathnote">
+      <b><span lang="en">What the ablations are really measuring.</span><span lang="zh">消融實驗真正在量什麼。</span></b>
+      <span lang="en">Equations (1) and (2) differ only in whether \(O\), \(P\), and \(E\) are present — so the paper&rsquo;s Table 3, where \(R@20\) climbs from \(0.032\) to \(23.040\) as those arguments are added, is measuring the value of constraining a VLM&rsquo;s output vocabulary, not the value of any architecture. <strong>Table 3 is a five-row factorial, and the effect is superadditive:</strong> \(O\) alone scores \(1.787\), \(P\) alone \(2.079\), and both together \(20.792\) — an order of magnitude beyond either. Constraining one end of the triplet is nearly worthless; constraining both is transformative. The paper does not remark on this. Equation (3) is a sampling procedure over \(N\); Table 4 reports \(N=3\) as optimal, and \(N=3\) is genuinely not dominated — \(N=5\) leads at \(k=20\) but loses on \(mR@50\) (\(24.383\) against \(25.480\)) and on \(R@100\) (\(30.020\) against \(30.142\)). No theory accompanies any of it. Lab L5 lets students vary \(N\) and \(O,P,E\) and watch both tables reassemble.</span>
+      <span lang="zh">方程式 (1) 與 (2) 的唯一差別，就是 \(O\)、\(P\)、\(E\) 在不在——因此論文 Table 3 中 \(R@20\) 從 \(0.032\) 一路爬到 \(23.040\)，量的是「約束 VLM 輸出詞彙」的價值，而不是任何架構的價值。<strong>Table 3 是五列的因子設計，且效果具超加成性：</strong>單給 \(O\) 為 \(1.787\)，單給 \(P\) 為 \(2.079\)，兩者同時給則為 \(20.792\)——比任一者高出一個數量級。只約束三元組的一端幾乎沒有作用，兩端同時約束才具決定性。論文本身並未論及此點。方程式 (3) 則是對 \(N\) 的一種抽樣程序；Table 4 回報 \(N=3\) 最佳，而 \(N=3\) 確實未被全面超越——\(N=5\) 在 \(k=20\) 領先，但 \(mR@50\) 落後（\(24.383\) 對 \(25.480\)）、\(R@100\) 亦落後（\(30.020\) 對 \(30.142\)）。這一切都沒有理論支撐。Lab L5 讓學生自行改動 \(N\) 與 \(O,P,E\)，看著這兩張表自己重新長出來。</span>
+    </p>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">04</span>
+    <div>
+      <h2><span lang="en">What the research turned up</span><span lang="zh">研究調查的發現</span></h2>
+      <p class="sec-sub"><span lang="en">Three web sweeps: datasets, methods, prior art</span><span lang="zh">三輪網路調查：資料集、方法、既有工具</span></p>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="callout">
+      <p><span class="h"><span lang="en">The dataset is not available</span><span lang="zh">資料集並未公開</span></span>
+      <span lang="en">The ISG dataset described in the paper has no public release. No repository matches it; the second author&rsquo;s page lists it paper-link-only while attaching <code>[Code]</code> badges to his other work; no Hugging Face dataset corresponds. The similarly-named <code>ISG-Bench</code> is an unrelated interleaved-generation benchmark. We will teach ISG from the published tables, label it request-only, and build a mini-ISG by the same method from openly licensed industrial frames.</span>
+      <span lang="zh">論文中的 ISG 資料集沒有公開釋出。沒有任何 repository 對應；第二作者的個人頁面只掛論文連結，但他其他論文都有 <code>[Code]</code> 標記；Hugging Face 上也沒有對應的資料集。名稱相近的 <code>ISG-Bench</code> 是另一個完全無關的交錯生成基準。我們會依論文已發表的表格來教 ISG，標註為「需來信索取」，並用同樣的方法、以授權開放的工業影格自行建立一個 mini-ISG。</span></p>
+    </div>
+  </div>
+
+  <div class="col" style="margin-top:26px">
+    <h3 style="font-size:14px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:12px">
+      <span lang="en">The PSG correction, side by side</span><span lang="zh">PSG 修正前後對照</span>
+    </h3>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th><span lang="en">Method</span><span lang="zh">方法</span></th>
+            <th><span lang="en">Family</span><span lang="zh">類型</span></th>
+            <th>mR@50 <span lang="en">original</span><span lang="zh">原協定</span></th>
+            <th>mR@50 <span lang="en">corrected</span><span lang="zh">修正後</span></th>
+            <th>&Delta;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>PSGTR</td><td>one-stage</td><td class="num">20.8</td><td class="num">11.62</td><td class="num drop">&minus;9.18</td></tr>
+          <tr><td>PSGFormer</td><td>one-stage</td><td class="num">17.0</td><td class="num">8.20</td><td class="num drop">&minus;8.80</td></tr>
+          <tr><td>HiLo</td><td>one-stage</td><td class="num">30.3</td><td class="num">18.33</td><td class="num drop">&minus;11.97</td></tr>
+          <tr><td>Neural Motifs</td><td>two-stage</td><td class="num">9.57</td><td class="num">21.83</td><td class="num">&mdash;</td></tr>
+          <tr><td>VCTree</td><td>two-stage</td><td class="num">10.2</td><td class="num">23.07</td><td class="num">&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption>
+      <span lang="en">From <em>A Fair Ranking and New Model for PSG</em>, ECCV 2024. The two-stage rows are not directly differenced because the corrected paper re-evaluates them under its own detector; the point is the direction, and it is unambiguous. Lab L6 lets students run both protocols over identical predictions and watch this happen.</span>
+      <span lang="zh">出自 ECCV 2024 的 <em>A Fair Ranking and New Model for PSG</em>。two-stage 兩列沒有直接相減，因為該論文用自己的 detector 重新評測；重點在於變化方向，而方向非常明確。Lab L6 讓學生用同一組預測跑兩種協定，親眼看著這件事發生。</span>
+    </figcaption>
+  </div>
+
+  <div class="col" style="margin-top:34px">
+    <div class="cards">
+      <div class="card">
+        <span class="tag">arXiv 2506.08189</span>
+        <h3><span lang="en">Scale does not solve this</span><span lang="zh">規模解決不了這個問題</span></h3>
+        <p><span lang="en">Zero-shot on VG-150 SGDet: LLaVA-next-7B reaches R@50 of 2.37; Qwen2-VL-7B reaches 0.87; Qwen2-VL-<strong>72B</strong> reaches 1.88. Ten times the parameters, no improvement.</span>
+        <span lang="zh">VG-150 SGDet 的 zero-shot 結果：LLaVA-next-7B 的 R@50 是 2.37，Qwen2-VL-7B 是 0.87，Qwen2-VL-<strong>72B</strong> 是 1.88。參數多十倍，成績沒有進步。</span></p>
+      </div>
+      <div class="card">
+        <span class="tag">arXiv 2504.13617</span>
+        <h3><span lang="en">But RL fixes the format</span><span lang="zh">但 RL 修好了輸出格式</span></h3>
+        <p><span lang="en">R1-SGG applies GRPO with a graph-shaped reward. Structural failure rate falls from 54.46% zero-shot, to 39.54% after supervised fine-tuning, to 0.06% after RL.</span>
+        <span lang="zh">R1-SGG 用 GRPO 搭配以圖為形式的 reward。結構性失敗率從 zero-shot 的 54.46%，經 SFT 降到 39.54%，再經 RL 降到 0.06%。</span></p>
+      </div>
+      <div class="card">
+        <span class="tag">Neurocomputing 566:127052</span>
+        <h3><span lang="en">A gap worth taking</span><span lang="zh">一個值得佔下的空缺</span></h3>
+        <p><span lang="en">The newest comprehensive SGG survey predates the R1/GRPO wave entirely. No dedicated survey of SGG in the LLM era exists. That is a publishable opening, and the course map is most of the literature review.</span>
+        <span lang="zh">目前最新的 SGG 綜述完全早於 R1/GRPO 這一波。至今沒有任何專門討論 LLM 時代 SGG 的綜述。這是一個可發表的空缺，而本課程的知識地圖已經是文獻回顧的大半。</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">05</span>
+    <div>
+      <h2><span lang="en">Eight labs</span><span lang="zh">八個實驗室</span></h2>
+      <p class="sec-sub"><span lang="en">Where the learning actually happens</span><span lang="zh">真正發生學習的地方</span></p>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="stack">
+      <div class="item"><span class="item-n">L1</span><div>
+        <h3><span lang="en">Triplet Builder</span><span lang="zh">三元組建構器</span></h3>
+        <p><span lang="en">Click two boxes, choose a predicate, build a graph, submit it for scoring. Teaches the data model and what grounding means.</span>
+        <span lang="zh">點兩個 box、選一個 predicate、建出一張圖、送出評分。教的是資料模型，以及 grounding 到底是什麼意思。</span></p></div></div>
+      <div class="item"><span class="item-n">L2</span><div>
+        <h3><span lang="en">Metric Explorer</span><span lang="zh">指標探索器</span></h3>
+        <p><span lang="en">The prototype above, against real dataset slices. Drag K, toggle the constraint, switch protocol, watch four metrics move.</span>
+        <span lang="zh">就是上面那個原型，但接上真實的資料集切片。拖動 K、切換 constraint、切換 protocol，看四個指標怎麼變。</span></p></div></div>
+      <div class="item"><span class="item-n">L3</span><div>
+        <h3><span lang="en">Long-Tail Lab</span><span lang="zh">長尾實驗室</span></h3>
+        <p><span lang="en">Run the co-occurrence baseline in the browser and watch a model with no access to pixels win on Recall and collapse on mean Recall.</span>
+        <span lang="zh">在瀏覽器裡跑共現基線，看著一個完全看不到像素的模型在 Recall 上獲勝、在 mean Recall 上崩潰。</span></p></div></div>
+      <div class="item"><span class="item-n">L4</span><div>
+        <h3><span lang="en">Method Comparator</span><span lang="zh">方法比較器</span></h3>
+        <p><span lang="en">One frame through RelTR live, cached Motifs / PSGFormer / EGTR, and the VLM pipeline. Two-stage against one-stage against prompting.</span>
+        <span lang="zh">同一張影格分別跑即時的 RelTR、快取的 Motifs / PSGFormer / EGTR，以及 VLM pipeline。Two-stage、one-stage 與 prompting 三方對照。</span></p></div></div>
+      <div class="item"><span class="item-n">L5</span><div>
+        <h3><span lang="en">IndVisSGG Replica &mdash; the anchor</span><span lang="zh">IndVisSGG 重建 &mdash; 核心</span></h3>
+        <p><span lang="en">Edit the Triplets Extraction Criteria — the object set <em>O</em>, the predicate set <em>P</em>, the worked examples <em>E</em> — set the expert count to 1, 2, 3, or 5, run all three steps, and replay the published ablations beside your own run.</span>
+        <span lang="zh">直接編輯 Triplets Extraction Criteria：物件集合 <em>O</em>、predicate 集合 <em>P</em>、範例 <em>E</em>；把 expert 數設成 1、2、3 或 5，跑完三個步驟，再把論文發表的消融結果與你自己跑出來的結果並排比較。</span></p></div></div>
+      <div class="item"><span class="item-n">L6</span><div>
+        <h3><span lang="en">Protocol Forensics</span><span lang="zh">協定鑑識</span></h3>
+        <p><span lang="en">Score identical PSG predictions under both mask-pairing protocols and reproduce the ECCV 2024 correction yourself.</span>
+        <span lang="zh">用同一組 PSG 預測跑兩種 mask-pairing 協定，親手重現 ECCV 2024 的那次修正。</span></p></div></div>
+      <div class="item"><span class="item-n">L7</span><div>
+        <h3><span lang="en">Caption &rarr; Graph</span><span lang="zh">語句 &rarr; 圖</span></h3>
+        <p><span lang="en">Type a sentence; watch nouns become nodes and verbs become edges. The rules-to-learned arc, in one panel.</span>
+        <span lang="zh">輸入一個句子，看名詞變成節點、動詞變成邊。從規則式到學習式的整條軌跡，濃縮在一個面板裡。</span></p></div></div>
+      <div class="item"><span class="item-n">L8</span><div>
+        <h3><span lang="en">Mini-ISG Annotator</span><span lang="zh">Mini-ISG 標註器</span></h3>
+        <p><span lang="en">Draft triplets on industrial frames with a VLM, then hand-correct them. The one place a student feels what annotation actually costs — which is the anchor paper&rsquo;s own motivation, reproduced at 0.4% scale.</span>
+        <span lang="zh">用 VLM 在工業影格上草擬三元組，再逐一人工修正。這是學生唯一能真正體會標註成本的地方——而這正是核心論文本身的動機，只是縮小到 0.4% 的規模。</span></p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">06</span>
+    <div>
+      <h2><span lang="en">What constrains the build</span><span lang="zh">這個專案受到的限制</span></h2>
+      <p class="sec-sub"><span lang="en">Probed on your machine, not assumed</span><span lang="zh">在你的機器上實測，不是猜的</span></p>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th><span lang="en">Fact</span><span lang="zh">事實</span></th>
+          <th><span lang="en">Value</span><span lang="zh">實測值</span></th>
+          <th><span lang="en">Consequence</span><span lang="zh">後果</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><span lang="en">Teaching machine</span><span lang="zh">授課機器</span></td><td class="num">Windows ARM64 · Adreno X1-45</td><td><span lang="en">Python runs as an x64 build under emulation. No CUDA. This is the machine the course is taught from, so it is the one every requirement targets</span><span lang="zh">Python 以模擬方式執行 x64 版本，沒有 CUDA。課程由這台機器授課，因此所有需求都以它為準</span></td></tr>
+          <tr><td><span lang="en">Development machine</span><span lang="zh">開發機器</span></td><td class="num">AMD64 i7-12700H · RTX 3070 Ti</td><td><span lang="en">Re-probed 16 Sep. A CUDA device <em>is</em> present; the installed torch is a CPU-only wheel. Used only to produce committed artefacts, never assumed at run time</span><span lang="zh">9 月 16 日重新實測。此機<em>確有</em> CUDA 裝置，但已安裝的 torch 是純 CPU 版。僅用於產生納入版控的成品，執行時一律不假設其存在</span></td></tr>
+          <tr><td>Python</td><td class="num">3.12.10 · fastapi · uvicorn · pydantic v2 · torch 2.11+cpu</td><td><span lang="en">The evaluation engine imports nothing outside the standard library</span><span lang="zh">評測引擎不引用標準函式庫以外的任何套件</span></td></tr>
+          <tr><td>Node</td><td class="num">v24.19.0 / npm 11.17.0</td><td><span lang="en">Upgraded 16 Sep. Vite 8 requires ^20.19 or &ge;22.12 and refused the previous v20.16</span><span lang="zh">9 月 16 日已升級。Vite 8 要求 ^20.19 或 &ge;22.12，先前的 v20.16 被拒絕</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="margin-top:22px">
+      <span lang="en"><strong>The cache-first rule stands, on corrected reasoning.</strong> The ARM64 objection applies to the teaching machine only — the development machine is AMD64 with a CUDA device. The rule survives on three grounds that hold on both: the course is taught from the ARM64 machine; students run localhost on unknown hardware, and every lab must work with <code>torch</code> uninstalled; and <code>maskrcnn-benchmark</code> is unmaintained and pinned to a PyTorch and CUDA generation <code>torch 2.11</code> does not provide, so Neural Motifs and VCTree are excluded on any machine. Every model comparison therefore ships as committed precomputed predictions; live inference is an opt-in path, RelTR only, behind a measured latency estimate. The application must stay fully usable with the network off and <code>torch</code> uninstalled — which is also exactly what a classroom demands.</span>
+      <span lang="zh"><strong>「快取優先」規則維持，但理由已修正。</strong>ARM64 的限制只適用於授課機器——開發機器為 AMD64 且具備 CUDA 裝置。此規則仍成立，依據三點且兩台機器皆適用：課程由 ARM64 機器授課；學生在未知硬體上以 localhost 執行，而所有實作單元都必須在未安裝 <code>torch</code> 的情況下運作；且 <code>maskrcnn-benchmark</code> 已停止維護，綁定的 PyTorch 與 CUDA 世代並非 <code>torch 2.11</code> 所提供，因此 Neural Motifs 與 VCTree 在任何機器上都被排除。因此所有模型比較都以預先算好、直接進版控的預測結果出貨；即時推論是選用路徑，只支援 RelTR，且會先顯示實測的延遲估計。整個應用程式在斷網、甚至移除 <code>torch</code> 的情況下都必須完全可用——而這恰好也是課堂現場的要求。</span>
+    </p>
+  </div>
+</section>
+
+<!-- ══════════ 07 ══════════ -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">07</span>
+    <div>
+      <h2><span lang="en">Nine phases</span><span lang="zh">九個階段</span></h2>
+      <p class="sec-sub"><span lang="en">Phase 2 first, and under a hard test-first mandate</span><span lang="zh">階段 2 優先，且強制 test-first</span></p>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>#</th>
+          <th><span lang="en">Deliverable</span><span lang="zh">產出</span></th>
+          <th><span lang="en">Needs</span><span lang="zh">前置</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="num">0</td><td><span lang="en">PRD, SRS, this brief, decisions register, contracts</span><span lang="zh">PRD、SRS、本綱要、決策紀錄、介面契約</span></td><td class="num">&mdash;</td></tr>
+          <tr><td class="num">1</td><td><span lang="en">Frontend and backend skeleton; health endpoint; i18n parity lint</span><span lang="zh">前後端骨架；health endpoint；i18n 對齊檢查</span></td><td class="num">0</td></tr>
+          <tr><td class="num">2</td><td><strong><span lang="en">Data model and the evaluation engine — test-first, both languages, golden vectors</span><span lang="zh">資料模型與評測引擎——test-first、雙語言實作、golden vector</span></strong></td><td class="num">1</td></tr>
+          <tr><td class="num">3</td><td><span lang="en">Graph rendering, SVG overlay, the four-colour diff; L1 and L2</span><span lang="zh">圖形繪製、SVG 疊層、四色差異檢視；L1 與 L2</span></td><td class="num">2</td></tr>
+          <tr><td class="num">4</td><td><span lang="en">15 bilingual modules, 35 paper cards in two tiers, frozen leaderboards</span><span lang="zh">15 個雙語模組、35 張論文卡（分兩層級）、凍結的排行榜</span></td><td class="num">1</td></tr>
+          <tr><td class="num">5</td><td><span lang="en">Prediction registry, RelTR CPU path; L4 and L6</span><span lang="zh">預測結果登錄、RelTR CPU 路徑；L4 與 L6</span></td><td class="num">2</td></tr>
+          <tr><td class="num">6</td><td><strong><span lang="en">VLM provider, offline transcript player, the IndVisSGG replica; L5</span><span lang="zh">VLM provider、離線逐字稿播放、IndVisSGG 重建；L5</span></strong></td><td class="num">2</td></tr>
+          <tr><td class="num">7</td><td><span lang="en">L3, L7, L8; build the mini-ISG set</span><span lang="zh">L3、L7、L8；建立 mini-ISG 資料集</span></td><td class="num">3, 6</td></tr>
+          <tr><td class="num">8</td><td><span lang="en">Lecture shell, presenter window, quizzes, spaced repetition</span><span lang="zh">講課介面、講者視窗、測驗、間隔重複</span></td><td class="num">3, 4</td></tr>
+          <tr><td class="num">9</td><td><span lang="en">Offline verification, licence audit, keyboard walkthrough test</span><span lang="zh">離線驗證、授權稽核、純鍵盤操作測試</span></td><td class="num"><span lang="en">all</span><span lang="zh">全部</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="margin-top:22px">
+      <span lang="en"><strong>Phases 1 and 2 are built as of 16 September 2026.</strong> The evaluation engine exists twice — Python, authoritative, importing nothing outside the standard library, and TypeScript for in-browser latency — held identical by eleven hand-computed golden vectors and a parity harness that was verified by deliberately breaking one side. Phase 2 carried the only absolute test-first requirement, because every lab reads its output and a wrong metric does not crash: it teaches a false fact. Phases 0 to 3 alone already produce something teachable.</span>
+      <span lang="zh"><strong>階段 1 與階段 2 已於 2026 年 9 月 16 日完成。</strong>評測引擎以兩種語言各實作一次——Python 為權威實作，且不引用標準函式庫以外的任何套件；TypeScript 版本供瀏覽器端即時計算——兩者以十一組手算 golden vector 與一支對照檢查程式維持一致，該檢查程式曾以刻意破壞其中一側的方式驗證其確實會失敗。階段 2 是唯一絕對要求 test-first 的階段，因為每一個 lab 都讀它的輸出——而一個算錯的指標不會當掉，它只會教出一件錯的事。光是階段 0 到 3 完成，就已經有東西可以拿來上課。</span>
+    </p>
+  </div>
+</section>
+
+<!-- ══════════ 08 ══════════ -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">08</span>
+    <div>
+      <h2><span lang="en">Open questions — answered</span><span lang="zh">待決問題 —— 已答覆</span></h2>
+      <p class="sec-sub"><span lang="en">All four settled 16 September 2026. Recorded here with their answers rather than deleted</span><span lang="zh">四項均於 2026 年 9 月 16 日定案。此處保留原問題並附上答覆，而非直接刪除</span></p>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="q">
+      <span class="q-n">01</span>
+      <div>
+        <h3><span lang="en">Where should the repository live? &mdash; settled</span><span lang="zh">程式碼要放在哪裡？ &mdash; 已定案</span></h3>
+        <p><span lang="en">Inside the teaching repository at <code>AI-LLM/scene-graph-studio/</code>, not as a repository of its own. It therefore inherits that repository&rsquo;s conventions, the most consequential of which is that large binary corpora are not committed &mdash; which is why slice annotations are versioned and slice images are not.</span>
+        <span lang="zh">放在教材 repository 內的 <code>AI-LLM/scene-graph-studio/</code>，不另建獨立 repository。因此它沿用該 repository 的慣例，其中影響最大的一條是大型二進位語料不納入版控——這正是切片標註納入版控、切片影像不納入的原因。</span></p>
+      </div>
+    </div>
+    <div class="q">
+      <span class="q-n">02</span>
+      <div>
+        <h3><span lang="en">Which VLM backs L5? &mdash; Claude, opt-in</span><span lang="zh">L5 要接哪個 VLM？ &mdash; Claude，選用</span></h3>
+        <p><span lang="en">The offline transcript player stays the default and remains the only provider any must-ship feature may require. A live Claude path is configured through <code>.env</code>, never committed, and reported by the health endpoint without ever reporting the key. Two implementations is the minimum that proves <code>VLMProvider</code> is a protocol rather than one class with an interface bolted on.</span>
+        <span lang="zh">離線逐字稿播放仍為預設，且是任何必交付功能唯一可依賴的供應者。即時的 Claude 路徑透過 <code>.env</code> 設定、絕不納入版控，並由 health endpoint 回報是否已設定，但永遠不回報金鑰內容。實作兩個供應者是證明 <code>VLMProvider</code> 確為協定（而非事後加上介面的單一類別）的最低要求。</span></p>
+      </div>
+    </div>
+    <div class="q">
+      <span class="q-n">03</span>
+      <div>
+        <h3><span lang="en">Where do the two-stage predictions come from? &mdash; labelled reconstructions</span><span lang="zh">Two-stage 的預測結果從哪來？ &mdash; 標示為重建</span></h3>
+        <p><span lang="en">RelTR and EGTR are produced here and committed as <em>measured</em>. Neural Motifs and PSGFormer ship as <em>reconstructed</em> files &mdash; scripted to reproduce the behaviour their papers document, carrying a required note saying so, and rendered in a visibly different style. Fidelity is a field in the data model, not a caveat in a caption, so nothing can quietly present a reconstruction as a model&rsquo;s output.</span>
+        <span lang="zh">RelTR 與 EGTR 在本專案產生，以 <em>measured</em>（實測）納入版控。Neural Motifs 與 PSGFormer 則以 <em>reconstructed</em>（重建）形式出貨——以腳本重現其論文所記載的行為，必須附上說明欄位，並以明顯不同的樣式呈現。來源層級是資料模型中的欄位，而非圖說裡的但書，因此任何地方都無法悄悄把重建結果當成模型輸出呈現。</span></p>
+      </div>
+    </div>
+    <div class="q">
+      <span class="q-n">04</span>
+      <div>
+        <h3><span lang="en">Is fifteen modules the right size? &mdash; kept, with the corpus cut instead</span><span lang="zh">十五個模組份量對嗎？ &mdash; 維持，改為縮減論文卡</span></h3>
+        <p><span lang="en">All fifteen modules stay. What was cut is the expensive part: every reported figure must be read off a named table, so the paper corpus now carries 35 cards in two tiers &mdash; roughly twelve scored methods with full verified numbers, and the rest with venue, DOI, core idea, predecessor and the defect each fixes, but no numbers at all. That serves the goal of placing any paper on the taxonomy completely, and takes roughly two hundred verified figures down to seventy. <strong>There is no unverified tier:</strong> a number nobody has checked against its table is not carried.</span>
+        <span lang="zh">十五個模組全數保留。被縮減的是成本高的部分：每一個引用數值都必須從指名的表格上讀出，因此論文卡現為 35 張、分兩個層級——約十二篇實際被評分的方法帶完整且已查證的數值，其餘僅列出場次、DOI、核心想法、前作，以及各自修正了前作的哪一個缺陷，完全不帶數值。這已足以完整支撐「把任一篇論文定位到分類體系上」的教學目標，並使需查證的數值從約兩百個降為七十個。<strong>不設「未查證」層級：</strong>沒有對照表格查證過的數字，一律不收錄。</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="col">
+    <p style="margin:0">
+      <span lang="en">Design brief for Scene Graph Studio · 15 September 2026 · Specifications committed at <code>docs/superpowers/specs/</code> · Anchor paper: <a href="https://doi.org/10.1016/j.aei.2024.103107">10.1016/j.aei.2024.103107</a></span>
+      <span lang="zh">Scene Graph Studio 設計綱要 · 2026 年 9 月 15 日 · 規格文件已提交於 <code>docs/superpowers/specs/</code> · 核心論文：<a href="https://doi.org/10.1016/j.aei.2024.103107">10.1016/j.aei.2024.103107</a></span>
+    </p>
+  </div>
+</footer>
+
+</div>
+
+<script>
+/* ═══════════ language ═══════════ */
+(function(){
+  var en = document.getElementById('lang-en'), zh = document.getElementById('lang-zh');
+  function set(l){
+    document.documentElement.setAttribute('data-lang', l);
+    en.setAttribute('aria-pressed', l === 'en');
+    zh.setAttribute('aria-pressed', l === 'zh');
+    try { localStorage.setItem('sgs-lang', l); } catch(e){}
+  }
+  en.addEventListener('click', function(){ set('en'); });
+  zh.addEventListener('click', function(){ set('zh'); });
+  var saved = 'en';
+  try { saved = localStorage.getItem('sgs-lang') || 'en'; } catch(e){}
+  set(saved);
+})();
+
+/* ═══════════ the L2 prototype ═══════════ */
+(function(){
+  // Schematic industrial workspace. Boxes in a 680x384 frame.
+  var OBJ = {
+    table:    {x: 90, y:214, w:436, h:112, label:'table'},
+    person:   {x:172, y: 62, w:108, h:224, label:'person'},
+    arm:      {x:336, y: 48, w:124, h:172, label:'robot arm'},
+    conveyor: {x:492, y:180, w:172, h: 96, label:'conveyor'},
+    box:      {x:252, y:172, w: 84, h: 62, label:'box'},
+    wrench:   {x:140, y:196, w: 62, h: 20, label:'wrench'},
+    laptop:   {x:382, y:168, w: 88, h: 50, label:'laptop'},
+    glove:    {x:196, y:168, w: 40, h: 32, label:'glove'}
+  };
+
+  // Ground truth: 10 triplets. Predicate 'on' appears 3x, 'near' 2x — the head.
+  var GT = [
+    {s:'box',      p:'on',           o:'table'},
+    {s:'wrench',   p:'on',           o:'table'},
+    {s:'laptop',   p:'on',           o:'table'},
+    {s:'person',   p:'in front of',  o:'table'},
+    {s:'arm',      p:'attached to',  o:'table'},
+    {s:'arm',      p:'above',        o:'table'},
+    {s:'person',   p:'picking up',   o:'box'},
+    {s:'conveyor', p:'near',         o:'table'},
+    {s:'person',   p:'wearing',      o:'glove'},
+    {s:'box',      p:'near',         o:'conveyor'}
+  ];
+
+  // Predictions. rank1 = the pair's top predicate (survives graph constraint);
+  // rank2 = the pair's second choice (admitted only with the constraint off).
+  var PRED = [
+    {s:'box',      p:'on',          o:'table',    score:0.96, iou:0.91, rank:1},
+    {s:'laptop',   p:'on',          o:'table',    score:0.91, iou:0.88, rank:1},
+    {s:'wrench',   p:'on',          o:'table',    score:0.87, iou:0.41, rank:1},
+    {s:'person',   p:'in front of', o:'table',    score:0.72, iou:0.84, rank:1},
+    {s:'box',      p:'near',        o:'conveyor', score:0.68, iou:0.77, rank:1},
+    {s:'arm',      p:'on',          o:'table',    score:0.61, iou:0.86, rank:1},
+    {s:'person',   p:'on',          o:'table',    score:0.54, iou:0.80, rank:1},
+    {s:'conveyor', p:'near',        o:'table',    score:0.49, iou:0.90, rank:1},
+    {s:'person',   p:'holding',     o:'box',      score:0.44, iou:0.82, rank:1},
+    {s:'arm',      p:'attached to', o:'table',    score:0.38, iou:0.79, rank:1},
+    {s:'arm',      p:'above',       o:'table',    score:0.29, iou:0.86, rank:2},
+    {s:'person',   p:'picking up',  o:'box',      score:0.21, iou:0.82, rank:2},
+    {s:'person',   p:'wearing',     o:'glove',    score:0.19, iou:0.43, rank:1},
+    {s:'person',   p:'near',        o:'table',    score:0.16, iou:0.80, rank:2},
+    {s:'box',      p:'on',          o:'conveyor', score:0.11, iou:0.74, rank:2}
+  ];
+
+  var IOU_T = 0.5;
+  var kEl = document.getElementById('kslider');
+  var gcEl = document.getElementById('gcon');
+
+  function evaluate(){
+    var K = +kEl.value, constrained = gcEl.checked;
+    var pool = PRED.filter(function(p){ return constrained ? p.rank === 1 : true; });
+    var top = pool.slice(0, K);
+
+    var gtUsed = GT.map(function(){ return false; });
+    var rows = [];
+
+    top.forEach(function(p){
+      var gi = -1;
+      for (var i = 0; i < GT.length; i++){
+        if (!gtUsed[i] && GT[i].s === p.s && GT[i].p === p.p && GT[i].o === p.o){ gi = i; break; }
+      }
+      var verdict;
+      if (gi === -1)            verdict = 'spur';
+      else if (p.iou < IOU_T)   verdict = 'loc';
+      else { verdict = 'match'; gtUsed[gi] = true; }
+      rows.push({p:p, verdict:verdict, gi:gi});
+    });
+
+    var matched = gtUsed.filter(Boolean).length;
+    var R = GT.length ? matched / GT.length : 0;
+
+    // mR@K: recall per predicate class present in the ground truth, averaged unweighted.
+    var byPred = {};
+    GT.forEach(function(g, i){
+      if (!byPred[g.p]) byPred[g.p] = {total:0, hit:0};
+      byPred[g.p].total++;
+      if (gtUsed[i]) byPred[g.p].hit++;
+    });
+    var classes = Object.keys(byPred);
+    var mR = classes.reduce(function(a, c){
+      return a + byPred[c].hit / byPred[c].total;
+    }, 0) / classes.length;
+
+    return {K:K, rows:rows, R:R, mR:mR, matched:matched, classes:classes.length,
+            gtUsed:gtUsed, pool:pool};
+  }
+
+  var VC = {match:'var(--m-match)', spur:'var(--m-spur)', miss:'var(--m-miss)', loc:'var(--m-loc)'};
+  var VL = {match:'match', spur:'spurious', loc:'IoU fail', miss:'missed'};
+
+  function label(k){ return OBJ[k].label; }
+
+  /* ---- scene ---- */
+  function drawScene(st){
+    var hot = {};
+    st.rows.forEach(function(r){
+      if (r.verdict !== 'spur'){ hot[r.p.s] = 1; hot[r.p.o] = 1; }
+    });
+
+    var s = '';
+    // schematic ground and structures, drawn first
+    s += '<rect x="0" y="0" width="680" height="384" fill="var(--sunk)"/>';
+    s += '<path d="M0 300 H680" stroke="var(--rule)" stroke-width="1"/>';
+    s += '<path d="M96 246 H520 M108 246 V322 M508 246 V322" stroke="var(--rule)" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+    for (var cx = 506; cx <= 648; cx += 24){
+      s += '<circle cx="' + cx + '" cy="222" r="9" fill="none" stroke="var(--rule)" stroke-width="1.5"/>';
+    }
+    s += '<path d="M352 66 L372 140 L410 196" stroke="var(--rule)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+    s += '<circle cx="212" cy="96" r="21" fill="none" stroke="var(--rule)" stroke-width="2"/>';
+    s += '<path d="M212 120 V214 M212 140 L246 176 M212 140 L182 176" stroke="var(--rule)" stroke-width="2" fill="none" stroke-linecap="round"/>';
+
+    Object.keys(OBJ).forEach(function(k){
+      var b = OBJ[k], on = hot[k];
+      var col = on ? 'var(--accent)' : 'var(--muted)';
+      s += '<rect x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '"'
+         + ' fill="none" stroke="' + col + '" stroke-width="' + (on ? 1.8 : 1) + '"'
+         + ' stroke-dasharray="' + (on ? 'none' : '4 3') + '" opacity="' + (on ? 1 : .55) + '" rx="1"/>';
+      // corner ticks, machine-vision style
+      if (on){
+        var t = 7;
+        s += '<path d="M' + b.x + ' ' + (b.y + t) + ' V' + b.y + ' H' + (b.x + t)
+           + ' M' + (b.x + b.w - t) + ' ' + b.y + ' H' + (b.x + b.w) + ' V' + (b.y + t)
+           + ' M' + (b.x + b.w) + ' ' + (b.y + b.h - t) + ' V' + (b.y + b.h) + ' H' + (b.x + b.w - t)
+           + ' M' + (b.x + t) + ' ' + (b.y + b.h) + ' H' + b.x + ' V' + (b.y + b.h - t)
+           + '" stroke="var(--accent)" stroke-width="2.6" fill="none" stroke-linecap="square"/>';
+      }
+      var ty = b.y - 5 < 12 ? b.y + 14 : b.y - 5;
+      s += '<text x="' + (b.x + 1) + '" y="' + ty + '" font-family="IBM Plex Mono, monospace"'
+         + ' font-size="11" fill="' + col + '" opacity="' + (on ? 1 : .6) + '">' + b.label + '</text>';
+    });
+    document.getElementById('scene').innerHTML = s;
+  }
+
+  /* ---- graph ---- */
+  var POS = {
+    person:{x: 96, y: 74}, glove:{x: 72, y:206}, wrench:{x:158, y:286},
+    box:{x:250, y:150}, table:{x:360, y:246}, arm:{x:402, y: 64},
+    laptop:{x:556, y:128}, conveyor:{x:590, y:252}
+  };
+
+  function drawGraph(st){
+    var edges = [];
+    st.rows.forEach(function(r){
+      edges.push({s:r.p.s, o:r.p.o, p:r.p.p, v:r.verdict});
+    });
+    GT.forEach(function(g, i){
+      if (!st.gtUsed[i]){
+        var shown = edges.some(function(e){
+          return e.s === g.s && e.o === g.o && e.p === g.p;
+        });
+        if (!shown) edges.push({s:g.s, o:g.o, p:g.p, v:'miss'});
+      }
+    });
+
+    var used = {};
+    edges.forEach(function(e){ used[e.s] = 1; used[e.o] = 1; });
+
+    var s = '';
+    // bow the edges apart when a pair carries more than one predicate
+    var seen = {};
+    edges.forEach(function(e){
+      var a = POS[e.s], b = POS[e.o];
+      if (!a || !b) return;
+      var key = e.s + '|' + e.o;
+      var n = seen[key] = (seen[key] || 0) + 1;
+      var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      var dx = b.x - a.x, dy = b.y - a.y;
+      var len = Math.sqrt(dx * dx + dy * dy) || 1;
+      var off = (n - 1) * 30 * (n % 2 ? 1 : -1);
+      var cx = mx - dy / len * off, cy = my + dx / len * off;
+      var col = VC[e.v];
+      var dash = (e.v === 'miss') ? '5 4' : 'none';
+      s += '<path d="M' + a.x + ' ' + a.y + ' Q' + cx + ' ' + cy + ' ' + b.x + ' ' + b.y + '"'
+         + ' fill="none" stroke="' + col + '" stroke-width="1.7" stroke-dasharray="' + dash + '"'
+         + ' opacity="' + (e.v === 'miss' ? .62 : .92) + '"/>';
+      var lx = (a.x + 2 * cx + b.x) / 4, ly = (a.y + 2 * cy + b.y) / 4;
+      var w = e.p.length * 5.6 + 8;
+      s += '<rect x="' + (lx - w / 2) + '" y="' + (ly - 8) + '" width="' + w + '" height="15"'
+         + ' rx="2" fill="var(--surface)" opacity=".94"/>';
+      s += '<text x="' + lx + '" y="' + (ly + 3) + '" text-anchor="middle"'
+         + ' font-family="IBM Plex Mono, monospace" font-size="10" fill="' + col + '">' + e.p + '</text>';
+    });
+
+    Object.keys(POS).forEach(function(k){
+      if (!used[k]) return;
+      var p = POS[k], t = label(k);
+      var w = t.length * 6.4 + 18;
+      s += '<rect x="' + (p.x - w / 2) + '" y="' + (p.y - 11) + '" width="' + w + '" height="22"'
+         + ' rx="11" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/>';
+      s += '<text x="' + p.x + '" y="' + (p.y + 4) + '" text-anchor="middle"'
+         + ' font-family="IBM Plex Mono, monospace" font-size="11" font-weight="500"'
+         + ' fill="var(--accent)">' + t + '</text>';
+    });
+    document.getElementById('graph').innerHTML = s;
+  }
+
+  /* ---- prediction list ---- */
+  function drawList(st){
+    var s = '';
+    st.pool.forEach(function(p, i){
+      var inK = i < st.K;
+      var r = inK ? st.rows[i] : null;
+      var v = r ? r.verdict : null;
+      s += '<div class="trow" data-out="' + (inK ? 0 : 1) + '">'
+         + '<span class="trank">' + (i + 1) + '</span>'
+         + '<span>' + label(p.s) + ' <span class="tpred">' + p.p + '</span> ' + label(p.o)
+         + (p.iou < IOU_T ? ' <span class="tscore">IoU ' + p.iou.toFixed(2) + '</span>' : '')
+         + '</span>'
+         + (v ? '<span class="chip c-' + v + '">' + VL[v] + '</span>'
+              : '<span class="tscore">' + p.score.toFixed(2) + '</span>')
+         + '</div>';
+    });
+    st.gtUsed.forEach(function(hit, i){
+      if (hit) return;
+      var g = GT[i];
+      var covered = st.rows.some(function(r){
+        return r.p.s === g.s && r.p.o === g.o && r.p.p === g.p;
+      });
+      if (covered) return;
+      s += '<div class="trow">'
+         + '<span class="trank">&mdash;</span>'
+         + '<span style="color:var(--m-miss)">' + label(g.s) + ' <em>' + g.p + '</em> ' + label(g.o) + '</span>'
+         + '<span class="chip c-miss">' + VL.miss + '</span>'
+         + '</div>';
+    });
+    document.getElementById('triplets').innerHTML = s;
+  }
+
+  function render(){
+    var st = evaluate();
+    document.getElementById('kval').textContent = st.K;
+    document.getElementById('kl1').textContent = st.K;
+    document.getElementById('kl2').textContent = st.K;
+    document.getElementById('rk').textContent = st.R.toFixed(3);
+    document.getElementById('rkn').textContent = st.matched + ' / ' + GT.length + ' triplets';
+    document.getElementById('mrk').textContent = st.mR.toFixed(3);
+    document.getElementById('mrkn').textContent = 'mean over ' + st.classes + ' predicates';
+    drawScene(st); drawGraph(st); drawList(st);
+  }
+
+  kEl.addEventListener('input', render);
+  gcEl.addEventListener('change', render);
+  render();
+})();
+</script>

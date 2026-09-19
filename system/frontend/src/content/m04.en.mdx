@@ -1,0 +1,529 @@
+---
+id: m04
+order: 4
+title_en: "Metrics: R@K, mR@K, ng-R@K, zR@K — and the frequency baseline that humiliated the field"
+title_zh: "評測指標：R@K、mR@K、ng-R@K、zR@K，以及使該領域難堪的頻率基線"
+anchor_labs: [L2, L3]
+knowledge_points: [E3, E4, E5, E6, E7, E8, E9, E11, E13, E14, E15, E16, X2]
+symbols:
+  - sym: "k"
+    gloss_en: "rank cutoff"
+    gloss_zh: "排序截斷位置"
+  - sym: "X_k"
+    gloss_en: "the top-k predictions after the constraint mode has been applied"
+    gloss_zh: "套用約束模式後的前 k 筆預測"
+  - sym: "\\lvert G\\rvert"
+    gloss_en: "number of ground-truth triplets in the image"
+    gloss_zh: "影像中標準答案三元組的數量"
+  - sym: "\\mu"
+    gloss_en: "size of the matching between predictions and ground truth"
+    gloss_zh: "預測與標準答案之間配對的大小"
+  - sym: "\\pi"
+    gloss_en: "the map sending a triplet to its ordered subject-object pair"
+    gloss_zh: "將三元組映至其有序主客體配對的函數"
+  - sym: "\\sigma"
+    gloss_en: "the score a model assigns a triplet"
+    gloss_zh: "模型賦予三元組的分數"
+  - sym: "\\alpha"
+    gloss_en: "the exponent weighting per-predicate recall by frequency"
+    gloss_zh: "各 predicate 召回率依頻率加權的指數"
+  - sym: "\\lambda"
+    gloss_en: "the mixing weight between the frequency prior and the visual model"
+    gloss_zh: "頻率先驗與視覺模型之間的混合權重"
+  - sym: "\\mathcal{P}"
+    gloss_en: "predicate class set"
+    gloss_zh: "predicate 類別集合"
+  - sym: "C"
+    gloss_en: "number of predicate classes"
+    gloss_zh: "predicate 類別數"
+  - sym: "n_p"
+    gloss_en: "number of ground-truth triplets carrying predicate p"
+    gloss_zh: "標準答案中 predicate p 的三元組數量"
+  - sym: "N"
+    gloss_en: "total number of ground-truth triplets"
+    gloss_zh: "標準答案三元組總數"
+  - sym: "R_p"
+    gloss_en: "recall restricted to predicate p"
+    gloss_zh: "僅就 predicate p 計算的召回率"
+claims:
+  - id: c-m04-freq
+    text_en: "On VG150 PredCls, FREQ reaches mR@100 = 16.0, above MOTIFS at 15.3 and IMP+ at 10.5"
+    text_zh: "於 VG150 PredCls 上，FREQ 的 mR@100 為 16.0，高於 MOTIFS 的 15.3 與 IMP+ 的 10.5"
+    source: tde-2020
+    source_table: "Table 1"
+    constraint: graph
+    protocol: predcls
+    verified: true
+  - id: c-m04-freq-kern
+    text_en: "KERN's own Table 1 puts the same FREQ and MOTIFS at 15.8 and 14.4"
+    text_zh: "KERN 自身的 Table 1 將同樣的 FREQ 與 MOTIFS 記為 15.8 與 14.4"
+    source: kern-2019
+    source_table: "Table 1"
+    constraint: graph
+    protocol: predcls
+    verified: true
+  - id: c-m04-sttran-constraint
+    text_en: "STTran on Action Genome moves from PredCls R@50 = 71.8 constrained to 99.1 unconstrained"
+    text_zh: "STTran 於 Action Genome 上，PredCls R@50 由約束模式的 71.8 變為無約束的 99.1"
+    source: sttran-2021
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: predcls
+    verified: false
+  - id: c-m04-mpo
+    text_en: "Under the corrected mask pairing, PSGTR mR@50 falls 20.8 to 11.62 and HiLo 30.3 to 18.33, while two-stage methods barely move"
+    text_zh: "改用修正後的遮罩配對規則，PSGTR 的 mR@50 由 20.8 降至 11.62、HiLo 由 30.3 降至 18.33，兩階段方法幾乎不變"
+    source: psg-fair-ranking-2024
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: sgdet
+    verified: false
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_en: "Opening, and this is the longest module in the course, so hold the clock. The frame: this field reports recall only, and the absence of precision is structural rather than an oversight — the annotation is incomplete, so a precision computed against it means nothing. The four metrics that follow are successive repairs, each exposing what the previous one hid, none replacing another. Put that frame up first; the seven derivations have nowhere to sit without it."
+  - id: s2
+    kind: math
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes, and two properties have to land together: R@k cannot fall as k rises, and nothing anywhere charges for a wrong guess, so a model pays nothing for emitting its fiftieth. Every repair that follows starts here."
+  - id: s3
+    kind: math
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes. The graph constraint allows at most one predicate per ordered pair; lifting it lets each pair's runner-up into the ranking. Stress that the model is untouched and what changed is the rule for reading its output, and that the effect is not small. This is the constraint knob in L2, exactly."
+  - id: s4
+    kind: math
+    seconds_budget: 360
+    presenter_notes_en: "Six minutes, and it is the centre of the module. R and mR are one weighted mean at α = 1 and α = 0, their difference is a single covariance, and that identity is the whole bias problem stated once. Write the derivation out; do not skip steps. The number in L3's identity panel is this one, and the whole of M06 assumes it."
+  - id: s5
+    kind: math
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes. ng-R@k turns the constraint of s3 from a switch into a degree: m predicates per pair instead of one. Raising m can only add candidates, so the metric rises, and it stops rising once m exceeds the number of runners-up the model actually distinguishes. If s3 landed, this one can be compressed."
+  - id: s6
+    kind: math
+    seconds_budget: 420
+    presenter_notes_en: "Seven minutes, and it is the page that matters most. The frequency baseline reads no pixels: given the two object classes it emits the commonest predicate for that pair. Ask the room to predict its R before revealing it — the gap between the guess and the number is the lesson. Under the mixing weight λ, R and mR move in opposite directions, and that is what L3 reproduces."
+  - id: s7
+    kind: math
+    seconds_budget: 300
+    presenter_notes_en: "Five minutes. On a mask dataset a further free parameter appears that has nothing to do with the model: whether one subject-object pair may be counted more than once through several masks. Permitting it costs a one-stage model nothing and pays well. This is single_mpo against multi_mpo, and L6 shows it by scoring one fixed prediction under both."
+  - id: s8
+    kind: math
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes. VRD carries the same hazard in a different place: its recall admits several predicates per ordered pair, the count is a free parameter, and papers usually do not state it. k = 1 is the graph constraint and k = 70 is no constraint at all. Worth adding that this project does not use VRD and that its licence gate is shut anyway."
+  - id: s9
+    kind: prose
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes, four items, about a minute each, and none of them opened up. Zero-shot recall exposes a collapse that neither R nor mR can show. Open Images uses a different metric family and is simply not comparable. Six undeclared parameters are why cross-paper comparison fails by default, and four of them are attached to every MetricValue in this application. And nothing in this field measures calibration. The third item is the reason MetricReadout is built the way it is; make that link explicitly."
+  - id: s10
+    kind: lab
+    lab: L2
+    seconds_budget: 480
+    presenter_notes_en: "Eight minutes across L2 and L3. In L2 the task is to find the setting where the R and mR curves are furthest apart and say what that gap measures — it does not measure model quality, and that sentence is worth repeating out loud. L3 turns the derivation of s6 into something seen rather than something told. If time is short, keep L3."
+  - id: s11
+    kind: checkpoint
+    presenter_notes_en: "Checkpoint. The questions to list are the six parameters of s9: split, constraint mode, τ, mask pairing, predicate merging, k. The two a paper has usually answered are the split and the constraint mode; the other four are usually silent. Ask for the list sorted into what the paper probably answered and what would have to be asked, rather than for the list alone."
+---
+
+import { Formal, Implications, Intuition, Worked } from './math/Parts';
+
+<Step id="s1">
+
+## Four metrics, because one was not enough
+
+Recall at a rank cutoff is the only metric this field reports. It has no precision partner, and
+that absence is structural rather than an oversight: the annotation is incomplete (M3), so a
+prediction absent from the ground truth may be wrong or may be true and unrecorded, and no
+precision figure computed against such an annotation would mean anything.
+
+What followed is a sequence of repairs. Mean recall arrived because recall could not tell a model
+that understands relations from one that memorised the head of the distribution. No-graph recall
+arrived because the constraint mode was silently changing published numbers. Zero-shot recall
+arrived because a model can score well on triplets it has seen a thousand times. Each repair
+exposes something the previous metric hid, and none of them replaces the others.
+
+</Step>
+
+<Step id="s2">
+
+<Intuition>
+
+Recall at $k$ counts how much of the annotation appears in the model's top $k$ guesses. Raising
+$k$ cannot lower it, and nothing anywhere charges for a wrong guess. A model that emits its
+fiftieth-best guess loses nothing by doing so.
+
+</Intuition>
+
+<Formal>
+
+$$
+R@k=\frac{\lvert G\cap X_k\rvert}{\lvert G\rvert},\qquad k^{\prime}\ge k\Rightarrow R@k^{\prime}\ge R@k \quad(\text{monotone; no precision term exists})
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+k'\ge k &\Rightarrow X_k\subseteq X_{k'} &&\text{the ranking is a prefix order}\\
+&\Rightarrow \mu(G,X_k)\le\mu(G,X_{k'}) &&\text{a maximum matching cannot shrink}\\
+&\Rightarrow R@k\le R@k' &&\text{divide by } N
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Monotone in } k \text{ with no offsetting term: emitting more guesses never costs anything.}
+\\ \text{There is no precision anywhere in this literature.}\end{gathered}
+$$
+
+So $k$ is not a detail of presentation. R@20 and R@100 are different quantities, and a table that
+mixes them is not a table. This is the first of four parameters that must travel with every number
+in this application, which is why `MetricReadout` refuses to render a bare `number`.
+
+</Implications>
+
+</Step>
+
+<Step id="s3">
+
+<Intuition>
+
+The graph constraint says a model may put at most one predicate on each ordered pair. Lift it and
+every pair's runner-up enters the ranking too. Nothing about the model changed; the rule for
+reading its output did. The effect is not small.
+
+</Intuition>
+
+<Formal>
+
+$$
+\pi(\langle s,p,o\rangle)=(s,o);\qquad \text{graph constraint}\iff\forall\,t\ne t^{\prime}\in X_k:\ \pi(t)\ne\pi(t^{\prime})
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+X_k &= \{t\in X_k^{\mathrm{ng}} : \sigma(t)=\max_{p}\sigma(\langle s,p,o\rangle)\} &&\text{constraint keeps the arg-max per pair}\\
+&\Rightarrow X_k\subseteq X_k^{\mathrm{ng}}\\
+&\Rightarrow \mu(G,X_k)\le\mu(G,X_k^{\mathrm{ng}}) \;\Rightarrow\; R@k\le \mathrm{ngR}@k
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{The inequality is strict whenever a ground-truth predicate is any pair's runner-up.}
+\\ \text{STTran on Action Genome: PredCls } R@50 = 71.8 \text{ constrained}, \; 99.1 \text{ unconstrained.}\end{gathered}
+$$
+
+Twenty-seven points, from a switch. Papers routinely omit which mode they used, so two figures in
+the same table may not be measuring the same thing. Claim `c-m04-sttran-constraint` in this
+module's frontmatter carries that pair of numbers marked `verified: false`: the source note this
+course inherited does not name the table, and until someone opens the paper the figure is a
+reported quantity rather than a checked one.
+
+</Implications>
+
+</Step>
+
+<Step id="s4">
+
+<Intuition>
+
+Mean recall weights every predicate equally instead of weighting by how often it occurs. The two
+metrics are the same average under different weights, and the difference between them turns out to
+be a single covariance. That identity is the whole bias problem written in one line.
+
+</Intuition>
+
+<Formal>
+
+$$
+w_p\propto n_p^{\alpha};\qquad \underbrace{R@k=\sum_p\frac{n_p}{\lvert G\rvert}R_p@k}_{\alpha=1}\qquad \underbrace{mR@k=\sum_p\frac{1}{\lvert\mathcal{P}^{\prime}\rvert}R_p@k}_{\alpha=0}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+R@k-mR@k &= \sum_p \frac{n_p}{N}R_p - \frac{1}{C}\sum_p R_p &&\text{Definition 9}\\
+&= \frac{1}{N}\sum_p\Bigl(n_p-\frac{N}{C}\Bigr)R_p = \frac{1}{N}\sum_p (n_p-\bar n)R_p &&\bar n=N/C\\
+&= \frac{1}{N}\sum_p (n_p-\bar n)(R_p-\bar R) &&\textstyle\sum_p(n_p-\bar n)=0\\
+&= \frac{C}{N}\operatorname{Cov}(n,R) = \frac{\operatorname{Cov}(n,R)}{\bar n}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{The slider moves } \alpha \text{ in } w_p(\alpha)\propto n_p^{\alpha}. \;\; \alpha=1 \text{ gives } R, \;\; \alpha=0 \text{ gives } mR.
+\\ \text{The whole bias problem is the sign of one covariance.}\end{gathered}
+$$
+
+Read the third line carefully: the step that introduces $\bar R$ is legitimate because
+$\sum_p(n_p-\bar n)=0$, so subtracting a constant from $R_p$ changes nothing. What remains is
+exactly $\operatorname{Cov}(n,R)$ divided by the mean predicate frequency.
+
+The consequence is worth stating plainly. $R > mR$ says the model is better at frequent predicates
+than at rare ones. It does not say the model is good, and it does not say it is bad. It is a
+measurement of correlation, and M6 is the story of what happens when a field tries to drive a
+correlation to zero.
+
+</Implications>
+
+</Step>
+
+<Step id="s5">
+
+<Intuition>
+
+No-graph recall is the constraint of step 3 relaxed by degrees rather than switched off: allow
+$m$ predicates per pair instead of one. Increasing $m$ can only add candidates, so the metric
+rises, and it stops rising once $m$ passes the number of runner-up predicates the model actually
+distinguishes.
+
+</Intuition>
+
+<Formal>
+
+$$
+\mathrm{ngR}@k:\ \pi \text{ need not be injective};\qquad \lvert\{t\in X_k:\pi(t)=(s,o)\}\rvert\le n_{\text{pair}}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+X_k^{\mathrm{ng}}(m) &= \bigcup_{(s,o)}\bigl\{\text{top-}m\text{ predicates for }(s,o)\bigr\}\cap X_k\\
+m'\ge m &\Rightarrow X_k^{\mathrm{ng}}(m)\subseteq X_k^{\mathrm{ng}}(m') \Rightarrow \mathrm{ngR}(m)\le \mathrm{ngR}(m')
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Saturates once } m \text{ exceeds the number of runner-up predicates the model actually carries.}
+\\ \text{A real model carries } \lvert\mathcal{P}\rvert=50, \text{ so the gap keeps widening to } m=50.\end{gathered}
+$$
+
+The application's third mode, `semi`, sits between the two with $m$ fixed at a small number. It is
+not a compromise for its own sake: M12 shows video work adopting it because a pair genuinely can
+carry two simultaneous relations over time.
+
+</Implications>
+
+</Step>
+
+<Step id="s6">
+
+<Intuition>
+
+Now the result that shaped the field. Consider a predictor that reads no pixels at all: given the
+subject and object classes, it emits the most frequent predicate for that class pair. Mix it with
+a visual model and watch what each metric does as the mixing weight moves.
+
+</Intuition>
+
+<Formal>
+
+$$
+R_p(\lambda)=(1-\lambda)\underbrace{\Pr[p\mid c_s,c_o]}_{\text{no pixels consulted}}+\lambda\underbrace{f_\theta(V,s,o)}_{\text{visual model}}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+R_p(\lambda) &= (1-\lambda)\,\pi_p + \lambda\, f_p, \qquad \pi_p=\Pr[p\mid c_s,c_o],\ f_p=f_\theta(V,s,o)\\
+R(\lambda) &= \sum_p \tfrac{n_p}{N}R_p(\lambda) = (1-\lambda)\textstyle\sum_p \tfrac{n_p}{N}\pi_p + \lambda\sum_p \tfrac{n_p}{N}f_p\\
+mR(\lambda) &= (1-\lambda)\,\overline{\pi} + \lambda\,\overline{f}
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{Both are affine in } \lambda. \text{ At } \lambda=0 \text{ the predictor reads no pixels, yet}
+\\ \operatorname{Cov}(n,\pi)\gg 0 \text{ by construction, so } R \text{ is high and } mR \text{ is near zero.}
+\\[4pt]
+\text{VG150, PredCls } mR@100: \ \text{FREQ } 16.0 \; > \; \text{MOTIFS } 15.3 \; > \; \text{IMP}^{+}\ 10.5.\end{gathered}
+$$
+
+Three things about that last line, in order of how often they are got wrong.
+
+**The baseline was published inside the paper it embarrasses.** Zellers et al. put FREQ in the
+Neural Motifs paper itself (CVPR 2018), where on $R@K$ it beat the learned models of its era.
+
+**Mean recall did not exist yet.** It arrived a year later, introduced independently by KERN and by
+VCTree, both CVPR 2019, precisely because $R@K$ cannot separate understanding from memorisation.
+Attributing mR to the 2018 paper reverses the chronology and the argument.
+
+**Read the row, not the headline.** The figure is IMP*+*, not IMP. And KERN's own Table 1 puts the
+same FREQ and MOTIFS at 15.8 and 14.4. Two tables, two answers, the same two methods — which is
+why this module's frontmatter carries `source_table` on every claim, and why a mean-recall figure
+quoted without its table is not yet a fact.
+
+</Implications>
+
+</Step>
+
+<Step id="s7">
+
+<Intuition>
+
+On a dataset with masks, a further parameter appears that has nothing to do with the model: may
+one subject-object pair be counted through several masks, or exactly one? Permitting several costs
+a one-stage model nothing and pays it well.
+
+</Intuition>
+
+<Formal>
+
+$$
+\text{MultiMPO permits }\lvert\{m:\pi(m)=(s,o)\}\rvert>1 \;\Longrightarrow\; \widehat{mR}=\rho\cdot mR,\quad\rho>1
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+\text{SingleMPO}&: \ \lvert\{m:\pi(m)=(s,o)\}\rvert = 1\\
+\text{MultiMPO}&: \ \lvert\{m:\pi(m)=(s,o)\}\rvert = d \ge 1 \ \text{permitted}\\
+\widehat{\mu} &= \textstyle\sum_{(s,o)}\min\bigl(d,\ \text{true matches at }(s,o)\bigr) \;\ge\; \mu
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{A one-stage model emits duplicate masks freely, so } d>1 \text{ costs it nothing and pays.}
+\\ \text{A two-stage model emits one mask per instance, so } d=1 \text{ regardless.}
+\\[4pt]
+\text{Measured: PSGTR } 20.8\to 11.62,\quad \text{HiLo } 30.3\to 18.33,\quad \text{VCTree } \approx\text{unchanged.}\end{gathered}
+$$
+
+The asymmetry is the point. A rule that costs one architecture nothing and another architecture
+nothing-to-lose is not a neutral rule, and the gap it opened ran for years before it was named.
+L6 scores one fixed prediction under both pairings so that the difference is something a student
+produces rather than reads about.
+
+</Implications>
+
+</Step>
+
+<Step id="s8">
+
+<Intuition>
+
+VRD carries the same hazard in a different place. Its recall admits several predicates per ordered
+pair, the number is a free parameter, and papers usually do not say which they used.
+
+</Intuition>
+
+<Formal>
+
+$$
+R@k \text{ on VRD depends on } k=\lvert\{p:\langle s,p,o\rangle\in X\}\rvert\in\{1,10,70\},\ \text{usually undeclared}
+$$
+
+</Formal>
+
+<Worked>
+
+$$
+\begin{aligned}
+R@k \text{ on VRD admits } k \text{ predicates per ordered pair}, \ k\in\{1,10,70\}\\
+k=1 &\equiv \text{graph constraint} \qquad k=\lvert\mathcal{P}\rvert=70 \equiv \text{no constraint at all}\\
+k=70 &\Rightarrow \text{every predicate enters for every pair} \Rightarrow R@k \to PR@k
+\end{aligned}
+$$
+
+</Worked>
+
+<Implications>
+
+$$
+\begin{gathered}\text{At } k=70 \text{ the metric measures pair detection, not relation classification (Proposition 4c).}
+\\ \text{Papers routinely omit } k, \text{ so VRD numbers are not comparable across papers by default.}\end{gathered}
+$$
+
+At the top of that range the metric has quietly become a different metric. Every predicate enters
+for every pair, so whether the model ranked the right relation first no longer affects the score —
+only whether it found the pair at all. That limit is $PR@k$, phrase recall, and the bound
+$R \le PR$ holds for the same reason the protocol ordering holds: the easier question is a relaxation
+of the harder one.
+
+</Implications>
+
+</Step>
+
+<Step id="s9">
+
+## Four more things the number does not tell you
+
+**Zero-shot recall** restricts the ground truth to triplets whose exact class signature never
+appeared in training. It collapses for most models, and the collapse is invisible in $R$ and in
+$mR$ alike, because the zero-shot triplets are a small fraction of the total.
+
+**Open Images uses a different metric family** — a weighted combination of relationship detection
+mAP, phrase detection mAP and recall — so a figure from that leaderboard is not comparable with a
+VG150 figure at all, regardless of protocol and constraint.
+
+**Cross-paper comparison is the default failure.** Split, constraint mode, $\tau$, mask pairing,
+predicate merging, $k$: six parameters, each changing the number, each routinely unstated. This
+application attaches four of them to every `MetricValue` for that reason, and marks the rest in
+the warning list.
+
+**Calibration is absent from the field.** No standard SGG metric asks whether a model's confidence
+means anything. A model whose top-ranked guess is right 40 per cent of the time and one whose
+top-ranked guess is right 90 per cent of the time can post the same $R@50$.
+
+</Step>
+
+<Step id="s10">
+
+## In the lab
+
+L2 puts $k$, the protocol, the constraint mode and $\tau$ on controls and draws $R$ and $mR$
+against $K$ on one axis. Find the configuration where the two curves are furthest apart, then
+state what that gap is measuring — it is not model quality.
+
+L3 runs the frequency baseline against the learned models on the same slice, so the last
+derivation above is something you watch happen rather than something you are told.
+
+</Step>
+
+<Step id="s11">
+
+## Checkpoint
+
+A paper reports mR@100 of 17.2 on VG150 PredCls and claims a new state of the art over a baseline
+at 16.0. List every question you would have to answer before accepting the comparison. Then say
+which of them the paper is likely to have answered.
+
+</Step>

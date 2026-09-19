@@ -1,0 +1,93 @@
+---
+id: m08
+order: 8
+title_en: "Panoptic SGG and the fair-ranking correction"
+title_zh: "Panoptic SGG 與公平排名之修正"
+anchor_labs: [L6]
+knowledge_points: [P1, P2, P3, P4]
+symbols: []
+claims:
+  - id: c-m08-correction
+    text_en: "Under the corrected pairing, PSGTR mR@50 falls 20.8 to 11.62, PSGFormer 17.0 to 8.20 and HiLo 30.3 to 18.33, while two-stage methods barely move"
+    text_zh: "改用修正後的配對規則，PSGTR 的 mR@50 由 20.8 降至 11.62、PSGFormer 由 17.0 降至 8.20、HiLo 由 30.3 降至 18.33，兩階段方法則幾乎不變"
+    source: psg-fair-ranking-2024
+    source_table: "table not located in this pass"
+    constraint: graph
+    protocol: sgdet
+    verified: false
+steps:
+  - id: s1
+    kind: prose
+    presenter_notes_zh: "開場。thing 與 stuff 之分的重要性高於初看所見：以框為基礎的資料集根本無法將 stuff 表示為物件，故涉及道路、牆面、天空的關係於 Visual Genome 詞彙中完全不存在。宜明言 PSG 與 VG150 非僅尺度不同，而是建立於不同論域之上，故兩者數值不可比。此句為本單元其餘各頁的前提。"
+  - id: s2
+    kind: prose
+    seconds_budget: 300
+    presenter_notes_zh: "五分鐘，三種方法。Pair-Net 一項最為重要，宜留足時間：其不改進關係分類，而是量測損失實際發生之處，並指出 pair recall 方為具拘束力的限制條件——即使配置一個完美的關係分類器，仍將遺漏大部分標準答案。此為 M05 正例比率的對應物，兩者自相反方向陳述同一事實，宜明確連結。"
+  - id: s3
+    kind: prose
+    seconds_budget: 360
+    presenter_notes_zh: "六分鐘，本單元最重要的一頁，但最值得說明者並非數值。修正本身的算術 M04 s7 已給出。本頁的重點為：本專案查核的每一篇 2025 至 2026 年 PSG 論文仍報告修正前的數值——一項已發表、正確、卻被忽略兩年的修正，是關於該領域運作方式的事實。此即本應用以「不可比較」標示呈現各表、而不合併為排行榜的理由。另須說明該 claim 標記 verified: false 的意義：本課程尚未查閱該修正自身的表格，在有人查閱之前此即其應有狀態。"
+  - id: s4
+    kind: lab
+    lab: L6
+    seconds_budget: 480
+    presenter_notes_zh: "L6 八分鐘。同一組固定預測分別於 single_mpo 與 multi_mpo 之下評分，兩者之間模型完全不變。落差須由學員親自產生而非由講者展示。其後的討論題只有一個：當論文所採用的評分規則與其比較對象不同時，該論文對讀者負有何種義務。此題無標準答案，宜收集兩三種立場而不作裁決。"
+  - id: s5
+    kind: checkpoint
+    presenter_notes_zh: "檢核點。此題刻意要求不使用公式，故答案的品質在於因果鏈是否完整：單階段方法可自由輸出同一遮罩的多份複本，修正前每份複本均可計分，故其數值有相當部分來自重複計入；兩階段方法先列舉配對，同一配對本即只出現一次，故無可損失者。若現場逕行寫出 M04 s7 的不等式，請要求改以文字覆述。"
+---
+
+
+<Step id="s1">
+
+## thing 與 stuff
+
+全景分割將影像劃分為兩類 segment。*thing* 為可數物件——人、杯子、機械手臂——其各個實例分屬不同 segment；*stuff* 則為不可數區域：天空、道路、牆面、地板。每一像素恰屬於其中一類的某一個 segment。
+
+就場景圖而言，此一區分的重要性高於初看所見。以框為基礎的資料集根本無法將 stuff 表示為物件，故涉及道路、牆面或天空的關係，於 Visual Genome 的詞彙中完全不存在。PSG 具備此類項目，因此其 predicate 分布與 VG150 並不可比——兩者非僅尺度不同，而是建立於不同的論域之上。
+
+</Step>
+
+<Step id="s2">
+
+## 各方法，以及瓶頸所在
+
+**PSGTR 與 PSGFormer** 為該資料集自身的基線，屬 M7 所述 DETR 系列的單階段 transformer，經調整後輸出 segment 而非框。
+
+**HiLo** 觀察到 predicate 的頻率與特異性方向相反，故將高頻與低頻分支分別執行，其後再予合併。其為該資料集上所報告的最強方法，且如第三節所示，亦為受該項修正衝擊最大者。
+
+**Pair-Net** 提出的問題有所不同。它不改進關係分類，而是量測損失實際發生之處，並發現 *pair recall*——正確的主客體配對是否曾被提出——方為具拘束力的限制條件。即使在現行方法所提出的配對上配置一個完美的關係分類器，仍將遺漏大部分標準答案。
+
+此一發現為 M5 正例比率於 M8 的對應物。兩者自相反方向陳述同一事實：困難之處不在於指認關係，而在於找出配對。
+
+</Step>
+
+<Step id="s3">
+
+## 該項修正，及其後續遭遇
+
+於原始 PSG 協定之下，模型可將同一遮罩輸出多次並各自搭配不同的 predicate 分布，且每一份複本均可計分。M4 已給出其算術：允許每一配對具備 $d > 1$ 個遮罩，僅能提高配對數，且其所提高者為「可自由輸出重複遮罩」的架構——亦即全部單階段方法，而無任何兩階段方法。
+
+ECCV 2024 的一項修正封閉了此一途徑。該修正對三項主要方法的實測影響即為本單元唯一的 claim，其幅度相當可觀：單階段各項的 mean recall 約減半，兩階段各項則幾乎不變。
+
+**最值得注意者並非該等數值。** 而是本專案所查核的每一篇 2025 至 2026 年 PSG 論文，仍舊報告修正前的數值。一項已發表、正確、卻被忽略兩年的修正，係關於該領域運作方式的事實；此亦為本應用以「不可比較」標示呈現各論文表格、而不將其合併為排行榜的理由。
+
+該 claim 標記為 `verified: false`，因本課程尚未查閱該修正自身的表格。在有人查閱之前，此即其應有的狀態。
+
+</Step>
+
+<Step id="s4">
+
+## 實作單元的內容
+
+L6 以同一組固定預測分別於 `single_mpo` 與 `multi_mpo` 之下評分，並同時呈現兩項數值。兩者之間模型完全不變。請親自產生該落差，再自行判斷：當論文所採用的評分規則與其比較對象不同時，該論文對讀者負有何種義務。
+
+</Step>
+
+<Step id="s5">
+
+## 檢核點
+
+請以一段文字、不使用公式，說明修正後的配對規則何以使單階段方法損失約半數的 mean recall，而兩階段方法幾乎不受影響。
+
+</Step>

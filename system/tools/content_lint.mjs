@@ -1,0 +1,380 @@
+// Content lint: the golden vectors, the licence gates, and the MDX module corpus.
+//
+// The module rules exist because the presentation contract of SRS §11.2 is structural rather
+// than a convention, and a convention is the first thing a deadline removes. Every rule here was
+// watched to fail against real content before it was kept; a rule that cannot fail is not a rule.
+//
+// Written before the modules rather than retrofitted, so `npm run ci` was complete from the
+// first commit.
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+
+const problems = [];
+
+// ---- golden vectors -------------------------------------------------------
+const golden = JSON.parse(readFileSync('../data/golden/vectors.json', 'utf-8'));
+if (golden.$schema_version !== 1) problems.push('data/golden/vectors.json: unknown schema version');
+
+const ids = new Set();
+for (const c of golden.cases) {
+  if (!c.id) problems.push('a golden case has no id');
+  if (ids.has(c.id)) problems.push(`duplicate golden case id: ${c.id}`);
+  ids.add(c.id);
+  if (c.hand_checked !== true) {
+    problems.push(`${c.id}: hand_checked is not true. Every expectation must be computed on ` +
+                  `paper from the definitions, never pasted from engine output.`);
+  }
+  if (!c.why || c.why.length < 40) {
+    problems.push(`${c.id}: 'why' must write out the arithmetic a reader would check`);
+  }
+  for (const key of ['gt', 'pred', 'params', 'expect']) {
+    if (!c[key]) problems.push(`${c.id}: missing '${key}'`);
+  }
+}
+
+// ---- licence gates --------------------------------------------------------
+const LICENCES = '../data/LICENCES.md';
+const gates = new Map();
+for (const line of readFileSync(LICENCES, 'utf-8').split('\n')) {
+  if (!line.startsWith('|')) continue;
+  const cells = line.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+  if (cells.length !== 6) continue;
+  const name = cells[0];
+  if (name === 'Dataset' || name === '' || /^[-: ]+$/.test(name)) continue;
+  gates.set(name, { commit: cells[4] === 'YES', bundle: cells[5] === 'YES' });
+}
+if (gates.size === 0) problems.push(`${LICENCES}: no dataset rows parsed`);
+
+// A committed annotations.json implies the annotations_commit gate is cleared. D-08.
+const SLICES = '../data/slices';
+if (existsSync(SLICES)) {
+  for (const ds of readdirSync(SLICES)) {
+    if (!existsSync(`${SLICES}/${ds}/annotations.json`)) continue;
+    const g = gates.get(ds);
+    if (!g) problems.push(`${ds}: annotations committed but no row in ${LICENCES}`);
+    else if (!g.commit) {
+      problems.push(`${ds}: annotations committed but ${LICENCES} does not clear ` +
+                    `annotations_commit. UNCLEAR counts as NO.`);
+    }
+  }
+}
+
+// ---- the module corpus ----------------------------------------------------
+// Frontmatter is read with a small reader rather than a YAML dependency. The schema is fixed by
+// contracts §3.1 and is scalars, flow sequences and lists of flat maps; a parser that accepted
+// more than the schema allows would accept a module the schema forbids.
+const CONTENT = 'frontend/src/content';
+const LOCALES = ['zh-TW', 'en'];
+const CONTRACT = ['Intuition', 'Formal', 'Worked', 'Implications'];
+// The presenter-notes field each locale file owns. D56: the field name carries the locale, so a
+// zh-TW file writing `presenter_notes_en` is the same sentence in the wrong place.
+const NOTES = { 'zh-TW': 'presenter_notes_zh', en: 'presenter_notes_en' };
+const FOREIGN = { 'zh-TW': 'presenter_notes_en', en: 'presenter_notes_zh' };
+
+// Collected by `scalar` and reported against the file being read.
+let badEscapes = [];
+
+/** The escapes a YAML double-quoted scalar allows, minus the numeric forms handled below. */
+const YAML_ESCAPES = new Set([
+  '0', 'a', 'b', 't', 'n', 'v', 'f', 'r', 'e', ' ', '"', '/', '\\', 'N', '_', 'L', 'P', '\t',
+]);
+
+/**
+ * The first invalid escape in a double-quoted scalar, or null.
+ *
+ * Written as a scan rather than a regex because the first attempt was a regex with a negative
+ * lookahead, and it reported `\\mathcal{P}` — a correctly escaped backslash — as invalid: after
+ * rejecting a match at the first backslash it simply advanced one character and matched at the
+ * second. An escape has to be consumed whole, which a stateless lookahead cannot do.
+ */
+function invalidEscape(inner) {
+  for (let i = 0; i < inner.length; i += 1) {
+    if (inner[i] !== '\\') continue;
+    const next = inner[i + 1];
+    if (next === undefined) return '\\ at the end of the scalar';
+    if (YAML_ESCAPES.has(next)) {
+      i += 1;
+      continue;
+    }
+    const width = next === 'x' ? 2 : next === 'u' ? 4 : next === 'U' ? 8 : 0;
+    if (width && /^[0-9a-fA-F]+$/.test(inner.slice(i + 2, i + 2 + width))) {
+      i += 1 + width;
+      continue;
+    }
+    return `\\${next}`;
+  }
+  return null;
+}
+
+function scalar(raw) {
+  const text = raw.trim();
+  if (text === 'true') return true;
+  if (text === 'false') return false;
+  if (/^-?\d+(\.\d+)?$/.test(text)) return Number(text);
+  if (/^\[.*\]$/.test(text)) {
+    const inner = text.slice(1, -1).trim();
+    return inner === '' ? [] : inner.split(',').map((x) => scalar(x));
+  }
+  if (/^\{.*\}$/.test(text)) {
+    const out = {};
+    for (const pair of text.slice(1, -1).split(',')) {
+      const at = pair.indexOf(':');
+      if (at > 0) out[pair.slice(0, at).trim()] = scalar(pair.slice(at + 1));
+    }
+    return out;
+  }
+  if (/^'.*'$/.test(text)) return text.slice(1, -1);
+  if (/^".*"$/.test(text)) {
+    const inner = text.slice(1, -1);
+    // A double-quoted YAML scalar processes escapes, and `remark-mdx-frontmatter` parses this
+    // block with a real YAML parser at build time. A lone `\o` is an invalid escape and fails
+    // the build. Reading it leniently here was worse than not reading it at all: every symbol in
+    // this corpus is LaTeX, so the lint passed a corpus the build could not compile. D31.
+    const bad = invalidEscape(inner);
+    if (bad) badEscapes.push(`${text} — invalid YAML escape '${bad}'`);
+    return inner.replace(/\\(.)/g, '$1');
+  }
+  return text;
+}
+
+function frontmatter(source, where) {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(source);
+  if (!match) {
+    problems.push(`${where}: no frontmatter block`);
+    return null;
+  }
+  const out = {};
+  let key = null;
+  let list = null;
+  let item = null;
+  for (const raw of match[1].split(/\r?\n/)) {
+    if (!raw.trim() || raw.trim().startsWith('#')) continue;
+    const indent = raw.length - raw.trimStart().length;
+    const line = raw.trim();
+    if (indent === 0) {
+      if (list && key) out[key] = list;
+      list = null;
+      item = null;
+      const at = line.indexOf(':');
+      if (at < 0) continue;
+      key = line.slice(0, at).trim();
+      const rest = line.slice(at + 1).trim();
+      if (rest === '') {
+        list = [];
+      } else {
+        out[key] = scalar(rest);
+        key = null;
+      }
+    } else if (line.startsWith('- ')) {
+      const rest = line.slice(2).trim();
+      if (rest.startsWith('{')) {
+        item = scalar(rest);
+      } else {
+        const at = rest.indexOf(':');
+        item = {};
+        if (at > 0) item[rest.slice(0, at).trim()] = scalar(rest.slice(at + 1));
+      }
+      if (list) list.push(item);
+    } else if (item && typeof item === 'object') {
+      const at = line.indexOf(':');
+      if (at > 0) item[line.slice(0, at).trim()] = scalar(line.slice(at + 1));
+    }
+  }
+  if (list && key) out[key] = list;
+  return out;
+}
+
+const POINTS = JSON.parse(readFileSync('../data/content/kp.json', 'utf-8'));
+const KP = new Set(POINTS.map((p) => p.id));
+
+// Which module teaches each point. A separate file from kp.json on purpose: kp.json is harvest
+// output and `npm run harvest` rewrites it wholesale, so an editorial field stored there is
+// erased by the next CI run. D29.
+const ASSIGNMENT = JSON.parse(readFileSync('../data/content/assignment.json', 'utf-8')).modules;
+const owned = new Map(Object.entries(ASSIGNMENT));
+const moduleOf = new Map();
+for (const [module, points] of owned) {
+  for (const point of points) {
+    if (moduleOf.has(point)) {
+      problems.push(`${point} is assigned to both ${moduleOf.get(point)} and ${module}`);
+    }
+    moduleOf.set(point, module);
+    if (!KP.has(point)) problems.push(`${module} is assigned '${point}', absent from kp.json`);
+  }
+}
+
+// Every harvested point belongs to exactly one module. An unassigned point is a piece of the
+// syllabus nobody has agreed to teach, and it disappears silently: the corpus looks complete
+// because every module that exists is well-formed.
+const unassigned = POINTS.filter((p) => !moduleOf.has(p.id));
+if (unassigned.length) {
+  problems.push(`${unassigned.length} knowledge point(s) belong to no module: ` +
+                unassigned.map((p) => p.id).join(', '));
+}
+const PAPERS = existsSync('../data/content/papers.json')
+  // `key`, not `id`: contracts §3.2 names the field `key` and every module claim cites one.
+  ? new Set(JSON.parse(readFileSync('../data/content/papers.json', 'utf-8')).map((p) => p.key))
+  : null;
+
+const modules = new Map();
+if (existsSync(CONTENT)) {
+  for (const file of readdirSync(CONTENT)) {
+    const parsed = /^(m\d\d)\.([\w-]+)\.mdx$/.exec(file);
+    if (!parsed) continue;
+    const [, id, locale] = parsed;
+    const source = readFileSync(`${CONTENT}/${file}`, 'utf-8');
+    badEscapes = [];
+    const meta = frontmatter(source, file);
+    for (const bad of badEscapes) problems.push(`${file}: ${bad}`);
+    if (!meta) continue;
+    if (!modules.has(id)) modules.set(id, {});
+    modules.get(id)[locale] = { meta, source, file };
+  }
+}
+
+if (modules.size === 0) problems.push(`${CONTENT}: no modules found. Plan 02 Task 7 writes m00.`);
+
+const glosses = new Map();
+for (const [id, locales] of [...modules].sort()) {
+  // Both locales, or neither. NFR-6: a half-translated build must not look finished.
+  for (const locale of LOCALES) {
+    if (!locales[locale]) problems.push(`${id}: missing the ${locale} locale`);
+  }
+  const present = LOCALES.filter((l) => locales[l]);
+
+  if (present.length === LOCALES.length) {
+    const [a, b] = LOCALES.map((l) => locales[l].meta.steps ?? []);
+    if (a.length !== b.length) {
+      problems.push(`${id}: ${a.length} steps in ${LOCALES[0]}, ${b.length} in ${LOCALES[1]}. ` +
+                    `The shells index the two locales by the same position.`);
+    } else {
+      for (let i = 0; i < a.length; i += 1) {
+        if (a[i].id !== b[i].id) {
+          problems.push(
+            `${id}: step ${i} is '${a[i].id}' in ${LOCALES[0]} and '${b[i].id}' in ${LOCALES[1]}`,
+          );
+        }
+      }
+
+      // Presenter notes, D56. A module is two files and each carries its own locale's field, so
+      // the two must agree on *which* steps have notes or the professor gets a notes pane in one
+      // language and an empty one in the other -- the half-translated build NFR-6 forbids, in the
+      // one window nobody in the room can see going wrong.
+      const noted = LOCALES.map((l, k) =>
+        (k === 0 ? a : b).filter((s) => s[NOTES[l]] !== undefined).map((s) => s.id),
+      );
+      if (noted[0].join(',') !== noted[1].join(',')) {
+        problems.push(
+          `${id}: presenter notes on [${noted[0].join(', ') || 'none'}] in ${LOCALES[0]} but ` +
+            `[${noted[1].join(', ') || 'none'}] in ${LOCALES[1]}. Both locales or neither.`,
+        );
+      }
+    }
+  }
+
+  for (const locale of present) {
+    const { meta, source, file } = locales[locale];
+    if (meta.id !== id) {
+      problems.push(`${file}: frontmatter id '${meta.id}' does not match the filename`);
+    }
+
+    for (const step of meta.steps ?? []) {
+      if (step[FOREIGN[locale]] !== undefined) {
+        problems.push(
+          `${file}: step '${step.id}' carries ${FOREIGN[locale]}. A locale file owns ` +
+            `${NOTES[locale]} only; the other locale's notes live in the other file.`,
+        );
+      }
+      const note = step[NOTES[locale]];
+      if (note !== undefined && (typeof note !== 'string' || note.trim() === '')) {
+        problems.push(
+          `${file}: step '${step.id}' declares ${NOTES[locale]} with nothing in it. ` +
+            `Leave the key out; the presenter window says when a step has no notes.`,
+        );
+      }
+      // Every step carries notes, as of 2026-09-19. Until then M00 was the only module with any,
+      // and the presenter window told the lecturer so on 88 steps out of 92 -- correct behaviour
+      // reporting an absent artefact. The artefact now exists for all of them, and this rule is
+      // what stops the next module being added without its own. D76.
+      if (note === undefined) {
+        problems.push(
+          `${file}: step '${step.id}' has no ${NOTES[locale]}. Every step carries presenter ` +
+            `notes; a new module writes its own rather than shipping an empty notes pane.`,
+        );
+      }
+    }
+
+    // The four-part contract, in order, in the body of a module that has a math step.
+    if ((meta.steps ?? []).some((s) => s.kind === 'math')) {
+      // Presence and order are two passes. One scan that looked for each part after the last
+      // one found would report a part that is merely out of order as absent, which is what it
+      // did when this was watched to fail: swapping Formal and Worked produced both "no
+      // <Worked>" and the ordering complaint, and only the second was true.
+      const body = source.slice(source.indexOf('\n---', 4) + 4);
+      const at = CONTRACT.map((name) => body.indexOf(`<${name}`));
+      const missing = CONTRACT.filter((_, i) => at[i] < 0);
+      if (missing.length) {
+        problems.push(
+          `${file}: has a math step but no ${missing.map((n) => `<${n}>`).join(', ')}. ` +
+            `SRS §11.2 fixes all four.`,
+        );
+      } else {
+        for (let i = 1; i < at.length; i += 1) {
+          if (at[i] < at[i - 1]) {
+            problems.push(`${file}: <${CONTRACT[i]}> precedes <${CONTRACT[i - 1]}>. That order is ` +
+                          `the order the professor teaches in, and SRS §11.2 fixes it.`);
+          }
+        }
+      }
+    }
+
+    for (const claim of meta.claims ?? []) {
+      for (const field of ['source', 'source_table', 'constraint', 'protocol', 'verified']) {
+        if (claim[field] === undefined || claim[field] === '') {
+          problems.push(`${file}: claim '${claim.id ?? '?'}' has no ${field}. A number without ` +
+                        `its protocol and constraint mode is not a fact about anything.`);
+        }
+      }
+      if (PAPERS && claim.source && !PAPERS.has(claim.source)) {
+        problems.push(`${file}: claim '${claim.id}' cites '${claim.source}', not in papers.json`);
+      }
+    }
+
+    for (const point of meta.knowledge_points ?? []) {
+      if (!KP.has(point)) problems.push(`${file}: knowledge point '${point}' is not in kp.json`);
+    }
+
+    // A module that exists must declare what it owns. Drawing on a point another module owns is
+    // fine and expected — the course cross-references itself — but a point assigned here and
+    // absent from the frontmatter is a piece of the syllabus that was assigned and then dropped.
+    const declared = new Set(meta.knowledge_points ?? []);
+    const dropped = (owned.get(id) ?? []).filter((p) => !declared.has(p));
+    if (dropped.length) {
+      problems.push(`${file}: kp.json assigns ${dropped.join(', ')} to this module, but the ` +
+                    `frontmatter does not list ${dropped.length > 1 ? 'them' : 'it'}`);
+    }
+
+    // Symbols are global (SRS §11.4): one notation, one meaning, across the whole corpus.
+    for (const entry of meta.symbols ?? []) {
+      for (const gloss of ['gloss_en', 'gloss_zh']) {
+        const key = `${entry.sym}::${gloss}`;
+        const seen = glosses.get(key);
+        if (seen === undefined) glosses.set(key, { text: entry[gloss], file });
+        else if (seen.text !== entry[gloss]) {
+          problems.push(`symbol '${entry.sym}' is glossed '${seen.text}' in ${seen.file} and ` +
+                        `'${entry[gloss]}' in ${file}. SRS §11.4 forbids redefining notation.`);
+        }
+      }
+    }
+  }
+}
+
+// ---- report ---------------------------------------------------------------
+if (problems.length) {
+  console.error(`content lint: ${problems.length} problem(s)\n  ` + problems.join('\n  '));
+  process.exit(1);
+}
+console.log(
+  `content lint: ${golden.cases.length} golden cases, ${gates.size} licence rows, ` +
+    `${modules.size} of ${owned.size} modules x ${LOCALES.length} locales, ` +
+    `${POINTS.length} knowledge points all assigned, ${glosses.size / 2} symbols, clean`,
+);

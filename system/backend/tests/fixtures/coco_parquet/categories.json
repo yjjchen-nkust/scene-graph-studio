@@ -1,0 +1,101 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "table",
+      "supercategory": "none"
+    },
+    {
+      "id": 2,
+      "name": "box",
+      "supercategory": "none"
+    },
+    {
+      "id": 3,
+      "name": "lamp",
+      "supercategory": "none"
+    },
+    {
+      "id": 4,
+      "name": "chair",
+      "supercategory": "none"
+    },
+    {
+      "id": 5,
+      "name": "window",
+      "supercategory": "none"
+    }
+  ],
+  "rel_categories": [
+    {
+      "id": 1,
+      "name": "on",
+      "supercategory": "none"
+    },
+    {
+      "id": 2,
+      "name": "near",
+      "supercategory": "none"
+    },
+    {
+      "id": 3,
+      "name": "above",
+      "supercategory": "none"
+    },
+    {
+      "id": 4,
+      "name": "behind",
+      "supercategory": "none"
+    },
+    {
+      "id": 5,
+      "name": "under",
+      "supercategory": "none"
+    },
+    {
+      "id": 6,
+      "name": "in",
+      "supercategory": "none"
+    },
+    {
+      "id": 7,
+      "name": "beside",
+      "supercategory": "none"
+    },
+    {
+      "id": 8,
+      "name": "against",
+      "supercategory": "none"
+    },
+    {
+      "id": 9,
+      "name": "in front of",
+      "supercategory": "none"
+    },
+    {
+      "id": 10,
+      "name": "attached to",
+      "supercategory": "none"
+    },
+    {
+      "id": 11,
+      "name": "wedged under",
+      "supercategory": "none"
+    },
+    {
+      "id": 12,
+      "name": "draped over",
+      "supercategory": "none"
+    },
+    {
+      "id": 13,
+      "name": "propped against",
+      "supercategory": "none"
+    },
+    {
+      "id": 14,
+      "name": "balanced on",
+      "supercategory": "none"
+    }
+  ]
+}
