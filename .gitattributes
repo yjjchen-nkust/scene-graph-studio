@@ -1,0 +1,8 @@
+# `tools/build_standalone.mjs --check` is step 11 of the gate and compares the generated
+# standalone brief against a fresh rebuild with plain string equality. The builder emits the
+# lines it generates itself with bare LF while inheriting CRLF from the source, and git's
+# autocrlf then rewrites every line to CRLF on checkout -- so on Windows the check passes
+# immediately after a build and fails after any checkout, though `git diff` shows the content
+# identical. Pinning both files to LF makes the comparison hold on every platform.
+docs/brief.standalone.html    eol=lf
+system/web/brief/index.html   eol=lf

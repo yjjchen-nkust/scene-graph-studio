@@ -29,6 +29,14 @@ export default defineConfig({
         // The root has no tsconfig declaring jsx, so esbuild would fall back to the classic
         // runtime and every render would fail with 'React is not defined'. Pin it here.
         esbuild: { jsx: 'automatic' },
+        // The F1 playground's import.meta.glob reads slice images from data/, which sits
+        // one level above this config's root (system/), as a sibling rather than a
+        // descendant. Vite's filesystem guard denies any read outside the root by default,
+        // so the allow list has to be widened by one level. Setting server.fs.allow
+        // replaces Vite's own defaults rather than adding to them, but the root (system/)
+        // is itself a descendant of that parent, so listing the parent alone still covers
+        // every path the defaults used to.
+        server: { fs: { allow: ['..'] } },
         test: {
           name: 'frontend',
           // Component tests live beside the component; frontend/test/ holds the
