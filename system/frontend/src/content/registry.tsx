@@ -1,5 +1,6 @@
-import type { ComponentType, ReactNode } from 'react';
+import type { ComponentProps, ComponentType, ReactNode } from 'react';
 import type { Locale } from '../i18n/useLocale';
+import { Playground } from '../playgrounds/Playground';
 
 export interface ModuleSymbol {
   sym: string;
@@ -20,8 +21,10 @@ export interface ModuleClaim {
 
 export interface ModuleStepMeta {
   id: string;
-  kind: 'prose' | 'math' | 'figure' | 'lab' | 'checkpoint';
+  kind: 'prose' | 'math' | 'figure' | 'lab' | 'checkpoint' | 'playground';
   lab?: string;
+  /** The knowledge point a `playground` step demonstrates. Contracts §2.4. */
+  kp?: string;
   seconds_budget?: number;
   /**
    * The presenter window's notes for this step, in the locale of the file that declares them.
@@ -61,13 +64,22 @@ export interface ModuleStep extends ModuleStepMeta {
 
 interface MdxModule {
   meta: ModuleMeta;
-  default: ComponentType<{ components?: Record<string, ComponentType<StepProps>> }>;
+  default: ComponentType<{ components?: MdxComponents }>;
 }
 
 interface StepProps {
   id: string;
   children?: ReactNode;
 }
+
+/**
+ * `components` carries two shapes at once: `Step` takes `StepProps`, `Playground` takes its own
+ * `kp` prop (read off the real component rather than redeclared, so the two cannot drift). A
+ * plain `Record<string, ComponentType<StepProps>>` would honestly reject `Playground` — they
+ * really do take different props — so this widens to the union of both instead of casting past
+ * the checker.
+ */
+type MdxComponents = Record<string, ComponentType<StepProps> | ComponentType<ComponentProps<typeof Playground>>>;
 
 /**
  * Every module, in both locales, found at build time.
@@ -114,6 +126,8 @@ export function getModule(id: string, locale: Locale): ModuleStep[] | null {
   return found.meta.steps.map((step) => {
     const Only = ({ id: stepId, children }: StepProps) =>
       stepId === step.id ? <>{children}</> : null;
-    return { ...step, node: <Body components={{ Step: Only }} /> };
+    // `Playground` joins `Step` here rather than being imported by each MDX file: see the
+    // component's own docstring.
+    return { ...step, node: <Body components={{ Step: Only, Playground }} /> };
   });
 }

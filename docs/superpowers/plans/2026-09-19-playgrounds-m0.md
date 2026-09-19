@@ -712,7 +712,7 @@ In `frontend/src/i18n/zh-TW.json`, at the same position:
 - [ ] **Step 6: Run the parity check**
 
 Run: `npm run lint:i18n`
-Expected: PASS — `i18n parity: 223 keys, both locales complete`.
+Expected: PASS — `i18n parity: 225 keys, both locales complete` (199 before, 26 added).
 
 - [ ] **Step 7: Commit**
 
@@ -2370,12 +2370,16 @@ test('a knob is reachable by keyboard, and turning it does not advance the deck'
   const position = page.getByTestId('position');
   const before = await position.textContent();
 
+  const annotated = page.getByTestId('readout-Annotated edges');
+  const annotatedBefore = await annotated.textContent();
+
   // Tab into the playground rather than clicking it: a professor at the podium has a remote.
   await page.getByLabel('Annotation density').focus();
   await page.keyboard.press('ArrowLeft');
 
-  // The slider moved...
-  await expect(page.getByTestId('readout-Annotated edges')).not.toContainText('6 /');
+  // The slider moved. Asserted as a change from what was there, not against a literal: a
+  // literal that happens not to appear makes this pass whether or not the key did anything.
+  await expect(annotated).not.toHaveText(annotatedBefore ?? '');
   // ...and the deck did not. `isTextEntry` gives every key to a focused INPUT; a knob built
   // from a styled div would fail exactly here.
   await expect(position).toHaveText(before ?? '');

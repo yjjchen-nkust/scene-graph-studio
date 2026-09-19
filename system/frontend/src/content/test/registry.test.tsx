@@ -122,3 +122,18 @@ describe('the module registry', () => {
     expect(getMeta('m99', 'en')).toBeNull();
   });
 });
+
+describe('the playground step kind', () => {
+  it('supplies Playground to every module body, so no MDX file imports it', () => {
+    // Both locale files would otherwise carry an import line, and two import lines are two
+    // places to drift. NFR-6 is about the content saying the same thing in both languages;
+    // this is the same rule applied to the machinery.
+    const steps = getModule('m00', 'zh-TW');
+    expect(steps).not.toBeNull();
+    // Rendering must not throw on a body containing <Playground/>; the tag resolves because the
+    // registry supplies it.
+    for (const step of steps!) {
+      expect(() => render(<>{step.node}</>)).not.toThrow();
+    }
+  });
+});

@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type { RLEMask } from 'sgg-metrics';
 import { encodeCounts } from 'sgg-metrics';
 import { describe, expect, it, vi } from 'vitest';
@@ -255,5 +255,57 @@ describe('ImageOverlay', () => {
       />,
     );
     expect(container.querySelector('path[data-relationship-id="9"]')).toBeNull();
+  });
+
+  describe('layers', () => {
+    const graph = {
+      image_id: 'ph-001', dataset: 'placeholder' as const, width: 640, height: 480,
+      objects: [
+        { object_id: 1, names: ['table'], bbox: { x: 60, y: 300, w: 420, h: 110 } },
+        { object_id: 3, names: ['box'], bbox: { x: 250, y: 240, w: 90, h: 70 } },
+      ],
+      relationships: [{ relationship_id: 1, subject_id: 3, object_id: 1, predicate: 'on' }],
+    };
+
+    it('draws boxes and relationships and no visible labels by default, as it always has', () => {
+      render(
+        <ImageOverlay imageUrl="/x.png" width={640} height={480}
+                      objects={graph.objects} relationships={graph.relationships} mode="view" />,
+      );
+      expect(screen.getAllByTestId(/^box-/)).toHaveLength(2);
+      expect(screen.getAllByTestId(/^edge-/)).toHaveLength(1);
+      expect(screen.queryAllByTestId(/^label-/)).toHaveLength(0);
+    });
+
+    it('turns each layer off independently', () => {
+      render(
+        <ImageOverlay imageUrl="/x.png" width={640} height={480}
+                      objects={graph.objects} relationships={graph.relationships} mode="view"
+                      layers={{ boxes: false, relationships: true, labels: false }} />,
+      );
+      expect(screen.queryAllByTestId(/^box-/)).toHaveLength(0);
+      expect(screen.getAllByTestId(/^edge-/)).toHaveLength(1);
+    });
+
+    it('draws a visible name per object when labels are asked for', () => {
+      render(
+        <ImageOverlay imageUrl="/x.png" width={640} height={480}
+                      objects={graph.objects} relationships={graph.relationships} mode="view"
+                      layers={{ boxes: true, relationships: true, labels: true }} />,
+      );
+      expect(screen.getAllByTestId(/^label-/)).toHaveLength(2);
+      expect(screen.getByTestId('label-1')).toHaveTextContent('table');
+    });
+
+    it('with every layer off, the photograph is still there', () => {
+      render(
+        <ImageOverlay imageUrl="/x.png" width={640} height={480}
+                      objects={graph.objects} relationships={graph.relationships} mode="view"
+                      layers={{ boxes: false, relationships: false, labels: false }} />,
+      );
+      expect(screen.queryAllByTestId(/^box-/)).toHaveLength(0);
+      expect(screen.queryAllByTestId(/^edge-/)).toHaveLength(0);
+      expect(screen.getByRole('img')).toBeInTheDocument();
+    });
   });
 });

@@ -25,6 +25,13 @@ export interface ImageOverlayProps {
   selection?: { subject?: number; object?: number };
   onSelect?: (objectId: number) => void;
   className?: string;
+  /**
+   * Which layers to draw. Absent keeps exactly what every caller before F1 got: boxes and
+   * relationships drawn, object names only in a `<title>` tooltip and never as visible text.
+   * F1 opts into `labels` because its whole claim is that a label is not a structure, and you
+   * cannot make that claim about something the reader cannot see.
+   */
+  layers?: { boxes?: boolean; relationships?: boolean; labels?: boolean };
 }
 
 /** Below this, a drag is a click that moved. Emitting it would put noise in the annotations. */
@@ -59,12 +66,19 @@ export function ImageOverlay({
   selection,
   onSelect,
   className = '',
+  layers,
 }: ImageOverlayProps) {
   const { t } = useLocale();
   const uid = useId().replace(/:/g, '');
   const svgRef = useRef<SVGSVGElement | null>(null);
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const [band, setBand] = useState<BBox | null>(null);
+
+  const show = {
+    boxes: layers?.boxes ?? true,
+    relationships: layers?.relationships ?? true,
+    labels: layers?.labels ?? false,
+  };
 
   const byId = new Map(objects.map((o) => [o.object_id, o]));
   const verdictAt = new Map<number, VerdictKind>();
@@ -211,54 +225,75 @@ export function ImageOverlay({
           ) : null,
         )}
 
-        {objects.map((o) => (
-          <rect
-            key={`box-${o.object_id}`}
-            data-object-id={o.object_id}
-            data-testid={`box-${o.object_id}`}
-            data-role={roleOf(o.object_id)}
-            x={o.bbox.x}
-            y={o.bbox.y}
-            width={o.bbox.w}
-            height={o.bbox.h}
-            fill="none"
-            stroke={roleOf(o.object_id) ? '#2563eb' : '#f8fafc'}
-            strokeWidth={roleOf(o.object_id) ? 3 : 2}
-            vectorEffect="non-scaling-stroke"
-            className={onSelect ? 'cursor-pointer' : undefined}
-            onClick={onSelect ? () => onSelect(o.object_id) : undefined}
-          >
-            <title>{o.names[0]}</title>
-          </rect>
-        ))}
-
-        {relationships.map((r, index) => {
-          const subject = byId.get(r.subject_id);
-          const object = byId.get(r.object_id);
-          // A dangling relationship is not drawable. The schema forbids one, but an overlay
-          // handed a partial object list should show less rather than throw.
-          if (!subject || !object) return null;
-          const from = centroid(subject.bbox);
-          const to = centroid(object.bbox);
-          const kind = verdictAt.get(index);
-          const style = kind ? VERDICT_STYLE[kind] : null;
-          return (
-            <path
-              key={`rel-${r.relationship_id}`}
-              data-relationship-id={r.relationship_id}
-              data-verdict={kind}
-              d={`M ${from.cx} ${from.cy} L ${to.cx} ${to.cy}`}
+        {show.boxes &&
+          objects.map((o) => (
+            <rect
+              key={`box-${o.object_id}`}
+              data-object-id={o.object_id}
+              data-testid={`box-${o.object_id}`}
+              data-role={roleOf(o.object_id)}
+              x={o.bbox.x}
+              y={o.bbox.y}
+              width={o.bbox.w}
+              height={o.bbox.h}
               fill="none"
-              stroke={style ? style.stroke : '#475569'}
-              strokeWidth={style ? style.width : 2}
-              strokeDasharray={style?.dash || undefined}
+              stroke={roleOf(o.object_id) ? '#2563eb' : '#f8fafc'}
+              strokeWidth={roleOf(o.object_id) ? 3 : 2}
               vectorEffect="non-scaling-stroke"
-              markerEnd={`url(#${uid}-arrow-${kind ?? 'plain'})`}
+              className={onSelect ? 'cursor-pointer' : undefined}
+              onClick={onSelect ? () => onSelect(o.object_id) : undefined}
             >
-              <title>{`${subject.names[0]} ${r.predicate} ${object.names[0]}`}</title>
-            </path>
-          );
-        })}
+              <title>{o.names[0]}</title>
+            </rect>
+          ))}
+
+        {show.relationships &&
+          relationships.map((r, index) => {
+            const subject = byId.get(r.subject_id);
+            const object = byId.get(r.object_id);
+            // A dangling relationship is not drawable. The schema forbids one, but an overlay
+            // handed a partial object list should show less rather than throw.
+            if (!subject || !object) return null;
+            const from = centroid(subject.bbox);
+            const to = centroid(object.bbox);
+            const kind = verdictAt.get(index);
+            const style = kind ? VERDICT_STYLE[kind] : null;
+            return (
+              <path
+                key={`rel-${r.relationship_id}`}
+                data-relationship-id={r.relationship_id}
+                data-testid={`edge-${r.relationship_id}`}
+                data-verdict={kind}
+                d={`M ${from.cx} ${from.cy} L ${to.cx} ${to.cy}`}
+                fill="none"
+                stroke={style ? style.stroke : '#475569'}
+                strokeWidth={style ? style.width : 2}
+                strokeDasharray={style?.dash || undefined}
+                vectorEffect="non-scaling-stroke"
+                markerEnd={`url(#${uid}-arrow-${kind ?? 'plain'})`}
+              >
+                <title>{`${subject.names[0]} ${r.predicate} ${object.names[0]}`}</title>
+              </path>
+            );
+          })}
+
+        {show.labels &&
+          objects.map((o) => (
+            <text
+              key={`label-${o.object_id}`}
+              data-testid={`label-${o.object_id}`}
+              x={o.bbox.x + 4}
+              y={o.bbox.y - 6}
+              className="font-mono"
+              fontSize={18}
+              fill={VERDICT_STYLE.match.stroke}
+              stroke="#ffffff"
+              strokeWidth={4}
+              paintOrder="stroke"
+            >
+              {o.names[0]}
+            </text>
+          ))}
 
         {band ? (
           <rect
