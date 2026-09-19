@@ -2254,8 +2254,8 @@ become folklore.
 **What moved.** `AI-LLM/scene-graph-studio/` in `course-lab` became `scene-graph-studio/` in
 `gitea.cillab.me/CIL-Team/WekaExt.git`, on 2026-09-19, from `feat/playgrounds-m0` at the tip that
 followed `13657e7`. `git subtree split` rewrote the paths and `git subtree add` grafted 79 commits
-onto WekaExt's `main`; `git subtree merge` carried the further 7 of the in-flight playgrounds
-branch. All 382 tracked files and all 86 commits travelled. `git blame` is unaffected.
+onto WekaExt's `main`; `git subtree merge` carried the further 10 of the in-flight playgrounds
+branch. All 386 tracked files and all 89 commits travelled. `git blame` is unaffected.
 
 **Why, and what the alternatives were.** Recorded as decision D-22, which supersedes D-01 and
 D-20.
@@ -2264,7 +2264,7 @@ D-20.
 `CLAUDE.md` and inherited `course-lab`'s; WekaExt's root has none, so it now carries its own.
 And `course-lab`'s root `.gitignore` held a bare `data` rule plus two un-ignore negations naming
 this track — the hazard that had already cost two tracks their data directory. WekaExt has no
-rule over this tree, verified by `git check-ignore` over all 382 tracked paths, so the negations
+rule over this tree, verified by `git check-ignore` over all 386 tracked paths, so the negations
 stayed behind.
 
 **What did not move, deliberately.** `plans/2026-09-15-01-skeleton-and-eval-engine.md` still
