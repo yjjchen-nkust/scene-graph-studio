@@ -563,7 +563,7 @@ excluded by the track's own `.gitignore`; see D-08 for how slice images are hand
 **What the move severed, and what replaced it.** The track inherited its project instructions
 from `course-lab/CLAUDE.md` and would have inherited none, since WekaExt's root has no such file;
 `scene-graph-studio/CLAUDE.md` now carries them. The two un-ignore negations `course-lab`
-required are gone, because WekaExt has no rule over this tree — `git check-ignore` over all 382
+required are gone, because WekaExt has no rule over this tree — `git check-ignore` over all 386
 tracked paths matches nothing.
 
 **Independence.** CI is a separate path-filtered workflow, `.gitea/workflows/scene-graph-studio.yml`.

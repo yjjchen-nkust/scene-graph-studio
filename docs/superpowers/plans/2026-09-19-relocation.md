@@ -22,6 +22,11 @@
 - **Both repositories have no `.gitattributes` and both set `core.autocrlf=true`.** Blobs are LF in the object store and CRLF in the working tree on both sides, so the graft must not produce line-ending churn. Task 3 asserts this.
 - **Commit style follows the track's existing log:** a `type(sgs): lowercase summary` subject, then prose explaining why. No trailer lines.
 
+> **Every count in this plan was measured at `6491b79`, before this plan, its spec and the F1
+> commit were themselves committed into the track.** 382 should be read as 386, 86 as 89, and "the
+> further 7" as "the further 10". The figures are left as written because a plan records what was
+> decided at the time; the measured values live in deviation D87 and decision D-22.
+
 ## Review Focus
 
 Five conditions the spec implies that no single task's deliverable would otherwise exercise. Each has a test, placed in the task that owns the code.

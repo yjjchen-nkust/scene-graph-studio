@@ -29,6 +29,12 @@ must occupy a subdirectory of its own.
 
 ### State at the time of writing
 
+> **The counts in this table were measured on 2026-09-19 at `6491b79`, before this document, the
+> implementation plan and the F1 commit were themselves committed into the track.** They are left
+> as written, being the measurement the design argued from. The values that held at the move are
+> 386 tracked files and 89 commits at the branch, 79 at `main`; deviation D87 and decision D-22
+> carry them.
+
 | | |
 |---|---|
 | `course-lab` branch | `feat/playgrounds-m0` at `6491b79`, seven commits past `main` |
