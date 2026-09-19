@@ -378,6 +378,14 @@ The α dial survives as *content*: it is knowledge point `E6`, whose derivation 
 
 ## D-15 CI is one command, mirrored by a path-filtered workflow
 
+> **Paths superseded 2026-09-19 by D-22; command location corrected.** The decision itself stands:
+> one command defines green, and a path-filtered workflow runs it. Three details below are stale.
+> The command runs from `scene-graph-studio/system/`, not from the track root — that changed when
+> the machinery moved under `system/`, before this relocation. The workflow is
+> `.gitea/workflows/scene-graph-studio.yml`, filtered on `scene-graph-studio/**`. And the `ci`
+> script quoted below lists six steps; it now has twelve. The body is left as the 2026-09-15
+> record.
+
 **Decision.** `npm run ci`, run from `AI-LLM/scene-graph-studio/`, is the definition of green. `.github/workflows/scene-graph-studio.yml` runs the same command and nothing else.
 
 ```jsonc
@@ -544,7 +552,10 @@ data rather than a separate file.
 **Decision.** The project lives at `scene-graph-studio/` inside the WekaExt repository
 (`gitea.cillab.me/CIL-Team/WekaExt.git`). It remains **not** a separate repository and still does
 not get its own `git init` — that half of D-01 is upheld, not overturned. Its history was carried
-over by `git subtree`, so `git log` and `git blame` reach back to `5341aee`.
+over by `git subtree`, which rewrote every commit SHA: the initial commit `5341aee` in `course-lab`
+is `fe1e9a9` here, with the same subject, author and date. `git blame` reaches back through it. A
+path-limited `git log` does not — git simplifies history against a subtree-shaped merge — so use
+`git blame`, or `git log` without a pathspec.
 
 **Why it moved.** `course-lab` is a teaching-materials repository whose tracks build PowerPoint
 decks and LaTeX courseware; this one shares nothing with them but the repository. WekaExt is a
@@ -567,7 +578,10 @@ required are gone, because WekaExt has no rule over this tree — `git check-ign
 tracked paths matches nothing.
 
 **Independence.** CI is a separate path-filtered workflow, `.gitea/workflows/scene-graph-studio.yml`.
-WekaExt's own `ci.yml` and `deploy.yml` are untouched, so the two pipelines cannot interfere.
+WekaExt's own `ci.yml` and `deploy.yml` are untouched, so a commit to this track never starts the
+platform's deploy, and this track's workflow never runs on a platform-only commit. The reverse is
+not filtered: `ci.yml` has no `paths:` of its own, so a commit here also runs the platform's
+backend and frontend jobs. That is the platform's file to change, not this track's.
 Deployment of this track remains out of scope.
 
 ---

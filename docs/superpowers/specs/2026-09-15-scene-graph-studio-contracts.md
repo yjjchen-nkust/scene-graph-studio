@@ -555,6 +555,6 @@ interface KnowledgePoint {
 
 **TypeScript.** `strict: true`, `noUncheckedIndexedAccess: true`. No `any` in `system/packages/sgg-metrics`; the parity harness is the one place where a type error is a correctness error.
 
-**Commits.** Conventional commits, scoped to this track: `feat(sgs): …`, `fix(sgs): …`, `test(sgs): …`, `docs(sgs): …`. The `sgs` scope lets `course-lab`'s mixed history be filtered.
+**Commits.** Conventional commits, scoped to this track: `feat(sgs): …`, `fix(sgs): …`, `test(sgs): …`, `docs(sgs): …`. The `sgs` scope lets the host repository's mixed history be filtered.
 
 **Never committed.** `.env`, `node_modules/`, `.venv/`, `__pycache__/`, `dist/`, `data/slices/*/images/`, any API key or token in any form — including inside teaching content, fixtures, and prompt transcripts.

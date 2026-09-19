@@ -375,7 +375,7 @@ Nine phases. Phases 3–6 are independent once Phase 2 lands and can be reordere
 
 | Phase | Deliverable | Depends on |
 |---|---|---|
-| **0. Design artifacts** ✅ | `PRD.md` + `SRS.md` written to `docs/superpowers/specs/`; the **bilingual Artifact design brief published for discussion**. `git init` is struck — the project lives inside `course-lab` (D-01). | — |
+| **0. Design artifacts** ✅ | `PRD.md` + `SRS.md` written to `docs/superpowers/specs/`; the **bilingual Artifact design brief published for discussion**. `git init` is struck — the project lives inside the WekaExt repository (D-22, superseding D-01). | — |
 | **0.5 Decisions and contracts** ✅ | `…-decisions.md` (D-01…D-20) and `…-contracts.md` (API bodies, frontend architecture, content schema); plans 01–04 under `docs/superpowers/plans/` | 0 |
 | **1. Skeleton** | Vite + React 19 + TS + Tailwind v4 frontend; FastAPI backend; `/api/health` reporting torch/device/live-capable models; i18n scaffolding with parity lint | 0 |
 | **2. Data + eval engine** ★ | `SceneGraph` schema both sides; Tier-1 slice ingestion (~200 images); **the eval engine, TDD, both languages, golden vectors, CI cross-check** | 1 |

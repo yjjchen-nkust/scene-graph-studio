@@ -18,9 +18,11 @@ A full-stack teaching application for scene graph generation, built for 大語�
 It lives at `scene-graph-studio/` inside the WekaExt repository and is **not** a separate
 repository (decision **D-22**, which superseded both D-01 and D-20 on 2026-09-19 when the track
 moved here from the `course-lab` teaching repository). It is independent of the rest of WekaExt:
-it shares no code, no build, no dependency and no deployment with the platform, and its CI is a
-separate path-filtered workflow. Do not wire it into WekaExt's `docker-compose.yml`, `ci.yml` or
-`deploy.yml`.
+it shares no code, no build, no dependency and no deployment with the platform, and its own CI is
+a separate path-filtered workflow. That independence runs one way: WekaExt's `ci.yml` has no
+`paths:` filter of its own, so a commit touching only this track still runs the platform's backend
+and frontend jobs — that is the platform's file to fix, not this one. Do not wire this track into
+WekaExt's `docker-compose.yml`, `ci.yml` or `deploy.yml`.
 
 ## Layout and commands
 
@@ -71,6 +73,13 @@ cd scene-graph-studio\system ; npm run ci
   `.gitignore` has no rule over this tree, so every exclusion the track needs is stated locally.
 - **The design document's ARM64/Snapdragon hardware table describes a different machine** and is
   marked superseded in place.
+- **`npm run ci` is currently red at step 4, and it is not the move's doing.**
+  `frontend/src/playgrounds/F1/LabelsToStructure.tsx` reaches five directory levels up with
+  `import.meta.glob('../../../../../data/slices/placeholder/images/*.png')`, outside vitest's root
+  at `system/`, and `vitest.config.ts` sets no `server.fs.allow` — so six suites fail to collect
+  and `test:ts` stops the gate. With that playground neutralised, 563/563 tests pass. It belongs to
+  the in-flight M0 playgrounds cycle (task 6), which resumes at task 7; see deviation D87. Fix it
+  there, with its own tests, not here.
 
 ## CI
 
