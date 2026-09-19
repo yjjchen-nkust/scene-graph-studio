@@ -2244,3 +2244,36 @@ wait between the two renders makes the ordering real, and the test then failed w
 `Unable to find an element by: [data-testid="next-absent"]`. The browser test is the one that
 matters, and with the `hello` removed it fails on `presenter-root` never becoming visible. jsdom
 could mask this defect; two real windows cannot.
+
+## D87 — the track moved out of `course-lab` and into WekaExt
+
+**Plan:** none. This is not a deviation from a plan but a change of the ground every plan stands
+on, recorded here because `DEVIATIONS.md` is where this project keeps things that would otherwise
+become folklore.
+
+**What moved.** `AI-LLM/scene-graph-studio/` in `course-lab` became `scene-graph-studio/` in
+`gitea.cillab.me/CIL-Team/WekaExt.git`, on 2026-09-19, from `feat/playgrounds-m0` at the tip that
+followed `13657e7`. `git subtree split` rewrote the paths and `git subtree add` grafted 79 commits
+onto WekaExt's `main`; `git subtree merge` carried the further 7 of the in-flight playgrounds
+branch. All 382 tracked files and all 86 commits travelled. `git blame` is unaffected.
+
+**Why, and what the alternatives were.** Recorded as decision D-22, which supersedes D-01 and
+D-20.
+
+**What the move severed.** Two things, both restored in the same cycle. The track had no
+`CLAUDE.md` and inherited `course-lab`'s; WekaExt's root has none, so it now carries its own.
+And `course-lab`'s root `.gitignore` held a bare `data` rule plus two un-ignore negations naming
+this track — the hazard that had already cost two tracks their data directory. WekaExt has no
+rule over this tree, verified by `git check-ignore` over all 382 tracked paths, so the negations
+stayed behind.
+
+**What did not move, deliberately.** `plans/2026-09-15-01-skeleton-and-eval-engine.md` still
+names `AI-LLM/scene-graph-studio/` five times, including the full text of the GitHub workflow it
+specified. It is a completed plan and a record of what was decided at the time. Rewriting it
+would destroy evidence and gain nothing.
+
+**CI changed forge.** `.github/workflows/scene-graph-studio.yml` (GitHub Actions) became
+`.gitea/workflows/scene-graph-studio.yml` (Gitea Actions), path-filtered on `scene-graph-studio/**`
+and running the same `npm run ci`. WekaExt's own `ci.yml` and `deploy.yml` were not edited.
+Deployment of this track remains out of scope, blocked by the same three reasons as before: a
+private repository, third-party content, and the backend dependency.

@@ -253,7 +253,7 @@ scene-graph-studio/                Reorganised 2026-09-16. Machinery under syste
         └── knowledge-map/         the frozen teaching page (D-13)
 ```
 
-Repo root: **`AI-LLM/scene-graph-studio/` inside the `course-lab` repository** (decision D-01; committed at `5341aee`). The earlier path recorded here was superseded before any code was written.
+Repo root: **`scene-graph-studio/` inside the WekaExt repository** (decision D-22, which superseded D-01 on 2026-09-19; originally committed to `course-lab` at `5341aee`). The path recorded in §4.1 above was superseded before any code was written; the `course-lab` path that replaced it was superseded by the move.
 
 ### 4.2 Canonical data model
 
@@ -414,8 +414,8 @@ Not "the tests pass" — end-to-end checks that the thing teaches correctly.
 Answered in `2026-09-15-scene-graph-studio-decisions.md`. Retained here with their answers so that
 a reader of this document alone is not misled into re-opening them.
 
-1. **Repo location** — **CLOSED, D-01.** `AI-LLM/scene-graph-studio/` inside `course-lab`. Not a
-   separate repository; no `git init`.
+1. **Repo location** — **CLOSED, D-22** (which superseded D-01). `scene-graph-studio/` inside
+   WekaExt. Not a separate repository; no `git init`.
 2. **Live VLM provider** — **CLOSED, D-17.** Claude, opt-in through `.env`. The offline transcript
    player remains the default and the only provider any P0 feature may require.
 3. **Which precomputed models to commit** — **CLOSED, D-06 and D-07.** RelTR and EGTR are produced

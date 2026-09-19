@@ -34,10 +34,16 @@ Each decision carries the evidence it rests on. Where a decision rests on a comm
 | D-19 | Effort estimates and the cut order | No estimates |
 | D-20 | The track is documented in the repository `CLAUDE.md` | Undocumented track |
 | D-21 | The paper corpus is two tiers; only scored methods carry numbers | D-19 scope cut |
+| D-22 | Repository location is `scene-graph-studio/` inside WekaExt | supersedes D-01, D-20 |
 
 ---
 
 ## D-01 Repository location
+
+> **Superseded 2026-09-19 by D-22.** The location this decision fixes is no longer where the
+> project lives; the rest of it — that this is not a separate repository, and that large binary
+> corpora stay out — was carried forward rather than discarded. The text below is left intact as
+> the record of what was decided on 2026-09-15. See `specs/2026-09-19-relocation-design.md`.
 
 **Decision.** The project lives at `AI-LLM/scene-graph-studio/` inside the `course-lab` repository. It is not a separate repository and does not get its own `git init`.
 
@@ -477,6 +483,11 @@ Design §5 names IndustReal and MECCANO as sources and calls both "open" without
 
 ## D-20 The track is documented in the repository `CLAUDE.md`
 
+> **Superseded 2026-09-19 by D-22.** The repository whose `CLAUDE.md` this decision amends is
+> `course-lab`, which no longer holds the track. The requirement it expresses — that a session
+> opening this code learns what it is before touching it — is met instead by
+> `scene-graph-studio/CLAUDE.md`, which the track now carries itself.
+
 **Decision.** `CLAUDE.md` at the repository root gains a `scene-graph-studio` entry under `AI-LLM/`, and the subdirectory count is corrected.
 
 `CLAUDE.md` currently describes `AI-LLM/` as holding `paper/`, `beamer/` and `intro/`. `scene-graph-studio/` landed at `5341aee` and is undocumented, which means a session opened on this repository will not know that it exists, that it is a full-stack application rather than a PPTX track, or that the §3 deck specification does not apply to it. The entry states all three, alongside `security/` which is the existing precedent for a non-deck track.
@@ -523,6 +534,41 @@ at all, which is a stronger position than rendering it in a distinct style and h
 **Reversible.** Promoting a tier-B card is additive: fill its `reported` array and the test
 starts enforcing it. Nothing has to be restructured, which is why the tier is a property of the
 data rather than a separate file.
+
+---
+
+## D-22 Repository location is `scene-graph-studio/` inside WekaExt
+
+**Decided 2026-09-19.** Supersedes D-01 (location) and D-20 (where the track is documented).
+
+**Decision.** The project lives at `scene-graph-studio/` inside the WekaExt repository
+(`gitea.cillab.me/CIL-Team/WekaExt.git`). It remains **not** a separate repository and still does
+not get its own `git init` — that half of D-01 is upheld, not overturned. Its history was carried
+over by `git subtree`, so `git log` and `git blame` reach back to `5341aee`.
+
+**Why it moved.** `course-lab` is a teaching-materials repository whose tracks build PowerPoint
+decks and LaTeX courseware; this one shares nothing with them but the repository. WekaExt is a
+full-stack platform repository, which is what this is.
+
+**Rejected alternatives.** A nested independent repository that WekaExt ignores — strongest
+independence, but it needs its own remote and leaves the two trees related only by disk layout.
+A git submodule — an explicit recorded link, at the cost of `--recurse-submodules` on every clone
+and a pointer bump on every change.
+
+**Consequence, carried forward from D-01.** Large binary corpora are still not committed, and
+the reason is now its own rather than inherited: a 4.7 GB corpus belongs in neither a teaching
+repository nor a deployed platform repository. `data/_raw/` and `data/slices/*/images/` stay
+excluded by the track's own `.gitignore`; see D-08 for how slice images are handled instead.
+
+**What the move severed, and what replaced it.** The track inherited its project instructions
+from `course-lab/CLAUDE.md` and would have inherited none, since WekaExt's root has no such file;
+`scene-graph-studio/CLAUDE.md` now carries them. The two un-ignore negations `course-lab`
+required are gone, because WekaExt has no rule over this tree — `git check-ignore` over all 382
+tracked paths matches nothing.
+
+**Independence.** CI is a separate path-filtered workflow, `.gitea/workflows/scene-graph-studio.yml`.
+WekaExt's own `ci.yml` and `deploy.yml` are untouched, so the two pipelines cannot interfere.
+Deployment of this track remains out of scope.
 
 ---
 

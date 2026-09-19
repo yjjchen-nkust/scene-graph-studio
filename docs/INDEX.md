@@ -18,7 +18,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/specs/2026-09-15-…-PRD.md` | Users, goals G1–G5, curriculum M0–M14, what we will not claim | approved |
 | `superpowers/specs/2026-09-15-…-SRS.md` | Architecture, data model, eval engine, API surface, NFR-1…8 | approved |
 | `superpowers/specs/2026-09-15-…-design.md` | PRD + SRS + the nine-phase plan; §7 open items, all closed | approved |
-| `superpowers/specs/2026-09-15-…-decisions.md` | **D-01…D-21. Binding. Read before any task.** | live |
+| `superpowers/specs/2026-09-15-…-decisions.md` | **D-01…D-22. Binding. Read before any task.** | live |
 | `superpowers/specs/2026-09-15-…-contracts.md` | **Normative field names, types, enum spellings** | live |
 | `superpowers/specs/2026-09-16-indvissgg-reading.md` | The anchor paper read as M11's source | reference |
 | `superpowers/specs/2026-09-19-playgrounds-design.md` | The `playground` step kind, and the three that complete M0 | **awaiting review** |
@@ -28,7 +28,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/…-03-models-and-vlm.md` | Phases 5–6: registry, RelTR, L4, L6, L5 | **executed**; the measured prediction tier is blocked on licences, see PROVENANCE.md |
 | `superpowers/plans/…-04-labs-shells-hardening.md` | Phases 7–9: L3, L7, L8, shells, hardening | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D86. Every departure from plan, with its reason.** | live |
+| `../DEVIATIONS.md` | **D1…D87. Every departure from plan, with its reason.** | live |
 | `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13) and the runner (§14)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
@@ -39,11 +39,11 @@ drifts.
 
 ---
 
-## 2. Decisions — D-01 … D-21
+## 2. Decisions — D-01 … D-22
 
 | | | |
 |---|---|---|
-| **D-01** | Repository lives at `AI-LLM/scene-graph-studio/` | not its own repo |
+| **D-01** | Repository lives at `AI-LLM/scene-graph-studio/` | **superseded 2026-09-19 by D-22** |
 | **D-02** | Two machines; the ship target is the weaker | TEACH is ARM64, no CUDA |
 | **D-03** | Node ≥ 22.12 is a hard prerequisite | **closed: 24.19.0 on both machines** |
 | **D-04** | Dependency versions pinned at measured values | see master plan |
@@ -62,8 +62,9 @@ drifts.
 | **D-17** | Live VLM provider is Claude, opt-in via `.env` | offline player is the default |
 | **D-18** | Mini-ISG licence gate precedes any frame commit | |
 | **D-19** | Effort estimates and the cut order | 44 days, four plans |
-| **D-20** | The track is documented in the repo `CLAUDE.md` | and `KNOWLEDGE_BASE.md` §19 |
+| **D-20** | The track is documented in the repo `CLAUDE.md` | **superseded 2026-09-19 by D-22** |
 | **D-21** | Paper corpus is two tiers; only scored methods carry numbers | 35 cards, no unverified tier |
+| **D-22** | Repository lives at `scene-graph-studio/` inside WekaExt | supersedes D-01, D-20; still not its own repo |
 
 ---
 
