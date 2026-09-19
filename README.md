@@ -41,7 +41,7 @@ node tools/py.mjs                              # prints the interpreter it resol
 **Windows (PowerShell)** — both machines in D-02 run Windows, so this is the default path:
 
 ```powershell
-cd AI-LLM\scene-graph-studio
+cd scene-graph-studio
 .\start.ps1              # checks Node and Python, installs on first run, then launches
 ```
 
@@ -51,7 +51,7 @@ It is safe to re-run — every step it has already done is skipped.
 **Any platform:**
 
 ```bash
-cd AI-LLM/scene-graph-studio/system
+cd scene-graph-studio/system
 npm run setup     # installs both toolchains and generates the placeholder slice
 npm start         # starts the backend and the dev server together
 ```

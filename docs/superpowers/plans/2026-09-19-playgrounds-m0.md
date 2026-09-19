@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- **Working directory is `AI-LLM/scene-graph-studio/system/`.** Every `npm` command runs there.
+- **Working directory is `scene-graph-studio/system/` inside the WekaExt repository.** Every `npm` command runs there. (The track moved on 2026-09-19, between tasks 6 and 7 of this plan; see `specs/2026-09-19-relocation-design.md`.)
 - **Python is `py12`.** Never the bare `python` on PATH. Node scripts resolve it through `tools/py.mjs`.
 - **No P0 feature may depend on `torch`, on CUDA, on the network, or on an API key.** A playground fetches nothing at runtime.
 - **A playground computes a count, a bound, or a set membership. Never a metric.** Nothing in `frontend/src/playgrounds/` may import from `sgg-metrics` except its *types*.

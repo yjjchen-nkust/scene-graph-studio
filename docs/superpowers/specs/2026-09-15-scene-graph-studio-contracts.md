@@ -287,7 +287,7 @@ Those directories are git-ignored (D-08). They are populated either by `make_pla
 npm workspaces, so the TypeScript metric engine is a real package that both the app and the parity harness import.
 
 ```
-AI-LLM/scene-graph-studio/
+scene-graph-studio/system/
 ├── package.json                  workspace root; holds the `ci` script of D-15
 ├── packages/
 │   └── sgg-metrics/              the TypeScript engine — no DOM, no React, no fetch
