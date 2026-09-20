@@ -1,7 +1,7 @@
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { Choice, PlaygroundFrame, Readout, Toggle } from '../controls';
-import { isInE } from '../logic';
+import { flag, isInE } from '../logic';
 import { FRAMES, frameById } from '../slice';
 
 /**
@@ -21,20 +21,55 @@ export function DirectedEdges() {
   const { t } = useLocale();
   const [params, setParams] = useLabParams({
     'F8.img': FRAMES[0].image_id,
-    'F8.rel': 1,
+    'F8.rel': FRAMES[0].relationships[0]?.relationship_id ?? 0,
     'F8.swap': 0,
   });
 
   const frame = frameById(params['F8.img']) ?? FRAMES[0];
-  const relationship =
-    frame.relationships.find((r) => r.relationship_id === params['F8.rel']) ??
-    frame.relationships[0];
-  const swapped = params['F8.swap'] === 1;
+  const relationship = frame.relationships.find(
+    (r) => r.relationship_id === params['F8.rel'],
+  ) ?? frame.relationships[0];
+  const swapped = flag(params['F8.swap'], false);
+
+  const nameOf = (id: number) =>
+    frame.objects.find((o) => o.object_id === id)?.names[0] ?? String(id);
+
+  const frameChooser = (
+    <Choice
+      id="F8.img"
+      label={t('playground.frame')}
+      value={frame.image_id}
+      options={FRAMES.map((f) => ({ value: f.image_id, label: f.image_id }))}
+      onChange={(next) =>
+        setParams({
+          'F8.img': next,
+          // That frame's own first relationship, not the literal 1. Ids are unique across the
+          // slice, so 1 exists in ph-001 and nowhere else; resetting to it left five of six
+          // frames depending on the fallback above to recover a knob whose stated default was
+          // never one of their values.
+          'F8.rel': frameById(next)?.relationships[0]?.relationship_id ?? 0,
+          'F8.swap': 0,
+        })
+      }
+    />
+  );
+
+  // A frame nobody annotated. No committed frame is empty, so this is reachable only by
+  // regenerating the slice — but the alternative to saying so is dereferencing `undefined` and
+  // blanking the step, and a blank step in a lecture is the failure this codebase legislates
+  // against everywhere else.
+  if (!relationship) {
+    return (
+      <PlaygroundFrame title="F8" controls={frameChooser}>
+        <p data-testid="f8-empty" className="text-[1.5em] text-slate-700">
+          {t('playground.no_relationships')}
+        </p>
+      </PlaygroundFrame>
+    );
+  }
 
   const subjectId = swapped ? relationship.object_id : relationship.subject_id;
   const objectId = swapped ? relationship.subject_id : relationship.object_id;
-  const nameOf = (id: number) =>
-    frame.objects.find((o) => o.object_id === id)?.names[0] ?? String(id);
 
   const recorded = isInE(frame, {
     subject_id: subjectId,
@@ -44,13 +79,7 @@ export function DirectedEdges() {
 
   const controls = (
     <>
-      <Choice
-        id="F8.frame"
-        label={t('playground.frame')}
-        value={frame.image_id}
-        options={FRAMES.map((f) => ({ value: f.image_id, label: f.image_id }))}
-        onChange={(next) => setParams({ 'F8.img': next, 'F8.rel': 1, 'F8.swap': 0 })}
-      />
+      {frameChooser}
       <Choice
         id="F8.rel"
         label={t('playground.triplet')}
@@ -92,6 +121,7 @@ export function DirectedEdges() {
           </p>
         )}
         <Readout
+          id="F8.annotated"
           label={t('playground.annotated')}
           value={String(frame.relationships.length)}
           note={`|E| — ${frame.image_id}`}

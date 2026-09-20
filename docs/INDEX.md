@@ -29,7 +29,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/…-04-labs-shells-hardening.md` | Phases 7–9: L3, L7, L8, shells, hardening | **executed** |
 | `superpowers/plans/2026-09-19-playgrounds-m0.md` | The `playground` step kind, F1, F2, F8, the golden file, the lint rules | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D89. Every departure from plan, with its reason.** | live |
+| `../DEVIATIONS.md` | **D1…D90. Every departure from plan, with its reason.** | live |
 | `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14) and the playgrounds (§15)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
@@ -272,8 +272,8 @@ against the 24 px shell, and they are sized in `em` now. See D88 and VERIFICATIO
 its own cycle against the pattern this one established.
 
 **Verification.** `npm run ci` green, 2026-09-20: **266 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 13 agree, i18n 227 keys both locales,
-**599 vitest** in 53 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+compare the requirement files to the interpreter), parity 13 agree, i18n 228 keys both locales,
+**607 vitest** in 54 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 43 symbols, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`:

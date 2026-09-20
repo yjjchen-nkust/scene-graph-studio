@@ -41,9 +41,20 @@ describe('the control kit is made of real form controls', () => {
   });
 
   it('Readout shows a number beside where it came from', () => {
-    render(<Readout label="Candidates" value="480" note="6 x 5 x 16" />);
-    expect(screen.getByTestId('readout-Candidates')).toHaveTextContent('480');
-    expect(screen.getByTestId('readout-Candidates')).toHaveTextContent('6 x 5 x 16');
+    render(<Readout id="F1.candidates" label="Candidates" value="480" note="6 x 5 x 16" />);
+    expect(screen.getByTestId('readout-F1.candidates')).toHaveTextContent('480');
+    expect(screen.getByTestId('readout-F1.candidates')).toHaveTextContent('6 x 5 x 16');
+  });
+
+  it('Readout keys its test id on the id, not on the label the locale changes', () => {
+    // The test id was `readout-${label}`, so `readout-Candidate triplets` existed under `en`
+    // and nothing equivalent existed under `zh-TW`. Every browser assertion that addressed a
+    // readout was therefore a test of the English build, passing only because the describe
+    // block around it forced the locale.
+    const { rerender } = render(<Readout id="F1.candidates" label="Candidates" value="480" note="n" />);
+    expect(screen.getByTestId('readout-F1.candidates')).toBeInTheDocument();
+    rerender(<Readout id="F1.candidates" label="候選三元組數" value="480" note="n" />);
+    expect(screen.getByTestId('readout-F1.candidates')).toHaveTextContent('候選三元組數');
   });
 
   it('PlaygroundFrame puts the controls before the visual in document order', () => {

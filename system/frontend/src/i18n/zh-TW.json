@@ -208,6 +208,7 @@
   "playground.in_e": "此邊收錄於 E",
   "playground.not_in_e": "此邊未收錄於 E",
   "playground.not_in_e_note": "未收錄與為偽並非同一陳述。",
+  "playground.no_relationships": "此影像未標註任何關係，因此無可交換之邊。",
   "playground.triplet": "三元組",
   "lab.loading": "正在載入切片……",
   "lab.unknown": "查無此實作單元",

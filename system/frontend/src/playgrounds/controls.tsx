@@ -94,10 +94,19 @@ export function Choice({
  * `note` is not decoration. NFR-2 requires a number to carry where it came from, and in a
  * playground that source is arithmetic the student can check rather than a citation they must
  * trust — so the note holds the arithmetic.
+ *
+ * `id` is the test id and `label` is only ever displayed. The test id was built from the label
+ * until 2026-09-20, which made `readout-Candidate triplets` an element that exists under `en` and
+ * under no other locale — so every browser assertion addressing a readout was really a test of
+ * the English build, passing because the describe block around it forced the locale. Ids are
+ * namespaced by playground (`F1.candidates`) because the study shell renders all three in one
+ * column and two of them count candidates.
  */
-export function Readout({ label, value, note }: { label: string; value: string; note: string }) {
+export function Readout({
+  id, label, value, note,
+}: { id: string; label: string; value: string; note: string }) {
   return (
-    <div data-testid={`readout-${label}`} className="flex flex-col">
+    <div data-testid={`readout-${id}`} className="flex flex-col">
       <span className="text-[0.875em] uppercase tracking-wide text-slate-700">{label}</span>
       <span className="font-mono text-[1.5em] tabular-nums text-slate-900">{value}</span>
       <span className="font-mono text-[0.875em] text-slate-700">{note}</span>

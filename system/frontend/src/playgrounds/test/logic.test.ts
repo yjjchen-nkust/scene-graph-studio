@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FRAMES, frameById } from '../slice';
 import {
-  candidateSpace, clamp, densityCut, formatRatio, isInE, ratio, tripletKey,
+  candidateSpace, clamp, densityCut, flag, formatRatio, isInE, ratio, tripletKey,
 } from '../logic';
 
 const ph001 = frameById('ph-001')!;
@@ -113,5 +113,21 @@ describe('clamp', () => {
 describe('the frames this all runs on', () => {
   it('has six of them', () => {
     expect(FRAMES).toHaveLength(6);
+  });
+});
+
+describe('flag', () => {
+  it('reads the two values a toggle writes', () => {
+    expect(flag(1, false)).toBe(true);
+    expect(flag(0, true)).toBe(false);
+  });
+
+  it('returns the default for a value the URL invented, rather than the opposite of it', () => {
+    // `=== 1` reads every one of these as off, so `?F2.directed=2` silently selected the state
+    // opposite the default and the panel showed a halved candidate space nobody asked for.
+    expect(flag(2, true)).toBe(true);
+    expect(flag(-1, true)).toBe(true);
+    expect(flag(7, false)).toBe(false);
+    expect(flag(Number.NaN, true)).toBe(true);
   });
 });

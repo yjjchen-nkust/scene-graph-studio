@@ -15,3 +15,9 @@ system/web/brief/index.html   eol=lf
 # real uncommitted change goes unnoticed. Pinning the directory keeps checkout and harvest
 # writing the same bytes, and covers whatever the harvest emits next without a second edit here.
 data/content/*.json           eol=lf
+
+# The slice cutters are Python and write LF for the same reason the Node tools do. A slice is cut
+# rarely (D-08), so this never reached the gate -- which is exactly why it would have been found
+# by somebody re-cutting a slice months from now and reading three thousand changed lines that
+# were not changes. Stated here with the rest rather than left as the one case that got away.
+data/slices/**/*.json         eol=lf

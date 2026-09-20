@@ -31,14 +31,14 @@ describe('F2', () => {
 
   it('states the candidate space before a single edge is built', () => {
     mount();
-    expect(screen.getByTestId('readout-Candidate triplets')).toHaveTextContent('480');
-    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('0');
+    expect(screen.getByTestId('readout-F2.candidates')).toHaveTextContent('480');
+    expect(screen.getByTestId('readout-F2.built')).toHaveTextContent('0');
   });
 
   it('counts an edge the student builds', () => {
     mount();
     addEdge('1', '2');
-    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('1');
+    expect(screen.getByTestId('readout-F2.built')).toHaveTextContent('1');
   });
 
   // Review Focus 2.
@@ -48,7 +48,7 @@ describe('F2', () => {
     fireEvent.click(screen.getByTestId('node-1'));
     expect(screen.getByTestId('f2-notice')).toHaveTextContent('two different objects');
     fireEvent.click(screen.getByRole('button', { name: 'Add edge' }));
-    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('0');
+    expect(screen.getByTestId('readout-F2.built')).toHaveTextContent('0');
   });
 
   // Review Focus 3.
@@ -56,25 +56,25 @@ describe('F2', () => {
     mount();
     addEdge('1', '2');
     addEdge('1', '2');
-    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('1');
+    expect(screen.getByTestId('readout-F2.built')).toHaveTextContent('1');
     expect(screen.getByTestId('f2-notice')).toHaveTextContent('already built');
   });
 
   it('halves the candidate space when direction is discarded', () => {
     mount();
     fireEvent.click(screen.getByLabelText('Directed arrows'));
-    expect(screen.getByTestId('readout-Candidate triplets')).toHaveTextContent('240');
+    expect(screen.getByTestId('readout-F2.candidates')).toHaveTextContent('240');
   });
 
   it('names the edges that become indistinguishable once direction is discarded', () => {
     mount();
     addEdge('1', '2', 'on');
     addEdge('2', '1', 'on');
-    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('2');
+    expect(screen.getByTestId('readout-F2.built')).toHaveTextContent('2');
 
     fireEvent.click(screen.getByLabelText('Directed arrows'));
     expect(screen.getByTestId('f2-collapsed')).toHaveTextContent('on');
-    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('1');
+    expect(screen.getByTestId('readout-F2.built')).toHaveTextContent('1');
   });
 
   // Spec §4.3: knob state lives in the query string, so a shared link restores the whole
@@ -112,7 +112,12 @@ describe('F2', () => {
     mount();
     fireEvent.click(screen.getByRole('button', { name: 'Add edge' }));
     expect(screen.getByTestId('f2-notice')).toHaveTextContent('subject and an object');
-    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('0');
+    expect(screen.getByTestId('readout-F2.built')).toHaveTextContent('0');
+  });
+
+  it('reads a direction value the URL invented as the default, not as its opposite', () => {
+    mount('?F2.directed=2');
+    expect(screen.getByTestId('readout-F2.candidates')).toHaveTextContent('480');
   });
 
   it('does not take focus when it mounts', () => {
