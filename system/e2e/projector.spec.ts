@@ -150,10 +150,17 @@ for (const size of SIZES) {
     test('the position and the clock stay on screen on a slide that is too long', async ({
       page,
     }) => {
-      // M00 step 2 is the longest slide in the corpus: 1030 px past the bottom of an XGA panel.
-      // The step scrolls inside the shell; the page does not, so the two things that say where
-      // the lecture is do not scroll away with it.
-      await page.goto('/lecture/m/m00/1');
+      // M00's math step is the longest slide in the corpus: 1030 px past the bottom of an XGA
+      // panel. The step scrolls inside the shell; the page does not, so the two things that say
+      // where the lecture is do not scroll away with it.
+      //
+      // Index 2, not 1. The three playground steps added to M0 renumbered the deck, and this
+      // test kept the old number. Measured at XGA, M0's seven steps overflow the panel by
+      // 0, 146, 1030, 0, 0, 0 and 0 px: index 2 is the slide the 1030 above refers to, and
+      // index 1 is now F1, whose visual is clipped at 46vh. The assertion passed at index 1
+      // too, which is the problem with leaving it there -- an assertion about a slide too long
+      // to fit, made against one that nearly does.
+      await page.goto('/lecture/m/m00/2');
       await expect(page.getByTestId('lecture-root')).toBeVisible();
 
       const pageScroll = await page.evaluate(
@@ -171,23 +178,43 @@ for (const size of SIZES) {
     });
 
     test('every painted word meets NFR-5 on the contrast the browser computed', async ({ page }) => {
+      // Two steps, not one. Index 2 is the mathematics this was written against; index 1 is the
+      // F1 playground, whose readouts and notes are a second palette on the same slide, drawn
+      // from Tailwind's scale rather than from `palette.ts`. Before the playgrounds landed this
+      // test visited index 1 and that was the mathematics; the renumbering moved it, and
+      // measuring only one of the two would leave whichever it is unchecked.
+      for (const step of [2, 1]) {
+        await page.goto(`/lecture/m/m00/${step}`);
+        await expect(page.getByTestId('lecture-root')).toBeVisible();
+
+        const measured = await painted(
+          page,
+          '[data-testid="lecture-root"] h1, [data-testid="lecture-root"] h2, ' +
+            '[data-testid="lecture-root"] h3, [data-testid="lecture-root"] p, ' +
+            '[data-testid="lecture-root"] li, [data-testid="lecture-root"] span, ' +
+            '[data-testid="lecture-root"] td, [data-testid="lecture-root"] th',
+        );
+
+        expect(measured.length, `step ${step}: nothing was measured`).toBeGreaterThan(3);
+        const failures = measured.filter((row) => row.ratio < 7);
+        expect(
+          failures,
+          `step ${step}, below 7:1 as painted: ${JSON.stringify(failures, null, 2)}`,
+        ).toEqual([]);
+      }
+    });
+
+    test('a playground step fits the panel, with its controls reachable', async ({ page }) => {
       await page.goto('/lecture/m/m00/1');
-      await expect(page.getByTestId('lecture-root')).toBeVisible();
+      const controls = page.getByTestId('playground-controls');
+      await expect(controls).toBeInViewport();
 
-      const measured = await painted(
-        page,
-        '[data-testid="lecture-root"] h1, [data-testid="lecture-root"] h2, ' +
-          '[data-testid="lecture-root"] h3, [data-testid="lecture-root"] p, ' +
-          '[data-testid="lecture-root"] li, [data-testid="lecture-root"] span, ' +
-          '[data-testid="lecture-root"] td, [data-testid="lecture-root"] th',
-      );
-
-      expect(measured.length, 'nothing was measured, so nothing was checked').toBeGreaterThan(3);
-      const failures = measured.filter((row) => row.ratio < 7);
-      expect(
-        failures,
-        `below 7:1 as painted: ${JSON.stringify(failures, null, 2)}`,
-      ).toEqual([]);
+      // D71 accepted 25 of 92 slides overflowing an XGA panel. Controls above the visual is the
+      // rule that keeps a playground off that list: the picture may be clipped, the knobs may not.
+      const box = await controls.boundingBox();
+      const height = page.viewportSize()?.height ?? 0;
+      expect(box, 'controls have a box').not.toBeNull();
+      expect(box!.y + box!.height).toBeLessThanOrEqual(height);
     });
 
     test('capture the slide for the author to judge against a real room', async ({ page }) => {

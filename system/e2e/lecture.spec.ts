@@ -132,4 +132,62 @@ test('a mistyped URL says so rather than showing an empty shell', async ({ page 
   await page.goto('/lecture/m/m99/0');
   await expect(page.getByText('No such page')).toBeVisible();
 });
+test('a playground computes with no backend running', async ({ page }) => {
+  // This file starts no backend. A playground that fetched its data would show nothing here,
+  // which is the whole difference between the guarantee and the intention. offline.spec.ts
+  // cannot make this check: it asserts nothing is fetched from *outside this origin*, and the
+  // proxy makes /api same-origin.
+  await page.goto('/lecture/m/m00/1');
+  await expect(page.getByTestId('playground-frame')).toBeVisible();
+  await expect(page.getByTestId('readout-Candidate triplets')).toContainText('480');
+  await expect(page.getByTestId('readout-Annotated share')).toContainText('1.25%');
+});
+
+test('a knob is reachable by keyboard, and turning it does not advance the deck', async ({ page }) => {
+  await page.goto('/lecture/m/m00/1');
+  const position = page.getByTestId('position');
+  const before = await position.textContent();
+
+  const annotated = page.getByTestId('readout-Annotated edges');
+  const annotatedBefore = await annotated.textContent();
+
+  // Tab into the playground rather than clicking it: a professor at the podium has a remote.
+  await page.getByLabel('Annotation density').focus();
+  await page.keyboard.press('ArrowLeft');
+
+  // The slider moved. Asserted as a change from what was there, not against a literal: a
+  // literal that happens not to appear makes this pass whether or not the key did anything.
+  await expect(annotated).not.toHaveText(annotatedBefore ?? '');
+  // ...and the deck did not. `isTextEntry` gives every key to a focused INPUT; a knob built
+  // from a styled div would fail exactly here.
+  await expect(position).toHaveText(before ?? '');
+});
+
+test('the node buttons of F2 take Space without advancing the slide', async ({ page }) => {
+  await page.goto('/lecture/m/m00/3');
+  const position = page.getByTestId('position');
+  const before = await position.textContent();
+  await page.getByTestId('node-1').focus();
+  await page.keyboard.press('Space');
+  await expect(page.getByTestId('node-1')).toHaveAttribute('data-role', 'subject');
+  await expect(position).toHaveText(before ?? '');
+});
+
+test('the study shell renders all three playgrounds in one column', async ({ page }) => {
+  // Spec §4.1 says the study shell needs no special provision, which is a claim about the
+  // product rather than an absence of work: it is true only if a playground renders outside the
+  // lecture shell at all. M0 has three, and the student reading alone sees every one of them.
+  await page.goto('/m/m00');
+  await expect(page.getByTestId('playground-frame')).toHaveCount(3);
+  await expect(page.getByTestId('readout-Candidate triplets').first()).toContainText('480');
+});
+
+test('no playground takes focus when its step opens', async ({ page }) => {
+  for (const index of [1, 3, 4]) {
+    await page.goto(`/lecture/m/m00/${index}`);
+    await expect(page.getByTestId('playground-frame')).toBeVisible();
+    const tag = await page.evaluate(() => document.activeElement?.tagName ?? '');
+    expect(tag).toBe('BODY');
+  }
+});
 });
