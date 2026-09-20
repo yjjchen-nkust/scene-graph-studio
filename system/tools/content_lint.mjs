@@ -136,6 +136,14 @@ function scalar(raw) {
   return text;
 }
 
+/** The slice of an MDX body between one `<Step id="...">` and the next. */
+function stepBody(body, stepId) {
+  const open = body.indexOf(`<Step id="${stepId}">`);
+  if (open < 0) return '';
+  const next = body.indexOf('<Step id="', open + 1);
+  return body.slice(open, next < 0 ? body.length : next);
+}
+
 function frontmatter(source, where) {
   const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(source);
   if (!match) {
@@ -190,6 +198,32 @@ const KP = new Set(POINTS.map((p) => p.id));
 // output and `npm run harvest` rewrites it wholesale, so an editorial field stored there is
 // erased by the next CI run. D29.
 const ASSIGNMENT = JSON.parse(readFileSync('../data/content/assignment.json', 'utf-8')).modules;
+
+// The registered playgrounds, read from the mount table rather than from a list beside it. A
+// regex over a .tsx file is crude, and the alternative is a second list that can disagree with
+// the first -- which is the failure this whole file exists to catch.
+//
+// Paths in this file are relative to system/, as every other read here is.
+const REGISTERED = new Set(
+  [...readFileSync('frontend/src/playgrounds/mounts.tsx', 'utf-8')
+    .matchAll(/^\s{2}([A-Z]\d+):\s/gm)].map((m) => m[1]),
+);
+
+const PLAYGROUND_GOLDEN = JSON.parse(
+  readFileSync('../data/content/playground_golden.json', 'utf-8'),
+);
+
+// The playground golden cases. Not beside the evaluation engine's golden-vector check at the top
+// of this file, although they are the same kind of artefact: this rule needs REGISTERED, and a
+// const is not reachable before its declaration.
+for (const c of PLAYGROUND_GOLDEN.cases) {
+  if (!c.why || c.why.length < 40) {
+    problems.push(`${c.id}: 'why' must write out the arithmetic a reader would check`);
+  }
+  if (!REGISTERED.has(c.kp)) {
+    problems.push(`${c.id}: golden case for '${c.kp}', which has no registered component`);
+  }
+}
 const owned = new Map(Object.entries(ASSIGNMENT));
 const moduleOf = new Map();
 for (const [module, points] of owned) {
@@ -268,6 +302,19 @@ for (const [id, locales] of [...modules].sort()) {
             `[${noted[1].join(', ') || 'none'}] in ${LOCALES[1]}. Both locales or neither.`,
         );
       }
+
+      // A step's kind and kp are not translated, so the two files must name the same component
+      // at the same position. Divergence here puts a different playground on the projector when
+      // the lecturer switches language mid-class, which the step-id check above cannot see.
+      for (let i = 0; i < Math.min(a.length, b.length); i += 1) {
+        if (a[i].kind === 'playground' || b[i].kind === 'playground') {
+          if (a[i].kind !== b[i].kind || a[i].kp !== b[i].kp) {
+            problems.push(`${id}: step '${a[i].id}' is ${a[i].kind}/${a[i].kp ?? '\u2014'} in ` +
+                          `${LOCALES[0]} and ${b[i].kind}/${b[i].kp ?? '\u2014'} in ${LOCALES[1]}. ` +
+                          `A playground must be the same playground in both languages.`);
+          }
+        }
+      }
     }
   }
 
@@ -276,6 +323,10 @@ for (const [id, locales] of [...modules].sort()) {
     if (meta.id !== id) {
       problems.push(`${file}: frontmatter id '${meta.id}' does not match the filename`);
     }
+
+    // Hoisted above the step loop: the playground rules read the body too, and computing it
+    // twice from the same source is two places for the offset arithmetic to drift.
+    const body = source.slice(source.indexOf('\n---', 4) + 4);
 
     for (const step of meta.steps ?? []) {
       if (step[FOREIGN[locale]] !== undefined) {
@@ -301,6 +352,42 @@ for (const [id, locales] of [...modules].sort()) {
             `notes; a new module writes its own rather than shipping an empty notes pane.`,
         );
       }
+
+      // The playground contract, contracts §2.4. A playground is the one step kind whose
+      // frontmatter names a component in another tree, so every way the two can disagree is a
+      // way the lecture shows an empty box on a projector.
+      if (step.kind === 'playground') {
+        if (!step.kp) {
+          problems.push(`${file}: step '${step.id}' is a playground and names no kp. ` +
+                        `Contracts §2.4 requires one.`);
+        } else {
+          if (!KP.has(step.kp)) {
+            problems.push(`${file}: step '${step.id}' names kp '${step.kp}', not in kp.json`);
+          }
+          const ownedHere = (ASSIGNMENT[meta.id] ?? []).includes(step.kp);
+          const cited = (meta.knowledge_points ?? []).includes(step.kp);
+          if (!ownedHere && !cited) {
+            problems.push(`${file}: step '${step.id}' has a playground for '${step.kp}', which ` +
+                          `this module neither owns nor cites. A playground for a point the ` +
+                          `module does not teach is a misfiled widget.`);
+          }
+          if (!REGISTERED.has(step.kp)) {
+            problems.push(`${file}: no component is registered for '${step.kp}' in ` +
+                          `frontend/src/playgrounds/mounts.tsx`);
+          }
+          const tags = [...body.matchAll(/<Playground\s+kp="([^"]+)"/g)].map((m) => m[1]);
+          const forThisStep = stepBody(body, step.id);
+          const inStep = [...forThisStep.matchAll(/<Playground\s+kp="([^"]+)"/g)].map((m) => m[1]);
+          if (inStep.length !== 1 || inStep[0] !== step.kp) {
+            problems.push(`${file}: step '${step.id}' declares kp '${step.kp}' but its body ` +
+                          `carries ${inStep.length === 0 ? 'no <Playground>' : inStep.join(', ')}. ` +
+                          `Frontmatter and body disagreeing is the defect this catches.`);
+          }
+          if (tags.filter((t) => t === step.kp).length > 1) {
+            problems.push(`${file}: '${step.kp}' is mounted more than once in this module`);
+          }
+        }
+      }
     }
 
     // The four-part contract, in order, in the body of a module that has a math step.
@@ -309,7 +396,6 @@ for (const [id, locales] of [...modules].sort()) {
       // one found would report a part that is merely out of order as absent, which is what it
       // did when this was watched to fail: swapping Formal and Worked produced both "no
       // <Worked>" and the ordering complaint, and only the second was true.
-      const body = source.slice(source.indexOf('\n---', 4) + 4);
       const at = CONTRACT.map((name) => body.indexOf(`<${name}`));
       const missing = CONTRACT.filter((_, i) => at[i] < 0);
       if (missing.length) {
