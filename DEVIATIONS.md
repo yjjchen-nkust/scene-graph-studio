@@ -2397,3 +2397,35 @@ candidate space never counted. And the collapsed panel named only the second edg
 pair, while both presenter notes promise the edges, plural — it groups by key and prints the whole
 group. `Add edge` with no pair chosen also said nothing at all, which is the silent non-response
 this codebase legislates against everywhere else; it now says what is missing.
+
+## D89 — the gate left the tree dirty on every green run
+
+**Plan:** none. An infrastructure finding, recorded here for the same reason D85 is: a gate that
+reports something untrue about the working tree on every run trains the reader to stop looking.
+
+`npm run harvest` is step 1 of the gate and rewrites `kp.json`, `math.json` and `deriv.json` from
+the frozen page on every invocation, emitting bare LF. The blobs are LF, as they should be, but
+`core.autocrlf=true` checks them out as CRLF — 981 carriage returns in `kp.json` alone. So the
+first step of a twelve-step gate left three files reported modified by `git status` while
+`git diff` printed nothing at all, on every single green run.
+
+Nothing was ever wrong with the content, which is exactly the problem. `git status` is what
+answers "did this cycle leave anything behind", and an answer that is three false positives every
+time is an answer nobody reads. During this cycle the three files had to be restored by hand
+before each of the six commits, and a real uncommitted change in that directory would have been
+invisible among them.
+
+`.gitattributes` pins `data/content/*.json` to `eol=lf`, so checkout and harvest write the same
+bytes. The directory rather than the three filenames, so whatever the harvest emits next is
+covered without a second edit. Verified by running the full gate and reading `git status`
+afterwards: clean.
+
+This is the second instance of the same defect in this file. The existing rule above it, pinning
+the two brief files, was written when `lint:standalone` compared a generated file against a fresh
+rebuild with string equality and failed after any checkout. Same cause, different symptom: there
+the mismatch failed a step, here it passed every step and lied about the tree.
+
+**Not fixed, and stated rather than left to be discovered:** `data/slices/*/annotations.json` and
+the manifests are written by the Python cutters and carry the same exposure. They are not part of
+the gate and a slice is cut rarely (D-08), so nothing has been changed there; a re-cut will dirty
+them the same way until it is.

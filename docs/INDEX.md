@@ -29,7 +29,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/…-04-labs-shells-hardening.md` | Phases 7–9: L3, L7, L8, shells, hardening | **executed** |
 | `superpowers/plans/2026-09-19-playgrounds-m0.md` | The `playground` step kind, F1, F2, F8, the golden file, the lint rules | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D88. Every departure from plan, with its reason.** | live |
+| `../DEVIATIONS.md` | **D1…D89. Every departure from plan, with its reason.** | live |
 | `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14) and the playgrounds (§15)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
@@ -323,6 +323,7 @@ until they had already happened.
 | A colour's contrast ratio written into a comment from memory reads as a measurement and is not one | `DEVIATIONS.md` D54 |
 | A contrast instrument that parses one colour syntax silently skips every element written in another, and reports a pass over the quarter of the slide it could read | `DEVIATIONS.md` D88 |
 | A framework that sizes in rem puts its text at the document root, not at the shell the component is mounted in, so a 24 px lecture can contain 14 px type | `DEVIATIONS.md` D88 |
+| A generated file that git checks out with different line endings than the generator writes leaves `git status` dirty after every green run, with `git diff` showing nothing | `DEVIATIONS.md` D89, and the rule above it in `.gitattributes` |
 | An input-to-paint measurement that awaits two animation frames cannot report less than two frame intervals, so five different labs all came back at the display's cadence | `DEVIATIONS.md` D74 |
 | `<rect fill="none">` is hit-tested on its outline only, and handing the interior to the browser hands the choice to paint order | `DEVIATIONS.md` D75 |
 | jsdom has no hit testing, so a DOM test of "what does this click select" passes against a component nothing can click | `DEVIATIONS.md` D75 |

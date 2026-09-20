@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate and §15 the playgrounds), and all 88 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate and §15 the playgrounds), and all 89 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -68,6 +68,11 @@ cd scene-graph-studio\system ; npm run ci
 - **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and
   `npm run lint:standalone` asserts they agree. Edit the source, then run
   `npm run build:standalone` in the same commit.
+- **Generated files are pinned to LF in `.gitattributes`, and the reasons are written there.**
+  `core.autocrlf=true` checks a file out as CRLF while every generator here writes LF, which
+  either fails a byte-equality step or — worse, because it is silent — leaves `git status`
+  dirty after every green gate with `git diff` showing nothing (**D89**). Adding a generator
+  that writes into a tracked path means adding its path there too.
 - **Large binary corpora are not committed.** `data/_raw/` (4.7 GB) and `data/slices/*/images/`
   are excluded by this track's own `.gitignore`; `fetch-data.ps1` retrieves them. WekaExt's root
   `.gitignore` has no rule over this tree, so every exclusion the track needs is stated locally.
