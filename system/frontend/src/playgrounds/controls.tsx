@@ -19,8 +19,8 @@ import type { ReactNode } from 'react';
  * measurement would read differently in each locale.
  */
 
-const LABEL = 'text-base font-medium text-slate-700';
-const FIELD = 'rounded border border-slate-300 bg-white px-2 py-1 text-base';
+const LABEL = 'text-[1em] font-medium text-slate-700';
+const FIELD = 'rounded border border-slate-300 bg-white px-2 py-1 text-[1em]';
 
 export function Toggle({
   id, label, checked, onChange,
@@ -59,7 +59,7 @@ export function Slider({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
       />
-      <span className="font-mono text-base tabular-nums text-slate-600">{valueLabel}</span>
+      <span className="font-mono text-[1em] tabular-nums text-slate-600">{valueLabel}</span>
     </span>
   );
 }
@@ -98,9 +98,9 @@ export function Choice({
 export function Readout({ label, value, note }: { label: string; value: string; note: string }) {
   return (
     <div data-testid={`readout-${label}`} className="flex flex-col">
-      <span className="text-sm uppercase tracking-wide text-slate-500">{label}</span>
-      <span className="font-mono text-2xl tabular-nums text-slate-900">{value}</span>
-      <span className="font-mono text-sm text-slate-500">{note}</span>
+      <span className="text-[0.875em] uppercase tracking-wide text-slate-700">{label}</span>
+      <span className="font-mono text-[1.5em] tabular-nums text-slate-900">{value}</span>
+      <span className="font-mono text-[0.875em] text-slate-700">{note}</span>
     </div>
   );
 }

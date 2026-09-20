@@ -258,17 +258,26 @@ the sum a reader would check. Eight lint rules hold the frontmatter, the body, t
 the two locales together, and each was watched failing. M0 went from 4 steps to 7, and the corpus
 from 92 to 95. See D88.
 
+**Review found the projector check blind on exactly this content.** `projector.spec.ts` resolved
+a colour by regex over `rgb()` and skipped what it could not parse; Tailwind v4 emits `oklch()`,
+so 13 of 20 text rows on the F1 step were never measured and the readouts were sitting at 4.55:1
+against a binding 7:1. The instrument paints to a canvas now, reports what it could not read, and
+asserts that report is empty before judging anything else; the ink is `slate-700`, `emerald-900`
+and `amber-900`, measured at 9.90, 9.20 and 8.66. The playgrounds were also the smallest type in
+the corpus at 14 px, because Tailwind sizes in rem against the document root rather than em
+against the 24 px shell, and they are sized in `em` now. See D88 and VERIFICATION §15.
+
 **Twenty-five live knowledge points still have no playground.** `kp.json` marks 27 points
 `status: 'live'`; F1 and F2 are two of them, and F8 is not among them at all, so 25 remain. Each is
 its own cycle against the pattern this one established.
 
 **Verification.** `npm run ci` green, 2026-09-20: **266 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 13 agree, i18n 225 keys both locales,
-**595 vitest** in 53 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+compare the requirement files to the interpreter), parity 13 agree, i18n 227 keys both locales,
+**599 vitest** in 53 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 43 symbols, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`:
-35 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
+38 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
 check:perf`: 13 passed, NFR-8 measured plus the D75 selection guard.
 
@@ -312,6 +321,8 @@ until they had already happened.
 | A scrolling container clamps its child's bounding rectangle, so the overflow you measure is zero | `DEVIATIONS.md` D70 |
 | A layout measured before the webfonts decode is a layout that is never painted | `DEVIATIONS.md` D70 |
 | A colour's contrast ratio written into a comment from memory reads as a measurement and is not one | `DEVIATIONS.md` D54 |
+| A contrast instrument that parses one colour syntax silently skips every element written in another, and reports a pass over the quarter of the slide it could read | `DEVIATIONS.md` D88 |
+| A framework that sizes in rem puts its text at the document root, not at the shell the component is mounted in, so a 24 px lecture can contain 14 px type | `DEVIATIONS.md` D88 |
 | An input-to-paint measurement that awaits two animation frames cannot report less than two frame intervals, so five different labs all came back at the display's cadence | `DEVIATIONS.md` D74 |
 | `<rect fill="none">` is hit-tested on its outline only, and handing the interior to the browser hands the choice to paint order | `DEVIATIONS.md` D75 |
 | jsdom has no hit testing, so a DOM test of "what does this click select" passes against a component nothing can click | `DEVIATIONS.md` D75 |

@@ -201,6 +201,8 @@
   "playground.reset": "清除",
   "playground.self_pair": "關係連接兩個相異物件，此配對不在候選空間之內。",
   "playground.duplicate": "此三元組已建立。",
+  "playground.and": "、",
+  "playground.need_pair": "請先選定主體與客體，再加入邊。",
   "playground.collapsed": "捨棄方向後無法區辨者：",
   "playground.swap": "交換主體與客體",
   "playground.in_e": "此邊收錄於 E",

@@ -2342,9 +2342,10 @@ too long to fit, quoting a measured 1030 px of overflow, and one measuring every
 against NFR-5's 7:1. Both still passed, which is the problem — measured at XGA, M0's seven steps
 now overflow the panel by 0, 146, 1030, 0, 0, 0 and 0 px, so the 1030 belongs to index 2 and the
 first test had been left asserting something about an over-long slide against one that nearly
-fits. It is repointed to index 2. The contrast test now walks index 2 and index 1 both, because
-the playground's readouts draw from Tailwind's slate scale rather than from `palette.ts` and are
-a second palette on the same lecture; it passes at 7:1 on all three panels.
+fits. It is repointed to index 2. The contrast test now walks index 2, 1, 3 and 4, because the
+playgrounds' readouts draw from Tailwind's scale rather than from `palette.ts` and are a second
+palette on the same deck. **When first repointed this reported a pass, and that pass was false**
+— see the entry below.
 
 Two of Task 4's tests in `frontend/src/content/test/registry.test.tsx` failed against the M0 this
 cycle produced, and both were right to. One pinned M0's step ids to the old four. The other
@@ -2353,3 +2354,46 @@ a playground step and became a real render the moment one did — a playground r
 `useSearchParams`, so it needs a router. It now renders inside `MemoryRouter` and asserts that a
 playground step mounts a `playground-frame` and not the `playground-unknown` placeholder, because
 an unregistered kp also does not throw.
+
+**The contrast instrument could not see the colours this cycle added, and the readouts were
+below 7:1.** Found in review, 2026-09-20. `projector.spec.ts` resolved a computed colour with
+`/rgba?\((\d+),\s*(\d+),\s*(\d+)/` and skipped any element it could not parse. The frontend is
+Tailwind v4.3.3, which emits `oklch()` for every colour utility, so every Tailwind-styled element
+was dropped in silence: on the F1 step, 13 of 20 text rows, including all four readouts. The
+`palette.ts` content the test was written against is plain `rgb()` and was measured all along —
+195 of 195 rows on the mathematics step — which is why a blind instrument had gone on reporting a
+pass. The floor assertion did not catch it either: it required more than 3 rows, and the 7
+survivors cleared it.
+
+Underneath the instrument was a real NFR-5 breach, on exactly the numbers a playground exists to
+display. Measured at XGA against the frame's own background, `rgb(248,250,252)`:
+
+| Ink | Where | Was | Now |
+|---|---|---|---|
+| `text-slate-500` → `text-slate-700` | readout label, and the NFR-2 provenance note under it | **4.55** | 9.90 |
+| `text-emerald-700` → `text-emerald-900` | F8's 「此邊收錄於 E」 status | **5.13** | 9.20 |
+| `text-amber-700` → `text-amber-900` | F2's refusal notices | **4.81** | 8.66 |
+
+Three changes follow. The parser paints the colour to a 1×1 canvas and reads the pixel, which
+resolves any syntax the browser accepts rather than the two this project happened to use, and
+returns the alpha the backdrop walk needs. `painted()` now returns what it *failed* to read, and
+the test asserts that list is empty before judging anything it did read — an instrument that
+cannot say what it skipped cannot be trusted to say the rest passed, which is the same finding as
+the `undefined` at §14 and D54's contrast ratio written from memory. And the walk covers steps 2,
+1, 3 and 4, so all three playgrounds are measured rather than only F1.
+
+**The playgrounds were the smallest type in the corpus.** Tailwind's `text-sm` and `text-base`
+are rem against the 16 px document root, not em against `lecture-root`'s 24 px, so the readout
+labels rendered at 14 px on a projector while nothing else in the deck goes below 18 px. The
+playgrounds are now sized in `em`, so they inherit whichever shell they are in — 21/24/36/45 px
+in the lecture, unchanged in the study column — and `projector.spec.ts` asserts no playground text
+falls below the deck's 18 px floor at any of the three panel sizes.
+
+**Two more from the same review.** F2's predicate knob was `useState` while its direction knob was
+in the query string, so `?F2.predicate=near` was a parameter the control advertised by its id and
+then ignored, and a shared link never restored it; spec §4.3 puts knob state in the URL, and it is
+there now, with a value outside |P| falling back to the vocabulary rather than building an edge the
+candidate space never counted. And the collapsed panel named only the second edge of each merged
+pair, while both presenter notes promise the edges, plural — it groups by key and prints the whole
+group. `Add edge` with no pair chosen also said nothing at all, which is the silent non-response
+this codebase legislates against everywhere else; it now says what is missing.

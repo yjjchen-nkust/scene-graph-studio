@@ -6,9 +6,9 @@ import { TripletCombinatorics } from '../TripletCombinatorics';
 
 beforeEach(() => setLocale('en'));
 
-function mount() {
+function mount(search = '') {
   return render(
-    <MemoryRouter initialEntries={['/m/m00']}>
+    <MemoryRouter initialEntries={[`/m/m00${search}`]}>
       <TripletCombinatorics />
     </MemoryRouter>,
   );
@@ -75,6 +75,44 @@ describe('F2', () => {
     fireEvent.click(screen.getByLabelText('Directed arrows'));
     expect(screen.getByTestId('f2-collapsed')).toHaveTextContent('on');
     expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('1');
+  });
+
+  // Spec §4.3: knob state lives in the query string, so a shared link restores the whole
+  // configuration. The predicate was held in useState until 2026-09-20 and the URL was ignored.
+  it('opens on the predicate the URL names, so a shared link restores the knob', () => {
+    mount('?F2.predicate=near');
+    expect(screen.getByLabelText('Predicate')).toHaveValue('near');
+    fireEvent.click(screen.getByTestId('node-1'));
+    fireEvent.click(screen.getByTestId('node-2'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add edge' }));
+    expect(screen.getByText(/table —near→ person/)).toBeInTheDocument();
+  });
+
+  it('falls back to the vocabulary when the URL names a predicate that is not in it', () => {
+    // A predicate outside |P| was never counted into the candidate space the panel displays.
+    mount('?F2.predicate=teleporting%20above');
+    expect(screen.getByLabelText('Predicate')).toHaveValue('above');
+  });
+
+  // Both presenter notes promise the panel lists which edges became indistinguishable. Naming
+  // one of a merged pair is half the claim.
+  it('names both edges of a collapsed pair, not just the second', () => {
+    mount();
+    addEdge('1', '2', 'on');
+    addEdge('2', '1', 'on');
+    fireEvent.click(screen.getByLabelText('Directed arrows'));
+    const panel = screen.getByTestId('f2-collapsed');
+    expect(panel).toHaveTextContent('table on person');
+    expect(panel).toHaveTextContent('person on table');
+  });
+
+  it('says why nothing happened when Add edge is pressed with no pair chosen', () => {
+    // A control that accepts a press and does nothing is the silent non-response this codebase
+    // legislates against everywhere else.
+    mount();
+    fireEvent.click(screen.getByRole('button', { name: 'Add edge' }));
+    expect(screen.getByTestId('f2-notice')).toHaveTextContent('subject and an object');
+    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('0');
   });
 
   it('does not take focus when it mounts', () => {

@@ -25,12 +25,22 @@ import { FRAMES, PREDICATES, SLICE_PREDICATE_COUNT } from '../slice';
 export function TripletCombinatorics() {
   const { t } = useLocale();
   const frame = FRAMES[0];
-  const [params, setParams] = useLabParams({ 'F2.directed': 1 });
+  // Both knobs in the query string, per spec §4.3. The predicate was `useState` until
+  // 2026-09-20, which made `?F2.predicate=near` a parameter the control advertised by its id and
+  // then ignored, and left a shared link opening on whatever sorts first.
+  const [params, setParams] = useLabParams({
+    'F2.directed': 1,
+    'F2.predicate': PREDICATES[0],
+  });
   const directed = params['F2.directed'] === 1;
+  // A predicate the URL invented is not in the vocabulary the candidate space was counted over,
+  // so a built edge carrying it would sit outside the bound displayed beside it.
+  const predicate = PREDICATES.includes(params['F2.predicate'])
+    ? params['F2.predicate']
+    : PREDICATES[0];
 
   const [subject, setSubject] = useState<number | null>(null);
   const [object, setObject] = useState<number | null>(null);
-  const [predicate, setPredicate] = useState(PREDICATES[0]);
   const [built, setBuilt] = useState<Triplet[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -40,9 +50,16 @@ export function TripletCombinatorics() {
   // count shown is therefore the number of *distinguishable* edges, which is the quantity the
   // candidate space is a bound on.
   const keys = new Set(built.map((t) => tripletKey(t, directed)));
-  const collapsed = built.filter(
-    (t, i) => built.findIndex((u) => tripletKey(u, directed) === tripletKey(t, directed)) !== i,
-  );
+  // Every group of two or more edges sharing a key, as whole groups. Keeping only the second and
+  // later occurrences would name one edge of each merged pair, and the pair is the claim: both
+  // presenter notes promise the panel lists which edges became indistinguishable, and one of
+  // them is not an indistinguishable pair.
+  const grouped = new Map<string, Triplet[]>();
+  for (const t of built) {
+    const key = tripletKey(t, directed);
+    grouped.set(key, [...(grouped.get(key) ?? []), t]);
+  }
+  const collapsed = [...grouped.values()].filter((group) => group.length > 1);
 
   function pick(objectId: number) {
     setNotice(null);
@@ -58,7 +75,10 @@ export function TripletCombinatorics() {
   }
 
   function add() {
-    if (subject === null || object === null) return;
+    if (subject === null || object === null) {
+      setNotice(t('playground.need_pair'));
+      return;
+    }
     const triplet: Triplet = { subject_id: subject, predicate, object_id: object };
     if (built.some((t) => tripletKey(t, true) === tripletKey(triplet, true))) {
       setNotice(t('playground.duplicate'));
@@ -80,12 +100,12 @@ export function TripletCombinatorics() {
         label={t('playground.predicate')}
         value={predicate}
         options={PREDICATES.map((p) => ({ value: p, label: p }))}
-        onChange={setPredicate}
+        onChange={(next) => setParams({ 'F2.predicate': next })}
       />
       <button
         type="button"
         onClick={add}
-        className="rounded border border-slate-400 bg-white px-3 py-1 text-base"
+        className="rounded border border-slate-400 bg-white px-3 py-1 text-[1em]"
       >
         {t('playground.add_edge')}
       </button>
@@ -97,7 +117,7 @@ export function TripletCombinatorics() {
           setObject(null);
           setNotice(null);
         }}
-        className="rounded border border-slate-300 bg-white px-3 py-1 text-base"
+        className="rounded border border-slate-300 bg-white px-3 py-1 text-[1em]"
       >
         {t('playground.reset')}
       </button>
@@ -126,8 +146,8 @@ export function TripletCombinatorics() {
                 onClick={() => pick(o.object_id)}
                 className={
                   role === 'none'
-                    ? 'rounded-full border border-slate-400 bg-white px-4 py-2 text-base'
-                    : 'rounded-full border-2 border-slate-900 bg-slate-900 px-4 py-2 text-base text-white'
+                    ? 'rounded-full border border-slate-400 bg-white px-4 py-2 text-[1em]'
+                    : 'rounded-full border-2 border-slate-900 bg-slate-900 px-4 py-2 text-[1em] text-white'
                 }
               >
                 {/* The role is spelled out, not only coloured: NFR-5 forbids hue as the only
@@ -149,12 +169,12 @@ export function TripletCombinatorics() {
       </div>
 
       {notice && (
-        <p data-testid="f2-notice" className="mt-3 text-base text-amber-700">
+        <p data-testid="f2-notice" className="mt-3 text-[1em] text-amber-900">
           {notice}
         </p>
       )}
 
-      <ul className="mt-3 space-y-1 font-mono text-base">
+      <ul className="mt-3 space-y-1 font-mono text-[1em]">
         {built.map((tri, i) => (
           <li key={`${tripletKey(tri, true)}-${i}`}>
             {nameOf(tri.subject_id)} —{tri.predicate}
@@ -165,11 +185,15 @@ export function TripletCombinatorics() {
       </ul>
 
       {!directed && collapsed.length > 0 && (
-        <p data-testid="f2-collapsed" className="mt-3 text-base text-slate-700">
+        <p data-testid="f2-collapsed" className="mt-3 text-[1em] text-slate-700">
           {t('playground.collapsed')}{' '}
           {collapsed
-            .map((tri) => `${nameOf(tri.subject_id)} ${tri.predicate} ${nameOf(tri.object_id)}`)
-            .join('、')}
+            .map((group) =>
+              group
+                .map((tri) => `${nameOf(tri.subject_id)} ${tri.predicate} ${nameOf(tri.object_id)}`)
+                .join(t('playground.and')),
+            )
+            .join(t('playground.and'))}
         </p>
       )}
     </PlaygroundFrame>

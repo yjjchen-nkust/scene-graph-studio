@@ -33,6 +33,12 @@ interface Painted {
   px: number;
 }
 
+interface Reading {
+  rows: Painted[];
+  /** Text-bearing elements whose colour could not be resolved. Must be empty. */
+  skipped: string[];
+}
+
 /**
  * WCAG 2.1 against the colours the browser computed, measured inside the page.
  *
@@ -41,32 +47,53 @@ interface Painted {
  * itself, serialised to `undefined`, and three tests failed with what looked like a contrast
  * problem in the application. The finding was in the instrument.
  */
-async function painted(page: Page, selector: string): Promise<Painted[]> {
+async function painted(page: Page, selector: string): Promise<Reading> {
   return page.evaluate((sel) => {
-    const parse = (value: string): [number, number, number] | null => {
-      const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(value);
-      return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
+    // Resolved by painting the colour, not by parsing its spelling.
+    //
+    // This read `/rgba?\((\d+),...)/` until 2026-09-20 and returned null for anything else, and
+    // `painted` skips a row it cannot parse. Tailwind v4 emits `oklch()` for every one of its
+    // colour utilities, so every element styled by a Tailwind class was silently dropped: on the
+    // F1 step, 13 of 20 text rows, including all four readouts. The `palette.ts` content that
+    // this test was written against is plain `rgb()` and was measured all along, which is why a
+    // blind instrument kept reporting a pass. The floor assertion below did not catch it either,
+    // because the 7 rows that survived cleared a floor of 3.
+    //
+    // A canvas resolves any syntax the browser accepts, current or future, and returns the alpha
+    // the backdrop walk needs rather than a second regex for it.
+    const probe = document.createElement('canvas');
+    probe.width = 1;
+    probe.height = 1;
+    const ctx = probe.getContext('2d', { willReadFrequently: true })!;
+    const parse = (value: string): [number, number, number, number] | null => {
+      if (!value) return null;
+      ctx.fillStyle = '#000';
+      ctx.fillStyle = value;
+      ctx.clearRect(0, 0, 1, 1);
+      ctx.fillRect(0, 0, 1, 1);
+      const d = ctx.getImageData(0, 0, 1, 1).data;
+      return [d[0]!, d[1]!, d[2]!, d[3]! / 255];
     };
     const channel = (v: number) => {
       const c = v / 255;
       return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
     };
-    const lum = ([r, g, b]: [number, number, number]) =>
+    const lum = ([r, g, b]: [number, number, number, number]) =>
       0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 
     // The nearest ancestor that actually paints. A transparent background inherits what is
-    // behind it, and measuring against `rgba(0,0,0,0)` would score every element 1:1.
-    const backdrop = (el: Element): [number, number, number] => {
+    // behind it, and measuring against `rgba(0,0,0,0)` would score every element 1:1. The alpha
+    // now comes from the painted pixel, so `oklch(... / 50%)` is read as correctly as `rgba()`.
+    const backdrop = (el: Element): [number, number, number, number] => {
       for (let node: Element | null = el; node; node = node.parentElement) {
-        const value = getComputedStyle(node).backgroundColor;
-        const alpha = /rgba\([^)]*,\s*([\d.]+)\)/.exec(value);
-        const rgb = parse(value);
-        if (rgb && (!alpha || Number(alpha[1]) > 0)) return rgb;
+        const rgba = parse(getComputedStyle(node).backgroundColor);
+        if (rgba && rgba[3] > 0) return rgba;
       }
-      return [255, 255, 255];
+      return [255, 255, 255, 1];
     };
 
     const out: Painted[] = [];
+    const skipped: string[] = [];
     for (const el of document.querySelectorAll(sel)) {
       // Only the element that owns the words, so a wrapper is not scored for its children.
       const own = [...el.childNodes]
@@ -77,7 +104,10 @@ async function painted(page: Page, selector: string): Promise<Painted[]> {
       if (!own) continue;
       const style = getComputedStyle(el);
       const fg = parse(style.color);
-      if (!fg) continue;
+      if (!fg) {
+        skipped.push(`${own.slice(0, 40)} :: ${style.color}`);
+        continue;
+      }
       const bg = backdrop(el);
       const [hi, lo] = lum(fg) >= lum(bg) ? [lum(fg), lum(bg)] : [lum(bg), lum(fg)];
       out.push({
@@ -87,7 +117,7 @@ async function painted(page: Page, selector: string): Promise<Painted[]> {
         px: Number.parseFloat(style.fontSize),
       });
     }
-    return out;
+    return { rows: out, skipped };
   }, selector);
 }
 
@@ -178,16 +208,15 @@ for (const size of SIZES) {
     });
 
     test('every painted word meets NFR-5 on the contrast the browser computed', async ({ page }) => {
-      // Two steps, not one. Index 2 is the mathematics this was written against; index 1 is the
-      // F1 playground, whose readouts and notes are a second palette on the same slide, drawn
-      // from Tailwind's scale rather than from `palette.ts`. Before the playgrounds landed this
-      // test visited index 1 and that was the mathematics; the renumbering moved it, and
-      // measuring only one of the two would leave whichever it is unchecked.
-      for (const step of [2, 1]) {
+      // Four steps. Index 2 is the mathematics this was written against; 1, 3 and 4 are F1, F2
+      // and F8, whose readouts, notices and status lines are a second palette on the same deck,
+      // drawn from Tailwind's scale rather than from `palette.ts`. Before the playgrounds landed
+      // this test visited index 1 and that was the mathematics; the renumbering moved it.
+      for (const step of [2, 1, 3, 4]) {
         await page.goto(`/lecture/m/m00/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
 
-        const measured = await painted(
+        const { rows, skipped } = await painted(
           page,
           '[data-testid="lecture-root"] h1, [data-testid="lecture-root"] h2, ' +
             '[data-testid="lecture-root"] h3, [data-testid="lecture-root"] p, ' +
@@ -195,11 +224,54 @@ for (const size of SIZES) {
             '[data-testid="lecture-root"] td, [data-testid="lecture-root"] th',
         );
 
-        expect(measured.length, `step ${step}: nothing was measured`).toBeGreaterThan(3);
-        const failures = measured.filter((row) => row.ratio < 7);
+        // Nothing unread, before anything read is judged. The floor used to be
+        // `toBeGreaterThan(3)`, which 7 surviving rows cleared while 13 were being dropped for a
+        // colour syntax the parser did not know -- a green test over a quarter of the slide.
+        // An instrument that cannot say what it failed to look at cannot be trusted to say the
+        // rest passed.
+        expect(
+          skipped,
+          `step ${step}: ${skipped.length} text elements whose colour could not be read: ` +
+            `${JSON.stringify(skipped, null, 2)}`,
+        ).toEqual([]);
+        expect(rows.length, `step ${step}: nothing was measured`).toBeGreaterThan(3);
+        const failures = rows.filter((row) => row.ratio < 7);
         expect(
           failures,
           `step ${step}, below 7:1 as painted: ${JSON.stringify(failures, null, 2)}`,
+        ).toEqual([]);
+      }
+    });
+
+    test('a playground is sized in the shell it is in, not in root pixels', async ({ page }) => {
+      // Spec §4.2 puts the lecture shell at >= 24 px base. Tailwind's `text-sm` and `text-base`
+      // are rem against the 16 px document root, not em against `lecture-root`, so the first
+      // version of these three playgrounds rendered its readout labels and its NFR-2 provenance
+      // notes at 14 px -- the smallest type in the corpus, on the numbers the playground exists
+      // to show. Nothing else in the deck goes below 18 px.
+      for (const step of [1, 3, 4]) {
+        await page.goto(`/lecture/m/m00/${step}`);
+        await expect(page.getByTestId('playground-frame')).toBeVisible();
+
+        const small = await page.evaluate(() => {
+          const frame = document.querySelector('[data-testid="playground-frame"]')!;
+          const out: { text: string; px: number }[] = [];
+          for (const el of frame.querySelectorAll('*')) {
+            const own = [...el.childNodes]
+              .filter((n) => n.nodeType === Node.TEXT_NODE)
+              .map((n) => n.textContent ?? '')
+              .join('')
+              .trim();
+            if (!own) continue;
+            const px = Number.parseFloat(getComputedStyle(el).fontSize);
+            if (px < 18) out.push({ text: own.slice(0, 30), px });
+          }
+          return out;
+        });
+
+        expect(
+          small,
+          `step ${step}: playground text below the deck's 18 px floor: ${JSON.stringify(small)}`,
         ).toEqual([]);
       }
     });

@@ -475,17 +475,50 @@ Every number below is from the run that produced this section, not from an earli
 | Step | Result |
 |---|---|
 | pytest | 266 passed, 7 skipped |
-| vitest | **595 passed in 53 files** (527 in 45 before this cycle) |
+| vitest | **599 passed in 53 files** (527 in 45 before this cycle) |
 | ruff over `backend` and `tools` | clean |
 | parity | 13 cases agree |
-| i18n parity | **225 keys**, both locales complete |
+| i18n parity | **227 keys**, both locales complete |
 | content lint | 13 golden cases, 7 licence rows, 15 of 15 modules × 2 locales, 93 points assigned, 43 symbols, clean |
 | frozen-page lints | clean |
 | standalone | up to date, 250 equations |
 | frontend build | 756 modules |
+| `npm run test:e2e` | 38 passed |
+| `npm run check:perf` | 17 passed |
 
-`npm run test:e2e`, exit 0: **35 passed** where 26 passed on 2026-09-19 — five new lecture tests
-and one new projector test at each of the three panel sizes.
+`npm run test:e2e`, exit 0: **38 passed** where 26 passed on 2026-09-19 — five new lecture tests,
+and two new projector tests at each of the three panel sizes.
+
+### The contrast check was blind, and what it was blind to was failing
+
+The first version of this section reported that the playgrounds pass NFR-5 at 7:1 on all three
+panels. That was false, and the review that found it is the reason this subsection exists.
+
+`projector.spec.ts` resolved a computed colour by regex over `rgb()`/`rgba()` and skipped what it
+could not parse. Tailwind v4.3.3 emits `oklch()`, so on the F1 step **13 of 20 text rows were
+never measured**, including every readout; the mathematics step, styled from `palette.ts` in plain
+`rgb()`, measured 195 of 195 and passed honestly. The floor assertion required more than 3 rows
+and the 7 survivors cleared it.
+
+Measured against the frame background `rgb(248,250,252)` once the parser was fixed:
+
+| Ink | Ratio before | Ratio after |
+|---|---|---|
+| readout label and provenance note | **4.55** | 9.90 |
+| F8's recorded-in-E status | **5.13** | 9.20 |
+| F2's refusal notice | **4.81** | 8.66 |
+
+The instrument now paints each colour to a 1×1 canvas and reads the pixel, reports every element
+whose colour it could not resolve, and the test asserts that report is empty **before** judging
+anything it did read. It walks steps 2, 1, 3 and 4, so all three playgrounds are covered. A
+separate test asserts no playground text falls below the deck's 18 px floor: the playgrounds were
+rendering at 14 px because Tailwind's size utilities are rem against the document root rather than
+em against the 24 px shell, and they are sized in `em` now.
+
+This is the third time in this project a measurement has been wrong in the instrument rather than
+in the product — §14's `undefined` from a function passed as a string, D74's two-frame floor, and
+now a parser that silently dropped three quarters of a slide. The common remedy each time was to
+make the instrument state what it did **not** measure.
 
 ### NFR-8, on the three new components
 

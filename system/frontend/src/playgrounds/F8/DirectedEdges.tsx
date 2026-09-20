@@ -73,21 +73,21 @@ export function DirectedEdges() {
   return (
     <PlaygroundFrame title="F8" controls={controls}>
       <div className="flex flex-col gap-4">
-        <p data-testid="f8-sentence" className="font-mono text-3xl text-slate-900">
-          {nameOf(subjectId)} <span className="text-slate-500">{relationship.predicate}</span>{' '}
+        <p data-testid="f8-sentence" className="font-mono text-[1.875em] text-slate-900">
+          {nameOf(subjectId)} <span className="text-slate-700">{relationship.predicate}</span>{' '}
           {nameOf(objectId)}
         </p>
         <p
           data-testid="f8-status"
           data-recorded={String(recorded)}
-          className={recorded ? 'text-2xl text-emerald-700' : 'text-2xl text-slate-700'}
+          className={recorded ? 'text-[1.5em] text-emerald-900' : 'text-[1.5em] text-slate-700'}
         >
           {/* The words carry the distinction, not the colour: NFR-5, and more importantly the
               reader must be able to quote this line without the palette. */}
           {recorded ? t('playground.in_e') : t('playground.not_in_e')}
         </p>
         {!recorded && (
-          <p data-testid="f8-note" className="text-base text-slate-600">
+          <p data-testid="f8-note" className="text-[1em] text-slate-600">
             {t('playground.not_in_e_note')}
           </p>
         )}
