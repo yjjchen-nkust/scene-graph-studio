@@ -24,15 +24,30 @@ steps:
     kind: prose
     presenter_notes_en: "Put the three photographs up and say nothing. Wait until somebody in the room says the labels are the same. That sentence is the module; do not name the scene graph before it has been said."
   - id: s2
+    kind: playground
+    kp: F1
+    seconds_budget: 180
+    presenter_notes_en: "Three minutes. Open with every layer off, so only the photograph shows, and wait for the room to say that labels alone do not separate the two scenes before bringing the layers up one at a time. Drag the density slider from full to zero: the candidate count does not move and the annotated count does, and that ratio is why every metric in this field is a recall. Switching |P| to 50 needs one sentence saying the number is VG-150's, not this slice's 16."
+  - id: s3
     kind: math
     seconds_budget: 240
     presenter_notes_en: "Four minutes, and the multigraph definition is the only thing that has to land. Define the object set and the relationship set on the board before the slide does. If the room is quiet when the predicate set appears, ask for one predicate that would be illegal here."
-  - id: s3
+  - id: s4
+    kind: playground
+    kp: F2
+    seconds_budget: 240
+    presenter_notes_en: "Four minutes. Ask the room to estimate how many candidate triplets six objects admit before showing 480. Three or four edges is enough; there is no need to fill the graph. The move that matters is turning direction off: the candidate count halves and the panel lists which built edges have become indistinguishable, which is the symmetrisation claim as evidence rather than as assertion."
+  - id: s5
+    kind: playground
+    kp: F8
+    seconds_budget: 120
+    presenter_notes_en: "Two minutes. Start on box on table; the swap turns the status to not recorded in E. Then move to person near table, which reads as symmetric and whose reversal is still not recorded. Say explicitly that not recorded and false are different claims: that is the third implication of the previous step, and it is what the missed against spurious split rests on later."
+  - id: s6
     kind: lab
     lab: L1
     seconds_budget: 480
     presenter_notes_en: "Eight minutes on L1. Hand out nothing; the boxes are already drawn and the only work is naming the relation. Walk the room. The common first mistake is a triplet with subject and object swapped, and it is worth finding one before the diff does."
-  - id: s4
+  - id: s7
     kind: checkpoint
     presenter_notes_en: "Collect two triplets from two different people before moving on. The reversible one is usually next to, the irreversible one usually on. If nobody finds a reversible predicate, that is the answer to the second half of the question rather than a failure."
 ---
@@ -54,6 +69,18 @@ between them.
 </Step>
 
 <Step id="s2">
+
+## Layers, and annotation density
+
+One image, with labels, boxes and relations as three independent layers. What remains when every layer is off is what a classifier sees; bringing them up one at a time is what a scene graph adds.
+
+The density slider moves the annotated edge count and leaves the candidate count where it is. The ratio between them is why every metric in this unit is stated as a recall.
+
+<Playground kp="F1" />
+
+</Step>
+
+<Step id="s3">
 
 <Intuition>
 
@@ -131,7 +158,31 @@ course returns to this as the difference between *missed* and *spurious* in the 
 
 </Step>
 
-<Step id="s3">
+<Step id="s4">
+
+## The candidate space, and direction
+
+Six objects. Build a few edges and read them against the total number of candidate triplets.
+
+Turning off directed arrows halves the candidate space and merges two edges that were distinct into one. The panel lists the edges that can no longer be told apart.
+
+<Playground kp="F2" />
+
+</Step>
+
+<Step id="s5">
+
+## Swapping subject and object
+
+Take a triplet, swap its subject and object, and see whether it is still recorded in E.
+
+Note what the reading is: *not recorded in E* and *false* are different claims. The first is a fact about the annotation, the second about the scene, and this course keeps them apart throughout.
+
+<Playground kp="F8" />
+
+</Step>
+
+<Step id="s6">
 
 ## What you will do in the lab
 
@@ -142,7 +193,7 @@ structure you proposed.
 
 </Step>
 
-<Step id="s4">
+<Step id="s7">
 
 ## Checkpoint
 

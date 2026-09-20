@@ -24,15 +24,30 @@ steps:
     kind: prose
     presenter_notes_zh: "先呈現三張照片，暫不說明。待現場指出三者標籤相同，再進入主題；在此之前不提出「場景圖」一詞。"
   - id: s2
+    kind: playground
+    kp: F1
+    seconds_budget: 180
+    presenter_notes_zh: "三分鐘。開場先關閉全部圖層，僅留照片，待現場指出僅憑標籤無法區辨兩張場景，再逐層開啟。密度滑桿由滿格拉至零，重點在於候選數不變而標註數改變；該比值即為本領域所有指標皆為召回率的理由。|𝒫| 切至 50 時須說明該值取自 VG-150，與本切片實計的 16 並非同一來源。"
+  - id: s3
     kind: math
     seconds_budget: 240
     presenter_notes_zh: "四分鐘。本步驟僅需確立多重圖之定義：先於板書定義物件集合與關係集合，再對照投影片。若進行至 predicate 類別集合時現場無回應，可要求舉出一個在此不合法的 predicate。"
-  - id: s3
+  - id: s4
+    kind: playground
+    kp: F2
+    seconds_budget: 240
+    presenter_notes_zh: "四分鐘。先請現場估計六個物件可構成多少候選三元組，再顯示 480。建立三至四條邊即足夠，不必建滿。關鍵操作為關閉方向：候選數減半，且畫面會列出哪幾條邊因此無法區辨，此即對稱化使語意消失的直接證據，而非僅為陳述。"
+  - id: s5
+    kind: playground
+    kp: F8
+    seconds_budget: 120
+    presenter_notes_zh: "兩分鐘。以 box on table 起始，交換後狀態轉為「未收錄於 E」。接著切至 person near table：語意上對稱，交換後仍為「未收錄於 E」。此處務必明確區分「未收錄」與「為偽」，該區別即為前一步驟第三項推論，亦為後續 missed 與 spurious 分野的基礎。"
+  - id: s6
     kind: lab
     lab: L1
     seconds_budget: 480
     presenter_notes_zh: "L1 實作八分鐘。不另發材料：邊界框已繪製完成，本步驟僅需命名關係。宜巡視現場；最常見的初次錯誤為主詞與受詞互換，於評分差異顯示前先行指出較佳。"
-  - id: s4
+  - id: s7
     kind: checkpoint
     presenter_notes_zh: "進入下一單元前，請兩位學員各提出一組三元組。可逆者多為 next to，不可逆者多為 on。若無人提出可逆的 predicate，該結果即為題目後半的答案，並非未完成。"
 ---
@@ -50,6 +65,18 @@ import { Formal, Implications, Intuition, Worked } from './math/Parts';
 </Step>
 
 <Step id="s2">
+
+## 圖層與標註密度
+
+同一張影像，分別以標籤、邊界框與關係三個圖層呈現。關閉全部圖層後所餘者即為分類器所見；逐層開啟，方得場景圖所載之結構。
+
+密度滑桿改變的是已標註邊數，候選三元組數不隨之改變。兩者之比值即為本單元後續所有指標皆以召回率表述的理由。
+
+<Playground kp="F1" />
+
+</Step>
+
+<Step id="s3">
 
 <Intuition>
 
@@ -109,7 +136,31 @@ $V$ 相同、$E$ 不同，而此一差異即為場景的全部內容。就數量
 
 </Step>
 
-<Step id="s3">
+<Step id="s4">
+
+## 候選空間與方向
+
+以六個物件為例，自行建立數條邊，並對照候選三元組總數。
+
+關閉「有向箭頭」後，候選空間減半，且原本相異的兩條邊將合併為一。畫面所列出者，即為捨棄方向後無法區辨之邊。
+
+<Playground kp="F2" />
+
+</Step>
+
+<Step id="s5">
+
+## 交換主體與客體
+
+任取一組三元組並交換其主體與客體，觀察其是否仍收錄於 E。
+
+須注意者為：「未收錄於 E」與「為偽」並非同一陳述。前者為標註之事實，後者為場景之事實，兩者於本課程始終分開處理。
+
+<Playground kp="F8" />
+
+</Step>
+
+<Step id="s6">
 
 ## 實作單元的內容
 
@@ -117,7 +168,7 @@ L1 提供一張已框出物件的影像，由學員自行建立 $E$：點選主�
 
 </Step>
 
-<Step id="s4">
+<Step id="s7">
 
 ## 檢核點
 

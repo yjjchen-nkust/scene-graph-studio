@@ -1,4 +1,5 @@
 import { render, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setLocale } from '../../i18n/useLocale';
 import { getMeta, getModule, moduleIds } from '../registry';
@@ -17,7 +18,7 @@ describe('the module registry', () => {
   it('reads the frontmatter the content lint validates', () => {
     const meta = getMeta('m00', 'en')!;
     expect(meta.id).toBe('m00');
-    expect(meta.steps.map((s) => s.id)).toEqual(['s1', 's2', 's3', 's4']);
+    expect(meta.steps.map((s) => s.id)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7']);
     expect(meta.steps.find((s) => s.kind === 'lab')?.lab).toBe('L1');
     expect(meta.knowledge_points).toContain('F1');
   });
@@ -130,10 +131,19 @@ describe('the playground step kind', () => {
     // this is the same rule applied to the machinery.
     const steps = getModule('m00', 'zh-TW');
     expect(steps).not.toBeNull();
-    // Rendering must not throw on a body containing <Playground/>; the tag resolves because the
-    // registry supplies it.
+    // Inside a router, because a playground's knobs live in the query string and a real mount
+    // therefore reaches useSearchParams. Until M0 carried a playground step this body had no
+    // <Playground/> in it, so the test asserted the tag resolved against a file that never used
+    // it; the three steps added in Task 10 are what make it a test of the thing it names.
     for (const step of steps!) {
-      expect(() => render(<>{step.node}</>)).not.toThrow();
+      const mounted = render(<MemoryRouter initialEntries={['/m/m00']}>{step.node}</MemoryRouter>);
+      if (step.kind === 'playground') {
+        expect(within(mounted.container).getByTestId('playground-frame')).toBeInTheDocument();
+        // `playground-unknown` is what an unregistered kp renders, and it would satisfy a
+        // "did not throw" assertion while teaching nobody anything.
+        expect(mounted.container.querySelector('[data-testid="playground-unknown"]')).toBeNull();
+      }
+      mounted.unmount();
     }
   });
 });
