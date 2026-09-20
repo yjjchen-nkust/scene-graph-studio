@@ -299,10 +299,10 @@ kept up to date; `docs/VERIFICATION.md` records the nine checks of design §6 wi
 was run and its outcome, including the one that is recorded as **not run**.
 
 `npm run ci` is green on py12: 266 Python tests (7 skipped for a corpus this machine may not
-have), 527 TypeScript tests across 45 files, parity 13/13, i18n 198 keys in both locales,
-content lint clean, frozen-page lints clean, and the frontend builds. Measured 2026-09-19;
-`docs/VERIFICATION.md` §14 is the run that produced these, and the three documents that carried
-three different counts before it.
+have), 595 TypeScript tests across 53 files, parity 13/13, i18n 225 keys in both locales,
+content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 35
+passed. Measured 2026-09-20; `docs/VERIFICATION.md` §15 is the run that produced these, and §14
+is the earlier one that reconciled three documents carrying three different counts.
 
 Two further checks are scripts rather than prose:
 

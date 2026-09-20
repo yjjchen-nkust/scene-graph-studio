@@ -12,6 +12,11 @@ import type { ReactNode } from 'react';
  *
  * Nothing here autofocuses. A playground that took focus on mount would hold the arrow keys for
  * the rest of the step.
+ *
+ * Each control carries `data-testid={id}` as well as `id`. `e2e/perf.spec.ts` addresses an
+ * element by test id only, and a knob that could be reached by label alone would have to be
+ * measured through the accessibility tree, whose name is the translated string -- so the
+ * measurement would read differently in each locale.
  */
 
 const LABEL = 'text-base font-medium text-slate-700';
@@ -24,6 +29,7 @@ export function Toggle({
     <span className="inline-flex items-center gap-2">
       <input
         id={id}
+        data-testid={id}
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
@@ -45,6 +51,7 @@ export function Slider({
       <label htmlFor={id} className={LABEL}>{label}</label>
       <input
         id={id}
+        data-testid={id}
         type="range"
         min={min}
         max={max}
@@ -66,7 +73,13 @@ export function Choice({
   return (
     <span className="inline-flex items-center gap-2">
       <label htmlFor={id} className={LABEL}>{label}</label>
-      <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={FIELD}>
+      <select
+        id={id}
+        data-testid={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={FIELD}
+      >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}

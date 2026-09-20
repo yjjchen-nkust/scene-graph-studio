@@ -318,6 +318,89 @@ test.describe('lab interaction', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2b. Playground interaction
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * The same budget, on the three components that sit inside a lecture step rather than a lab
+ * route.
+ *
+ * Added 2026-09-20 with the M0 playgrounds. NFR-8's second clause bounds input-to-paint at
+ * 100 ms and says nothing about which route the input lands on, so `check:perf` passing while
+ * measuring only `/lab/*` left the three newest interactive components unmeasured -- and these
+ * are the ones a professor turns in front of a room, where the lab is something a student opens
+ * alone.
+ *
+ * No backend: a playground imports its slice at build time, so unlike four of the five labs
+ * above there is no `lab-pending` to wait out and no failure sentence to skip on.
+ */
+const PLAYGROUND_CASES: { kp: string; step: number; act: Act; readout: string; why: string }[] = [
+  {
+    kp: 'F1',
+    step: 1,
+    act: { kind: 'set', testid: 'F1.density', value: '0.5' },
+    readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'moving the density slider re-cuts the edge set and re-divides the share',
+  },
+  {
+    kp: 'F2',
+    step: 3,
+    act: { kind: 'click', testid: 'F2.directed' },
+    readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'discarding direction halves the candidate space',
+  },
+  {
+    kp: 'F8',
+    step: 4,
+    act: { kind: 'click', testid: 'F8.swap' },
+    // Not a readout: F8's only readout is |E| for the frame, which a swap does not move. The
+    // sentence and the status are what the swap changes, and a case watching the wrong element
+    // is reported by the change guard as having measured nothing.
+    readout: '[data-testid="f8-sentence"], [data-testid="f8-status"]',
+    why: 'swapping subject and object re-reads the triplet against E',
+  },
+];
+
+test.describe('playground interaction', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('sgs:v1:lang', '"zh-TW"'));
+  });
+
+  for (const c of PLAYGROUND_CASES) {
+    test(`${c.kp}: ${c.why}, inside the budget`, async ({ page }) => {
+      await page.goto(`/lecture/m/m00/${c.step}`);
+      await expect(page.getByTestId('playground-frame')).toBeVisible();
+      await expect(page.getByTestId(c.act.testid)).toBeEnabled();
+
+      const { ms, floor, before, after } = await inputToPaint(page, c.act, c.readout);
+
+      expect(
+        after,
+        `${c.kp}: the interaction painted no change, so the ${ms.toFixed(1)} ms is the time to ` +
+          `do nothing. Readout was ${before} and stayed ${after}.`,
+      ).not.toBe(before);
+
+      measured.push(
+        `playground   ${c.kp.padEnd(22)} ${ms.toFixed(1).padStart(6)} ms ` +
+          `(two frames cost ${floor.toFixed(1)} ms idle, so the work is ` +
+          `${Math.max(0, ms - floor).toFixed(1)} ms)`,
+      );
+      expect(ms, `${c.kp} took ${ms.toFixed(1)} ms from input to paint`).toBeLessThan(
+        INTERACTION_MS,
+      );
+    });
+  }
+
+  test('all three playgrounds were actually measured', () => {
+    const timed = measured.filter((l) => l.startsWith('playground'));
+    expect(
+      timed.length,
+      `only ${timed.length} playgrounds were timed; M0 carries three`,
+    ).toBe(3);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // 3. Selecting a box by clicking inside it — D75
 // ---------------------------------------------------------------------------------------------
 

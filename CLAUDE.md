@@ -5,15 +5,15 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build and §14 the runner gate), and all 87 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate and §15 the playgrounds), and all 88 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
 
 A full-stack teaching application for scene graph generation, built for 大語言模型技術與應用
 (2026) and anchored on Wang et al., *IndVisSGG*, Advanced Engineering Informatics 65 (2025)
-103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 60 paper cards and
-5 frozen leaderboards.
+103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 3 playgrounds, 60 paper
+cards and 5 frozen leaderboards.
 
 It lives at `scene-graph-studio/` inside the WekaExt repository and is **not** a separate
 repository (decision **D-22**, which superseded both D-01 and D-20 on 2026-09-19 when the track
@@ -64,7 +64,7 @@ cd scene-graph-studio\system ; npm run ci
   click handler sits on the `<svg>` and picks the smallest box containing the point, ties broken
   by the lower object id. **Do not move it back onto the rects.**
 - **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
-  in both locales (**D76**). All 92 steps carry theirs; 184 notes.
+  in both locales (**D76**). All 95 steps carry theirs; 190 notes.
 - **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and
   `npm run lint:standalone` asserts they agree. Edit the source, then run
   `npm run build:standalone` in the same commit.
@@ -73,13 +73,19 @@ cd scene-graph-studio\system ; npm run ci
   `.gitignore` has no rule over this tree, so every exclusion the track needs is stated locally.
 - **The design document's ARM64/Snapdragon hardware table describes a different machine** and is
   marked superseded in place.
-- **`npm run ci` is currently red at step 4, and it is not the move's doing.**
-  `frontend/src/playgrounds/F1/LabelsToStructure.tsx` reaches five directory levels up with
-  `import.meta.glob('../../../../../data/slices/placeholder/images/*.png')`, outside vitest's root
-  at `system/`, and `vitest.config.ts` sets no `server.fs.allow` — so six suites fail to collect
-  and `test:ts` stops the gate. With that playground neutralised, 563/563 tests pass. It belongs to
-  the in-flight M0 playgrounds cycle (task 6), which resumes at task 7; see deviation D87. Fix it
-  there, with its own tests, not here.
+- **A playground reads `data/` from outside vitest's root, and the allow list is why that works.**
+  `frontend/src/playgrounds/` imports the placeholder slice and its images from `data/`, which is a
+  sibling of `system/` rather than a descendant, so Vite's filesystem guard denies the read and six
+  suites fail to collect. `vitest.config.ts` sets `server: { fs: { allow: ['..'] } }` on the
+  frontend project, which replaces Vite's defaults rather than adding to them — the root is itself
+  under that parent, so listing the parent alone still covers everything the defaults did. Removing
+  it turns the gate red at step 4 with an error that names neither the config nor the cause.
+- **A playground is a step kind, not a lab.** `kind: playground` with `kp:`, one
+  `<Playground kp="…"/>` in the body, registered in `frontend/src/playgrounds/mounts.tsx`;
+  contracts §2.4 is normative and `content_lint.mjs` holds eight rules over it. **It computes a
+  count, a bound or a set membership, never a metric** — a metric is a lab's business and the
+  boundary is the point. Nothing in `frontend/src/playgrounds/` imports from `sgg-metrics` except
+  its types. M0 carries three (F1, F2, F8); 25 live knowledge points have none. See D88.
 
 ## CI
 
