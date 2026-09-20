@@ -6,3 +6,12 @@
 # identical. Pinning both files to LF makes the comparison hold on every platform.
 docs/brief.standalone.html    eol=lf
 system/web/brief/index.html   eol=lf
+
+# `tools/harvest.mjs` is step 1 of the gate and rewrites kp.json, math.json and deriv.json on
+# every run, emitting bare LF. The blobs are LF, but `core.autocrlf=true` checks them out as
+# CRLF -- 981 of them in kp.json alone -- so the first step of the gate leaves three files
+# reported modified by `git status` while `git diff` shows no content change at all. A tree that
+# is dirty after every green run is a tree in which nobody reads `git status`, which is where a
+# real uncommitted change goes unnoticed. Pinning the directory keeps checkout and harvest
+# writing the same bytes, and covers whatever the harvest emits next without a second edit here.
+data/content/*.json           eol=lf
