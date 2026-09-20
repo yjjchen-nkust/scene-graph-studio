@@ -15,7 +15,12 @@ describe('Playground', () => {
     expect(screen.getByTestId('playground-unknown')).toHaveTextContent('F99');
   });
 
-  it('derives its id list from the mount table, so neither can drift from the other', () => {
-    expect(PLAYGROUND_IDS).toEqual(Object.keys(PLAYGROUND_MOUNTS).sort());
+  it('registers exactly the three playgrounds M0 mounts', () => {
+    // Named, not derived. This asserted `PLAYGROUND_IDS` equalled
+    // `Object.keys(PLAYGROUND_MOUNTS).sort()`, which is `mounts.tsx`'s own definition copied into
+    // the test: it passes with the table empty, with a component missing, or with every entry
+    // wrong. There is nothing for a derivation to drift from; what can drift is the set itself.
+    expect(PLAYGROUND_IDS).toEqual(['F1', 'F2', 'F8']);
+    for (const id of PLAYGROUND_IDS) expect(PLAYGROUND_MOUNTS[id]).toBeTypeOf('function');
   });
 });

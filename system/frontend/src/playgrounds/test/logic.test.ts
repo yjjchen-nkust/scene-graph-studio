@@ -131,3 +131,34 @@ describe('flag', () => {
     expect(flag(Number.NaN, true)).toBe(true);
   });
 });
+
+describe('formatRatio', () => {
+  it('prints an ordinary share to two decimals', () => {
+    expect(formatRatio(0.0125)).toBe('1.25%');
+    expect(formatRatio(0)).toBe('0.00%');
+  });
+
+  it('distinguishes a share too small to print from no share at all', () => {
+    // Both rendered `0.00%`, which is the one distinction an "annotated share" readout exists
+    // to make. 1e-5 is 0.001%.
+    expect(formatRatio(1e-5)).toBe('< 0.01%');
+    expect(formatRatio(0)).toBe('0.00%');
+  });
+});
+
+describe('densityCut clamps rather than indexing from the end', () => {
+  const six = frameById('ph-001')!.relationships;
+
+  it('keeps nothing for a negative density, whatever its magnitude', () => {
+    // Unclamped, `Math.round(-0.5 * 6) = -3` and `slice(0, -3)` returns the first three. The
+    // clamp inside densityCut is the only thing between a negative knob and half the graph.
+    expect(densityCut(six, -0.5)).toHaveLength(0);
+    expect(densityCut(six, -1)).toHaveLength(0);
+    expect(densityCut(six, -0.1)).toHaveLength(0);
+  });
+
+  it('keeps everything for a density above one', () => {
+    expect(densityCut(six, 5)).toHaveLength(6);
+  });
+});
+

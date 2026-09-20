@@ -452,7 +452,10 @@ both. See DEVIATIONS D84.
 **Re-run, 2026-09-19, on `py12`:** `npm run ci` exits 0 — **266 pytest passed, 7 skipped**, and
 **271 passed, 2 skipped** with `SGS_CORPUS_ROOT=C:\DataRaw`, which had been 1 failed before this
 change; **527 vitest across 45 files**; parity 13/13; i18n 198 keys; content lint clean; `ruff`
-clean; frontend build 741 modules. `npm run test:e2e` 26 passed, `npm run check:perf` 13 passed,
+clean; frontend build 741 modules. `npm run test:e2e` 26 passed [**corrected 2026-09-20: 27.**
+Counted from the spec files at that commit: 9 lecture tests plus 6 projector tests over 3 panel
+sizes. Left in place rather than overwritten, because this section's subject is documents
+disagreeing about a count], `npm run check:perf` 13 passed,
 `npm run check:offline -- --python .offline-venv/Scripts/python` 8 passed, `npm run check:pins`
 9 of 9 and 5 of 5.
 
@@ -475,19 +478,22 @@ Every number below is from the run that produced this section, not from an earli
 | Step | Result |
 |---|---|
 | pytest | 266 passed, 7 skipped |
-| vitest | **599 passed in 53 files** (527 in 45 before this cycle) |
+| vitest | **625 passed in 55 files** (527 in 45 before this cycle) |
 | ruff over `backend` and `tools` | clean |
 | parity | 13 cases agree |
-| i18n parity | **227 keys**, both locales complete |
-| content lint | 13 golden cases, 7 licence rows, 15 of 15 modules × 2 locales, 93 points assigned, 43 symbols, clean |
+| i18n parity | **229 keys**, both locales complete |
+| content lint | 13 golden cases, 9 playground cases, 7 licence rows, 15 of 15 modules × 2 locales, 93 points assigned, 43 symbols, clean |
 | frozen-page lints | clean |
 | standalone | up to date, 250 equations |
 | frontend build | 756 modules |
-| `npm run test:e2e` | 38 passed |
+| `npm run test:e2e` | 39 passed |
 | `npm run check:perf` | 17 passed |
 
-`npm run test:e2e`, exit 0: **38 passed** where 26 passed on 2026-09-19 — five new lecture tests,
-and two new projector tests at each of the three panel sizes.
+`npm run test:e2e`, exit 0: **39 passed**, where **27** passed at `ce31d8f`. The delta is twelve:
+six new lecture tests and two new projector tests at each of the three panel sizes. §14 recorded
+the earlier figure as 26; counted from the spec files at that commit it was 9 lecture tests plus
+6 projector tests across 3 sizes, so 27, and neither file was touched between the subtree import
+and this cycle. The 26 was wrong on the day it was written.
 
 ### The contrast check was blind, and what it was blind to was failing
 

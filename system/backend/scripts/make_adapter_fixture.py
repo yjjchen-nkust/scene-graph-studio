@@ -143,6 +143,7 @@ def main() -> int:
     (OUT / "categories.json").write_text(
         json.dumps({"categories": CATEGORIES, "rel_categories": REL_CATEGORIES}, indent=2) + "\n",
         encoding="utf-8",
+        newline="",
     )
     ann = OUT / "annotations"
     ann.mkdir(exist_ok=True)

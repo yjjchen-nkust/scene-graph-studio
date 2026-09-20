@@ -131,6 +131,9 @@ describe('the playground step kind', () => {
     // this is the same rule applied to the machinery.
     const steps = getModule('m00', 'zh-TW');
     expect(steps).not.toBeNull();
+    // Without this, every assertion below sits behind an `if` that nothing forces to be entered,
+    // so the test would pass unchanged on a module that had no playground at all.
+    expect(steps!.filter((s) => s.kind === 'playground')).toHaveLength(3);
     // Inside a router, because a playground's knobs live in the query string and a real mount
     // therefore reaches useSearchParams. Until M0 carried a playground step this body had no
     // <Playground/> in it, so the test asserted the tag resolved against a file that never used

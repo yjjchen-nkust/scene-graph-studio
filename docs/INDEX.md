@@ -29,7 +29,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/…-04-labs-shells-hardening.md` | Phases 7–9: L3, L7, L8, shells, hardening | **executed** |
 | `superpowers/plans/2026-09-19-playgrounds-m0.md` | The `playground` step kind, F1, F2, F8, the golden file, the lint rules | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D90. Every departure from plan, with its reason.** | live |
+| `../DEVIATIONS.md` | **D1…D91. Every departure from plan, with its reason.** | live |
 | `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14) and the playgrounds (§15)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
@@ -208,7 +208,7 @@ the wrong object unpredictably; `geometry.pickObjectAt` makes it explicitly inst
 by the lower object id, the boundary counted as inside so the outline still works. Asserted in
 jsdom for the rule and in Chromium for the hit testing jsdom does not have.
 
-**Presenter notes are complete, 2026-09-19.** All 92 steps carry them in both locales, 184 in
+**Presenter notes are complete, 2026-09-19.** All 95 steps carry them in both locales, 190 in
 total, written against each step's own content: what has to land, what to put on the board before
 the slide does, what the room usually gets wrong, what to compress when the clock is short. They
 are procedural rather than expository — none introduces a claim its module does not already make.
@@ -272,14 +272,14 @@ against the 24 px shell, and they are sized in `em` now. See D88 and VERIFICATIO
 its own cycle against the pattern this one established.
 
 **Verification.** `npm run ci` green, 2026-09-20: **266 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 13 agree, i18n 228 keys both locales,
-**607 vitest** in 54 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+compare the requirement files to the interpreter), parity 13 agree, i18n 229 keys both locales,
+**625 vitest** in 55 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 43 symbols, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`:
-38 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
+39 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
-check:perf`: 13 passed, NFR-8 measured plus the D75 selection guard.
+check:perf`: 17 passed, NFR-8 measured over five labs and three playgrounds, plus the D75 selection guard.
 
 **The gate was green here and red on the runner, 2026-09-19.** `main`'s GitHub Actions run had
 failed on five consecutive pushes, including the two that recorded checks 12 and 13 as passed.
@@ -322,6 +322,11 @@ until they had already happened.
 | A layout measured before the webfonts decode is a layout that is never painted | `DEVIATIONS.md` D70 |
 | A colour's contrast ratio written into a comment from memory reads as a measurement and is not one | `DEVIATIONS.md` D54 |
 | A contrast instrument that parses one colour syntax silently skips every element written in another, and reports a pass over the quarter of the slide it could read | `DEVIATIONS.md` D88 |
+| An instrument's skip list can only report what its loop reaches, so a tag allowlist is a second silent skip hiding behind the report that was added to end the first | `DEVIATIONS.md` D91 |
+| A canvas keeps its previous `fillStyle` when handed a colour it cannot parse, so priming with black scores every unresolvable colour as the highest contrast on the slide | `DEVIATIONS.md` D91 |
+| `Path.write_text` translates the newline to `os.linesep`, so a Python generator writes CRLF on Windows however the file is pinned in `.gitattributes` | `DEVIATIONS.md` D91 |
+| Clamping a difference between two noisy samples at zero turns "below the resolution" into an apparent measurement of none | `DEVIATIONS.md` D91 |
+| A lint rule watched failing by hand and then only described in prose leaves nothing that notices its deletion | `DEVIATIONS.md` D91 |
 | A framework that sizes in rem puts its text at the document root, not at the shell the component is mounted in, so a 24 px lecture can contain 14 px type | `DEVIATIONS.md` D88 |
 | A generated file that git checks out with different line endings than the generator writes leaves `git status` dirty after every green run, with `git diff` showing nothing | `DEVIATIONS.md` D89, and the rule above it in `.gitattributes` |
 | An input-to-paint measurement that awaits two animation frames cannot report less than two frame intervals, so five different labs all came back at the display's cadence | `DEVIATIONS.md` D74 |

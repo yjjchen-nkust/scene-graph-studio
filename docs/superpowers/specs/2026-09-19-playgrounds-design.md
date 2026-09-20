@@ -103,9 +103,24 @@ Each rule is watched failing before it is kept.
 4. A component is registered for it, read by scanning `playgrounds/mounts.tsx` for its keys, as
    the four-part contract is checked by scanning the MDX body.
 5. The step's body contains exactly one `<Playground kp="…" />`, whose id equals the front
-   matter's.
-6. Both locales mark the same steps as playgrounds, with the same `kp`.
-7. No `kp` is used by two playground steps.
+   matter's. The step's body ends at its own `</Step>`: content after it belongs to no step, and
+   `registry.tsx` renders it on **every** slide of the module.
+6. No `<Playground>` anywhere in the body names a `kp` that no step declares.
+7. Both locales mark the same steps as playgrounds, with the same `kp`.
+8. No `kp` is used by two playground steps, **anywhere in the corpus** — not merely within one
+   module, since two modules may each cite the same point.
+
+And over `data/content/playground_golden.json`, which is the same contract applied to the file
+that pins the arithmetic:
+
+9. Every case has a unique `id`, and carries `kp`, `image_id`, `knobs` and a non-empty `expect`.
+10. Every case's `why` writes out the arithmetic a reader would check.
+11. Every case names a `kp` with a registered component.
+
+Rules 5 (the `</Step>` bound), 6 and 8 were added on 2026-09-20 after review found each of them
+passing a defect that reaches the projector; `tools/test/content_lint.test.mjs` exercises all
+eleven against fixture corpora, which is what makes deleting one fail the gate rather than only
+the prose.
 
 ### 2.5 One change outside the contract
 

@@ -100,7 +100,12 @@ export function TripletCombinatorics() {
         label={t('playground.predicate')}
         value={predicate}
         options={PREDICATES.map((p) => ({ value: p, label: p }))}
-        onChange={(next) => setParams({ 'F2.predicate': next })}
+        onChange={(next) => {
+          // The notice describes the pair and the predicate as they were. Changing either
+          // leaves it on screen beside a state it no longer describes.
+          setNotice(null);
+          setParams({ 'F2.predicate': next });
+        }}
       />
       <button
         type="button"
@@ -125,7 +130,10 @@ export function TripletCombinatorics() {
         id="F2.directed"
         label={t('playground.directed')}
         checked={directed}
-        onChange={(on) => setParams({ 'F2.directed': on ? 1 : 0 })}
+        onChange={(on) => {
+          setNotice(null);
+          setParams({ 'F2.directed': on ? 1 : 0 });
+        }}
       />
     </>
   );
@@ -188,13 +196,18 @@ export function TripletCombinatorics() {
       {!directed && collapsed.length > 0 && (
         <p data-testid="f2-collapsed" className="mt-3 text-[1em] text-slate-700">
           {t('playground.collapsed')}{' '}
+          {/* Two separators, because they mean different things: the edges within one merged
+              group are joined by "and", and one group is divided from the next. With a single
+              separator doing both jobs, two collapsed pairs render as four edges in a row and
+              the pairing -- which is the entire claim this panel makes -- is not recoverable
+              from what the room sees. */}
           {collapsed
             .map((group) =>
               group
                 .map((tri) => `${nameOf(tri.subject_id)} ${tri.predicate} ${nameOf(tri.object_id)}`)
                 .join(t('playground.and')),
             )
-            .join(t('playground.and'))}
+            .join(t('playground.group_sep'))}
         </p>
       )}
     </PlaygroundFrame>

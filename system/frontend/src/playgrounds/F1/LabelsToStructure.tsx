@@ -128,7 +128,12 @@ export function LabelsToStructure() {
             id="F1.annotated"
             label={t('playground.annotated')}
             value={String(kept.length)}
-            note={`|E| / ${frame.relationships.length}`}
+            // `|E|` alone. This read `|E| / 6`, where the slash means "out of", directly above
+            // `3 / 480`, where it means division -- and NFR-2 makes this note the place a
+            // student checks the arithmetic, so a note that reads as arithmetic and is not one
+            // is the wrong thing in the wrong place. The kept-of-total fraction is on the
+            // density slider, which is the control that changes it.
+            note="|E|"
           />
           <Readout
             id="F1.candidates"

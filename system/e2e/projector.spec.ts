@@ -49,31 +49,34 @@ interface Reading {
  */
 async function painted(page: Page, selector: string): Promise<Reading> {
   return page.evaluate((sel) => {
-    // Resolved by painting the colour, not by parsing its spelling.
+    // Resolved by painting the colour, and a failure to resolve is detectable.
     //
-    // This read `/rgba?\((\d+),...)/` until 2026-09-20 and returned null for anything else, and
-    // `painted` skips a row it cannot parse. Tailwind v4 emits `oklch()` for every one of its
-    // colour utilities, so every element styled by a Tailwind class was silently dropped: on the
-    // F1 step, 13 of 20 text rows, including all four readouts. The `palette.ts` content that
-    // this test was written against is plain `rgb()` and was measured all along, which is why a
-    // blind instrument kept reporting a pass. The floor assertion below did not catch it either,
-    // because the 7 rows that survived cleared a floor of 3.
-    //
-    // A canvas resolves any syntax the browser accepts, current or future, and returns the alpha
-    // the backdrop walk needs rather than a second regex for it.
+    // Two starting values, not one. This primed `fillStyle` with `'#000'` and assigned the
+    // candidate over it; canvas leaves `fillStyle` untouched when the assignment is invalid, so
+    // an unresolvable colour came back as pure black -- which against a light slide is the
+    // highest contrast obtainable, i.e. the reading that most certainly passes. The regex this
+    // replaced failed loudly by returning null; its replacement failed silently by returning a
+    // pass. Priming with two different colours and requiring them to agree makes the failure
+    // visible again, and anything unresolvable goes to `skipped`.
     const probe = document.createElement('canvas');
     probe.width = 1;
     probe.height = 1;
     const ctx = probe.getContext('2d', { willReadFrequently: true })!;
-    const parse = (value: string): [number, number, number, number] | null => {
-      if (!value) return null;
-      ctx.fillStyle = '#000';
+    const paintOnce = (value: string, prime: string): [number, number, number, number] => {
+      ctx.fillStyle = prime;
       ctx.fillStyle = value;
       ctx.clearRect(0, 0, 1, 1);
       ctx.fillRect(0, 0, 1, 1);
       const d = ctx.getImageData(0, 0, 1, 1).data;
       return [d[0]!, d[1]!, d[2]!, d[3]! / 255];
     };
+    const parse = (value: string): [number, number, number, number] | null => {
+      if (!value) return null;
+      const a = paintOnce(value, '#000000');
+      const b = paintOnce(value, '#ffffff');
+      return a.every((n, i) => n === b[i]) ? a : null;
+    };
+
     const channel = (v: number) => {
       const c = v / 255;
       return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
@@ -81,27 +84,65 @@ async function painted(page: Page, selector: string): Promise<Reading> {
     const lum = ([r, g, b]: [number, number, number, number]) =>
       0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 
-    // The nearest ancestor that actually paints. A transparent background inherits what is
-    // behind it, and measuring against `rgba(0,0,0,0)` would score every element 1:1. The alpha
-    // now comes from the painted pixel, so `oklch(... / 50%)` is read as correctly as `rgba()`.
+    /** Source-over, so a translucent ink is scored as the colour the eye receives. */
+    const over = (
+      fg: [number, number, number, number],
+      bg: [number, number, number, number],
+    ): [number, number, number, number] => [
+      fg[0] * fg[3] + bg[0] * (1 - fg[3]),
+      fg[1] * fg[3] + bg[1] * (1 - fg[3]),
+      fg[2] * fg[3] + bg[2] * (1 - fg[3]),
+      1,
+    ];
+
+    // The nearest ancestors that paint, composited. Alpha used to be read and then discarded:
+    // an ink at 12% opacity scored as though it were opaque, which is the one case where the
+    // painted result and the declared colour differ most.
     const backdrop = (el: Element): [number, number, number, number] => {
+      const stack: [number, number, number, number][] = [];
       for (let node: Element | null = el; node; node = node.parentElement) {
         const rgba = parse(getComputedStyle(node).backgroundColor);
-        if (rgba && rgba[3] > 0) return rgba;
+        if (rgba && rgba[3] > 0) {
+          stack.push(rgba);
+          if (rgba[3] === 1) break;
+        }
       }
-      return [255, 255, 255, 1];
+      let out: [number, number, number, number] = [255, 255, 255, 1];
+      for (let i = stack.length - 1; i >= 0; i -= 1) out = over(stack[i]!, out);
+      return out;
+    };
+
+    const rendered = (el: Element) => {
+      const st = getComputedStyle(el);
+      if (st.visibility === 'hidden' || st.display === 'none' || Number(st.opacity) === 0) {
+        return false;
+      }
+      const box = (el as HTMLElement).getBoundingClientRect();
+      return box.width >= 1 && box.height >= 1;
     };
 
     const out: Painted[] = [];
     const skipped: string[] = [];
-    for (const el of document.querySelectorAll(sel)) {
-      // Only the element that owns the words, so a wrapper is not scored for its children.
+    const root = document.querySelector(sel);
+    if (!root) return { rows: out, skipped: [`no element matches ${sel}`] };
+
+    // Every descendant, not a list of tag names. The list was `h1,h2,h3,p,li,span,td,th`, and an
+    // element outside it was neither measured nor reported -- 178 of them on the mathematics
+    // step, including the four contract headings. A tag allowlist is a silent skip that the
+    // `skipped` report cannot see, which is the defect this whole function was rewritten to
+    // remove and which it kept in a second form.
+    for (const el of root.querySelectorAll('*')) {
+      // KaTeX renders a MathML copy of every formula for assistive technology and hides it from
+      // paint. It is the same text twice, and it is not what the room sees.
+      if (el.closest('.katex-mathml')) continue;
       const own = [...el.childNodes]
         .filter((n) => n.nodeType === Node.TEXT_NODE)
         .map((n) => n.textContent ?? '')
         .join('')
         .trim();
       if (!own) continue;
+      if (!rendered(el)) continue;
+
       const style = getComputedStyle(el);
       const fg = parse(style.color);
       if (!fg) {
@@ -109,7 +150,8 @@ async function painted(page: Page, selector: string): Promise<Reading> {
         continue;
       }
       const bg = backdrop(el);
-      const [hi, lo] = lum(fg) >= lum(bg) ? [lum(fg), lum(bg)] : [lum(bg), lum(fg)];
+      const ink = over(fg, bg);
+      const [hi, lo] = lum(ink) >= lum(bg) ? [lum(ink), lum(bg)] : [lum(bg), lum(ink)];
       out.push({
         text: own.slice(0, 40),
         color: style.color,
@@ -216,13 +258,7 @@ for (const size of SIZES) {
         await page.goto(`/lecture/m/m00/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
 
-        const { rows, skipped } = await painted(
-          page,
-          '[data-testid="lecture-root"] h1, [data-testid="lecture-root"] h2, ' +
-            '[data-testid="lecture-root"] h3, [data-testid="lecture-root"] p, ' +
-            '[data-testid="lecture-root"] li, [data-testid="lecture-root"] span, ' +
-            '[data-testid="lecture-root"] td, [data-testid="lecture-root"] th',
-        );
+        const { rows, skipped } = await painted(page, '[data-testid="lecture-root"]');
 
         // Nothing unread, before anything read is judged. The floor used to be
         // `toBeGreaterThan(3)`, which 7 surviving rows cleared while 13 were being dropped for a
@@ -234,7 +270,18 @@ for (const size of SIZES) {
           `step ${step}: ${skipped.length} text elements whose colour could not be read: ` +
             `${JSON.stringify(skipped, null, 2)}`,
         ).toEqual([]);
-        expect(rows.length, `step ${step}: nothing was measured`).toBeGreaterThan(3);
+        // A floor per step, measured rather than guessed: at XGA the walk reads 203 rows on the
+        // mathematics step and 33, 24 and 17 on F1, F2 and F8. `toBeGreaterThan(3)` was kept
+        // here after the oklch finding with a comment explaining why it had failed to catch it,
+        // which is a floor known to be inadequate left in place. These are set below the
+        // measured counts so ordinary content edits do not trip them, and far enough above zero
+        // that a walk collapsing to a handful of rows is reported rather than passed.
+        const floor: Record<number, number> = { 2: 150, 1: 25, 3: 18, 4: 12 };
+        expect(
+          rows.length,
+          `step ${step}: ${rows.length} rows measured, fewer than the ${floor[step]} this step ` +
+            `carries -- the walk is not reaching the slide`,
+        ).toBeGreaterThanOrEqual(floor[step]!);
         const failures = rows.filter((row) => row.ratio < 7);
         expect(
           failures,
@@ -243,27 +290,41 @@ for (const size of SIZES) {
       }
     });
 
-    test('a playground is sized in the shell it is in, not in root pixels', async ({ page }) => {
-      // Spec §4.2 puts the lecture shell at >= 24 px base. Tailwind's `text-sm` and `text-base`
-      // are rem against the 16 px document root, not em against `lecture-root`, so the first
-      // version of these three playgrounds rendered its readout labels and its NFR-2 provenance
-      // notes at 14 px -- the smallest type in the corpus, on the numbers the playground exists
-      // to show. Nothing else in the deck goes below 18 px.
-      for (const step of [1, 3, 4]) {
+    test('no word on a slide falls below the deck’s 18 px floor', async ({ page }) => {
+      // Spec §4.2 puts the lecture shell at >= 24 px base. Two separate defects lived under
+      // that: Tailwind's `text-sm`/`text-base` are rem against the 16 px document root rather
+      // than em against `lecture-root`, which rendered the playgrounds' readout labels at 14 px;
+      // and the four SRS §11.2 contract headings were `text-xs`, 12 px, on every mathematics
+      // step in the corpus. The first was caught by an earlier version of this test. The second
+      // was not, because that version scoped itself to `[data-testid="playground-frame"]` -- a
+      // floor test that cannot see the element that breaks the floor.
+      //
+      // So: the whole slide, every descendant. KaTeX's internals are excluded because the
+      // mathematics is sized by KaTeX and then scaled by `fitMath.ts`, which is a different
+      // mechanism with its own test above; its struts and spacers carry 1 px text that is not
+      // read by anyone.
+      for (const step of [0, 1, 2, 3, 4, 5, 6]) {
         await page.goto(`/lecture/m/m00/${step}`);
-        await expect(page.getByTestId('playground-frame')).toBeVisible();
+        await expect(page.getByTestId('lecture-root')).toBeVisible();
 
         const small = await page.evaluate(() => {
-          const frame = document.querySelector('[data-testid="playground-frame"]')!;
+          const root = document.querySelector('[data-testid="lecture-root"]')!;
           const out: { text: string; px: number }[] = [];
-          for (const el of frame.querySelectorAll('*')) {
+          for (const el of root.querySelectorAll('*')) {
+            if (el.closest('.katex') || el.closest('.katex-mathml')) continue;
             const own = [...el.childNodes]
               .filter((n) => n.nodeType === Node.TEXT_NODE)
               .map((n) => n.textContent ?? '')
               .join('')
               .trim();
             if (!own) continue;
-            const px = Number.parseFloat(getComputedStyle(el).fontSize);
+            const st = getComputedStyle(el);
+            if (st.visibility === 'hidden' || st.display === 'none' || Number(st.opacity) === 0) {
+              continue;
+            }
+            const box = (el as HTMLElement).getBoundingClientRect();
+            if (box.width < 1 || box.height < 1) continue;
+            const px = Number.parseFloat(st.fontSize);
             if (px < 18) out.push({ text: own.slice(0, 30), px });
           }
           return out;
@@ -271,7 +332,7 @@ for (const size of SIZES) {
 
         expect(
           small,
-          `step ${step}: playground text below the deck's 18 px floor: ${JSON.stringify(small)}`,
+          `step ${step}: text below the deck's 18 px floor: ${JSON.stringify(small)}`,
         ).toEqual([]);
       }
     });
@@ -281,7 +342,8 @@ for (const size of SIZES) {
       const controls = page.getByTestId('playground-controls');
       await expect(controls).toBeInViewport();
 
-      // D71 accepted 25 of 92 slides overflowing an XGA panel. Controls above the visual is the
+      // D71 accepted 25 of the then 92 slides overflowing an XGA panel (the corpus is 95 now;
+      // the three playground steps are not in that denominator). Controls above the visual is the
       // rule that keeps a playground off that list: the picture may be clipped, the knobs may not.
       const box = await controls.boundingBox();
       const height = page.viewportSize()?.height ?? 0;

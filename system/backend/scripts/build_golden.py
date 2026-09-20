@@ -396,5 +396,6 @@ out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text(
     json.dumps({"$schema_version": 1, "cases": cases}, indent=2, ensure_ascii=False) + "\n",
     encoding="utf-8",
+    newline="",
 )
 print(f"wrote {len(cases)} cases to {out}")

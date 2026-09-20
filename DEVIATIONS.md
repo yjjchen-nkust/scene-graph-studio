@@ -2320,7 +2320,7 @@ in order:
 | `kp: F8` in the `en` file only | `m00: step 's4' is playground/F2 in zh-TW and playground/F8 in en. A playground must be the same playground in both languages.` |
 | a case's `why` truncated | `pg-F1-ph001-full-slice: 'why' must write out the arithmetic a reader would check` |
 
-Six of the eight breaks produce more than one message, and correctly so: a kp that is not in
+Seven of the eight breaks produce more than one message, and correctly so: a kp that is not in
 `kp.json` is also unowned, unregistered, and absent from the body, and a kp changed in one locale
 trips the cross-locale rule as well. The plan expected exactly one problem per break. Each rule
 was confirmed by finding its own message in the output rather than by counting the lines, and the
@@ -2412,7 +2412,7 @@ first step of a twelve-step gate left three files reported modified by `git stat
 Nothing was ever wrong with the content, which is exactly the problem. `git status` is what
 answers "did this cycle leave anything behind", and an answer that is three false positives every
 time is an answer nobody reads. During this cycle the three files had to be restored by hand
-before each of the six commits, and a real uncommitted change in that directory would have been
+before each of the eight non-merge commits, and a real uncommitted change in that directory would have been
 invisible among them.
 
 `.gitattributes` pins `data/content/*.json` to `eol=lf`, so checkout and harvest write the same
@@ -2472,8 +2472,12 @@ addresses knobs by that id.
 playground steps, unqualified; the implementation counted `<Playground>` tags within one module's
 body, so two modules that each cite the same point could each mount it and the gate would pass.
 The corpus-wide judgement runs after every module has been walked, counting one entry per module
-and step rather than per locale. Watched failing by mounting F1 from M01 as well as M00: it was
-the only problem reported, which is the measure of the gap — every per-module rule passed.
+and step rather than per locale. Watched failing by adding `F1` to M01's `knowledge_points` and
+mounting it there as well as in M00: it was then the only problem reported, which is the measure
+of the gap — every per-module rule passed. The first half of that sentence matters and was missing
+from this entry until 2026-09-20: without citing the point, M01 also trips the owned-or-cited rule
+in both locales, so the break yields three messages and the recorded observation does not
+reproduce.
 
 **`data/slices/**/*.json` is pinned to LF**, closing the case D89 left open. The Python cutters
 write LF and `core.autocrlf=true` checked the files out as CRLF — 7,189 carriage returns in one
@@ -2489,3 +2493,112 @@ defects: F2's built-edge list stays out of the query string, because it is work 
 than a knob and L1 does not persist its proposals either; and `f2-notice` carries no `aria-live`,
 which is outside a spec addressing the projector and the keyboard. Both are noted here so that a
 later cycle re-opens them deliberately rather than rediscovering them.
+
+## D91 — the instrument rewritten to stop skipping silently, which still did
+
+**Plan:** none. Three fresh-context reviews of the whole cycle before merge — correctness, test
+quality, documentation accuracy — and what each of their findings cost.
+
+**The contrast instrument's blind spot moved instead of closing.** D88 records replacing a regex
+colour parser, which could not read `oklch()` and dropped 13 of 20 rows in silence, with a canvas
+parser plus a `skipped` list asserted empty before anything measured is judged. Both halves were
+still wrong, in the same direction.
+
+The selector was a tag allowlist — `h1,h2,h3,p,li,span,td,th`. An element outside it was never
+entered into the loop, so it was neither measured nor reported, and `skipped` cannot see what the
+loop never reaches. Measured at XGA: 178 visible text-bearing elements passed over on the
+mathematics step, 13 on F1's, 11 on F2's, 4 on F8's, with `skipped` empty on all four. Among them
+were the four SRS §11.2 contract headings, rendered by `math/Parts.tsx` as `text-xs`
+`text-slate-500` — **12 px at 4.76:1**, against a deck floor of 18 px and NFR-5's 7:1, on every
+mathematics step in the corpus since the MDX pipeline landed.
+
+And `parse` primed `fillStyle` with `'#000'` before assigning the candidate. Canvas leaves
+`fillStyle` unchanged on an invalid assignment, so an unresolvable colour came back as pure black
+— against a light slide the highest contrast obtainable, the reading most certain to pass — and
+never reached `skipped`. Measured: `parse('totally-not-a-colour')` returned `[0,0,0,1]`, scoring
+20.07:1. The alpha was returned in the tuple and then discarded, so an ink at 12% opacity scored
+as though it were opaque.
+
+Now: no allowlist, every descendant of the slide; two priming colours whose disagreement is what
+detects an unresolvable value, so `parse` returns null and the row is reported; alpha composited
+source-over for ink and backdrop both. KaTeX's MathML copy is excluded by name, being the same
+text twice and not painted. Coverage went 195→203, 20→33, 13→24 and 13→17 rows. The headings are
+`text-[0.75em]` `text-slate-700`, 18 px at 9.90:1. The floor assertion is a measured per-step row
+count rather than `> 3` — the floor D88 kept in place while explaining why it had been inadequate.
+
+**The type-floor test could not see the element that broke the floor**, because it scoped itself
+to `[data-testid="playground-frame"]`. It walks the whole slide now, KaTeX's internals excepted,
+across all seven M0 steps.
+
+**The Python cutters do not write LF, and D90 said they did.** `Path.write_text` defaults to
+`newline=None`, which translates the newline to `os.linesep` — CRLF here. Measured: running
+`make_placeholders.py` without a pin put 743 carriage returns into the placeholder slice and left
+two tracked files modified, with `eol=lf` already in force. `eol=lf` normalises on check-in and
+does not stop a CRLF-writing generator from dirtying the tree, so D90 recorded as closed a case
+that was open — and `npm run setup` runs that generator. Every `write_text` under
+`system/backend/scripts/` now passes `newline=""`, and the pin covers the whole tracked data tree:
+golden vectors, predictions, transcripts and mini-ISG authoring, not slices alone.
+
+**The performance table printed a clamp as a measurement.** `Math.max(0, ms - floor)` subtracts
+two samples of the same two-frame quantity; all three playground figures were in fact negative,
+were printed as `0.0 ms`, and were then written into §15 under a "Work" column and glossed as
+"all three do their work inside the frame that carries the input". The data support only that the
+work is below the instrument's ~33 ms resolution. It reports `below the N ms two-frame floor`
+now, and quotes a figure only where there is one.
+
+**Four assertions could not fail on the regression they were named for.** The F1 clamp test,
+marked `// Review Focus 1.`, passed with the clamp deleted: `slice(0, 30)` returns all six and
+`slice(0, -6)` returns none, so negative-index `slice` coincidentally does what clamping does at
+this frame size. A density of `-0.5` is where they part — unclamped, `Math.round(-3)` makes
+`slice(0, -3)` return the **first three** edges, so a URL asking for less than nothing displays
+half the graph. `toHaveTextContent` is a substring match over the whole readout, and the note
+`|E| / 6` satisfied `toHaveTextContent('6')` for any value at all, so the value carries its own
+test id now. `Playground.test.tsx` asserted `PLAYGROUND_IDS` equalled
+`Object.keys(PLAYGROUND_MOUNTS).sort()`, which is that module's own definition restated and passes
+with the table empty. And the lab-measurement floor of `>= 3` was satisfied by exactly the three
+cases that can never skip.
+
+**Two requirements had no test that would break if the behaviour did.** `isTextEntry` names
+`SELECT` beside `INPUT`, and deleting that branch left the whole unit suite green — five of the
+twelve knobs the playgrounds carry are `<select>`, so a professor pressing Right to change option
+would have changed slide. And nothing asserted that a knob *writes* the query string: every URL
+test supplied the state through the URL and checked the read side, leaving spec §4.3's operative
+claim, that a setting becomes a link, untested in the direction that makes it true.
+
+**The lint rules had no automated test at all.** Each was watched failing once by hand and its
+message copied into a deviation, which satisfies the discipline and leaves nothing behind that
+notices a rule being deleted: removing any one left the gate green. `tools/test/content_lint.test.mjs`
+runs the lint as a subprocess against fixture corpora — eleven rules, each asserted by its own
+message. Deleting the registered-component rule now fails it.
+
+**Two further lint gaps, both reaching the projector.** A `<Playground>` tag that no frontmatter
+step declares was invisible, because the body scan only ever looked for `step.kp`: inserting
+`<Playground kp="F5" />` into a math step left the lint clean and would have rendered the amber
+unknown panel on that slide. And `stepBody` sliced from one `<Step id="…">` to the *next* rather
+than to `</Step>`, so content between a step's close and the next one's open was attributed to the
+preceding step — `registry.tsx` renders the whole body for every step with `Step` filtered, so such
+content appears on **every** slide of the module, and moving F1's tag outside its block left the
+lint clean.
+
+**Counts that D90's last commit left behind.** `a6ddfda` re-measured and updated README and INDEX
+without touching VERIFICATION §15, CLAUDE.md's Traps, or INDEX's `check:perf` line, so five
+quantities carried two values across five documents — with README pointing at §15 as "the run that
+produced these" while §15 held the older pair. All corrected here. §14's `test:e2e` figure of 26 is
+marked in place rather than overwritten: counted from the spec files at that commit it was 27, and
+it was wrong on the day it was written. D88's "six of the eight breaks produce more than one
+message" was seven of eight, counted from the recorded run. D89's "six commits" was eight non-merge
+commits. D90's rule-7 reproduction omitted that `F1` must first be added to M01's
+`knowledge_points`, without which the break yields three messages rather than the one recorded.
+
+**What this entry is really about.** Three of the findings above are the same shape: an instrument
+that cannot report what it did not look at. The regex could not read `oklch` and said nothing; its
+replacement could not read past a tag allowlist and said nothing; the perf harness could not
+resolve a sub-frame quantity and printed zero. Each time the fix was believed general and was
+specific. The rule this project keeps relearning — that a measurement must carry what it excluded
+— is now enforced in the one place it can be: `skipped` is asserted empty, and the set it is drawn
+from is every element on the slide rather than a list written in advance.
+
+**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **625 vitest in 55 files**, parity
+13, i18n 229 keys both locales, content lint clean over 13 golden cases and 9 playground cases,
+ruff clean, standalone current, frontend builds 756 modules. `npm run test:e2e` **39**.
+`npm run check:perf` **17**.

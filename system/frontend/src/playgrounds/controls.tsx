@@ -108,7 +108,16 @@ export function Readout({
   return (
     <div data-testid={`readout-${id}`} className="flex flex-col">
       <span className="text-[0.875em] uppercase tracking-wide text-slate-700">{label}</span>
-      <span className="font-mono text-[1.5em] tabular-nums text-slate-900">{value}</span>
+      {/* The value carries its own test id. `toHaveTextContent` is a substring match over the
+          whole container, so an assertion on a number could be satisfied by a digit in the note
+          or the label instead -- `note="|E| / 6"` made `toHaveTextContent('6')` pass for any
+          value at all. Assertions on the number address this element. */}
+      <span
+        data-testid={`readout-${id}-value`}
+        className="font-mono text-[1.5em] tabular-nums text-slate-900"
+      >
+        {value}
+      </span>
       <span className="font-mono text-[0.875em] text-slate-700">{note}</span>
     </div>
   );

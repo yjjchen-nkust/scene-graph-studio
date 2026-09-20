@@ -157,7 +157,7 @@ def main() -> int:
         "predicate_classes": PREDICATES,
         "test_image_ids": ["000000000001", "000000000002", "000000000003"],
     }
-    (OUT / "psg.json").write_text(json.dumps(blob, indent=2) + "\n", encoding="utf-8")
+    (OUT / "psg.json").write_text(json.dumps(blob, indent=2) + "\n", encoding="utf-8", newline="")
     print(f"wrote {len(blob['data'])} PSG fixture records to {OUT}")
     return 0
 

@@ -182,6 +182,36 @@ test('the study shell renders all three playgrounds in one column', async ({ pag
   await expect(page.getByTestId('readout-F1.candidates')).toContainText('480');
 });
 
+test('turning a knob writes it into the address bar, so the setting is a link', async ({ page }) => {
+  // Spec §4.3's operative claim is that a knob setting becomes a link, so a presenter note can
+  // name the setting to open on. Every other URL test in this repository supplies the state
+  // through the URL and checks the component reads it; nothing checked the write direction, so
+  // if `setParams` stopped reaching the address bar every one of them would still pass. That is
+  // the defect D88 records for F2's predicate -- advertised by its id and ignored -- and the
+  // guard added there covered only the read side.
+  await page.goto('/lecture/m/m00/1');
+  await expect(page.getByTestId('playground-frame')).toBeVisible();
+  expect(page.url()).not.toContain('F1.labels');
+  await page.getByTestId('F1.labels').click();
+  await expect(page).toHaveURL(/F1\.labels=0/);
+
+  await page.goto('/lecture/m/m00/3');
+  await expect(page.getByTestId('playground-frame')).toBeVisible();
+  await page.getByTestId('F2.predicate').selectOption('near');
+  await expect(page).toHaveURL(/F2\.predicate=near/);
+
+  await page.goto('/lecture/m/m00/4');
+  await expect(page.getByTestId('playground-frame')).toBeVisible();
+  await page.getByTestId('F8.swap').click();
+  await expect(page).toHaveURL(/F8\.swap=1/);
+
+  // And the link round-trips: the URL the knob wrote reproduces the state when opened cold.
+  const shared = page.url();
+  await page.goto('about:blank');
+  await page.goto(shared);
+  await expect(page.getByTestId('f8-status')).toHaveText(/Not recorded in E/);
+});
+
 test('no playground takes focus when its step opens', async ({ page }) => {
   for (const index of [1, 3, 4]) {
     await page.goto(`/lecture/m/m00/${index}`);
