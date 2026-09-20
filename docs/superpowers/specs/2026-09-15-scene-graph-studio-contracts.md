@@ -337,8 +337,9 @@ One content base, two shells, per PRD §6.1. A module is a component tree; a she
 ```typescript
 interface ModuleStep {
   id: string;
-  kind: 'prose' | 'math' | 'figure' | 'lab' | 'checkpoint';
+  kind: 'prose' | 'math' | 'figure' | 'lab' | 'checkpoint' | 'playground';
   node: React.ReactNode;
+  kp?: string;                  // required when kind is 'playground'
   presenter_notes_en?: string;
   presenter_notes_zh?: string;
   seconds_budget?: number;      // lecture timing
@@ -349,9 +350,11 @@ The MDX compiler emits `ModuleStep[]`. The **study shell** renders every step in
 
 **Space is two keys in one.** It means "next" to the deck and "activate" to whatever has focus, so the shell yields it to a focused button, link, `summary` or activatable input, and yields every key to a focused text field or `contenteditable` region. An arrow means nothing to a button and stays the deck's.
 
-**Presenter notes live one locale per file.** A module is `mNN.zh-TW.mdx` and `mNN.en.mdx`; the first may declare `presenter_notes_zh` on a step and the second `presenter_notes_en`, and neither may declare the other's. Exactly one of the two fields is therefore ever populated on a step returned by `getModule(id, locale)`, and the window reads the one matching the locale it is displaying — there is no fallback, per §2.7. `content_lint.mjs` refuses a file carrying the other locale's field, an empty note, and — the one that matters — the two locales disagreeing on *which* steps carry notes. The fields were optional and mostly absent when this was written; as of 2026-09-19 all 92 steps carry them in both locales and `content_lint.mjs` refuses a step without them (D76). The window still states that a step has no notes rather than rendering an empty pane, which is what a module authored from here on gets before its notes are written. See DEVIATIONS D56 and D76.
+**Presenter notes live one locale per file.** A module is `mNN.zh-TW.mdx` and `mNN.en.mdx`; the first may declare `presenter_notes_zh` on a step and the second `presenter_notes_en`, and neither may declare the other's. Exactly one of the two fields is therefore ever populated on a step returned by `getModule(id, locale)`, and the window reads the one matching the locale it is displaying — there is no fallback, per §2.7. `content_lint.mjs` refuses a file carrying the other locale's field, an empty note, and — the one that matters — the two locales disagreeing on *which* steps carry notes. The fields were optional and mostly absent when this was written; as of 2026-09-20 all 95 steps carry them in both locales and `content_lint.mjs` refuses a step without them (D76). The window still states that a step has no notes rather than rendering an empty pane, which is what a module authored from here on gets before its notes are written. See DEVIATIONS D56 and D76.
 
 The position message shape is fixed. The presenter window therefore cannot know when the lecture began and times its own session instead, labelled as such.
+
+**A step may be a playground.** `kind: playground` with `kp: <knowledge point id>`, and its body carries exactly one `<Playground kp="…"/>` naming the same point. `Playground` is supplied through the MDX `components` prop, as `Step` is, so no module imports it. A playground computes a count, a bound or a set membership that its own knowledge point's definition contains, and never a metric; a metric belongs to a lab. `content_lint.mjs` enforces eight rules over this, listed in `docs/superpowers/specs/2026-09-19-playgrounds-design.md` §2.4.
 
 **The channel carries one other message, in the other direction: `{kind: 'hello'}`, posted once by `/lecture/notes` when it mounts.** A running shell answers it with the position message above; if no shell is running, nothing answers and the window keeps its waiting pane. The two are told apart by `kind`, which the position message does not carry, so the fixed shape above is unchanged. This is a query and not a command: the presenter window still cannot drive the deck, which is the property that matters. It exists because `BroadcastChannel` retains nothing — the shell posts on entering a step and on each tick of the section clock, and a step with no `seconds_budget` has no clock, so a window opened after such a step was entered heard nothing at all. Every module opens on a step with no budget. See DEVIATIONS D86.
 

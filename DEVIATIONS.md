@@ -2277,3 +2277,123 @@ would destroy evidence and gain nothing.
 and running the same `npm run ci`. WekaExt's own `ci.yml` and `deploy.yml` were not edited.
 Deployment of this track remains out of scope, blocked by the same three reasons as before: a
 private repository, third-party content, and the backend dependency.
+
+## D88 — the three M0 playgrounds, and the four things building them decided
+
+**Plan:** `plans/2026-09-19-playgrounds-m0.md`, tasks 1–13. **Spec:**
+`specs/2026-09-19-playgrounds-design.md`.
+
+The entry is numbered D88 and not D87. The plan's Task 13 says to append a `## D87`; D87 was
+taken by the relocation on 2026-09-19, between tasks 6 and 7 of the same plan. This is the trap
+`docs/INDEX.md` §6 already lists — numbering an appended entry without reading the end of the
+file — arriving from the one direction it was not expected from, a plan written before the entry
+it would collide with existed.
+
+**`ImageOverlay` gained a `layers` prop rather than F1 gaining a second copy of the geometry.**
+Before this cycle the component drew boxes and relationship edges and no visible object names at
+all: the name was in the `<title>` a screen reader reads, and nowhere a projector shows. F1's
+entire claim is that a list of labels loses the scene, which cannot be demonstrated by a component
+that will not draw a label. The alternative was for F1 to draw its own overlay, which means a
+second implementation of the image-coordinate transform, and two of those drift. `layers` is
+additive and defaults to what every existing caller already got — `boxes` and `relationships` on,
+`labels` off — so no lab changed behaviour, and that default is asserted rather than assumed.
+
+**F2 does not reuse `SceneGraphView`, although it exists and draws exactly this diagram.**
+`SceneGraphView` renders through cytoscape onto a `<canvas>`, and a node painted on a canvas is
+not a DOM element, so it cannot be a `<button>`. Spec §4.2 requires every knob to be operable from
+the keyboard and check 8 walks the whole lecture without a mouse, so F2 renders its six objects as
+real buttons instead. The cost is a second way of drawing a graph in the codebase; the cost of the
+other choice is a playground the professor cannot drive from the podium.
+
+**Eight lint rules, each watched failing.** Task 11 Step 5 broke M0, the mount table or the golden
+file in the eight ways the rules describe and recorded what `content_lint.mjs` said. The messages,
+in order:
+
+| Break | Message |
+|---|---|
+| `kp:` deleted from `s2` | `m00.zh-TW.mdx: step 's2' is a playground and names no kp. Contracts §2.4 requires one.` |
+| `kp: F99` | `m00.zh-TW.mdx: step 's2' names kp 'F99', not in kp.json` |
+| `kp: T1` | `m00.zh-TW.mdx: step 's2' has a playground for 'T1', which this module neither owns nor cites. A playground for a point the module does not teach is a misfiled widget.` |
+| `F1:` commented out of `mounts.tsx` | `m00.zh-TW.mdx: no component is registered for 'F1' in frontend/src/playgrounds/mounts.tsx` |
+| body tag changed to `F2` | `m00.zh-TW.mdx: step 's2' declares kp 'F1' but its body carries F2. Frontmatter and body disagreeing is the defect this catches.` |
+| a second `<Playground kp="F1" />` | `m00.zh-TW.mdx: 'F1' is mounted more than once in this module` |
+| `kp: F8` in the `en` file only | `m00: step 's4' is playground/F2 in zh-TW and playground/F8 in en. A playground must be the same playground in both languages.` |
+| a case's `why` truncated | `pg-F1-ph001-full-slice: 'why' must write out the arithmetic a reader would check` |
+
+Six of the eight breaks produce more than one message, and correctly so: a kp that is not in
+`kp.json` is also unowned, unregistered, and absent from the body, and a kp changed in one locale
+trips the cross-locale rule as well. The plan expected exactly one problem per break. Each rule
+was confirmed by finding its own message in the output rather than by counting the lines, and the
+lint was verified clean before the first break and after the last.
+
+**The keyboard assertion was watched failing with the knob rebuilt as a `div`.** `Slider`'s
+`<input type="range">` was temporarily replaced by a focusable `<div role="slider">` that still
+moved its own value on `ArrowLeft`, so the only property under test was whether the knob is a
+form control. The test failed — not on the deck assertion the comment points at, but one line
+earlier, on the readout, which by then no longer existed: `ArrowLeft` reached the lecture shell,
+the shell went back a step, and the playground went with it. `useStepper.isTextEntry` keys on the
+focused element being an `INPUT`, and a `div` is not one. The control kit was restored and
+`git diff` confirmed it byte-for-byte unchanged.
+
+**Two tests elsewhere were pinned to a step number that Task 10 moved.** M0 went from four steps
+to seven, so `/lecture/m/m00/1` stopped being the mathematics and became F1. `projector.spec.ts`
+held two tests at that URL: one asserting that the position and clock stay on screen on a slide
+too long to fit, quoting a measured 1030 px of overflow, and one measuring every painted word
+against NFR-5's 7:1. Both still passed, which is the problem — measured at XGA, M0's seven steps
+now overflow the panel by 0, 146, 1030, 0, 0, 0 and 0 px, so the 1030 belongs to index 2 and the
+first test had been left asserting something about an over-long slide against one that nearly
+fits. It is repointed to index 2. The contrast test now walks index 2, 1, 3 and 4, because the
+playgrounds' readouts draw from Tailwind's scale rather than from `palette.ts` and are a second
+palette on the same deck. **When first repointed this reported a pass, and that pass was false**
+— see the entry below.
+
+Two of Task 4's tests in `frontend/src/content/test/registry.test.tsx` failed against the M0 this
+cycle produced, and both were right to. One pinned M0's step ids to the old four. The other
+rendered every step bare and asserted only that nothing threw, which was sound while no module had
+a playground step and became a real render the moment one did — a playground reaches
+`useSearchParams`, so it needs a router. It now renders inside `MemoryRouter` and asserts that a
+playground step mounts a `playground-frame` and not the `playground-unknown` placeholder, because
+an unregistered kp also does not throw.
+
+**The contrast instrument could not see the colours this cycle added, and the readouts were
+below 7:1.** Found in review, 2026-09-20. `projector.spec.ts` resolved a computed colour with
+`/rgba?\((\d+),\s*(\d+),\s*(\d+)/` and skipped any element it could not parse. The frontend is
+Tailwind v4.3.3, which emits `oklch()` for every colour utility, so every Tailwind-styled element
+was dropped in silence: on the F1 step, 13 of 20 text rows, including all four readouts. The
+`palette.ts` content the test was written against is plain `rgb()` and was measured all along —
+195 of 195 rows on the mathematics step — which is why a blind instrument had gone on reporting a
+pass. The floor assertion did not catch it either: it required more than 3 rows, and the 7
+survivors cleared it.
+
+Underneath the instrument was a real NFR-5 breach, on exactly the numbers a playground exists to
+display. Measured at XGA against the frame's own background, `rgb(248,250,252)`:
+
+| Ink | Where | Was | Now |
+|---|---|---|---|
+| `text-slate-500` → `text-slate-700` | readout label, and the NFR-2 provenance note under it | **4.55** | 9.90 |
+| `text-emerald-700` → `text-emerald-900` | F8's 「此邊收錄於 E」 status | **5.13** | 9.20 |
+| `text-amber-700` → `text-amber-900` | F2's refusal notices | **4.81** | 8.66 |
+
+Three changes follow. The parser paints the colour to a 1×1 canvas and reads the pixel, which
+resolves any syntax the browser accepts rather than the two this project happened to use, and
+returns the alpha the backdrop walk needs. `painted()` now returns what it *failed* to read, and
+the test asserts that list is empty before judging anything it did read — an instrument that
+cannot say what it skipped cannot be trusted to say the rest passed, which is the same finding as
+the `undefined` at §14 and D54's contrast ratio written from memory. And the walk covers steps 2,
+1, 3 and 4, so all three playgrounds are measured rather than only F1.
+
+**The playgrounds were the smallest type in the corpus.** Tailwind's `text-sm` and `text-base`
+are rem against the 16 px document root, not em against `lecture-root`'s 24 px, so the readout
+labels rendered at 14 px on a projector while nothing else in the deck goes below 18 px. The
+playgrounds are now sized in `em`, so they inherit whichever shell they are in — 21/24/36/45 px
+in the lecture, unchanged in the study column — and `projector.spec.ts` asserts no playground text
+falls below the deck's 18 px floor at any of the three panel sizes.
+
+**Two more from the same review.** F2's predicate knob was `useState` while its direction knob was
+in the query string, so `?F2.predicate=near` was a parameter the control advertised by its id and
+then ignored, and a shared link never restored it; spec §4.3 puts knob state in the URL, and it is
+there now, with a value outside |P| falling back to the vocabulary rather than building an edge the
+candidate space never counted. And the collapsed panel named only the second edge of each merged
+pair, while both presenter notes promise the edges, plural — it groups by key and prints the whole
+group. `Add edge` with no pair chosen also said nothing at all, which is the silent non-response
+this codebase legislates against everywhere else; it now says what is missing.

@@ -201,6 +201,8 @@
   "playground.reset": "Clear",
   "playground.self_pair": "A relation joins two different objects, so this pair is outside the candidate space.",
   "playground.duplicate": "That triplet is already built.",
+  "playground.and": " and ",
+  "playground.need_pair": "Choose a subject and an object before adding an edge.",
   "playground.collapsed": "Indistinguishable once direction is discarded:",
   "playground.swap": "Swap subject and object",
   "playground.in_e": "Recorded in E",

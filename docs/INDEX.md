@@ -1,7 +1,7 @@
 # Knowledge index
 
 Every planning document in this track, what it governs, and where each piece of knowledge is
-defined. Current as of **2026-09-19**.
+defined. Current as of **2026-09-20**.
 
 **Read order for someone new:** `decisions.md` → `contracts.md` → the plan you are about to
 execute. The PRD and SRS explain *why*; those two say *what is binding*.
@@ -21,15 +21,16 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/specs/2026-09-15-…-decisions.md` | **D-01…D-22. Binding. Read before any task.** | live |
 | `superpowers/specs/2026-09-15-…-contracts.md` | **Normative field names, types, enum spellings** | live |
 | `superpowers/specs/2026-09-16-indvissgg-reading.md` | The anchor paper read as M11's source | reference |
-| `superpowers/specs/2026-09-19-playgrounds-design.md` | The `playground` step kind, and the three that complete M0 | **awaiting review** |
+| `superpowers/specs/2026-09-19-playgrounds-design.md` | The `playground` step kind, and the three that complete M0 | **executed** |
 | `superpowers/plans/…-00-master.md` | Index, dependency graph, global constraints | live |
 | `superpowers/plans/…-01-skeleton-and-eval-engine.md` | Phases 1–2 | **executed** |
 | `superpowers/plans/…-02-graph-labs-and-content.md` | Phases 3–4: graph, L1, L2, harvest, corpus | **executed** |
 | `superpowers/plans/…-03-models-and-vlm.md` | Phases 5–6: registry, RelTR, L4, L6, L5 | **executed**; the measured prediction tier is blocked on licences, see PROVENANCE.md |
 | `superpowers/plans/…-04-labs-shells-hardening.md` | Phases 7–9: L3, L7, L8, shells, hardening | **executed** |
+| `superpowers/plans/2026-09-19-playgrounds-m0.md` | The `playground` step kind, F1, F2, F8, the golden file, the lint rules | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D87. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13) and the runner (§14)** | live |
+| `../DEVIATIONS.md` | **D1…D88. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14) and the playgrounds (§15)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
 
@@ -100,11 +101,13 @@ drifts.
 | Why the frozen page must not be extended | `FROZEN.md`, and D-13 / D-14 |
 | The eight labs L1–L8 | `PRD.md` §6.2; per-lab tasks in plans 02–04 |
 | The anchor paper's four equations | `design.md` §4.5 and `2026-09-16-indvissgg-reading.md` |
+| The `playground` step kind, and its eight lint rules | `contracts.md` §2.4; rules in `system/tools/content_lint.mjs` |
+| The playground arithmetic, and the nine cases that pin it | `system/frontend/src/playgrounds/logic.ts`; `data/content/playground_golden.json` |
 | How to build a project like this again | `PLAYBOOK.md` |
 
 ---
 
-## 5. State, 2026-09-19
+## 5. State, 2026-09-20
 
 **Built.** Plan 01: FastAPI backend, the evaluation engine in Python and TypeScript held identical
 by 13 golden vectors, slice ingestion with both licence gates, `/api/health`, `/api/eval`,
@@ -240,13 +243,41 @@ complaints about the name `O`, which is IndVisSGG's own symbol for the object vo
 exempted per-file with the reason written into `pyproject.toml` rather than renamed away from the
 paper it reproduces.
 
-**Verification.** `npm run ci` green, 2026-09-19: **266 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 13 agree, i18n 198 keys both locales,
-**527 vitest** in 45 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**M0's three playgrounds landed 2026-09-20.** A `playground` step is a knowledge-point id in
+the frontmatter and one `<Playground kp="…"/>` in the body, supplied through the MDX `components`
+prop the way `Step` already is. F1 turns the layers off to leave the bare photograph and moves the
+annotation density against a candidate space that does not move; F2 builds edges over six objects
+as real buttons rather than a cytoscape canvas, because a canvas node cannot be a `<button>` and
+check 8 walks the lecture by keyboard; F8 swaps subject and object and reports 「收錄於 E」 against
+「未收錄於 E」, never 真 against 偽. Nothing a playground computes is a metric — a count, a bound and
+a set membership are M0's own definitions, and R@K belongs to a lab. All three import their data
+at build time from the committed placeholder slice, so they compute with no backend, no network
+and no corpus, which `e2e/lecture.spec.ts` now asserts against a preview server with nothing behind
+it. Nine golden cases in `data/content/playground_golden.json` pin the arithmetic, each writing out
+the sum a reader would check. Eight lint rules hold the frontmatter, the body, the mount table and
+the two locales together, and each was watched failing. M0 went from 4 steps to 7, and the corpus
+from 92 to 95. See D88.
+
+**Review found the projector check blind on exactly this content.** `projector.spec.ts` resolved
+a colour by regex over `rgb()` and skipped what it could not parse; Tailwind v4 emits `oklch()`,
+so 13 of 20 text rows on the F1 step were never measured and the readouts were sitting at 4.55:1
+against a binding 7:1. The instrument paints to a canvas now, reports what it could not read, and
+asserts that report is empty before judging anything else; the ink is `slate-700`, `emerald-900`
+and `amber-900`, measured at 9.90, 9.20 and 8.66. The playgrounds were also the smallest type in
+the corpus at 14 px, because Tailwind sizes in rem against the document root rather than em
+against the 24 px shell, and they are sized in `em` now. See D88 and VERIFICATION §15.
+
+**Twenty-five live knowledge points still have no playground.** `kp.json` marks 27 points
+`status: 'live'`; F1 and F2 are two of them, and F8 is not among them at all, so 25 remain. Each is
+its own cycle against the pattern this one established.
+
+**Verification.** `npm run ci` green, 2026-09-20: **266 pytest** and 7 skipped (the ten newest
+compare the requirement files to the interpreter), parity 13 agree, i18n 227 keys both locales,
+**599 vitest** in 53 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 43 symbols, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`:
-26 passed across the keyboard walkthrough and the three projector resolutions. `npm run
+38 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
 check:perf`: 13 passed, NFR-8 measured plus the D75 selection guard.
 
@@ -290,6 +321,8 @@ until they had already happened.
 | A scrolling container clamps its child's bounding rectangle, so the overflow you measure is zero | `DEVIATIONS.md` D70 |
 | A layout measured before the webfonts decode is a layout that is never painted | `DEVIATIONS.md` D70 |
 | A colour's contrast ratio written into a comment from memory reads as a measurement and is not one | `DEVIATIONS.md` D54 |
+| A contrast instrument that parses one colour syntax silently skips every element written in another, and reports a pass over the quarter of the slide it could read | `DEVIATIONS.md` D88 |
+| A framework that sizes in rem puts its text at the document root, not at the shell the component is mounted in, so a 24 px lecture can contain 14 px type | `DEVIATIONS.md` D88 |
 | An input-to-paint measurement that awaits two animation frames cannot report less than two frame intervals, so five different labs all came back at the display's cadence | `DEVIATIONS.md` D74 |
 | `<rect fill="none">` is hit-tested on its outline only, and handing the interior to the browser hands the choice to paint order | `DEVIATIONS.md` D75 |
 | jsdom has no hit testing, so a DOM test of "what does this click select" passes against a component nothing can click | `DEVIATIONS.md` D75 |

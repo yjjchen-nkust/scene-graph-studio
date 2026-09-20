@@ -460,3 +460,103 @@ clean; frontend build 741 modules. `npm run test:e2e` 26 passed, `npm run check:
 said 263 pytest and 502 vitest, this file's §12 said 263 and 510 in 44 files, `README.md` said
 263 and 515. The measurement was 265 and 515 before today's change. §12's figures stay as
 written, being the record of that day's run; the two present-tense claims are corrected.
+
+---
+
+## 15. The M0 playgrounds — measured, 2026-09-20
+
+The three playgrounds that complete M0 (`plans/2026-09-19-playgrounds-m0.md`, tasks 1–13; D88).
+Every number below is from the run that produced this section, not from an earlier one.
+
+### The gate
+
+`npm run ci`, exit 0:
+
+| Step | Result |
+|---|---|
+| pytest | 266 passed, 7 skipped |
+| vitest | **599 passed in 53 files** (527 in 45 before this cycle) |
+| ruff over `backend` and `tools` | clean |
+| parity | 13 cases agree |
+| i18n parity | **227 keys**, both locales complete |
+| content lint | 13 golden cases, 7 licence rows, 15 of 15 modules × 2 locales, 93 points assigned, 43 symbols, clean |
+| frozen-page lints | clean |
+| standalone | up to date, 250 equations |
+| frontend build | 756 modules |
+| `npm run test:e2e` | 38 passed |
+| `npm run check:perf` | 17 passed |
+
+`npm run test:e2e`, exit 0: **38 passed** where 26 passed on 2026-09-19 — five new lecture tests,
+and two new projector tests at each of the three panel sizes.
+
+### The contrast check was blind, and what it was blind to was failing
+
+The first version of this section reported that the playgrounds pass NFR-5 at 7:1 on all three
+panels. That was false, and the review that found it is the reason this subsection exists.
+
+`projector.spec.ts` resolved a computed colour by regex over `rgb()`/`rgba()` and skipped what it
+could not parse. Tailwind v4.3.3 emits `oklch()`, so on the F1 step **13 of 20 text rows were
+never measured**, including every readout; the mathematics step, styled from `palette.ts` in plain
+`rgb()`, measured 195 of 195 and passed honestly. The floor assertion required more than 3 rows
+and the 7 survivors cleared it.
+
+Measured against the frame background `rgb(248,250,252)` once the parser was fixed:
+
+| Ink | Ratio before | Ratio after |
+|---|---|---|
+| readout label and provenance note | **4.55** | 9.90 |
+| F8's recorded-in-E status | **5.13** | 9.20 |
+| F2's refusal notice | **4.81** | 8.66 |
+
+The instrument now paints each colour to a 1×1 canvas and reads the pixel, reports every element
+whose colour it could not resolve, and the test asserts that report is empty **before** judging
+anything it did read. It walks steps 2, 1, 3 and 4, so all three playgrounds are covered. A
+separate test asserts no playground text falls below the deck's 18 px floor: the playgrounds were
+rendering at 14 px because Tailwind's size utilities are rem against the document root rather than
+em against the 24 px shell, and they are sized in `em` now.
+
+This is the third time in this project a measurement has been wrong in the instrument rather than
+in the product — §14's `undefined` from a function passed as a string, D74's two-frame floor, and
+now a parser that silently dropped three quarters of a slide. The common remedy each time was to
+make the instrument state what it did **not** measure.
+
+### NFR-8, on the three new components
+
+`npm run check:perf`, exit 0, **17 tests** where 13 ran before. The lab cases measured
+`/lab/*` only, so until this run the three newest interactive components in the product — the
+ones a professor turns in front of a room — were outside the only instrument that bounds
+input-to-paint. A `playground interaction` block now measures one characteristic knob on each,
+on its own lecture step, with no backend behind it:
+
+| | Wall | Idle floor | Work | Budget |
+|---|---|---|---|---|
+| F1, the density slider | 33.0 ms | 34.1 ms | 0.0 ms | 100 ms |
+| F2, discarding direction | 32.6 ms | 34.1 ms | 0.0 ms | 100 ms |
+| F8, swapping subject and object | 32.6 ms | 33.6 ms | 0.0 ms | 100 ms |
+
+The floor is two animation frames at the display's cadence, subtracted as D74 established; all
+three do their work inside the frame that carries the input. Cold start on the five routes was
+214–419 ms against a ten-second budget.
+
+Three details the cases had to get right, each of which would otherwise have measured nothing.
+F8's only `Readout` is |E| for the frame, which a swap does not move, so its change guard watches
+the sentence and the status instead. The controls carry `data-testid` as well as `id`, because
+the harness addresses elements by test id and the accessible name of a knob is the translated
+string — a measurement keyed on it would read differently in each locale. And no `lab-pending`
+wait is needed: a playground imports its slice at build time, which is the same property
+`e2e/lecture.spec.ts` asserts by driving one against a preview server with nothing behind it.
+
+### What was watched failing
+
+Eight lint rules and one browser assertion, listed with their messages in D88. In summary: each
+of `content_lint.mjs`'s eight playground rules was broken deliberately and its own message read
+out of the output, with the lint verified clean before the first break and after the last; and
+the keyboard assertion was re-run with `Slider` rebuilt as a focusable `div` that still moved its
+value, where it failed because `ArrowLeft` reached the lecture shell and took the step away.
+
+### What this section does not claim
+
+The playgrounds are measured on this machine, which is the development machine of D-02's pair and
+not the ship target. Nothing here re-measures the ARM64 side. The contrast figures are the
+browser's computed values at three panel sizes, which is what `projector.spec.ts` asserts and is
+not a statement about a real projector in a lit room — §8 already records that boundary.
