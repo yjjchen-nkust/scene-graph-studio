@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { LabelsToStructure } from './F1/LabelsToStructure';
+import { TripletCombinatorics } from './F2/TripletCombinatorics';
 
 /**
  * Every playground, keyed by the knowledge point it demonstrates.
@@ -12,6 +13,7 @@ import { LabelsToStructure } from './F1/LabelsToStructure';
  */
 export const PLAYGROUND_MOUNTS: Record<string, ComponentType> = {
   F1: LabelsToStructure,
+  F2: TripletCombinatorics,
 };
 
 export const PLAYGROUND_IDS: string[] = Object.keys(PLAYGROUND_MOUNTS).sort();

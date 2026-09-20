@@ -1,0 +1,84 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { setLocale } from '../../../i18n/useLocale';
+import { TripletCombinatorics } from '../TripletCombinatorics';
+
+beforeEach(() => setLocale('en'));
+
+function mount() {
+  return render(
+    <MemoryRouter initialEntries={['/m/m00']}>
+      <TripletCombinatorics />
+    </MemoryRouter>,
+  );
+}
+
+function addEdge(subject: string, object: string, predicate = 'on') {
+  fireEvent.click(screen.getByTestId(`node-${subject}`));
+  fireEvent.click(screen.getByTestId(`node-${object}`));
+  fireEvent.change(screen.getByLabelText('Predicate'), { target: { value: predicate } });
+  fireEvent.click(screen.getByRole('button', { name: 'Add edge' }));
+}
+
+describe('F2', () => {
+  it('offers the six objects as buttons, so the keyboard can reach them', () => {
+    mount();
+    const nodes = screen.getAllByTestId(/^node-/);
+    expect(nodes).toHaveLength(6);
+    for (const node of nodes) expect(node.tagName).toBe('BUTTON');
+  });
+
+  it('states the candidate space before a single edge is built', () => {
+    mount();
+    expect(screen.getByTestId('readout-Candidate triplets')).toHaveTextContent('480');
+    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('0');
+  });
+
+  it('counts an edge the student builds', () => {
+    mount();
+    addEdge('1', '2');
+    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('1');
+  });
+
+  // Review Focus 2.
+  it('refuses a self-pair and says why, rather than counting it', () => {
+    mount();
+    fireEvent.click(screen.getByTestId('node-1'));
+    fireEvent.click(screen.getByTestId('node-1'));
+    expect(screen.getByTestId('f2-notice')).toHaveTextContent('two different objects');
+    fireEvent.click(screen.getByRole('button', { name: 'Add edge' }));
+    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('0');
+  });
+
+  // Review Focus 3.
+  it('counts a repeated triplet once, so built can never exceed the candidate space', () => {
+    mount();
+    addEdge('1', '2');
+    addEdge('1', '2');
+    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('1');
+    expect(screen.getByTestId('f2-notice')).toHaveTextContent('already built');
+  });
+
+  it('halves the candidate space when direction is discarded', () => {
+    mount();
+    fireEvent.click(screen.getByLabelText('Directed arrows'));
+    expect(screen.getByTestId('readout-Candidate triplets')).toHaveTextContent('240');
+  });
+
+  it('names the edges that become indistinguishable once direction is discarded', () => {
+    mount();
+    addEdge('1', '2', 'on');
+    addEdge('2', '1', 'on');
+    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('2');
+
+    fireEvent.click(screen.getByLabelText('Directed arrows'));
+    expect(screen.getByTestId('f2-collapsed')).toHaveTextContent('on');
+    expect(screen.getByTestId('readout-Edges built')).toHaveTextContent('1');
+  });
+
+  it('does not take focus when it mounts', () => {
+    mount();
+    expect(document.activeElement).toBe(document.body);
+  });
+});
