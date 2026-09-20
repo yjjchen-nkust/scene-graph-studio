@@ -97,6 +97,7 @@ def main() -> None:
     (out / "annotations.json").write_text(
         json.dumps({"dataset": ds, "graphs": [g.model_dump() for g in chosen]}, indent=2) + "\n",
         encoding="utf-8",
+        newline="",
     )
     # Which of the two distribution paths this dataset takes is a licence fact, not a
     # preference, so it is recorded in the manifest rather than re-derived by each reader.
@@ -108,6 +109,7 @@ def main() -> None:
         )
         + "\n",
         encoding="utf-8",
+        newline="",
     )
     if not manifest:
         raise SystemExit(

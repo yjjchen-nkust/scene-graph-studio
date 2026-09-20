@@ -144,6 +144,7 @@ def main() -> None:
         )
         + "\n",
         encoding="utf-8",
+        newline="",
     )
     print(f"{len(manifest)} frames from {len(chosen)} videos -> {IMAGES}")
 

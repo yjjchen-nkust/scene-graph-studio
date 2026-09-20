@@ -13,16 +13,20 @@ import { setLocale } from '../../../i18n/useLocale';
  * Regenerating the slice with one unannotated frame is all it would take to reach it, and the
  * component used to dereference `relationships[0]` and blank the step.
  */
+// Every required field, no cast. `as unknown as SceneGraph` would keep compiling if the type
+// gained a field the component then read, which is the one thing a fixture must not do.
 const EMPTY: SceneGraph = {
   image_id: 'ph-empty',
+  dataset: 'placeholder',
   width: 640,
   height: 480,
   objects: [
-    { object_id: 1, names: ['table'], bbox: [0, 0, 10, 10] },
-    { object_id: 2, names: ['person'], bbox: [5, 5, 15, 15] },
+    { object_id: 1, names: ['table'], bbox: { x: 0, y: 0, w: 10, h: 10 } },
+    { object_id: 2, names: ['person'], bbox: { x: 5, y: 5, w: 10, h: 10 } },
   ],
   relationships: [],
-} as unknown as SceneGraph;
+  provenance: { kind: 'ground_truth', fidelity: 'measured' },
+};
 
 vi.mock('../../slice', () => ({
   FRAMES: [EMPTY],

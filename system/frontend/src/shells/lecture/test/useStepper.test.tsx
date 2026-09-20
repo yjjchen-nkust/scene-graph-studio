@@ -14,19 +14,25 @@ function Probe() {
   return <output data-testid="url">{location.pathname}</output>;
 }
 
-function Harness({ withInput = false }: { withInput?: boolean }) {
+function Harness({ withInput = false, withSelect = false }: { withInput?: boolean; withSelect?: boolean }) {
   const stepper = useStepper('m00', STEPS);
   return (
     <div>
       <output data-testid="index">{stepper.index}</output>
       <output data-testid="remaining">{String(stepper.remainingSeconds)}</output>
       {withInput && <input data-testid="editor" defaultValue="" />}
+      {withSelect && (
+        <select data-testid="chooser" defaultValue="a">
+          <option value="a">a</option>
+          <option value="b">b</option>
+        </select>
+      )}
       <Probe />
     </div>
   );
 }
 
-function mount(entry: string, props: { withInput?: boolean } = {}) {
+function mount(entry: string, props: { withInput?: boolean; withSelect?: boolean } = {}) {
   return render(
     <MemoryRouter initialEntries={[entry]}>
       <Routes>
@@ -76,6 +82,23 @@ describe('useStepper', () => {
     fireEvent.keyDown(editor, { key: ' ' });
     fireEvent.keyDown(editor, { key: 'ArrowRight' });
     fireEvent.keyDown(editor, { key: 'ArrowLeft' });
+
+    expect(index()).toBe(0);
+  });
+
+  it('does not steal arrow keys while a select has focus', () => {
+    // `isTextEntry` names SELECT alongside INPUT and TEXTAREA, and nothing tested that branch:
+    // deleting `|| node.tagName === 'SELECT'` left the whole unit suite green. Five of the
+    // twelve knobs the three M0 playgrounds carry are `Choice`, which renders a `<select>`, so
+    // the regression is a professor pressing Right to move to the next option and changing the
+    // slide instead. Spec §4.2 requires every knob to be operable from the keyboard.
+    mount('/lecture/m/m00/0', { withSelect: true });
+    const chooser = screen.getByTestId('chooser');
+    chooser.focus();
+
+    fireEvent.keyDown(chooser, { key: 'ArrowRight' });
+    fireEvent.keyDown(chooser, { key: 'ArrowLeft' });
+    fireEvent.keyDown(chooser, { key: ' ' });
 
     expect(index()).toBe(0);
   });

@@ -19,7 +19,13 @@ function Part({ name, tone, children }: { name: string; tone: string; children: 
     // `data-part` carries the component name, which is the name `tools/content_lint.mjs`
     // checks for in the source. One vocabulary, so a test and the lint agree on what a part is.
     <section data-part={name} className={`my-4 rounded border-l-4 pl-4 ${tone}`}>
-      <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      {/* `text-[0.75em]` and `slate-700`, not `text-xs` and `slate-500`. The heading names one of
+          the four parts SRS §11.2 fixes, so it is read from the room, not skimmed: at 12 px and
+          4.76:1 it met neither the deck's 18 px floor nor NFR-5's 7:1. It sat on every
+          mathematics step in the corpus and `projector.spec.ts` could not see it, because the
+          instrument filtered to a list of tag names that did not include `h4`. Sized in em so it
+          follows whichever shell it is in, as the playgrounds are. */}
+      <h4 className="mb-1 text-[0.75em] font-semibold uppercase tracking-wide text-slate-700">
         {t(`math.${name.toLowerCase()}`)}
       </h4>
       <div className="prose prose-slate max-w-none">{children}</div>

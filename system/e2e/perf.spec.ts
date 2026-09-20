@@ -214,12 +214,16 @@ async function inputToPaint(
       const el = document.querySelector<HTMLElement>(`[data-testid="${act.testid}"]`);
       if (!el) throw new Error(`no [data-testid="${act.testid}"] on this page`);
 
-      const before = read();
       const paint = () =>
         new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
 
       // Settle whatever the previous frame was still doing, so the clock starts on a quiet page.
       await paint();
+
+      // Sampled after the settle, not before it. Taken first, `before` could capture a frame the
+      // navigation had not finished painting, and the change guard would then read that paint as
+      // the act's own work.
+      const before = read();
 
       // Calibrate. Two animation frames cost two frame intervals whether or not anything happened
       // in them, so at 60 Hz this instrument cannot report less than about 33 ms and a lab that
@@ -253,6 +257,22 @@ async function inputToPaint(
     },
     { act, readout },
   );
+}
+
+/**
+ * What the two samples support saying, which is not always a number.
+ *
+ * `ms - floor` subtracts two samples of the same two-animation-frame quantity, so when the work
+ * is small the difference is noise around zero and is as often negative as positive. It was
+ * printed as `Math.max(0, ms - floor)`, and every one of the recorded playground figures was in
+ * fact negative -- a clamp turning an unresolvable quantity into an apparent measurement of
+ * exactly zero, which is D54's defect in a new place. If the difference does not clear the
+ * sampling noise, say so instead of quoting it.
+ */
+function workReport(ms: number, floor: number): string {
+  const delta = ms - floor;
+  if (delta <= 0) return `below the ${floor.toFixed(1)} ms two-frame floor`;
+  return `${delta.toFixed(1)} ms above the ${floor.toFixed(1)} ms two-frame floor`;
 }
 
 test.describe('lab interaction', () => {
@@ -298,8 +318,7 @@ test.describe('lab interaction', () => {
 
       measured.push(
         `interaction ${c.labId.padEnd(22)} ${ms.toFixed(1).padStart(6)} ms ` +
-          `(two frames cost ${floor.toFixed(1)} ms idle, so the work is ` +
-          `${Math.max(0, ms - floor).toFixed(1)} ms)`,
+          `(work: ${workReport(ms, floor)})`,
       );
       expect(ms, `${c.labId} took ${ms.toFixed(1)} ms from input to paint`).toBeLessThan(
         INTERACTION_MS,
@@ -307,13 +326,22 @@ test.describe('lab interaction', () => {
     });
   }
 
-  test('at least three labs were actually measured', () => {
+  test('every lab that does not need a backend was actually measured', () => {
+    // `>= 3` was satisfied by exactly the three cases that can never skip (L2, L3, L7), so the
+    // floor held on a run where both backed labs skipped and nothing about the backend was
+    // reported. The unbacked cases are named, and the backed ones are counted separately so a
+    // run that measured none of them says so rather than passing quietly.
     const timed = measured.filter((l) => l.startsWith('interaction') && !l.includes('not measured'));
-    expect(
-      timed.length,
-      `only ${timed.length} interactions were timed; a run that measures nothing passes for the ` +
-        `wrong reason`,
-    ).toBeGreaterThanOrEqual(3);
+    const unbacked = LAB_CASES.filter((c) => !c.needsBackend).map((c) => c.labId);
+    for (const labId of unbacked) {
+      expect(
+        timed.some((l) => l.includes(labId)),
+        `${labId} needs no backend and was not measured`,
+      ).toBe(true);
+    }
+    const backed = LAB_CASES.filter((c) => c.needsBackend).map((c) => c.labId);
+    const backedTimed = backed.filter((labId) => timed.some((l) => l.includes(labId)));
+    console.log(`  labs needing a backend measured: ${backedTimed.length}/${backed.length}`);
   });
 });
 
@@ -382,8 +410,7 @@ test.describe('playground interaction', () => {
 
       measured.push(
         `playground   ${c.kp.padEnd(22)} ${ms.toFixed(1).padStart(6)} ms ` +
-          `(two frames cost ${floor.toFixed(1)} ms idle, so the work is ` +
-          `${Math.max(0, ms - floor).toFixed(1)} ms)`,
+          `(work: ${workReport(ms, floor)})`,
       );
       expect(ms, `${c.kp} took ${ms.toFixed(1)} ms from input to paint`).toBeLessThan(
         INTERACTION_MS,

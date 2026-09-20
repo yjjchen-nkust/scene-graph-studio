@@ -51,7 +51,13 @@ export function ratio(annotated: number, candidates: number): number {
 }
 
 export function formatRatio(value: number): string {
-  return `${(value * 100).toFixed(2)}%`;
+  // A share that rounds to zero is not a share of zero, and F1 exists to say how small this
+  // number is -- so printing `0.00%` for both loses exactly the distinction the readout is for.
+  // Unreachable on the committed slice, where the smallest non-zero share is 1/1500 = 0.07%, and
+  // reachable the moment a frame carries more objects or the vocabulary grows.
+  const percent = value * 100;
+  if (value > 0 && percent < 0.005) return '< 0.01%';
+  return `${percent.toFixed(2)}%`;
 }
 
 /** A triplet's identity. With direction discarded, the two endpoints are sorted into one key. */

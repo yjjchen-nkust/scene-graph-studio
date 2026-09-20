@@ -171,6 +171,7 @@ def build() -> None:
     (out / "annotations.json").write_text(
         json.dumps({"dataset": "placeholder", "graphs": graphs}, indent=2) + "\n",
         encoding="utf-8",
+        newline="",
     )
     (out / "MANIFEST.json").write_text(
         json.dumps(
@@ -178,6 +179,7 @@ def build() -> None:
             indent=2,
         ) + "\n",
         encoding="utf-8",
+        newline="",
     )
     print(f"wrote {len(graphs)} placeholder frames to {out}")
 

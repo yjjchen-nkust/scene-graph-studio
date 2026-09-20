@@ -136,12 +136,23 @@ function scalar(raw) {
   return text;
 }
 
-/** The slice of an MDX body between one `<Step id="...">` and the next. */
+/**
+ * The slice of an MDX body inside one `<Step id="...">`, bounded by its own closing tag.
+ *
+ * Bounded at `</Step>` rather than at the next `<Step id="`, which is what it read until
+ * 2026-09-20. The difference is everything between one step's close and the next one's open, and
+ * that region is not nothing: `registry.tsx` renders the *whole* body for every step with `Step`
+ * filtered to admit one id, so anything outside a `Step` block has no filter over it and renders
+ * on every slide of the module. Attributing it to the preceding step made rule 5 report content
+ * as correctly placed when it was about to appear seven times.
+ */
 function stepBody(body, stepId) {
   const open = body.indexOf(`<Step id="${stepId}">`);
   if (open < 0) return '';
+  const close = body.indexOf('</Step>', open + 1);
   const next = body.indexOf('<Step id="', open + 1);
-  return body.slice(open, next < 0 ? body.length : next);
+  const end = [close, next].filter((i) => i >= 0);
+  return body.slice(open, end.length ? Math.min(...end) : body.length);
 }
 
 function frontmatter(source, where) {
@@ -216,7 +227,24 @@ const PLAYGROUND_GOLDEN = JSON.parse(
 // The playground golden cases. Not beside the evaluation engine's golden-vector check at the top
 // of this file, although they are the same kind of artefact: this rule needs REGISTERED, and a
 // const is not reachable before its declaration.
+const playgroundGoldenIds = new Set();
 for (const c of PLAYGROUND_GOLDEN.cases) {
+  // The same structural guard the engine's vectors get at the top of this file. It had only the
+  // two rules below, so a case missing its `knobs` or `expect`, or repeating another's id, was
+  // this file's business and this file said nothing. `golden.test.ts` throws on it, which makes
+  // the gate red somewhere -- but a lint whose subject is the golden file should be the thing
+  // that names the defect.
+  if (!c.id) problems.push('a playground golden case has no id');
+  if (playgroundGoldenIds.has(c.id)) {
+    problems.push(`duplicate playground golden case id: ${c.id}`);
+  }
+  playgroundGoldenIds.add(c.id);
+  for (const key of ['kp', 'image_id', 'knobs', 'expect']) {
+    if (!c[key]) problems.push(`${c.id}: missing '${key}'`);
+  }
+  if (c.expect && Object.keys(c.expect).length === 0) {
+    problems.push(`${c.id}: 'expect' is empty, so the case asserts nothing`);
+  }
   if (!c.why || c.why.length < 40) {
     problems.push(`${c.id}: 'why' must write out the arithmetic a reader would check`);
   }
@@ -401,6 +429,24 @@ for (const [id, locales] of [...modules].sort()) {
       }
     }
 
+    // Every `<Playground>` in the body answers to a declared step. The per-step rule above asks
+    // the other direction -- does the step this frontmatter declares carry its tag -- and a tag
+    // belonging to no step at all is invisible to it, because it only ever looks for `step.kp`.
+    // An undeclared tag renders the amber `playground-unknown` panel on a slide, or a real
+    // playground on a slide that never asked for one, with the gate green either way.
+    {
+      const declared = new Set(
+        (meta.steps ?? []).filter((s) => s.kind === 'playground' && s.kp).map((s) => s.kp),
+      );
+      const inBody = [...body.matchAll(/<Playground\s+kp="([^"]+)"/g)].map((m) => m[1]);
+      for (const kp of [...new Set(inBody)]) {
+        if (!declared.has(kp)) {
+          problems.push(`${file}: the body mounts <Playground kp="${kp}" />, which no step in ` +
+                        `this module's frontmatter declares. Every playground is a step.`);
+        }
+      }
+    }
+
     // The four-part contract, in order, in the body of a module that has a math step.
     if ((meta.steps ?? []).some((s) => s.kind === 'math')) {
       // Presence and order are two passes. One scan that looked for each part after the last
@@ -482,7 +528,10 @@ if (problems.length) {
   process.exit(1);
 }
 console.log(
-  `content lint: ${golden.cases.length} golden cases, ${gates.size} licence rows, ` +
+  `content lint: ${golden.cases.length} golden cases, ` +
+    // Counted, so a green run says the playground file was read. It was checked and not
+    // counted, which reads to the person watching CI as though it were not checked.
+    `${PLAYGROUND_GOLDEN.cases.length} playground cases, ${gates.size} licence rows, ` +
     `${modules.size} of ${owned.size} modules x ${LOCALES.length} locales, ` +
     `${POINTS.length} knowledge points all assigned, ${glosses.size / 2} symbols, clean`,
 );
