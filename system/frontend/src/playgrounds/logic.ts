@@ -74,6 +74,21 @@ export function isInE(graph: SceneGraph, t: Triplet): boolean {
   );
 }
 
+/**
+ * A boolean knob, read from the number the URL carries.
+ *
+ * Deliberately not `value === 1`. That reads every value outside {0, 1} as *off*, so a URL
+ * carrying `?F2.directed=2` selected the state opposite the default and showed a halved candidate
+ * space nobody asked for. `useLabParams` rejects only what will not parse as a number, so an
+ * absurd-but-numeric value reaches the component and the component is where it stops. Same rule
+ * as `clamp` below, for the knobs that have two states rather than a range.
+ */
+export function flag(value: number, fallback: boolean): boolean {
+  if (value === 1) return true;
+  if (value === 0) return false;
+  return fallback;
+}
+
 /** A knob arriving from the URL is not necessarily in range; `useLabParams` only rejects NaN. */
 export function clamp(value: number, low: number, high: number): number {
   if (!Number.isFinite(value)) return low;

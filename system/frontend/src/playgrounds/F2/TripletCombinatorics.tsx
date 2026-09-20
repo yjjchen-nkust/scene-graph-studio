@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { Choice, PlaygroundFrame, Readout, Toggle } from '../controls';
-import { candidateSpace, tripletKey, type Triplet } from '../logic';
+import { candidateSpace, flag, tripletKey, type Triplet } from '../logic';
 import { FRAMES, PREDICATES, SLICE_PREDICATE_COUNT } from '../slice';
 
 /**
@@ -32,7 +32,7 @@ export function TripletCombinatorics() {
     'F2.directed': 1,
     'F2.predicate': PREDICATES[0],
   });
-  const directed = params['F2.directed'] === 1;
+  const directed = flag(params['F2.directed'], true);
   // A predicate the URL invented is not in the vocabulary the candidate space was counted over,
   // so a built edge carrying it would sit outside the bound displayed beside it.
   const predicate = PREDICATES.includes(params['F2.predicate'])
@@ -160,11 +160,12 @@ export function TripletCombinatorics() {
         </div>
         <div className="grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-1">
           <Readout
+            id="F2.candidates"
             label={t('playground.candidates')}
             value={String(candidates)}
             note={`${frame.objects.length} × ${frame.objects.length - 1}${directed ? '' : ' / 2'} × ${SLICE_PREDICATE_COUNT}`}
           />
-          <Readout label={t('playground.built')} value={String(keys.size)} note="|E|" />
+          <Readout id="F2.built" label={t('playground.built')} value={String(keys.size)} note="|E|" />
         </div>
       </div>
 

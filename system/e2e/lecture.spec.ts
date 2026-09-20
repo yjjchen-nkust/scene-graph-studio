@@ -139,8 +139,8 @@ test('a playground computes with no backend running', async ({ page }) => {
   // proxy makes /api same-origin.
   await page.goto('/lecture/m/m00/1');
   await expect(page.getByTestId('playground-frame')).toBeVisible();
-  await expect(page.getByTestId('readout-Candidate triplets')).toContainText('480');
-  await expect(page.getByTestId('readout-Annotated share')).toContainText('1.25%');
+  await expect(page.getByTestId('readout-F1.candidates')).toContainText('480');
+  await expect(page.getByTestId('readout-F1.ratio')).toContainText('1.25%');
 });
 
 test('a knob is reachable by keyboard, and turning it does not advance the deck', async ({ page }) => {
@@ -148,7 +148,7 @@ test('a knob is reachable by keyboard, and turning it does not advance the deck'
   const position = page.getByTestId('position');
   const before = await position.textContent();
 
-  const annotated = page.getByTestId('readout-Annotated edges');
+  const annotated = page.getByTestId('readout-F1.annotated');
   const annotatedBefore = await annotated.textContent();
 
   // Tab into the playground rather than clicking it: a professor at the podium has a remote.
@@ -179,7 +179,7 @@ test('the study shell renders all three playgrounds in one column', async ({ pag
   // lecture shell at all. M0 has three, and the student reading alone sees every one of them.
   await page.goto('/m/m00');
   await expect(page.getByTestId('playground-frame')).toHaveCount(3);
-  await expect(page.getByTestId('readout-Candidate triplets').first()).toContainText('480');
+  await expect(page.getByTestId('readout-F1.candidates')).toContainText('480');
 });
 
 test('no playground takes focus when its step opens', async ({ page }) => {

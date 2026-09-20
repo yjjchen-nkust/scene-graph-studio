@@ -268,6 +268,11 @@ if (existsSync(CONTENT)) {
 if (modules.size === 0) problems.push(`${CONTENT}: no modules found. Plan 02 Task 7 writes m00.`);
 
 const glosses = new Map();
+// Which steps mount each knowledge point, across the whole corpus. Spec 2.4 rule 7 says no kp is
+// used by two playground steps and does not qualify that by module; the body rule below is
+// per-module because it reads one module's body, and on its own it would pass two modules that
+// each cite the same point and each mount it.
+const mountedBy = new Map();
 for (const [id, locales] of [...modules].sort()) {
   // Both locales, or neither. NFR-6: a half-translated build must not look finished.
   for (const locale of LOCALES) {
@@ -375,6 +380,12 @@ for (const [id, locales] of [...modules].sort()) {
             problems.push(`${file}: no component is registered for '${step.kp}' in ` +
                           `frontend/src/playgrounds/mounts.tsx`);
           }
+          // One entry per module and step, not per locale: the two locale files describe the
+          // same step and must not be counted as two uses of it.
+          mountedBy.set(
+            step.kp,
+            new Set([...(mountedBy.get(step.kp) ?? []), `${meta.id}:${step.id}`]),
+          );
           const tags = [...body.matchAll(/<Playground\s+kp="([^"]+)"/g)].map((m) => m[1]);
           const forThisStep = stepBody(body, step.id);
           const inStep = [...forThisStep.matchAll(/<Playground\s+kp="([^"]+)"/g)].map((m) => m[1]);
@@ -451,6 +462,17 @@ for (const [id, locales] of [...modules].sort()) {
         }
       }
     }
+  }
+}
+
+// A knowledge point has one playground, corpus-wide. Judged after every module has been walked,
+// because no single module's body can see another's.
+for (const [kp, steps] of [...mountedBy].sort()) {
+  if (steps.size > 1) {
+    problems.push(
+      `'${kp}' is mounted by ${steps.size} playground steps: ${[...steps].sort().join(', ')}. ` +
+        `Contracts §2.4 gives a knowledge point one playground.`,
+    );
   }
 }
 

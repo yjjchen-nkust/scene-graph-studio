@@ -2429,3 +2429,63 @@ the mismatch failed a step, here it passed every step and lied about the tree.
 the manifests are written by the Python cutters and carry the same exposure. They are not part of
 the gate and a slice is cut rarely (D-08), so nothing has been changed there; a re-cut will dirty
 them the same way until it is.
+
+## D90 — the eight minor findings the review deferred
+
+**Plan:** none. The Minor list from the whole-branch review of the playgrounds cycle (D88),
+deferred there because a fix pass takes only what it must and the author decides the rest.
+Recorded together because six of the eight are one defect wearing six hats: a value that is legal
+to parse but wrong to use, reaching a component that had no opinion about it.
+
+**A boolean knob read `=== 1`, so every value outside {0,1} selected the opposite of its default.**
+`?F2.directed=2` halved the candidate space, and `?F1.labels=7` turned off a layer that defaults
+to on. `useLabParams` rejects only what will not parse as a number, so the component is where an
+absurd-but-numeric value has to stop, and `clamp` was already doing exactly that for the knobs
+with a range. `flag(value, fallback)` is the same rule for the knobs with two states, and all five
+boolean knobs across the three playgrounds now use it.
+
+**A readout's test id was built from its translated label.** `readout-Candidate triplets` existed
+under `en` and had no equivalent under `zh-TW`, so every browser assertion that addressed a
+readout was a test of the English build, passing only because the describe block around it forced
+the locale — and `check:perf`, which is the one instrument that cannot force a locale, had to
+match `[data-testid^="readout-"]` rather than name what it was measuring. `Readout` takes an `id`
+now, namespaced by playground because the study shell renders all three in one column and two of
+them count candidates.
+
+**F8 dereferenced `relationships[0]` on a frame that has none.** No committed frame is empty, so
+this was latent; regenerating the slice with one unannotated frame would have blanked the step
+rather than said anything. It reports the absence and keeps the frame chooser, so the step is not
+a dead end. Pinned by a fixture in its own file, since no data reaches it — the construction
+`logic.test.ts` already uses for the reversed triplet no frame carries.
+
+**`F8.rel` defaulted to the literal 1.** Relationship ids are unique across the slice, so 1 is a
+relationship in `ph-001` and in none of the other five frames; changing frame reset the knob to it
+and relied on the `?? relationships[0]` fallback to recover. The default is read from the data
+now, and a frame change selects that frame's own first relationship. The fallback stays, but it is
+no longer load-bearing for five frames out of six.
+
+**Two knob ids did not match the query keys they write.** `id="F1.frame"` wrote `F1.img` and
+`id="F8.frame"` wrote `F8.img`, while every other control's id equals its key and `perf.spec.ts`
+addresses knobs by that id.
+
+**Lint rule 7 was narrower than the spec that states it.** Spec §2.4 says no `kp` is used by two
+playground steps, unqualified; the implementation counted `<Playground>` tags within one module's
+body, so two modules that each cite the same point could each mount it and the gate would pass.
+The corpus-wide judgement runs after every module has been walked, counting one entry per module
+and step rather than per locale. Watched failing by mounting F1 from M01 as well as M00: it was
+the only problem reported, which is the measure of the gap — every per-module rule passed.
+
+**`data/slices/**/*.json` is pinned to LF**, closing the case D89 left open. The Python cutters
+write LF and `core.autocrlf=true` checked the files out as CRLF — 7,189 carriage returns in one
+annotations file. It never reached the gate because a slice is cut rarely (D-08), which is
+precisely why it would have been met by somebody re-cutting one months from now and reading
+thousands of changed lines that were not changes.
+
+**Verification.** `npm run ci` exit 0, **607 vitest** in 54 files where 599 in 53 passed before;
+`npm run test:e2e` 38; `npm run check:perf` 17; i18n 228 keys both locales.
+
+**Not changed, and why.** The reviewer's remaining observations were judgement calls rather than
+defects: F2's built-edge list stays out of the query string, because it is work product rather
+than a knob and L1 does not persist its proposals either; and `f2-notice` carries no `aria-live`,
+which is outside a spec addressing the projector and the keyboard. Both are noted here so that a
+later cycle re-opens them deliberately rather than rediscovering them.

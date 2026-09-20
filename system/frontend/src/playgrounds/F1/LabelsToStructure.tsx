@@ -2,7 +2,7 @@ import { ImageOverlay } from '../../graph/ImageOverlay';
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { Choice, PlaygroundFrame, Readout, Slider, Toggle } from '../controls';
-import { candidateSpace, clamp, densityCut, formatRatio, ratio } from '../logic';
+import { candidateSpace, clamp, densityCut, flag, formatRatio, ratio } from '../logic';
 import { FRAMES, SLICE_PREDICATE_COUNT, frameById } from '../slice';
 
 // Vite resolves these at build time and emits them as assets on this origin, so the playground
@@ -58,7 +58,7 @@ export function LabelsToStructure() {
   const controls = (
     <>
       <Choice
-        id="F1.frame"
+        id="F1.img"
         label={t('playground.frame')}
         value={frame.image_id}
         options={FRAMES.map((f) => ({ value: f.image_id, label: f.image_id }))}
@@ -67,19 +67,19 @@ export function LabelsToStructure() {
       <Toggle
         id="F1.labels"
         label={t('playground.layer_labels')}
-        checked={params['F1.labels'] === 1}
+        checked={flag(params['F1.labels'], true)}
         onChange={(on) => setParams({ 'F1.labels': on ? 1 : 0 })}
       />
       <Toggle
         id="F1.boxes"
         label={t('playground.layer_boxes')}
-        checked={params['F1.boxes'] === 1}
+        checked={flag(params['F1.boxes'], true)}
         onChange={(on) => setParams({ 'F1.boxes': on ? 1 : 0 })}
       />
       <Toggle
         id="F1.rel"
         label={t('playground.layer_relations')}
-        checked={params['F1.rel'] === 1}
+        checked={flag(params['F1.rel'], true)}
         onChange={(on) => setParams({ 'F1.rel': on ? 1 : 0 })}
       />
       <Slider
@@ -116,25 +116,28 @@ export function LabelsToStructure() {
           relationships={kept}
           mode="view"
           layers={{
-            boxes: params['F1.boxes'] === 1,
-            relationships: params['F1.rel'] === 1,
-            labels: params['F1.labels'] === 1,
+            boxes: flag(params['F1.boxes'], true),
+            relationships: flag(params['F1.rel'], true),
+            labels: flag(params['F1.labels'], true),
           }}
           className="max-w-2xl"
         />
         <div className="grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-1">
-          <Readout label={t('playground.objects')} value={String(objectCount)} note="|V|" />
+          <Readout id="F1.objects" label={t('playground.objects')} value={String(objectCount)} note="|V|" />
           <Readout
+            id="F1.annotated"
             label={t('playground.annotated')}
             value={String(kept.length)}
             note={`|E| / ${frame.relationships.length}`}
           />
           <Readout
+            id="F1.candidates"
             label={t('playground.candidates')}
             value={String(candidates)}
             note={`${objectCount} × ${objectCount - 1} × ${predicateCount}`}
           />
           <Readout
+            id="F1.ratio"
             label={t('playground.ratio')}
             value={formatRatio(share)}
             note={`${kept.length} / ${candidates}`}

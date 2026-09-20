@@ -208,6 +208,7 @@
   "playground.in_e": "Recorded in E",
   "playground.not_in_e": "Not recorded in E",
   "playground.not_in_e_note": "Not recorded is not the same claim as false.",
+  "playground.no_relationships": "This frame carries no annotated relationships, so there is nothing to reverse.",
   "playground.triplet": "Triplet",
   "lab.loading": "Loading the slice…",
   "lab.unknown": "No such lab",

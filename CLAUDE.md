@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate and §15 the playgrounds), and all 89 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate and §15 the playgrounds), and all 90 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
