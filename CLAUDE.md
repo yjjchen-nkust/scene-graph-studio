@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate and §15 the playgrounds), and all 91 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the playgrounds and §16 the lint suite by mutation), and all 92 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -50,7 +50,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-22` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D91` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D92` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` is frozen** (2026-09-15) and was harvested into `data/content/`
   as the seed corpus. Do not extend it. Its `pg.js evaluate()` is a teaching toy over fifteen
@@ -87,7 +87,8 @@ cd scene-graph-studio\system ; npm run ci
   it turns the gate red at step 4 with an error that names neither the config nor the cause.
 - **A playground is a step kind, not a lab.** `kind: playground` with `kp:`, one
   `<Playground kp="…"/>` in the body, registered in `frontend/src/playgrounds/mounts.tsx`;
-  contracts §2.4 is normative and `content_lint.mjs` holds eight rules over it. **It computes a
+  contracts §2.4 is normative and `content_lint.mjs` holds eleven rules over it, each
+  failing a test in `tools/test/content_lint.test.mjs` when disabled (D92). **It computes a
   count, a bound or a set membership, never a metric** — a metric is a lab's business and the
   boundary is the point. Nothing in `frontend/src/playgrounds/` imports from `sgg-metrics` except
   its types. M0 carries three (F1, F2, F8); 25 live knowledge points have none. See D88.

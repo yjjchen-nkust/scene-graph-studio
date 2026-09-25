@@ -122,6 +122,10 @@ passing a defect that reaches the projector; `tools/test/content_lint.test.mjs` 
 eleven against fixture corpora, which is what makes deleting one fail the gate rather than only
 the prose.
 
+That last sentence was false until 2026-09-26 for rules 3, 7, 8 and part of 9: disabling any of
+them left the suite green, because its fixture had one module and one frontmatter. It is true now,
+measured by disabling each rule in turn (D92, VERIFICATION §16).
+
 ### 2.5 One change outside the contract
 
 `PresenterWindow` prints `step.id · step.kind` and appends `step.lab`. It appends `kp` the same

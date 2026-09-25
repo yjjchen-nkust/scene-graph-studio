@@ -13,6 +13,11 @@ import { afterAll, describe, expect, it } from 'vitest';
  * of them left `npm run ci` green, because the rule's only evidence of existence was a paragraph.
  * A lint is the one kind of code whose absence looks exactly like success.
  *
+ * Until 2026-09-26 four of the rules still could not fail here: the fixture had one module and one
+ * frontmatter, so a defect needing two modules or two differing locales could not be written, and
+ * eight of seventeen mutants passed the suite (D92). Each test below that exists for such a rule
+ * says why no other rule can catch its defect; disabling any rule must fail at least one test.
+ *
  * The lint resolves every path relative to the working directory, so a fixture corpus is a
  * directory with the same shape and a `cwd`. That is also why this reaches for a subprocess
  * rather than an import: the file does its work at module scope and exits, which is the right
@@ -26,7 +31,27 @@ import { afterAll, describe, expect, it } from 'vitest';
 const LINT = resolve(import.meta.dirname, '../content_lint.mjs');
 const roots = [];
 
-function corpus({ frontmatter, body, mounts = '  F1: A,\n  F2: B,\n', golden } = {}) {
+/** One playground step's frontmatter; the notes key is filled per locale by `corpus`. */
+const step = (id, kp) => [
+  `  - id: ${id}`, '    kind: playground', `    kp: ${kp}`, '    presenter_notes_LOCALE: "n"',
+].join('\n');
+
+/** One `<Step>` block mounting `kp`. */
+const block = (id, kp) => `<Step id="${id}">\n\n<Playground kp="${kp}" />\n\n</Step>`;
+
+/**
+ * A fixture corpus rooted at a temporary directory, returned as its `system/` path.
+ *
+ * `frontmatter` and `body` describe m00 in both locales unless `en` overrides either for the
+ * English file alone, which is how a cross-locale disagreement is built. `others` adds modules
+ * after m00, each written in both locales, for the rules that judge the corpus rather than one
+ * module.
+ */
+function corpus({
+  frontmatter, body, en = {}, knowledgePoints = '[F1, F2, Z9]',
+  assignment = { m00: ['F1', 'F2', 'Z9'] }, others = [],
+  mounts = '  F1: A,\n  F2: B,\n', golden,
+} = {}) {
   const root = mkdtempSync(join(tmpdir(), 'sgs-lint-'));
   roots.push(root);
   const write = (p, text) => {
@@ -43,7 +68,7 @@ function corpus({ frontmatter, body, mounts = '  F1: A,\n  F2: B,\n', golden } =
       '| placeholder | generated here | - | 2026-09-20 | YES | YES |\n',
   );
   write('data/content/kp.json', JSON.stringify([{ id: 'F1' }, { id: 'F2' }, { id: 'Z9' }]));
-  write('data/content/assignment.json', JSON.stringify({ modules: { m00: ['F1', 'F2', 'Z9'] } }));
+  write('data/content/assignment.json', JSON.stringify({ modules: assignment }));
   write('data/content/papers.json', JSON.stringify([]));
   write('data/content/playground_golden.json', JSON.stringify(golden ?? {
     cases: [{
@@ -57,18 +82,20 @@ function corpus({ frontmatter, body, mounts = '  F1: A,\n  F2: B,\n', golden } =
   write('system/frontend/src/playgrounds/mounts.tsx',
     `export const PLAYGROUND_MOUNTS = {\n${mounts}};\n`);
 
-  const fm = frontmatter ?? [
-    '  - id: s1',
-    '    kind: playground',
-    '    kp: F1',
-    '    presenter_notes_LOCALE: "note"',
-  ].join('\n');
-  const bd = body ?? '<Step id="s1">\n\n<Playground kp="F1" />\n\n</Step>';
-  for (const [locale, field] of [['zh-TW', 'presenter_notes_zh'], ['en', 'presenter_notes_en']]) {
-    write(`system/frontend/src/content/m00.${locale}.mdx`,
-      ['---', 'id: m00', 'order: 0', 'title_en: "T"', 'title_zh: "T"',
-        'knowledge_points: [F1, F2, Z9]', 'claims: []', 'steps:',
-        fm.replaceAll('presenter_notes_LOCALE', field), '---', '', bd, ''].join('\n'));
+  const m00 = {
+    id: 'm00', knowledgePoints, en,
+    frontmatter: frontmatter ?? step('s1', 'F1'),
+    body: body ?? block('s1', 'F1'),
+  };
+  for (const [order, m] of [m00, ...others].entries()) {
+    for (const [locale, field] of [['zh-TW', 'presenter_notes_zh'], ['en', 'presenter_notes_en']]) {
+      const own = locale === 'en' ? { ...m, ...m.en } : m;
+      write(`system/frontend/src/content/${m.id}.${locale}.mdx`,
+        ['---', `id: ${m.id}`, `order: ${order}`, 'title_en: "T"', 'title_zh: "T"',
+          `knowledge_points: ${m.knowledgePoints}`, 'claims: []', 'steps:',
+          own.frontmatter.replaceAll('presenter_notes_LOCALE', field), '---', '', own.body, '',
+        ].join('\n'));
+    }
   }
   return join(root, 'system');
 }
@@ -109,11 +136,30 @@ describe('content_lint playground rules', () => {
   });
 
   it('refuses a kp the module neither owns nor cites', () => {
+    // F1 is registered and in kp.json, so this rule is the only one with anything to say.
     const r = lint(corpus({
-      frontmatter: '  - id: s1\n    kind: playground\n    kp: F1\n    presenter_notes_LOCALE: "n"',
-      mounts: '  F2: B,\n',
+      knowledgePoints: '[F2, Z9]',
+      assignment: { m00: ['F2', 'Z9'], m01: ['F1'] },
     }));
+    expect(r.out).toContain("has a playground for 'F1', which this module neither owns nor cites");
+  });
+
+  it('accepts a kp the module cites although another module owns it', () => {
+    const r = lint(corpus({ assignment: { m00: ['F2', 'Z9'], m01: ['F1'] } }));
+    expect(r.out).not.toContain('neither owns nor cites');
+    // Clean, so the absence above is the rule's verdict and not a run that stopped early.
+    expect(r.ok, r.out).toBe(true);
+  });
+
+  it('refuses a playground kp with no registered component', () => {
+    const r = lint(corpus({ mounts: '  F2: B,\n' }));
     expect(r.out).toContain("no component is registered for 'F1'");
+  });
+
+  it('refuses a step that is a different playground in each locale', () => {
+    // The English file is consistent with itself, so no per-file rule can see the defect.
+    const r = lint(corpus({ en: { frontmatter: step('s1', 'F2'), body: block('s1', 'F2') } }));
+    expect(r.out).toContain("step 's1' is playground/F1 in zh-TW and playground/F2 in en");
   });
 
   it('refuses a step whose body carries a different kp than its frontmatter', () => {
@@ -134,15 +180,24 @@ describe('content_lint playground rules', () => {
     expect(r.out).toContain("declares kp 'F1' but its body carries no <Playground>");
   });
 
-  it('refuses the same kp mounted by two steps', () => {
-    const fm = [
-      '  - id: s1', '    kind: playground', '    kp: F1', '    presenter_notes_LOCALE: "n"',
-      '  - id: s2', '    kind: playground', '    kp: F1', '    presenter_notes_LOCALE: "n"',
-    ].join('\n');
-    const body = '<Step id="s1">\n\n<Playground kp="F1" />\n\n</Step>\n\n' +
-      '<Step id="s2">\n\n<Playground kp="F1" />\n\n</Step>';
-    const r = lint(corpus({ frontmatter: fm, body }));
-    expect(r.out).toMatch(/mounted (more than once|by 2 playground steps)/);
+  it('refuses the same kp mounted by two steps of one module', () => {
+    const r = lint(corpus({
+      frontmatter: `${step('s1', 'F1')}\n${step('s2', 'F1')}`,
+      body: `${block('s1', 'F1')}\n\n${block('s2', 'F1')}`,
+    }));
+    expect(r.out).toContain("'F1' is mounted more than once in this module");
+  });
+
+  it('refuses the same kp mounted by two modules', () => {
+    // Each module mounts F1 once and M01 cites it, so every per-module rule passes; only the
+    // corpus-wide judgement can see two playgrounds for one point.
+    const r = lint(corpus({
+      others: [{
+        id: 'm01', knowledgePoints: '[F1]', frontmatter: step('s1', 'F1'), body: block('s1', 'F1'),
+      }],
+    }));
+    expect(r.out).toContain("'F1' is mounted by 2 playground steps: m00:s1, m01:s1");
+    expect(r.out).not.toContain('more than once in this module');
   });
 
   it('refuses a golden case whose why does not write out the arithmetic', () => {
@@ -152,17 +207,32 @@ describe('content_lint playground rules', () => {
     expect(r.out).toContain("'why' must write out the arithmetic");
   });
 
-  it('refuses a golden case missing its structure, and a duplicate id', () => {
-    const r = lint(corpus({
-      golden: {
-        cases: [
-          { id: 'pg-1', kp: 'F1', image_id: 'x', knobs: {}, expect: { a: 1 }, why: 'y'.repeat(50) },
-          { id: 'pg-1', kp: 'F1', why: 'y'.repeat(50) },
-        ],
-      },
-    }));
+  it('refuses a duplicate golden case id', () => {
+    const c = { id: 'pg-1', kp: 'F1', image_id: 'x', knobs: {}, expect: { a: 1 }, why: 'y'.repeat(50) };
+    const r = lint(corpus({ golden: { cases: [c, { ...c }] } }));
     expect(r.out).toContain('duplicate playground golden case id: pg-1');
-    expect(r.out).toContain("missing 'image_id'");
+  });
+
+  it('refuses a golden case with no id', () => {
+    const r = lint(corpus({
+      golden: { cases: [{ kp: 'F1', image_id: 'x', knobs: {}, expect: { a: 1 }, why: 'y'.repeat(50) }] },
+    }));
+    expect(r.out).toContain('a playground golden case has no id');
+  });
+
+  it('refuses a golden case missing a field', () => {
+    const r = lint(corpus({
+      golden: { cases: [{ id: 'pg-1', kp: 'F1', knobs: {}, expect: { a: 1 }, why: 'y'.repeat(50) }] },
+    }));
+    expect(r.out).toContain("pg-1: missing 'image_id'");
+  });
+
+  it('refuses a golden case whose expect is empty', () => {
+    // `{}` is truthy, so the missing-field rule passes it; this is the case that asserts nothing.
+    const r = lint(corpus({
+      golden: { cases: [{ id: 'pg-1', kp: 'F1', image_id: 'x', knobs: {}, expect: {}, why: 'y'.repeat(50) }] },
+    }));
+    expect(r.out).toContain("pg-1: 'expect' is empty, so the case asserts nothing");
   });
 
   it('refuses a golden case for a kp with no registered component', () => {

@@ -2602,3 +2602,63 @@ from is every element on the slide rather than a list written in advance.
 13, i18n 229 keys both locales, content lint clean over 13 golden cases and 9 playground cases,
 ruff clean, standalone current, frontend builds 756 modules. `npm run test:e2e` **39**.
 `npm run check:perf` **17**.
+
+## D92 — the suite written to guard the lint rules missed eight of seventeen breaks
+
+**Plan:** none. A review of the track on 2026-09-26, after the M0 playgrounds cycle (D88–D91) had
+merged, and what it found.
+
+**The lint suite could not see four of the eleven rules.** D91 wrote
+`tools/test/content_lint.test.mjs` so that deleting a playground rule turns the gate red, and
+contracts §2.4 and design §2.4 both say it does. Measured by disabling each rule in turn and running
+the suite: seventeen mutants, one per `problems.push` in the playground section, the corpus-wide
+duplicate judgement, and two narrowings (rule 3 checking ownership alone, rule 7 comparing kind
+alone). The suite missed eight. VERIFICATION §16 lists every mutant with both results.
+
+- **Rule 3, owned or cited.** The test named for it asserted rule 4's message, `no component is
+  registered`. The fixture's one module owned and cited every point, so no fixture could make rule
+  3 speak, and a narrowing that dropped the `cited` branch was invisible too.
+- **Rule 7, the same playground in both locales.** The fixture wrote one frontmatter into both
+  locale files, so the two could not disagree.
+- **Rule 8, both halves.** The one duplicate test put both steps in one module and accepted either
+  message through a regex alternation, so each half was covered only by the other. The corpus-wide
+  half, which D90 added for two modules that each cite the point, had no two-module fixture.
+- **Rule 9, two clauses.** A case with no `id`, and a case whose `expect` is `{}`, which is truthy, so the
+  missing-field loop passes it.
+
+The fixture now takes a per-locale override and further modules. Seven tests are new, two are split
+from one, one is renamed to the rule it tests: 18 tests where there were 11, and **17 of 17 mutants
+fail at least one**. Each new test states in a comment why no other rule can catch its defect,
+because that is the property the mutation run measures.
+
+This is D91's finding one level up. D91 found instruments that could not report what they had not
+looked at, and closed the lint's case by writing a suite. The suite was an instrument of the same
+kind: its fixture had one module and one frontmatter, so every defect that needs two of either lay
+outside what it could express, and it passed without saying so. The mutation run is the question
+that makes it say what it excluded.
+
+**A figure D91 said it had corrected was still in VERIFICATION §15.** D91 records that the NFR-8
+harness printed `Math.max(0, ms - floor)` as a measurement, that all three playground figures were
+negative, and that the data support only "below the two-frame floor". §15's table still printed
+`0.0 ms` under **Work** and still glossed it as "all three do their work inside the frame that
+carries the input". The rows' own numbers show the wall below the floor in all three. The column is
+marked in place rather than overwritten, as §14's 26 was.
+
+**The paper corpus holds 60 cards, and D-21 says 35.** D-21 (2026-09-16) keeps "35 cards — every
+method the curriculum names"; plan 02 Task 9 and the master plan carry the same figure. Commit
+`291f67f` (2026-09-17, in the `course-lab` history the subtree import brought in) wrote 60 across
+nine branches: two-stage 8, one-stage 8, debiasing 9, panoptic 6, open-vocabulary 3, llm-vlm 10,
+video 6, embodied 6, foundations 4. D33 accounts for the ninth branch and its four dataset cards.
+Neither D32, D33 nor the commit message states why the method cards number 56 rather than 35, and
+**this entry does not supply a reason**: it records the departure so that it is no longer silent,
+and the reason is the author's to add. What D-21 exists to protect is unaffected: no card carries
+an unverified number, and check 9 counted ten cards carrying 87 figures. D-21 is annotated in place,
+and INDEX §2 now gives both figures.
+
+**Counts.** CLAUDE.md and INDEX §4 said the lint holds eight playground rules; contracts §2.4 and
+design §2.4 said eleven. It is eleven, and both now say so.
+
+**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **632 vitest in 55 files**, parity
+13, i18n 229 keys both locales, content lint clean over 13 golden cases and 9 playground cases, ruff
+clean, standalone current, frontend builds 756 modules. `npm run test:e2e` and `npm run check:perf`
+were not re-run: nothing under `frontend/` or `e2e/` changed.

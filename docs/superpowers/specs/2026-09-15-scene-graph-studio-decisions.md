@@ -543,6 +543,10 @@ at all, which is a stronger position than rendering it in a distinct style and h
 starts enforcing it. Nothing has to be restructured, which is why the tier is a property of the
 data rather than a separate file.
 
+**Count, annotated 2026-09-26.** The corpus was built with **60** cards, not 35 (commit `291f67f`,
+2026-09-17). Four are the dataset cards on D33's ninth branch; no document records why the method
+cards number 56. The rule above is unaffected: no card carries an unverified number. See D92.
+
 ---
 
 ## D-22 Repository location is `scene-graph-studio/` inside WekaExt

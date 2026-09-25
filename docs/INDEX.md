@@ -1,7 +1,7 @@
 # Knowledge index
 
 Every planning document in this track, what it governs, and where each piece of knowledge is
-defined. Current as of **2026-09-20**.
+defined. Current as of **2026-09-26**.
 
 **Read order for someone new:** `decisions.md` → `contracts.md` → the plan you are about to
 execute. The PRD and SRS explain *why*; those two say *what is binding*.
@@ -29,8 +29,8 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/…-04-labs-shells-hardening.md` | Phases 7–9: L3, L7, L8, shells, hardening | **executed** |
 | `superpowers/plans/2026-09-19-playgrounds-m0.md` | The `playground` step kind, F1, F2, F8, the golden file, the lint rules | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D91. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14) and the playgrounds (§15)** | live |
+| `../DEVIATIONS.md` | **D1…D92. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15) and the lint suite by mutation (§16)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
 
@@ -64,7 +64,7 @@ drifts.
 | **D-18** | Mini-ISG licence gate precedes any frame commit | |
 | **D-19** | Effort estimates and the cut order | 44 days, four plans |
 | **D-20** | The track is documented in the repo `CLAUDE.md` | **superseded 2026-09-19 by D-22** |
-| **D-21** | Paper corpus is two tiers; only scored methods carry numbers | 35 cards, no unverified tier |
+| **D-21** | Paper corpus is two tiers; only scored methods carry numbers | 35 cards decided; 60 built, reason unrecorded (D92); no unverified tier |
 | **D-22** | Repository lives at `scene-graph-studio/` inside WekaExt | supersedes D-01, D-20; still not its own repo |
 
 ---
@@ -101,7 +101,7 @@ drifts.
 | Why the frozen page must not be extended | `FROZEN.md`, and D-13 / D-14 |
 | The eight labs L1–L8 | `PRD.md` §6.2; per-lab tasks in plans 02–04 |
 | The anchor paper's four equations | `design.md` §4.5 and `2026-09-16-indvissgg-reading.md` |
-| The `playground` step kind, and its eight lint rules | `contracts.md` §2.4; rules in `system/tools/content_lint.mjs` |
+| The `playground` step kind, and its eleven lint rules | `contracts.md` §2.4; rules in `system/tools/content_lint.mjs` |
 | The playground arithmetic, and the nine cases that pin it | `system/frontend/src/playgrounds/logic.ts`; `data/content/playground_golden.json` |
 | How to build a project like this again | `PLAYBOOK.md` |
 
@@ -271,15 +271,24 @@ against the 24 px shell, and they are sized in `em` now. See D88 and VERIFICATIO
 `status: 'live'`; F1 and F2 are two of them, and F8 is not among them at all, so 25 remain. Each is
 its own cycle against the pattern this one established.
 
-**Verification.** `npm run ci` green, 2026-09-20: **266 pytest** and 7 skipped (the ten newest
+**Verification.** `npm run ci` green, 2026-09-26: **266 pytest** and 7 skipped (the ten newest
 compare the requirement files to the interpreter), parity 13 agree, i18n 229 keys both locales,
-**625 vitest** in 55 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**632 vitest** in 55 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 43 symbols, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
-frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`:
+frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,
+2026-09-20:
 39 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
-check:perf`: 17 passed, NFR-8 measured over five labs and three playgrounds, plus the D75 selection guard.
+check:perf`, 2026-09-20: 17 passed, NFR-8 measured over five labs and three playgrounds, plus the D75 selection guard.
+
+**The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
+`tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in
+turn showed it missed eight of seventeen mutants: rules 3 and 7, both halves of rule 8, and two
+clauses of rule 9. Its fixture had one module and one frontmatter, so no defect needing two of
+either could be expressed. It has 18 tests now and catches 17 of 17. The same review found
+VERIFICATION §15 still printing the clamped `0.0 ms` that D91 had withdrawn, and the paper corpus
+at 60 cards against D-21's 35 with no entry recording why. See D92 and VERIFICATION §16.
 
 **The gate was green here and red on the runner, 2026-09-19.** `main`'s GitHub Actions run had
 failed on five consecutive pushes, including the two that recorded checks 12 and 13 as passed.
@@ -327,6 +336,8 @@ until they had already happened.
 | `Path.write_text` translates the newline to `os.linesep`, so a Python generator writes CRLF on Windows however the file is pinned in `.gitattributes` | `DEVIATIONS.md` D91 |
 | Clamping a difference between two noisy samples at zero turns "below the resolution" into an apparent measurement of none | `DEVIATIONS.md` D91 |
 | A lint rule watched failing by hand and then only described in prose leaves nothing that notices its deletion | `DEVIATIONS.md` D91 |
+| A test suite is an instrument too: a fixture with one module and one locale cannot express a cross-module or cross-locale defect, so those rules can be deleted with the suite green, until each rule is disabled in turn | `DEVIATIONS.md` D92, `VERIFICATION.md` §16 |
+| A correction recorded in a deviation is not a correction of the document that carried the error, which keeps printing it | `DEVIATIONS.md` D92 |
 | A framework that sizes in rem puts its text at the document root, not at the shell the component is mounted in, so a 24 px lecture can contain 14 px type | `DEVIATIONS.md` D88 |
 | A generated file that git checks out with different line endings than the generator writes leaves `git status` dirty after every green run, with `git diff` showing nothing | `DEVIATIONS.md` D89, and the rule above it in `.gitattributes` |
 | An input-to-paint measurement that awaits two animation frames cannot report less than two frame intervals, so five different labs all came back at the display's cadence | `DEVIATIONS.md` D74 |
