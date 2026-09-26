@@ -327,8 +327,8 @@ M11, so authoring that module was transcription rather than a fresh reading.
 * The measured prediction tier, blocked on licences (`data/predictions/PROVENANCE.md`).
 * Slides that run past the bottom of a 1024×768 projector. 25 of the then 92 were reviewed and
   accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). The six
-  playground steps added since are measured in §15 and §18, and M1's long steps await the same
-  decision. The step region scrolls inside a fixed shell, so the position and the section clock
+  playground steps added since are measured in §15 and §18, and M1's long steps were accepted
+  the same way on 2026-09-26 (D94). The step region scrolls inside a fixed shell, so the position and the section clock
   stay on screen, and no playground hides a word where that scroll cannot reach it (D93).
 * `vrd` and `haystack` state no licence, so nothing is cut from either and both gates stay shut.
 

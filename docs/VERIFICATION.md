@@ -741,7 +741,9 @@ D93's deferred findings, resolved (D94). Every number below is from the run that
 | px past 1920×1080 | 0 | 0 | 0 | 15 | 0 | 0 | 0 | 0 | 0 |
 
 Measured as §17's table was. Before the trim the three playground steps read 214, 306 and 514 at
-XGA. The remainder awaits the author's decision, in D71's form.
+XGA. **Reviewed and accepted by the author, 2026-09-26**, as D71's list was on 2026-09-18: the
+options were to split the steps or leave them, and the answer was to leave them. The item is
+closed on that judgement, not on a code change.
 
 ### Rule 12 by mutation
 

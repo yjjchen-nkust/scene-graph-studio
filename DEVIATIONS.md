@@ -2809,8 +2809,10 @@ kept in its one sentence. Overflow past the panel, before and after:
 | s5, F7 | 306 → **188** | 183 → **105** | 0 → 0 |
 | s7, X1 | 514 → **475** | 326 → **326** | 0 → 0 |
 
-X1 is mostly its table and its sources, which do not shorten. What remains is for the author's
-decision, in D71's form; every word is reachable by the step's scroll.
+X1 is mostly its table and its sources, which do not shorten. What remains was put to the author
+in D71's form, split the steps or leave them, and **accepted as it stands on 2026-09-26**; every
+word is reachable by the step's scroll, and the numbers stay in VERIFICATION §18 so a different
+hall can re-open the question without re-measuring.
 
 **Rule 12 compared a count with every digit of its quote run together, and so passed two kinds of
 wrong figure.** A number straddling two others passed: 3857 against "68 538 | 57 723". And a figure
