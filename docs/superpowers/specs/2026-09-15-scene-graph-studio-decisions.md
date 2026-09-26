@@ -290,6 +290,16 @@ dataset: 'vrd' | 'vg150-sgb' | 'psg' | 'indoorvg' | 'haystack' | 'mini-isg'
 
 `data/slices/vg150-sgb/MANIFEST.json` carries the SHA-256 of the exact `VG-SGG.h5` the slice was cut from. SRS §10 hazard 1 states that three incompatible splits answer to the name VG150; naming the artefact after its provenance is what prevents this project from becoming a fourth instance of the problem. The hazard is still *taught* — it is knowledge point `X1` in the harvested corpus — but it is taught from a position of having named our own.
 
+**Annotated 2026-09-26 (D93).** The corpus this project holds is not `VG-SGG.h5`. It is the
+COCO-format parquet release `maelic/VG150-coco-format` of Neau et al.'s SGG-Benchmark, in its
+corrected version: the val parquet has 5,000 rows, and the card records that an earlier version
+drew its validation images from the test pool. `MANIFEST.json` carries per-image hashes, the seed
+and the distribution mode, and has never carried a source-file hash. The letters `sgb` fit both
+`Scene-Graph-Benchmark.pytorch`, which this decision names, and `SGG-Benchmark`, which the corpus
+is; the identifier denotes the second. SRS §10's "three incompatible splits" is not supported by
+the sources opened on 2026-09-26 (`specs/2026-09-26-playgrounds-m1-design.md` §2). The decision
+itself, one named split and no bare identifier, stands.
+
 ---
 
 ## D-10 Slice composition

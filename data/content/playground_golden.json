@@ -72,6 +72,110 @@
       "knobs": { "relationship_id": 2, "swapped": true },
       "expect": { "recorded": false },
       "why": "ph-001 relationship 2 is object 2 (person) --near--> object 1 (table). `near` reads as symmetric, but the annotator wrote one direction only, so table --near--> person is not in E. This is the case worth showing: the absence is a fact about the annotation, not about the world."
+    },
+    {
+      "id": "pg-F6-slice-predicates-merged",
+      "kp": "F6",
+      "scope": "slice",
+      "knobs": { "group": "predicates", "merged": true },
+      "expect": { "classes": 33, "group_count": 408 },
+      "why": "The 80 frames carry 36 predicates. Merging on, above, over and sitting on turns four classes into one: 36 - 4 + 1 = 33. Their triplets add: 382 + 11 + 5 + 10 = 408."
+    },
+    {
+      "id": "pg-F6-slice-predicates-unmerged",
+      "kp": "F6",
+      "scope": "slice",
+      "knobs": { "group": "predicates", "merged": false },
+      "expect": { "classes": 36, "group_count": 382 },
+      "why": "Unmerged, the slice uses 36 predicates, and on alone carries 382 of the 892 triplets. The other three members keep their own 11, 5 and 10."
+    },
+    {
+      "id": "pg-F6-slice-objects-merged",
+      "kp": "F6",
+      "scope": "slice",
+      "knobs": { "group": "objects", "merged": true },
+      "expect": { "classes": 113, "group_count": 127 },
+      "why": "The slice uses 115 object names. Merging man, person and people turns three into one: 115 - 3 + 1 = 113, with 56 + 52 + 19 = 127 objects in the merged class."
+    },
+    {
+      "id": "pg-F6-228-membership-unmerged",
+      "kp": "F6",
+      "image_id": "228",
+      "knobs": { "relationship_id": 5, "substitute": "on", "merged": false },
+      "expect": { "annotated_predicate": "sitting on", "recorded": false },
+      "why": "Frame 228, relationship 5 is glass (10) sitting on table (2). The frame carries no on edge from 10 to 2, so glass on table is not in E before the merge."
+    },
+    {
+      "id": "pg-F6-228-membership-merged",
+      "kp": "F6",
+      "image_id": "228",
+      "knobs": { "relationship_id": 5, "substitute": "on", "merged": true },
+      "expect": { "annotated_predicate": "sitting on", "recorded": true },
+      "why": "With on and sitting on merged, glass (10) sitting on table (2) and glass on table share the key (10, on, 2), so the substituted triplet is in E prime. No annotation and no model changed."
+    },
+    {
+      "id": "pg-F7-model-flat",
+      "kp": "F7",
+      "scope": "model",
+      "knobs": { "s": 0, "C": 36, "k": 3 },
+      "expect": { "head_share": 0.083333, "tail_to_head": 1 },
+      "why": "At s = 0 every class holds the same count, so the three most frequent of 36 hold 3 / 36 = 1/12 = 0.083333, and the rarest is as frequent as the first: 36^0 = 1."
+    },
+    {
+      "id": "pg-F7-model-s1-C4-k1",
+      "kp": "F7",
+      "scope": "model",
+      "knobs": { "s": 1, "C": 4, "k": 1 },
+      "expect": { "head_share": 0.48, "tail_to_head": 0.25 },
+      "why": "H_4 at s = 1 is 1 + 1/2 + 1/3 + 1/4 = 25/12. The first class holds 1 / (25/12) = 12/25 = 0.48. The fourth is 4^(-1) = 0.25 of the first."
+    },
+    {
+      "id": "pg-F7-slice-top3",
+      "kp": "F7",
+      "scope": "slice",
+      "knobs": { "k": 3 },
+      "expect": { "head_share": 0.570628 },
+      "why": "The slice's three most frequent predicates are on 382, has 68 and near 59: 382 + 68 + 59 = 509 of 892 triplets, and 509 / 892 = 0.570628."
+    },
+    {
+      "id": "pg-X1-v2-canonical-train",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v2", "vs": "canonical", "split": "train" },
+      "expect": { "difference": 10815, "explained_by": 10815 },
+      "why": "v2 states 68,538 training images and the canonical protocol 57,723: 68,538 - 57,723 = 10,815, which is the card's own count of v2 training images kept with no relation."
+    },
+    {
+      "id": "pg-X1-v2-canonical-test",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v2", "vs": "canonical", "split": "test" },
+      "expect": { "difference": 5430, "explained_by": 5430 },
+      "why": "v2 states 31,876 test images and the canonical protocol 26,446: 31,876 - 26,446 = 5,430, the card's count of v2 test images kept with no relation."
+    },
+    {
+      "id": "pg-X1-v1-v2-train",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v1", "vs": "sgb-v2", "split": "train" },
+      "expect": { "difference": 5000, "explained_by": 5000 },
+      "why": "Issue 94 gives v1 73,538 training images against v2's 68,538: 73,538 - 68,538 = 5,000, the canonical validation set the card says v1 folded into train."
+    },
+    {
+      "id": "pg-X1-v1-v2-test",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v1", "vs": "sgb-v2", "split": "test" },
+      "expect": { "difference": -4844, "explained_by": 4844 },
+      "why": "v1 has 27,032 test images and v2 31,876: 27,032 - 31,876 = -4,844. The 4,844 are the images the card says v1 took from the test pool for its validation set."
+    },
+    {
+      "id": "pg-X1-xu-canonical-train",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "xu-2017", "vs": "canonical", "split": "train" },
+      "expect": { "difference": null, "explained_by": null },
+      "why": "Xu et al. state 70% of 108,077 images and no count, so there is no count to subtract from 57,723. Multiplying 0.7 by 108,077 would assert a split size the paper never states."
     }
   ]
 }

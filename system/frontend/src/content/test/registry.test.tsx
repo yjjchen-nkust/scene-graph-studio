@@ -125,6 +125,21 @@ describe('the module registry', () => {
 });
 
 describe('the playground step kind', () => {
+  it('M1 carries its three playgrounds, after the steps that teach them', () => {
+    const meta = getMeta('m01', 'en')!;
+    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}` : ''}`)).toEqual([
+      's1:prose', 's2:math', 's3:playground/F6', 's4:math', 's5:playground/F7',
+      's6:prose', 's7:playground/X1', 's8:lab', 's9:checkpoint',
+    ]);
+    const steps = getModule('m01', 'zh-TW')!;
+    for (const step of steps.filter((s) => s.kind === 'playground')) {
+      const mounted = render(<MemoryRouter initialEntries={['/m/m01']}>{step.node}</MemoryRouter>);
+      expect(within(mounted.container).getByTestId('playground-frame')).toBeInTheDocument();
+      expect(mounted.container.querySelector('[data-testid="playground-unknown"]')).toBeNull();
+      mounted.unmount();
+    }
+  });
+
   it('supplies Playground to every module body, so no MDX file imports it', () => {
     // Both locale files would otherwise carry an import line, and two import lines are two
     // places to drift. NFR-6 is about the content saying the same thing in both languages;

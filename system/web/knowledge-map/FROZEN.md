@@ -137,3 +137,27 @@ and never used it, so the brief page — 13 display blocks, 602 inline delimiter
 audited at all; it is now checked by the same routine as the knowledge map. And `check.js` gained
 the `live`-flag cross-check described above, verified by deliberately flipping `F8` to `live` and
 confirming a non-zero exit. Both validators now exit non-zero on a problem, which neither did before.
+
+### 2026-09-26 — X1's premise, its figures, and its statement
+
+Opened for the M1 playgrounds (`docs/superpowers/specs/2026-09-26-playgrounds-m1-design.md` §2).
+
+**1 · The premise.** The page said three incompatible splits share the name and, in the harvested
+statement, "three distinct (D_train, D_val, D_test)". The sources opened do not support that as
+worded: the `vg150-sgb` card states that its current release's test is "the full, untouched test
+pool" and that its relation-bearing counts match the canonical protocol exactly. What they support
+is that releases differ in the validation carve-out and in filtering, and that one published
+release drew its validation set from the test pool. Title, knobs and statement are corrected.
+
+**2 · The figures.** "SGG-Bench" 73,538 / 27,032 / 4,844 were the withdrawn v1 release, labelled as
+current; they are now the card's current figures, 68,538 / 31,876 / 5,000. "Xu et al." 75,651 /
+32,422 are not in Xu et al. 2017, which states 70% / 30% of 108,077 images and no counts; the row
+now says so. "Tang" 57,723 / 26,446 / 5,000 stand, attributed to the card that states them.
+
+**3 · The note's four figures** (65.3, 64.6, 31.0, 25.1) are removed. No table in this corpus
+verifies them in the role the note gave them.
+
+**4 · The brief.** `web/brief/index.html` item 01 carried the same claim and the same nine figures,
+and is corrected by the same rule; `docs/brief.standalone.html` is rebuilt from it.
+
+No option, control or knowledge point was added. One UI string, `not stated`, entered the `ZH` table.

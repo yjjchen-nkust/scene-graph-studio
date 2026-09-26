@@ -130,10 +130,16 @@ export function Readout({
  * panel is short something has to give, and it must be the picture: a professor who cannot see
  * the whole photograph can still turn the knob and read the number, while one who cannot reach
  * the knob has no playground at all.
+ *
+ * `clip={false}` is for a playground whose visual is words and figures rather than a picture.
+ * Clipping a picture costs its lower edge; clipping X1's sources or F7's legend cost the citation
+ * and the key, and no scroll could reach them, because the clip sits inside the step that
+ * scrolls (D93). Unclipped, the text runs past the panel like any long slide (D71) and the step's
+ * own scroll reaches it; the controls are still above it and still in view.
  */
 export function PlaygroundFrame({
-  title, controls, children,
-}: { title: string; controls: ReactNode; children: ReactNode }) {
+  title, controls, children, clip = true,
+}: { title: string; controls: ReactNode; children: ReactNode; clip?: boolean }) {
   return (
     <section
       data-testid="playground-frame"
@@ -145,7 +151,7 @@ export function PlaygroundFrame({
       </div>
       <div
         data-testid="playground-visual"
-        className="mt-4 max-h-[46vh] overflow-hidden"
+        className={clip ? 'mt-4 max-h-[46vh] overflow-hidden' : 'mt-4'}
       >
         {children}
       </div>

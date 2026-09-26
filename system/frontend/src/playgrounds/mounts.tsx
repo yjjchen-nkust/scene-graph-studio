@@ -1,7 +1,10 @@
 import type { ComponentType } from 'react';
 import { LabelsToStructure } from './F1/LabelsToStructure';
 import { TripletCombinatorics } from './F2/TripletCombinatorics';
+import { PredicateSynonymy } from './F6/PredicateSynonymy';
+import { LongTailDistribution } from './F7/LongTailDistribution';
 import { DirectedEdges } from './F8/DirectedEdges';
+import { SplitReleases } from './X1/SplitReleases';
 
 /**
  * Every playground, keyed by the knowledge point it demonstrates.
@@ -15,7 +18,10 @@ import { DirectedEdges } from './F8/DirectedEdges';
 export const PLAYGROUND_MOUNTS: Record<string, ComponentType> = {
   F1: LabelsToStructure,
   F2: TripletCombinatorics,
+  F6: PredicateSynonymy,
+  F7: LongTailDistribution,
   F8: DirectedEdges,
+  X1: SplitReleases,
 };
 
 export const PLAYGROUND_IDS: string[] = Object.keys(PLAYGROUND_MOUNTS).sort();

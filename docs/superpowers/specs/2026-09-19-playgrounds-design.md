@@ -113,9 +113,16 @@ Each rule is watched failing before it is kept.
 And over `data/content/playground_golden.json`, which is the same contract applied to the file
 that pins the arithmetic:
 
-9. Every case has a unique `id`, and carries `kp`, `image_id`, `knobs` and a non-empty `expect`.
+9. Every case has a unique `id`, and carries `kp`, `knobs`, a non-empty `expect`, and exactly one of
+   `image_id` or `scope` ∈ {`slice`, `model`, `sources`} (amended 2026-09-26, M1 design §6).
 10. Every case's `why` writes out the arithmetic a reader would check.
 11. Every case names a `kp` with a registered component.
+
+And over `data/content/vg150_splits.json`, added 2026-09-26 for X1 (M1 design §6):
+
+12. Every release figure and note carries `source`, `url`, `locator` and a non-empty `quote`; a
+    numeric value's digits appear among its quote's digits; a `measured` row count equals its value;
+    every note has a numeric value and both texts; every release has both labels.
 
 Rules 5 (the `</Step>` bound), 6 and 8 were added on 2026-09-20 after review found each of them
 passing a defect that reaches the projector; `tools/test/content_lint.test.mjs` exercises all
@@ -226,6 +233,10 @@ which is what makes the existing policy sufficient without amendment:
 without anyone deciding to grow it. Controls sit **above** the visual and the visual carries a max
 height, so a short panel clips the picture and leaves the knobs reachable, rather than the
 reverse.
+
+*Amended 2026-09-26 (D93):* the max height clips only a picture. The whole visual was clipped, and
+F1's readouts, standing beside the picture, sat under the clip at every panel size; a playground
+of words and figures (F7, X1) passes `clip={false}` and lets the step scroll.
 
 ### 4.3 Knob state
 

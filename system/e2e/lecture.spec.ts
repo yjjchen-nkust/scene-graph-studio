@@ -173,13 +173,15 @@ test('the node buttons of F2 take Space without advancing the slide', async ({ p
   await expect(position).toHaveText(before ?? '');
 });
 
-test('the study shell renders all three playgrounds in one column', async ({ page }) => {
+test('the study shell renders every playground of M0 and of M1 in one column', async ({ page }) => {
   // Spec §4.1 says the study shell needs no special provision, which is a claim about the
   // product rather than an absence of work: it is true only if a playground renders outside the
   // lecture shell at all. M0 has three, and the student reading alone sees every one of them.
   await page.goto('/m/m00');
   await expect(page.getByTestId('playground-frame')).toHaveCount(3);
   await expect(page.getByTestId('readout-F1.candidates')).toContainText('480');
+  await page.goto('/m/m01');
+  await expect(page.getByTestId('playground-frame')).toHaveCount(3);
 });
 
 test('turning a knob writes it into the address bar, so the setting is a link', async ({ page }) => {
@@ -213,11 +215,57 @@ test('turning a knob writes it into the address bar, so the setting is a link', 
 });
 
 test('no playground takes focus when its step opens', async ({ page }) => {
-  for (const index of [1, 3, 4]) {
-    await page.goto(`/lecture/m/m00/${index}`);
+  for (const [module, index] of [['m00', 1], ['m00', 3], ['m00', 4], ['m01', 2], ['m01', 4], ['m01', 6]] as const) {
+    await page.goto(`/lecture/m/${module}/${index}`);
     await expect(page.getByTestId('playground-frame')).toBeVisible();
     const tag = await page.evaluate(() => document.activeElement?.tagName ?? '');
     expect(tag).toBe('BODY');
   }
+});
+
+test('M1\'s playgrounds compute with no backend running', async ({ page }) => {
+  await page.goto('/lecture/m/m01/2');
+  await expect(page.getByTestId('readout-F6.predicates-value')).toHaveText('36');
+  await page.goto('/lecture/m/m01/4');
+  await expect(page.getByTestId('readout-F7.head-value')).toHaveText(/%$/);
+  await page.goto('/lecture/m/m01/6');
+  await expect(page.getByTestId('x1-train-a')).toContainText('68,538');
+});
+
+test('M1\'s knobs work from the keyboard and never advance the deck', async ({ page }) => {
+  const cases = [
+    { step: 2, knob: 'F6.mp', key: 'Space', watch: 'readout-F6.predicates-value' },
+    { step: 4, knob: 'F7.s', key: 'ArrowRight', watch: 'readout-F7.head-value' },
+    // ArrowUp, not ArrowDown: the default, sgb-v2, is the last option, so ArrowDown would change
+    // nothing and the test would report a keyboard failure that is really the end of the list.
+    { step: 6, knob: 'X1.r', key: 'ArrowUp', watch: 'x1-train-a' },
+  ];
+  for (const c of cases) {
+    await page.goto(`/lecture/m/m01/${c.step}`);
+    const position = page.getByTestId('position');
+    const before = await position.textContent();
+    const watched = page.getByTestId(c.watch);
+    const was = await watched.textContent();
+    await page.getByTestId(c.knob).focus();
+    await page.keyboard.press(c.key);
+    await expect(watched, `${c.knob} moved nothing`).not.toHaveText(was ?? '');
+    await expect(position, `${c.knob} advanced the deck`).toHaveText(before ?? '');
+  }
+});
+
+test('M1\'s knobs write the address bar', async ({ page }) => {
+  await page.goto('/lecture/m/m01/2');
+  await page.getByTestId('F6.mp').click();
+  await expect(page).toHaveURL(/F6\.mp=1/);
+  await page.goto('/lecture/m/m01/4');
+  await page.getByTestId('F7.measured').click();
+  await expect(page).toHaveURL(/F7\.measured=1/);
+  await page.goto('/lecture/m/m01/6');
+  await page.getByTestId('X1.r').selectOption('sgb-v1');
+  await expect(page).toHaveURL(/X1\.r=sgb-v1/);
+  const shared = page.url();
+  await page.goto('about:blank');
+  await page.goto(shared);
+  await expect(page.getByTestId('x1-train-a')).toContainText('73,538');
 });
 });

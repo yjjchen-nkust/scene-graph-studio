@@ -5,14 +5,14 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the playgrounds and §16 the lint suite by mutation), and all 92 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation and §17 the M1 playgrounds), and all 93 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
 
 A full-stack teaching application for scene graph generation, built for 大語言模型技術與應用
 (2026) and anchored on Wang et al., *IndVisSGG*, Advanced Engineering Informatics 65 (2025)
-103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 3 playgrounds, 60 paper
+103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 6 playgrounds, 60 paper
 cards and 5 frozen leaderboards.
 
 It lives at `scene-graph-studio/` inside the WekaExt repository and is **not** a separate
@@ -42,15 +42,15 @@ cd scene-graph-studio\system ; npm run ci
 - **`npm run ci` is the gate**, twelve steps: harvest, pytest, the metrics build, vitest, ruff,
   parity, i18n, content, frozen, mockup, standalone, frontend build.
 - **Four checks `ci` does not run**, each for a reason: `npm run test:e2e` (check 8, the keyboard
-  walkthrough at three projector resolutions, 39 tests, over the production build with no backend
+  walkthrough at three projector resolutions, 48 tests, over the production build with no backend
   running), `npm run check:offline` (check 6, a torch-free interpreter with every outward request
   intercepted), `npm run check:perf` (NFR-8, cold start on five routes and input-to-paint on five
-  labs and three playgrounds, against a backend it starts itself), `npm run check:pins`.
+  labs and six playgrounds, against a backend it starts itself), `npm run check:pins`.
 
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-22` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D92` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D93` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` is frozen** (2026-09-15) and was harvested into `data/content/`
   as the seed corpus. Do not extend it. Its `pg.js evaluate()` is a teaching toy over fifteen
@@ -64,7 +64,7 @@ cd scene-graph-studio\system ; npm run ci
   click handler sits on the `<svg>` and picks the smallest box containing the point, ties broken
   by the lower object id. **Do not move it back onto the rects.**
 - **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
-  in both locales (**D76**). All 95 steps carry theirs; 190 notes.
+  in both locales (**D76**). All 98 steps carry theirs; 196 notes.
 - **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and
   `npm run lint:standalone` asserts they agree. Edit the source, then run
   `npm run build:standalone` in the same commit.
@@ -87,11 +87,15 @@ cd scene-graph-studio\system ; npm run ci
   it turns the gate red at step 4 with an error that names neither the config nor the cause.
 - **A playground is a step kind, not a lab.** `kind: playground` with `kp:`, one
   `<Playground kp="…"/>` in the body, registered in `frontend/src/playgrounds/mounts.tsx`;
-  contracts §2.4 is normative and `content_lint.mjs` holds eleven rules over it, each
+  contracts §2.4 is normative and `content_lint.mjs` holds eleven rules over it, and a twelfth over
+  `data/content/vg150_splits.json`, each
   failing a test in `tools/test/content_lint.test.mjs` when disabled (D92). **It computes a
   count, a bound or a set membership, never a metric** — a metric is a lab's business and the
   boundary is the point. Nothing in `frontend/src/playgrounds/` imports from `sgg-metrics` except
-  its types. M0 carries three (F1, F2, F8); 25 live knowledge points have none. See D88.
+  its types. M0 carries three (F1, F2, F8) and M1
+  three (F6, F7, X1); 22 live knowledge points have none. See D88 and D93. **`PlaygroundFrame`
+  clips only a picture** (`clip`, default on): a playground of words and figures passes
+  `clip={false}`, because a word under the clip is beyond the reach of the step's scroll (D93).
 
 ## CI
 

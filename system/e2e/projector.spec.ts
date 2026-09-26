@@ -163,6 +163,101 @@ async function painted(page: Page, selector: string): Promise<Reading> {
   }, selector);
 }
 
+/**
+ * Text inside `selector` that an ancestor hiding its overflow has cut out of sight.
+ *
+ * `painted` asks whether a word is rendered and legible; it does not ask whether anyone can see
+ * it, and a word below the edge of an `overflow: hidden` box is rendered, legible and invisible.
+ * That is how X1's sources and its explanations passed the contrast walk while sitting under the
+ * clip of the playground frame at every panel size (D93, review finding 1). Scrolling the step
+ * cannot reach such a word; scrolling can reach a word that merely runs past the panel, which is
+ * the separate, accepted overflow of D71.
+ */
+async function clipped(page: Page, selector: string): Promise<string[]> {
+  return page.evaluate((sel) => {
+    const root = document.querySelector(sel);
+    if (!root) return [`no element matches ${sel}`];
+    const out: string[] = [];
+    for (const el of root.querySelectorAll('*')) {
+      // A label drawn on a picture is part of the picture, and the picture is the one thing the
+      // M0 design lets a short panel clip (§4.2). Every word outside a picture is judged.
+      if (el.closest('svg')) continue;
+      const own = [...el.childNodes]
+        .filter((n) => n.nodeType === Node.TEXT_NODE)
+        .map((n) => n.textContent ?? '')
+        .join('')
+        .trim();
+      if (!own) continue;
+      const box = el.getBoundingClientRect();
+      if (box.width < 1 || box.height < 1) continue;
+      for (let a = el.parentElement; a && a !== root.parentElement; a = a.parentElement) {
+        const st = getComputedStyle(a);
+        if (!/hidden|clip/.test(`${st.overflowX} ${st.overflowY}`)) continue;
+        const clip = a.getBoundingClientRect();
+        if (box.top < clip.top - 1 || box.bottom > clip.bottom + 1 ||
+            box.left < clip.left - 1 || box.right > clip.right + 1) {
+          out.push(`${own.slice(0, 40)} :: ${Math.round(box.bottom - clip.bottom)} px below its clip`);
+          break;
+        }
+      }
+    }
+    return out;
+  }, selector);
+}
+
+/**
+ * WCAG 1.4.11 for the marks of a chart: every filled or stroked SVG shape against the backdrop it
+ * is drawn on, at 3:1. F7's measured bars were `slate-400` on `slate-50`, about 2.5:1 by the
+ * review's arithmetic, and nothing measured graphics at all.
+ */
+async function graphics(page: Page, selector: string): Promise<{ mark: string; ratio: number }[]> {
+  return page.evaluate((sel) => {
+    const probe = document.createElement('canvas');
+    probe.width = 1;
+    probe.height = 1;
+    const ctx = probe.getContext('2d', { willReadFrequently: true })!;
+    const paintOnce = (value: string, prime: string) => {
+      ctx.fillStyle = prime;
+      ctx.fillStyle = value;
+      ctx.clearRect(0, 0, 1, 1);
+      ctx.fillRect(0, 0, 1, 1);
+      return [...ctx.getImageData(0, 0, 1, 1).data];
+    };
+    const parse = (value: string) => {
+      if (!value || value === 'none') return null;
+      const a = paintOnce(value, '#000000');
+      const b = paintOnce(value, '#ffffff');
+      return a.every((n, i) => n === b[i]) && a[3]! > 0 ? a : null;
+    };
+    const channel = (v: number) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    const lum = (c: number[]) => 0.2126 * channel(c[0]!) + 0.7152 * channel(c[1]!) + 0.0722 * channel(c[2]!);
+    const backdrop = (el: Element) => {
+      for (let n: Element | null = el; n; n = n.parentElement) {
+        const c = parse(getComputedStyle(n).backgroundColor);
+        if (c && c[3] === 255) return c;
+      }
+      return [255, 255, 255, 255];
+    };
+    const out: { mark: string; ratio: number }[] = [];
+    const root = document.querySelector(sel);
+    if (!root) return [{ mark: `no element matches ${sel}`, ratio: 0 }];
+    for (const el of root.querySelectorAll('rect, path, circle, line, polygon, polyline')) {
+      const st = getComputedStyle(el);
+      const bg = backdrop(el);
+      for (const [kind, value] of [['fill', st.fill], ['stroke', st.stroke]] as const) {
+        const c = parse(value);
+        if (!c) continue;
+        const [hi, lo] = lum(c) >= lum(bg) ? [lum(c), lum(bg)] : [lum(bg), lum(c)];
+        out.push({ mark: `${el.tagName} ${kind} ${value}`, ratio: Number(((hi + 0.05) / (lo + 0.05)).toFixed(2)) });
+      }
+    }
+    return out;
+  }, selector);
+}
+
 async function noHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(() => ({
     doc: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -253,9 +348,27 @@ for (const size of SIZES) {
       // Four steps. Index 2 is the mathematics this was written against; 1, 3 and 4 are F1, F2
       // and F8, whose readouts, notices and status lines are a second palette on the same deck,
       // drawn from Tailwind's scale rather than from `palette.ts`. Before the playgrounds landed
-      // this test visited index 1 and that was the mathematics; the renumbering moved it.
-      for (const step of [2, 1, 3, 4]) {
-        await page.goto(`/lecture/m/m00/${step}`);
+      // this test visited index 1 and that was the mathematics; the renumbering moved it. M1's
+      // three playgrounds (indices 2, 4, 6) joined the walk on 2026-09-26.
+      //
+      // A floor per step, measured rather than guessed: at XGA the walk reads 203 rows on the
+      // mathematics step and 33, 24 and 17 on F1, F2 and F8, and 27, 34 and 52 on F6, F7
+      // and X1 at every panel size (2026-09-26). `toBeGreaterThan(3)` was kept
+      // here after the oklch finding with a comment explaining why it had failed to catch it,
+      // which is a floor known to be inadequate left in place. These are set below the
+      // measured counts so ordinary content edits do not trip them, and far enough above zero
+      // that a walk collapsing to a handful of rows is reported rather than passed.
+      const pages: { module: string; step: number; floor: number }[] = [
+        { module: 'm00', step: 2, floor: 150 },
+        { module: 'm00', step: 1, floor: 25 },
+        { module: 'm00', step: 3, floor: 18 },
+        { module: 'm00', step: 4, floor: 12 },
+        { module: 'm01', step: 2, floor: 20 },
+        { module: 'm01', step: 4, floor: 25 },
+        { module: 'm01', step: 6, floor: 39 },
+      ];
+      for (const { module, step, floor } of pages) {
+        await page.goto(`/lecture/m/${module}/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
 
         const { rows, skipped } = await painted(page, '[data-testid="lecture-root"]');
@@ -267,25 +380,18 @@ for (const size of SIZES) {
         // rest passed.
         expect(
           skipped,
-          `step ${step}: ${skipped.length} text elements whose colour could not be read: ` +
+          `${module}/${step}: ${skipped.length} text elements whose colour could not be read: ` +
             `${JSON.stringify(skipped, null, 2)}`,
         ).toEqual([]);
-        // A floor per step, measured rather than guessed: at XGA the walk reads 203 rows on the
-        // mathematics step and 33, 24 and 17 on F1, F2 and F8. `toBeGreaterThan(3)` was kept
-        // here after the oklch finding with a comment explaining why it had failed to catch it,
-        // which is a floor known to be inadequate left in place. These are set below the
-        // measured counts so ordinary content edits do not trip them, and far enough above zero
-        // that a walk collapsing to a handful of rows is reported rather than passed.
-        const floor: Record<number, number> = { 2: 150, 1: 25, 3: 18, 4: 12 };
         expect(
           rows.length,
-          `step ${step}: ${rows.length} rows measured, fewer than the ${floor[step]} this step ` +
+          `${module}/${step}: ${rows.length} rows measured, fewer than the ${floor} this step ` +
             `carries -- the walk is not reaching the slide`,
-        ).toBeGreaterThanOrEqual(floor[step]!);
+        ).toBeGreaterThanOrEqual(floor);
         const failures = rows.filter((row) => row.ratio < 7);
         expect(
           failures,
-          `step ${step}, below 7:1 as painted: ${JSON.stringify(failures, null, 2)}`,
+          `${module}/${step}, below 7:1 as painted: ${JSON.stringify(failures, null, 2)}`,
         ).toEqual([]);
       }
     });
@@ -303,8 +409,11 @@ for (const size of SIZES) {
       // mathematics is sized by KaTeX and then scaled by `fitMath.ts`, which is a different
       // mechanism with its own test above; its struts and spacers carry 1 px text that is not
       // read by anyone.
-      for (const step of [0, 1, 2, 3, 4, 5, 6]) {
-        await page.goto(`/lecture/m/m00/${step}`);
+      for (const [module, step] of [
+        ...[0, 1, 2, 3, 4, 5, 6].map((s) => ['m00', s] as const),
+        ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((s) => ['m01', s] as const),
+      ]) {
+        await page.goto(`/lecture/m/${module}/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
 
         const small = await page.evaluate(() => {
@@ -332,23 +441,48 @@ for (const size of SIZES) {
 
         expect(
           small,
-          `step ${step}: text below the deck's 18 px floor: ${JSON.stringify(small)}`,
+          `${module} step ${step}: text below the deck's 18 px floor: ${JSON.stringify(small)}`,
         ).toEqual([]);
       }
     });
 
     test('a playground step fits the panel, with its controls reachable', async ({ page }) => {
-      await page.goto('/lecture/m/m00/1');
-      const controls = page.getByTestId('playground-controls');
-      await expect(controls).toBeInViewport();
+      // D71 accepted 25 of the then 92 slides overflowing an XGA panel (the corpus is 98 now; the
+      // six playground steps are not in that denominator). Controls above the visual is the rule
+      // that keeps a playground off that list: the picture may be clipped, the knobs may not.
+      for (const where of ['m00/1', 'm00/3', 'm00/4', 'm01/2', 'm01/4', 'm01/6']) {
+        await page.goto(`/lecture/m/${where}`);
+        const controls = page.getByTestId('playground-controls');
+        await expect(controls, where).toBeInViewport();
+        const box = await controls.boundingBox();
+        const height = page.viewportSize()?.height ?? 0;
+        expect(box, `${where}: controls have a box`).not.toBeNull();
+        expect(box!.y + box!.height, `${where}: controls end below the panel`).toBeLessThanOrEqual(height);
+      }
+    });
 
-      // D71 accepted 25 of the then 92 slides overflowing an XGA panel (the corpus is 95 now;
-      // the three playground steps are not in that denominator). Controls above the visual is the
-      // rule that keeps a playground off that list: the picture may be clipped, the knobs may not.
-      const box = await controls.boundingBox();
-      const height = page.viewportSize()?.height ?? 0;
-      expect(box, 'controls have a box').not.toBeNull();
-      expect(box!.y + box!.height).toBeLessThanOrEqual(height);
+    test('no word of a playground is clipped out of reach', async ({ page }) => {
+      // Each at its longest configuration: F7 with the overlay and its legend, X1 with the
+      // comparison that carries two explanations. The step may scroll past the panel (D71); what
+      // it may not do is hide a word inside the frame where no scroll reaches it. M0's three are
+      // here too: F1's candidate count and ratio sat under the clip at every panel size from
+      // the day it landed, and nothing measured it (D93).
+      for (const where of [
+        'm00/1', 'm00/3', 'm00/4',
+        'm01/2', 'm01/4?F7.measured=1', 'm01/6?X1.r=sgb-v1&X1.vs=sgb-v2',
+      ]) {
+        await page.goto(`/lecture/m/${where}`);
+        await expect(page.getByTestId('playground-frame')).toBeVisible();
+        expect(await clipped(page, '[data-testid="playground-frame"]'), where).toEqual([]);
+      }
+    });
+
+    test('every mark of an M1 playground chart meets 3:1', async ({ page }) => {
+      await page.goto('/lecture/m/m01/4?F7.measured=1');
+      await expect(page.getByTestId('f7-bars')).toBeVisible();
+      const marks = await graphics(page, '[data-testid="playground-frame"]');
+      expect(marks.length, 'the chart drew no marks').toBeGreaterThan(0);
+      expect(marks.filter((m) => m.ratio < 3)).toEqual([]);
     });
 
     test('capture the slide for the author to judge against a real room', async ({ page }) => {

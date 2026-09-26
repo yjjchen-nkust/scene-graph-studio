@@ -112,7 +112,7 @@ const CLUSTERS = [
   ]},
 
   { id:'X', en:'Datasets', zh:'資料集', kps:[
-    ['X1','VG150 names three different splits','VG150 是三個不同的切分','3-way knob: Xu / Tang / SGG-Benchmark · watch every number move','live'],
+    ['X1','VG150 names several releases','VG150 指涉數個發布版本','choose a release · compare it with another · watch the images move between splits','live'],
     ['X2','VRD and the undeclared k','VRD 與未交代的 k','knob: k ∈ {1,10,70}','live'],
     ['X3','PSG: masks, 133 classes, 56 predicates','PSG：mask、133 類、56 predicate','toggle: thing / stuff / both','spec'],
     ['X4','IndoorVG: what merging classes does','IndoorVG：合併類別的效果','shared with F6','spec'],

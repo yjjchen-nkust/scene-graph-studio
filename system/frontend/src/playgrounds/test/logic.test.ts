@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import type { SceneGraph } from 'sgg-metrics';
 import { FRAMES, frameById } from '../slice';
+import type { Release } from '../splits';
 import {
-  candidateSpace, clamp, densityCut, flag, formatRatio, isInE, ratio, tripletKey,
+  candidateSpace, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
+  headShare, isInE, isInMergedE, measuredHeadShare, mergeMap, ranked, ratio, splitDifference,
+  tailToHead, tripletKey, valDisjointFromTest,
 } from '../logic';
 
 const ph001 = frameById('ph-001')!;
@@ -162,3 +166,114 @@ describe('densityCut clamps rather than indexing from the end', () => {
   });
 });
 
+// A frame with chosen edges, built from a real one so every required field is present and
+// nothing is cast: the construction the reversed-triplet test above already uses. `tsc -b`
+// type-checks this file, since `tsconfig.app.json` includes all of `src`.
+const graph = (rels: [number, string, number][]): SceneGraph => ({
+  ...ph001,
+  relationships: rels.map(([subject_id, predicate, object_id], relationship_id) => ({
+    ...ph001.relationships[0]!,
+    relationship_id,
+    subject_id,
+    predicate,
+    object_id,
+  })),
+});
+
+describe('F6: merging classes', () => {
+  it('maps every member of a group to its first member, and nothing else', () => {
+    const m = mergeMap([['on', 'above', 'over']]);
+    expect(canonical('above', m)).toBe('on');
+    expect(canonical('on', m)).toBe('on');
+    expect(canonical('near', m)).toBe('near');
+  });
+
+  it('counts classes before and after a merge', () => {
+    const labels = ['on', 'above', 'on', 'near', 'over'];
+    expect(classCounts(labels, new Map()).size).toBe(4);
+    const merged = classCounts(labels, mergeMap([['on', 'above', 'over']]));
+    expect(merged.size).toBe(2);
+    expect(merged.get('on')).toBe(4);
+  });
+
+  it('a group member absent from the vocabulary adds no class', () => {
+    expect(classCounts(['on', 'near'], mergeMap([['on', 'sitting on']])).size).toBe(2);
+  });
+
+  it('merged membership: absent before, present after, and direction still counts', () => {
+    const g = graph([[1, 'sitting on', 2]]);
+    const t = { subject_id: 1, predicate: 'on', object_id: 2 };
+    expect(isInMergedE(g, t, new Map())).toBe(false);
+    expect(isInMergedE(g, t, mergeMap([['on', 'sitting on']]))).toBe(true);
+    expect(isInMergedE(g, { ...t, subject_id: 2, object_id: 1 }, mergeMap([['on', 'sitting on']]))).toBe(false);
+  });
+});
+
+describe('F7: the shape of a Zipf distribution', () => {
+  it('H_4 at s = 1 is 25/12', () => {
+    expect(harmonic(4, 1)).toBeCloseTo(25 / 12, 12);
+  });
+
+  it('the head share is k/C exactly when s = 0', () => {
+    expect(headShare(3, 36, 0)).toBeCloseTo(3 / 36, 12);
+  });
+
+  it('one class of four at s = 1 holds 12/25', () => {
+    expect(headShare(1, 4, 1)).toBeCloseTo(12 / 25, 12);
+    expect(tailToHead(4, 1)).toBeCloseTo(0.25, 12);
+  });
+
+  it('clamps k into [1, C] and rounds C, so the share stays in (0, 1]', () => {
+    expect(headShare(0, 4, 0)).toBeCloseTo(1 / 4, 12);
+    expect(headShare(9, 4, 1)).toBe(1);
+    expect(headShare(2, 3.6, 0)).toBeCloseTo(2 / 4, 12);
+    expect(Number.isNaN(headShare(Number.NaN, 4, 1))).toBe(false);
+  });
+
+  it('ranks by count, ties by label, and measures the head share of the ranking', () => {
+    const rank = ranked(['b', 'a', 'a', 'c', 'b', 'a']);
+    expect(rank).toEqual([
+      { label: 'a', count: 3 }, { label: 'b', count: 2 }, { label: 'c', count: 1 },
+    ]);
+    expect(measuredHeadShare(rank, 2)).toBeCloseTo(5 / 6, 12);
+    expect(measuredHeadShare([], 2)).toBe(0);
+  });
+});
+
+const release = (id: string, train: number | string | null, notes: { value: number; text_en: string }[] = []): Release => {
+  const cite = { source: 's', url: 'u', locator: 'l', quote: 'q' };
+  return {
+    id, label_en: id, label_zh: id,
+    figures: { train: { value: train, ...cite }, val_from: { value: id === 'leaky' ? 'test' : 'trainval', ...cite } },
+    notes: notes.map((n) => ({ ...cite, text_zh: n.text_en, ...n })),
+  };
+};
+
+describe('X1: differences between releases', () => {
+  it('subtracts only two stated counts', () => {
+    expect(splitDifference(release('a', 68538), release('b', 57723), 'train')).toBe(10815);
+    expect(splitDifference(release('xu', '70%'), release('b', 57723), 'train')).toBeNull();
+    expect(splitDifference(release('xu', null), release('b', 57723), 'train')).toBeNull();
+  });
+
+  it('finds the note a difference equals, in either direction', () => {
+    const a = release('a', 68538, [{ value: 10815, text_en: 'kept' }]);
+    const b = release('b', 57723);
+    expect(explain(10815, [a, b])?.text_en).toBe('kept');
+    expect(explain(-10815, [b, a])?.text_en).toBe('kept');
+    expect(explain(586, [a, b])).toBeUndefined();
+  });
+
+  it('a zero difference claims no explanation, even when a note has value zero', () => {
+    const a = release('a', 5000, [{ value: 0, text_en: 'zero' }]);
+    expect(explain(0, [a, a])).toBeUndefined();
+  });
+
+  it('val is disjoint from test when drawn from the train/val pool, not when drawn from test', () => {
+    expect(valDisjointFromTest(release('a', 1))).toBe(true);
+    expect(valDisjointFromTest(release('leaky', 1))).toBe(false);
+    const unstated = release('x', 1);
+    unstated.figures.val_from = { value: null, source: 's', url: 'u', locator: 'l', quote: 'q' };
+    expect(valDisjointFromTest(unstated)).toBeNull();
+  });
+});

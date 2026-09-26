@@ -106,22 +106,28 @@ export function LabelsToStructure() {
   );
 
   return (
-    <PlaygroundFrame title="F1" controls={controls}>
+    // The picture is clipped, the readouts are not. The whole visual was clipped until
+    // 2026-09-26, and at 1024 px and wider the readouts stand in one column beside the picture,
+    // so the candidate count and the ratio -- the two numbers F1 exists to show -- sat under the
+    // clip at every panel size (D93).
+    <PlaygroundFrame title="F1" controls={controls} clip={false}>
       <div className="flex flex-col gap-4 lg:flex-row">
-        <ImageOverlay
-          imageUrl={imageUrl(frame.image_id)}
-          width={frame.width}
-          height={frame.height}
-          objects={frame.objects}
-          relationships={kept}
-          mode="view"
-          layers={{
-            boxes: flag(params['F1.boxes'], true),
-            relationships: flag(params['F1.rel'], true),
-            labels: flag(params['F1.labels'], true),
-          }}
-          className="max-w-2xl"
-        />
+        <div className="max-h-[46vh] overflow-hidden">
+          <ImageOverlay
+            imageUrl={imageUrl(frame.image_id)}
+            width={frame.width}
+            height={frame.height}
+            objects={frame.objects}
+            relationships={kept}
+            mode="view"
+            layers={{
+              boxes: flag(params['F1.boxes'], true),
+              relationships: flag(params['F1.rel'], true),
+              labels: flag(params['F1.labels'], true),
+            }}
+            className="max-w-2xl"
+          />
+        </div>
         <div className="grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-1">
           <Readout id="F1.objects" label={t('playground.objects')} value={String(objectCount)} note="|V|" />
           <Readout

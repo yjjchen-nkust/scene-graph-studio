@@ -93,7 +93,7 @@ Only curated slices are committed (≈200 images total, with their annotations) 
 
 ### 2.3 Gotchas that become lessons, not footnotes
 
-1. **"VG150" names three incompatible splits**: Xu 75,651/32,422 · Neural-Motifs/Tang 57,723+5,000 val/26,446 · SGG-Benchmark HF 73,538/4,844/27,032.
+1. **"VG150" names three incompatible splits**: Xu 75,651/32,422 · Neural-Motifs/Tang 57,723+5,000 val/26,446 · SGG-Benchmark HF 73,538/4,844/27,032. *(Annotated 2026-09-26: the Xu figures are not in Xu et al. 2017, which states 70/30 of 108,077; the SGG-Benchmark figures are its withdrawn v1 release. See `specs/2026-09-26-playgrounds-m1-design.md` §2 and D93.)*
 2. **Graph-constraint vs no-constraint swings R@K 10–20 points.** STTran PredCls R@50 on Action Genome: **71.8 constrained vs 99.1 unconstrained.** AG adds a third "semi-constraint" mode.
 3. **VRD's R@K depends on an undeclared `k`** (1 / 10 / 70 predicates per pair).
 4. **Missing annotations score as false positives** in VG/VRD/VidVRD — "wrong" predictions are often correct-but-unlabelled.
