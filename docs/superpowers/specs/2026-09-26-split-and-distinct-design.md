@@ -99,13 +99,13 @@ with no relation. Xu's pool, a count, stands with the counts in part 1. The mech
 parts 1 to N.
 
 **F7's second part has no overlay toggle.** Part 2 is the comparison, so the slice is shown there
-without being asked for, and part 1 shows the model alone. The toggle belongs to the whole
-playground on the study page.
+without being asked for, and part 1 shows the model alone. The toggle exists only when the
+playground is mounted without a part, as its unit tests mount it; no step does.
 
 **Layout, within the 18 px floor.** F6's three readouts stand in three columns from 1024 px, where
 a wrapping row had put each on a line of its own. Sliders are 96 px wide, so F7's three share a
-row. F7's note on s shares the key's line, and the line sending the room to L3 is shown on the study
-page only, since the first part's sentence and both notes already say it. X1's two release choices
+row. F7's note on s shares the key's line, and the line sending the room to L3 is left off the
+parts, since the first part's sentence and the second part's notes say it. X1's two release choices
 share a row, each capped at 20rem; its figures and differences do not wrap, its header is 0.875em,
 its cells lose 2 px of padding, its "not stated" cells are set in the text face, and its sources
 run as one line.

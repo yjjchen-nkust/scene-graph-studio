@@ -141,7 +141,7 @@ That last sentence was false until 2026-09-26 for rules 3, 7, 8 and part of 9: d
 left the suite green, because its fixture had one module and one frontmatter. It is true now,
 measured by disabling each rule in turn (D92, VERIFICATION §16), and for rule 12, added the same
 day, by disabling each of its clauses in turn (D93, D94, D95, VERIFICATION §17 to §19). The suite
-holds 44 tests as of 2026-09-26; the eight on parts were each watched failing, and the seven clauses
+holds 45 tests as of 2026-09-26; the nine on parts were each watched failing, and the eight clauses
 they guard were each disabled once and caught (D96).
 
 ### 2.5 One change outside the contract

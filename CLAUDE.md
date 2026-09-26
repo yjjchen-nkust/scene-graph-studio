@@ -42,7 +42,7 @@ cd scene-graph-studio\system ; npm run ci
 - **`npm run ci` is the gate**, twelve steps: harvest, pytest, the metrics build, vitest, ruff,
   parity, i18n, content, frozen, mockup, standalone, frontend build.
 - **Four checks `ci` does not run**, each for a reason: `npm run test:e2e` (check 8, the keyboard
-  walkthrough at three projector resolutions, 52 tests, over the production build with no backend
+  walkthrough at three projector resolutions, 55 tests, over the production build with no backend
   running), `npm run check:offline` (check 6, a torch-free interpreter with every outward request
   intercepted), `npm run check:perf` (NFR-8, cold start on five routes and input-to-paint on five
   labs and six playgrounds, against a backend it starts itself), `npm run check:pins`.
@@ -63,6 +63,10 @@ cd scene-graph-studio\system ; npm run ci
   an object selects nothing. `pointer-events: all` would hand the choice to paint order, so the
   click handler sits on the `<svg>` and picks the smallest box containing the point, ties broken
   by the lower object id. **Do not move it back onto the rects.**
+- **`ImageOverlay` has no width of its own.** Its children are all absolutely positioned, so a
+  container that does not give it a width renders the photograph 0×0, with no error and a step
+  that "fits" the panel. F1 did so on every projector until D96; `F1 shows its photograph` in
+  `e2e/projector.spec.ts` now measures it.
 - **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
   in both locales (**D76**). All 103 steps carry theirs; 206 notes.
 - **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and

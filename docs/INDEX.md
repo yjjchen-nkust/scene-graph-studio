@@ -308,16 +308,17 @@ three. Every part fits 1024×768 in 繁體中文 in every state measured, where 
 run 387, 334, 188 and 619 px past it; English still runs up to 163 px past on X1's first part. M0
 went from 7 steps to 8 and M1 from 9 to 13, the corpus from 98 to 103. F6 and F7 count distinct
 triplets, 684 of the slice's 892 rows, and F6 writes out the two pairs its merge makes one. See
-D96 and VERIFICATION §20.
+D96 and VERIFICATION §20. The branch review found F1's photograph rendering 0×0 at 1024 px and
+wider, in both shells; it is sized now, and the projector suite measures it.
 
 **Verification.** `npm run ci` green, 2026-09-26: **266 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 13 agree, i18n 277 keys both locales,
-**751 vitest** in 60 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+compare the requirement files to the interpreter), parity 13 agree, i18n 278 keys both locales,
+**755 vitest** in 60 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 43 symbols, 22 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,
 2026-09-26:
-52 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
+55 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
 check:perf`, 2026-09-26: 20 passed, NFR-8 measured over five labs and six playgrounds, plus the D75 selection guard.
 
@@ -325,9 +326,9 @@ check:perf`, 2026-09-26: 20 passed, NFR-8 measured over five labs and six playgr
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in
 turn showed it missed eight of seventeen mutants: rules 3 and 7, both halves of rule 8, and two
 clauses of rule 9. Its fixture had one module and one frontmatter, so no defect needing two of
-either could be expressed. It had 18 tests after that change and caught 17 of 17. It has 44 now,
+either could be expressed. It had 18 tests after that change and caught 17 of 17. It has 45 now,
 over twelve rules (D93 to D96), and the mutation runs of VERIFICATION §17 to §20 caught 23 of 23,
-10 of 10, 4 of 4 and 7 of 7. The same review found
+10 of 10, 4 of 4 and 8 of 8. The same review found
 VERIFICATION §15 still printing the clamped `0.0 ms` that D91 had withdrawn, and the paper corpus
 at 60 cards against D-21's 35 with no entry recording why. See D92 and VERIFICATION §16.
 

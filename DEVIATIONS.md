@@ -2986,7 +2986,8 @@ count distinct triplets; read the runner's logs once signed in to Gitea. Branch
 
 **A step split alone could not end the overflow.** At 1024×768 a step shows 561 px in 繁體中文 and
 517 px in English, and in its longest state each long playground's frame alone was taller: F1 705,
-F6 730, F7 577, X1 998 px in 繁體中文. Moving each step's sentence into a step of its own, which is
+F6 730, F7 577, X1 998 px in 繁體中文. [F1's 705 was its readouts column: the photograph beside it
+had no width at all, as the branch review below found.] Moving each step's sentence into a step of its own, which is
 what D71 meant by a split, would have left every one past the panel. The playground itself is
 divided.
 
@@ -3014,12 +3015,14 @@ The provenance became a third part, one line a release, which also removed the t
 said a second time where validation is drawn from. The mechanism is the same, parts 1 to N.
 
 **F7's second part shows the slice without a toggle.** It is the comparison, so the overlay is
-simply on there, and the first part shows the model alone; the toggle belongs to the whole
-playground on the study page.
+simply on there, and the first part shows the model alone. The toggle, and the line sending the
+room to L3, exist only when the playground is mounted without a part, as its unit tests mount it:
+no step does, since rule 4 refuses a split point's step that names no part, and the study page
+renders the parts as the lecture does.
 
 **Layout, within the 18 px floor.** F6's readouts stand in three columns from 1024 px; F7's
 sliders are 96 px wide and share a row, its note on s shares the key's line, and its line sending
-the room to L3 stays on the study page, where the first part's sentence and both notes already
+the room to L3 is left off the parts, where the first part's sentence and the second part's notes
 say it; X1's release choices share a row, each capped at 20rem, its figures and differences do not
 wrap, its header is 0.875em, its cells lose 2 px of padding, its "not stated" cells are set in the
 text face, its sources run as one line, and `not both counts` / 「非皆為張數」 replaces a label
@@ -3029,7 +3032,7 @@ that wrapped to three lines.
 
 | Playground | Before (D95) | Part 1 | Part 2 | Part 3 |
 |---|---|---|---|---|
-| F1 | 387 / 470 | 0 / 0 | 0 / 0 | |
+| F1 | 387 / 470 | 0 / 73 | 0 / 0 | |
 | F6 | 334 / 475 | 0 / 28 | 0 / 0 | |
 | F7 | 188 / 410 | 0 / 81 | 0 / 74 | |
 | X1 | 619 / 880 | 0 / 163 | 0 / 69 | 0 / 46 |
@@ -3065,10 +3068,39 @@ the 2 are; the object names are counted per object and do not change.
 Three golden cases are re-derived, with their arithmetic written out, and the presenter notes of
 F6 and F7 quote the new figures. Nine tests were written first and failed.
 
+**The branch review found F1's photograph missing.** The overlay's children are all absolutely
+positioned, so its box has no width of its own, and in the row F1 lays out at 1024 px and wider
+nothing gave it one: measured at `736a34f` and at this branch, the photograph rendered 0×0 on
+every projector size, in both shells. The step "fit" the panel because the picture was not there.
+The same row, with the overlay given no width, is in F1 from its first commit on 2026-09-19, so
+D88's 146 px and D95's 387 very likely measured the readouts alone; no earlier build was
+measured. The photograph is now sized rather than clipped, at most 38vh tall and never
+wider than the frame, so it is whole: 389×292 at 1024×768, where part 1 fits in 繁體中文 and runs
+73 px past in English. The projector suite asserts that it has a size and lies within the panel,
+at all three sizes; it failed at all three before the fix.
+
+**Four further findings of that review.** A tag is its point and its part, and rule 6 compared the
+point alone, so a whole `<Playground kp="F1" />` pasted onto another step, or a part F1 does not
+have, linted clean; it compares both now, and the new clause was watched failing and caught when
+disabled. The study page renders every part, so a knob's DOM id repeated on one page and each
+later label named the first part's control; a part now suffixes the DOM id, the test id stays the
+knob's name, and a test asserts every id unique and every label its own control. Two presses
+faster than the renders carried the rendered step's query rather than the pending one's; the
+stepper keeps the pending query, and a test presses twice before a render. And the whole view
+this entry first said the study page shows is reachable from unit tests only, since rule 4 refuses
+a split point's step without a part; the claim is corrected here and in the code. Minor: F6's
+sentence counts pairs (`pairsWithSeveral`), where it had counted rows a merge removes, which
+differ once a pair carries three members; X1 says whether no split is a count in both releases or
+the counts agree, where one sentence had read as agreement for Xu; its inline sources list keeps
+its list role; two comments named steps by their old ids. The browser's Back button restores each
+history entry's own query, so a knob turned on part 2 is not seen on Back to part 1: recorded, not
+changed.
+
 **The runner's logs.** At the time of writing the browser this session drives was not signed in to
 Gitea, so runs 1 to 3 remain unread; D95 item 3 stays open.
 
 **Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **751 vitest in 60 files** (724
 before), parity 13, **i18n 277 keys** both locales, content lint clean over 13 golden cases, 22
 playground cases and 25 release figures, ruff clean, standalone current at 250 equations, frontend
-builds 763 modules. `npm run test:e2e` **52** (48 before). `npm run check:perf` **20**.
+builds 763 modules. `npm run test:e2e` **52** (48 before). `npm run check:perf` **20**. After the
+branch review: see VERIFICATION §20.

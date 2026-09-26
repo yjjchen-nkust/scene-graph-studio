@@ -304,8 +304,8 @@ was run and its outcome. All nine have been run and passed; check 6 was first re
 **not run** (D69) and passed on 2026-09-18.
 
 `npm run ci` is green on py12: 266 Python tests (7 skipped for a corpus this machine may not
-have), 751 TypeScript tests across 60 files, parity 13/13, i18n 277 keys in both locales,
-content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 52
+have), 755 TypeScript tests across 60 files, parity 13/13, i18n 278 keys in both locales,
+content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 55
 passed and `npm run check:perf` is 20. All measured 2026-09-26; `docs/VERIFICATION.md` §20
 records that run, §15 to §19 the five before it, and §14 the earlier run that reconciled
 three documents carrying three different counts.

@@ -875,6 +875,11 @@ D96. Every number below is from the run that produced it, on branch `feat/sgs-sp
 | `npm run test:e2e` | **52 passed** (48 before) |
 | `npm run check:perf` | 20 passed |
 
+After the branch review's fixes (D96), the same gates: `npm run ci` exit 0 with **755 vitest in 60
+files** and **278 i18n keys**, 266 pytest and 7 skipped, content lint clean; `npm run test:e2e`
+**55 passed**, the three new being F1's photograph at each panel size; `npm run check:perf` 20
+passed. The lint suite holds 45 tests.
+
 ### Every part, every state
 
 Measured as §17's table was, over the production build. Pixels past the panel, the largest over
@@ -882,7 +887,7 @@ the states listed, 繁體中文 / English.
 
 | Step | States measured | 1024×768 | 1280×800 | 1920×1080 |
 |---|---|---|---|---|
-| M0 s2, F1 part 1 | default; every layer off | 0 / 0 | 0 / 0 | 0 / 0 |
+| M0 s2, F1 part 1 | default; every layer off; frame ph-003 | 0 / 73 | 0 / 0 | 0 / 0 |
 | M0 s3, F1 part 2 | default; \|P\| 50 | 0 / 0 | 0 / 0 | 0 / 0 |
 | M0 s5, F2 | default | 24 / 107 | 0 / 0 | 0 / 0 |
 | M0 s6, F8 | default | 27 / 161 | 0 / 0 | 0 / 0 |
@@ -893,6 +898,10 @@ the states listed, 繁體中文 / English.
 | M1 s9, X1 part 1 | all 16 ordered release pairs | 0 / 163 | 0 / 0 | 0 / 0 |
 | M1 s10, X1 part 2 | all 16 ordered release pairs | 0 / 69 | 0 / 0 | 0 / 0 |
 | M1 s11, X1 part 3 | all 16 ordered release pairs | 0 / 46 | 0 / 0 | 0 / 0 |
+
+F1's first part is measured with its photograph, 389×292 at 1024×768, 405×304 at 1280×800 and
+547×410 at 1920×1080. Before the branch review it rendered 0×0 at all three, and the part measured
+0 / 0 because the picture was missing (D96).
 
 English's largest figures at 1024×768 are F6 with the predicate merge, F7 at its default, X1 part 1
 with Xu against v1, part 2 with v1 against v2, and part 3 with Xu against the canonical protocol.
@@ -910,8 +919,9 @@ The lecture header wraps to two lines in English at that width, which is why its
 | rule 5: one tag a part in a module | yes |
 | rule 7: the part the same in both locales | yes |
 | rule 8: parts consecutive, in order, in one module | yes |
+| rule 6: a tag's point and part both declared by a step, after the branch review | yes |
 
-7 of 7, by the method of §19.
+8 of 8, by the method of §19.
 
 ### NFR-8
 
