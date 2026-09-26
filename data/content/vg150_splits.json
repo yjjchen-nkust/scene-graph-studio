@@ -1,0 +1,70 @@
+{
+  "$schema_version": 1,
+  "$comment": "X1's figures. Each is copied from the passage in `quote`, and content_lint.mjs rule 12 refuses a figure without its source, url, locator and quote, or a count whose digits are not in its quote. A null value is a figure the source does not state; its quote is the passage that does not state it. See docs/superpowers/specs/2026-09-26-playgrounds-m1-design.md §2.",
+  "sources": [
+    { "id": "xu-2017", "url": "https://arxiv.org/abs/1701.02426", "read": "2026-09-26", "note": "Xu et al., Scene Graph Generation by Iterative Message Passing, CVPR 2017. §4, Visual Genome paragraph, p. 5." },
+    { "id": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "read": "2026-09-26", "sha256": "6fe84d8666f6549d74c2b6d6884bc0de53fecec09e0a11cd9c5dfc958e6a5f15", "revision": "ea6fb3a56a0876eee98165ea17792fc6ec8460e6", "last_modified": "2026-07-16T15:49:20Z", "note": "README.md as downloaded with the corpus on 2026-09-16; byte-identical to the upstream card at this revision on 2026-09-26." },
+    { "id": "SGG-Benchmark issue #94", "url": "https://github.com/Maelic/SGG-Benchmark/issues/94", "read": "2026-09-26", "note": "Opened 2026-07-15T14:12:53Z, closed. Read through the GitHub API." }
+  ],
+  "releases": [
+    {
+      "id": "xu-2017",
+      "label_en": "Xu et al. 2017",
+      "label_zh": "Xu 等人 2017",
+      "figures": {
+        "pool": { "value": 108077, "source": "Xu et al. 2017", "url": "https://arxiv.org/abs/1701.02426", "locator": "§4, Visual Genome", "quote": "The original VG scene graph dataset contains 108,077 images with an average of 38 objects and 22 relationships per image." },
+        "train": { "value": "70%", "source": "Xu et al. 2017", "url": "https://arxiv.org/abs/1701.02426", "locator": "§4, Visual Genome", "quote": "We use 70% of the images for training and the remaining 30% for testing." },
+        "val": { "value": null, "source": "Xu et al. 2017", "url": "https://arxiv.org/abs/1701.02426", "locator": "§4, Visual Genome", "quote": "We use 70% of the images for training and the remaining 30% for testing." },
+        "test": { "value": "30%", "source": "Xu et al. 2017", "url": "https://arxiv.org/abs/1701.02426", "locator": "§4, Visual Genome", "quote": "We use 70% of the images for training and the remaining 30% for testing." },
+        "val_from": { "value": null, "source": "Xu et al. 2017", "url": "https://arxiv.org/abs/1701.02426", "locator": "§4, Visual Genome", "quote": "We use 70% of the images for training and the remaining 30% for testing." },
+        "zero_relation": { "value": null, "source": "Xu et al. 2017", "url": "https://arxiv.org/abs/1701.02426", "locator": "§4, Visual Genome", "quote": "In this experiment, we use the most frequent 150 object categories and 50 predicates for evaluation." }
+      },
+      "notes": []
+    },
+    {
+      "id": "canonical",
+      "label_en": "Canonical protocol, as the card states it",
+      "label_zh": "標準協定（依資料卡所述）",
+      "figures": {
+        "train": { "value": 57723, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "relation-based training/eval effectively sees 57,723 / 5,000 / 26,446 images, matching the canonical VG150 protocol exactly" },
+        "val": { "value": 5000, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "relation-based training/eval effectively sees 57,723 / 5,000 / 26,446 images, matching the canonical VG150 protocol exactly" },
+        "test": { "value": 26446, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "relation-based training/eval effectively sees 57,723 / 5,000 / 26,446 images, matching the canonical VG150 protocol exactly" },
+        "val_from": { "value": "trainval", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "the entire train/val pool was placed in `train` with no validation images held out" },
+        "zero_relation": { "value": "dropped", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "SGG-specific loaders (`sgg_benchmark/data/datasets/visual_genome.py`) already filter these out per-split at load time" }
+      },
+      "notes": []
+    },
+    {
+      "id": "sgb-v1",
+      "label_en": "SGG-Benchmark release, v1 (withdrawn)",
+      "label_zh": "SGG-Benchmark 發布版本 v1（已撤回）",
+      "figures": {
+        "train": { "value": 73538, "source": "SGG-Benchmark issue #94", "url": "https://github.com/Maelic/SGG-Benchmark/issues/94", "locator": "§1, the COCO Format column", "quote": "| **Train** | 73,538 | 57,723 |" },
+        "val": { "value": 4844, "source": "SGG-Benchmark issue #94", "url": "https://github.com/Maelic/SGG-Benchmark/issues/94", "locator": "§1, the COCO Format column", "quote": "| **Val** | 4,844 | 5,000 |" },
+        "test": { "value": 27032, "source": "SGG-Benchmark issue #94", "url": "https://github.com/Maelic/SGG-Benchmark/issues/94", "locator": "§1, the COCO Format column", "quote": "| **Test** | 27,032 | 26,446 |" },
+        "val_from": { "value": "test", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "`val` was actually built from the first ~4,844 images of the *test* pool" },
+        "zero_relation": { "value": null, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "Object/relation annotations themselves were not affected by this bug and are unchanged content-wise." }
+      },
+      "notes": [
+        { "value": 4844, "text_en": "v1's validation images, drawn from the test pool", "text_zh": "v1 之驗證影像，取自測試影像池", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "`val` was actually built from the first ~4,844 images of the *test* pool" },
+        { "value": 5000, "text_en": "the canonical validation set, folded into v1's train", "text_zh": "標準驗證集，於 v1 中併入訓練集", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "the true 5,000-image canonical validation set was silently folded into `train`" }
+      ]
+    },
+    {
+      "id": "sgb-v2",
+      "label_en": "SGG-Benchmark release, v2 (current; the corpus on disk)",
+      "label_zh": "SGG-Benchmark 發布版本 v2（現行；本機語料）",
+      "figures": {
+        "train": { "value": 68538, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| train |  68 538 |  730 270           |  405 822   | 10 815                      |" },
+        "val": { "value": 5000, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| val   |   5 000 |   62 754           |   33 203   | 0 (all have ≥1 relation)    |", "measured": { "command": "node tools/py.mjs -c \"import pyarrow.parquet as pq; print(pq.ParquetFile('C:/DataRaw/vg150-sgb/annotations/val-00000-of-00001.parquet').metadata.num_rows)\"", "sha256": "66830fb049a10616d08a3ebfd5c5f24db8002452224dd186a525ebdeaefea0e6", "rows": 5000, "date": "2026-09-26" } },
+        "test": { "value": 31876, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| test  |  31 876 |  352 330           |  183 640   | 5 430                       |" },
+        "val_from": { "value": "trainval", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "`val` is now exactly the standard Neural-Motifs / Scene-Graph-Benchmark 5,000-image validation set (all with ≥1 annotated relation), disjoint from both `train` and `test`" },
+        "zero_relation": { "value": "kept", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "Images with zero relations are kept" }
+      },
+      "notes": [
+        { "value": 10815, "text_en": "v2's training images with no relation, kept", "text_zh": "v2 保留之無關係訓練影像", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| train |  68 538 |  730 270           |  405 822   | 10 815                      |" },
+        { "value": 5430, "text_en": "v2's test images with no relation, kept", "text_zh": "v2 保留之無關係測試影像", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| test  |  31 876 |  352 330           |  183 640   | 5 430                       |" }
+      ]
+    }
+  ]
+}
