@@ -362,8 +362,11 @@ test.describe('lab interaction', () => {
  * No backend: a playground imports its slice at build time, so unlike four of the five labs
  * above there is no `lab-pending` to wait out and no failure sentence to skip on.
  */
-const PLAYGROUND_CASES: { kp: string; step: number; act: Act; readout: string; why: string }[] = [
+const PLAYGROUND_CASES: {
+  module: string; kp: string; step: number; act: Act; readout: string; why: string;
+}[] = [
   {
+    module: 'm00',
     kp: 'F1',
     step: 1,
     act: { kind: 'set', testid: 'F1.density', value: '0.5' },
@@ -371,6 +374,7 @@ const PLAYGROUND_CASES: { kp: string; step: number; act: Act; readout: string; w
     why: 'moving the density slider re-cuts the edge set and re-divides the share',
   },
   {
+    module: 'm00',
     kp: 'F2',
     step: 3,
     act: { kind: 'click', testid: 'F2.directed' },
@@ -378,6 +382,7 @@ const PLAYGROUND_CASES: { kp: string; step: number; act: Act; readout: string; w
     why: 'discarding direction halves the candidate space',
   },
   {
+    module: 'm00',
     kp: 'F8',
     step: 4,
     act: { kind: 'click', testid: 'F8.swap' },
@@ -386,6 +391,30 @@ const PLAYGROUND_CASES: { kp: string; step: number; act: Act; readout: string; w
     // is reported by the change guard as having measured nothing.
     readout: '[data-testid="f8-sentence"], [data-testid="f8-status"]',
     why: 'swapping subject and object re-reads the triplet against E',
+  },
+  {
+    module: 'm01',
+    kp: 'F6',
+    step: 2,
+    act: { kind: 'click', testid: 'F6.mp' },
+    readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'merging the four predicates recounts the classes',
+  },
+  {
+    module: 'm01',
+    kp: 'F7',
+    step: 4,
+    act: { kind: 'set', testid: 'F7.s', value: '2' },
+    readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'moving s re-divides the head share',
+  },
+  {
+    module: 'm01',
+    kp: 'X1',
+    step: 6,
+    act: { kind: 'set', testid: 'X1.r', value: 'sgb-v1' },
+    readout: '[data-testid^="x1-"]',
+    why: 'choosing another release re-reads every figure and every difference',
   },
 ];
 
@@ -396,7 +425,7 @@ test.describe('playground interaction', () => {
 
   for (const c of PLAYGROUND_CASES) {
     test(`${c.kp}: ${c.why}, inside the budget`, async ({ page }) => {
-      await page.goto(`/lecture/m/m00/${c.step}`);
+      await page.goto(`/lecture/m/${c.module}/${c.step}`);
       await expect(page.getByTestId('playground-frame')).toBeVisible();
       await expect(page.getByTestId(c.act.testid)).toBeEnabled();
 
@@ -418,12 +447,12 @@ test.describe('playground interaction', () => {
     });
   }
 
-  test('all three playgrounds were actually measured', () => {
+  test('all six playgrounds were actually measured', () => {
     const timed = measured.filter((l) => l.startsWith('playground'));
     expect(
       timed.length,
-      `only ${timed.length} playgrounds were timed; M0 carries three`,
-    ).toBe(3);
+      `only ${timed.length} playgrounds were timed; M0 and M1 carry six`,
+    ).toBe(6);
   });
 });
 

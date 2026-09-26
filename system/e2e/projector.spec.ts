@@ -253,9 +253,27 @@ for (const size of SIZES) {
       // Four steps. Index 2 is the mathematics this was written against; 1, 3 and 4 are F1, F2
       // and F8, whose readouts, notices and status lines are a second palette on the same deck,
       // drawn from Tailwind's scale rather than from `palette.ts`. Before the playgrounds landed
-      // this test visited index 1 and that was the mathematics; the renumbering moved it.
-      for (const step of [2, 1, 3, 4]) {
-        await page.goto(`/lecture/m/m00/${step}`);
+      // this test visited index 1 and that was the mathematics; the renumbering moved it. M1's
+      // three playgrounds (indices 2, 4, 6) joined the walk on 2026-09-26.
+      //
+      // A floor per step, measured rather than guessed: at XGA the walk reads 203 rows on the
+      // mathematics step and 33, 24 and 17 on F1, F2 and F8, and 27, 34 and 52 on F6, F7
+      // and X1 at every panel size (2026-09-26). `toBeGreaterThan(3)` was kept
+      // here after the oklch finding with a comment explaining why it had failed to catch it,
+      // which is a floor known to be inadequate left in place. These are set below the
+      // measured counts so ordinary content edits do not trip them, and far enough above zero
+      // that a walk collapsing to a handful of rows is reported rather than passed.
+      const pages: { module: string; step: number; floor: number }[] = [
+        { module: 'm00', step: 2, floor: 150 },
+        { module: 'm00', step: 1, floor: 25 },
+        { module: 'm00', step: 3, floor: 18 },
+        { module: 'm00', step: 4, floor: 12 },
+        { module: 'm01', step: 2, floor: 20 },
+        { module: 'm01', step: 4, floor: 25 },
+        { module: 'm01', step: 6, floor: 39 },
+      ];
+      for (const { module, step, floor } of pages) {
+        await page.goto(`/lecture/m/${module}/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
 
         const { rows, skipped } = await painted(page, '[data-testid="lecture-root"]');
@@ -267,25 +285,18 @@ for (const size of SIZES) {
         // rest passed.
         expect(
           skipped,
-          `step ${step}: ${skipped.length} text elements whose colour could not be read: ` +
+          `${module}/${step}: ${skipped.length} text elements whose colour could not be read: ` +
             `${JSON.stringify(skipped, null, 2)}`,
         ).toEqual([]);
-        // A floor per step, measured rather than guessed: at XGA the walk reads 203 rows on the
-        // mathematics step and 33, 24 and 17 on F1, F2 and F8. `toBeGreaterThan(3)` was kept
-        // here after the oklch finding with a comment explaining why it had failed to catch it,
-        // which is a floor known to be inadequate left in place. These are set below the
-        // measured counts so ordinary content edits do not trip them, and far enough above zero
-        // that a walk collapsing to a handful of rows is reported rather than passed.
-        const floor: Record<number, number> = { 2: 150, 1: 25, 3: 18, 4: 12 };
         expect(
           rows.length,
-          `step ${step}: ${rows.length} rows measured, fewer than the ${floor[step]} this step ` +
+          `${module}/${step}: ${rows.length} rows measured, fewer than the ${floor} this step ` +
             `carries -- the walk is not reaching the slide`,
-        ).toBeGreaterThanOrEqual(floor[step]!);
+        ).toBeGreaterThanOrEqual(floor);
         const failures = rows.filter((row) => row.ratio < 7);
         expect(
           failures,
-          `step ${step}, below 7:1 as painted: ${JSON.stringify(failures, null, 2)}`,
+          `${module}/${step}, below 7:1 as painted: ${JSON.stringify(failures, null, 2)}`,
         ).toEqual([]);
       }
     });
@@ -303,8 +314,11 @@ for (const size of SIZES) {
       // mathematics is sized by KaTeX and then scaled by `fitMath.ts`, which is a different
       // mechanism with its own test above; its struts and spacers carry 1 px text that is not
       // read by anyone.
-      for (const step of [0, 1, 2, 3, 4, 5, 6]) {
-        await page.goto(`/lecture/m/m00/${step}`);
+      for (const [module, step] of [
+        ...[0, 1, 2, 3, 4, 5, 6].map((s) => ['m00', s] as const),
+        ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((s) => ['m01', s] as const),
+      ]) {
+        await page.goto(`/lecture/m/${module}/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
 
         const small = await page.evaluate(() => {
@@ -332,23 +346,24 @@ for (const size of SIZES) {
 
         expect(
           small,
-          `step ${step}: text below the deck's 18 px floor: ${JSON.stringify(small)}`,
+          `${module} step ${step}: text below the deck's 18 px floor: ${JSON.stringify(small)}`,
         ).toEqual([]);
       }
     });
 
     test('a playground step fits the panel, with its controls reachable', async ({ page }) => {
-      await page.goto('/lecture/m/m00/1');
-      const controls = page.getByTestId('playground-controls');
-      await expect(controls).toBeInViewport();
-
-      // D71 accepted 25 of the then 92 slides overflowing an XGA panel (the corpus is 95 now;
-      // the three playground steps are not in that denominator). Controls above the visual is the
-      // rule that keeps a playground off that list: the picture may be clipped, the knobs may not.
-      const box = await controls.boundingBox();
-      const height = page.viewportSize()?.height ?? 0;
-      expect(box, 'controls have a box').not.toBeNull();
-      expect(box!.y + box!.height).toBeLessThanOrEqual(height);
+      // D71 accepted 25 of the then 92 slides overflowing an XGA panel (the corpus is 98 now; the
+      // six playground steps are not in that denominator). Controls above the visual is the rule
+      // that keeps a playground off that list: the picture may be clipped, the knobs may not.
+      for (const where of ['m00/1', 'm00/3', 'm00/4', 'm01/2', 'm01/4', 'm01/6']) {
+        await page.goto(`/lecture/m/${where}`);
+        const controls = page.getByTestId('playground-controls');
+        await expect(controls, where).toBeInViewport();
+        const box = await controls.boundingBox();
+        const height = page.viewportSize()?.height ?? 0;
+        expect(box, `${where}: controls have a box`).not.toBeNull();
+        expect(box!.y + box!.height, `${where}: controls end below the panel`).toBeLessThanOrEqual(height);
+      }
     });
 
     test('capture the slide for the author to judge against a real room', async ({ page }) => {
