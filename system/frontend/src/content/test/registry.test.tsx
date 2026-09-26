@@ -142,6 +142,13 @@ describe('the playground step kind', () => {
     }
   });
 
+  it('M2 carries F3 directly after the step that teaches it', () => {
+    const meta = getMeta('m02', 'en')!;
+    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}` : ''}`)).toEqual([
+      's1:prose', 's2:math', 's3:playground/F3', 's4:prose', 's5:prose', 's6:lab', 's7:checkpoint',
+    ]);
+  });
+
   it('supplies Playground to every module body, so no MDX file imports it', () => {
     // Both locale files would otherwise carry an import line, and two import lines are two
     // places to drift. NFR-6 is about the content saying the same thing in both languages;
