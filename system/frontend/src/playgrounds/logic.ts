@@ -159,7 +159,7 @@ export function isInMergedE(graph: SceneGraph, t: Triplet, merge: Map<string, st
 
 // ---- F7: the shape of the tail --------------------------------------------------------------
 
-/** H_m^(s) = Σ_{p=1}^{m} p^(−s), the generalized harmonic number M1's s3 uses. */
+/** H_m^(s) = Σ_{p=1}^{m} p^(−s), the generalized harmonic number M1's s4 uses. */
 export function harmonic(m: number, s: number): number {
   let sum = 0;
   for (let p = 1; p <= m; p += 1) sum += p ** -s;

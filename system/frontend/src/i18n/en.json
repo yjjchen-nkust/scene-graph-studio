@@ -256,6 +256,7 @@
   "playground.x1.disjoint_no": "validation drawn from the test pool",
   "playground.x1.disjoint_unknown": "whether validation overlaps test is not stated by the source",
   "playground.x1.sources": "Sources",
+  "playground.x1.magnitude_equals": "Its magnitude equals:",
   "playground.triplet": "Triplet",
   "lab.loading": "Loading the slice…",
   "lab.unknown": "No such lab",

@@ -35,6 +35,9 @@ export function SplitReleases() {
   const a = releaseById(params['X1.r']) ?? fallback;
   const b = releaseById(params['X1.vs']) ?? releaseById(DEFAULT_B) ?? fallback;
   const label = (r: Release) => (locale === 'en' ? r.label_en : r.label_zh);
+  // Chinese takes a full-width colon with no space after it; English a colon and a space.
+  const colon = locale === 'en' ? ': ' : '：';
+  const gap = locale === 'en' ? ' ' : '';
 
   const shown = (f: Figure | undefined): string => {
     if (!f || f.value === null) return t('playground.x1.not_stated');
@@ -124,17 +127,24 @@ export function SplitReleases() {
         {equalities.map((e) => (
           <p key={e.split} data-testid={`x1-equality-${e.split}`} data-explained={String(Boolean(e.note))} className="text-[1em] text-slate-700">
             <span className="font-mono text-slate-900">
-              {t(`playground.x1.${e.split}`)}: {COUNT.format(e.x)} − {COUNT.format(e.y)} = {signed(e.d)}
+              {t(`playground.x1.${e.split}`)}{colon}{COUNT.format(e.x)} − {COUNT.format(e.y)} = {signed(e.d)}
             </span>{' '}
             {e.note ? (
-              <>{t('playground.x1.equals')} {locale === 'en' ? e.note.text_en : e.note.text_zh}{mark(e.note)}</>
+              // A negative difference is matched by its magnitude (`explain`), so it says so
+              // rather than claiming that −4,844 equals a count of 4,844 images.
+              <>
+                {t(e.d < 0 ? 'playground.x1.magnitude_equals' : 'playground.x1.equals')}
+                {gap}
+                {locale === 'en' ? e.note.text_en : e.note.text_zh}
+                {mark(e.note)}
+              </>
             ) : (
               t('playground.x1.unexplained')
             )}
           </p>
         ))}
-        <p data-testid="x1-disjoint-a" className="text-[1em] text-slate-700">{label(a)}: {disjoint(a)}</p>
-        <p data-testid="x1-disjoint-b" className="text-[1em] text-slate-700">{label(b)}: {disjoint(b)}</p>
+        <p data-testid="x1-disjoint-a" className="text-[1em] text-slate-700">{label(a)}{colon}{disjoint(a)}</p>
+        <p data-testid="x1-disjoint-b" className="text-[1em] text-slate-700">{label(b)}{colon}{disjoint(b)}</p>
         <div className="text-[0.875em] text-slate-700">
           <span className="font-medium">{t('playground.x1.sources')}</span>
           <ol data-testid="x1-sources" className="list-decimal pl-6">

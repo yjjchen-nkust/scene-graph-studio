@@ -121,8 +121,10 @@ that pins the arithmetic:
 And over `data/content/vg150_splits.json`, added 2026-09-26 for X1 (M1 design §6):
 
 12. Every release figure and note carries `source`, `url`, `locator` and a non-empty `quote`; a
-    numeric value's digits appear among its quote's digits; a `measured` row count equals its value;
-    every note has a numeric value and both texts; every release has both labels.
+    numeric value equals one whole number of its quote, named by `index` when the quote holds
+    several; coded values are within their sets; every release states all five figures; a
+    `measured` row count equals its value; every note has a numeric value and both texts; every
+    release has both labels (tightened 2026-09-26, D94).
 
 Rules 5 (the `</Step>` bound), 6 and 8 were added on 2026-09-20 after review found each of them
 passing a defect that reaches the projector; `tools/test/content_lint.test.mjs` exercises all

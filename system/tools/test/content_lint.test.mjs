@@ -37,6 +37,7 @@ const step = (id, kp) => [
 ].join('\n');
 
 /** One release with one cited figure: the smallest file rule 12 accepts. */
+const UNSTATED = { value: null, source: 'card', url: 'https://example.org/card', locator: 'Stats', quote: 'q' };
 const SPLITS = {
   $schema_version: 1,
   releases: [{
@@ -44,6 +45,7 @@ const SPLITS = {
     figures: {
       train: { value: 68538, source: 'card', url: 'https://example.org/card', locator: 'Stats',
         quote: '| train |  68 538 |' },
+      val: UNSTATED, test: UNSTATED, val_from: UNSTATED, zero_relation: UNSTATED,
     },
     notes: [],
   }],
@@ -271,7 +273,10 @@ describe('content_lint playground rules', () => {
   };
   const withFigure = (f, extra = {}) => ({
     $schema_version: 1,
-    releases: [{ id: 'r1', label_en: 'R', label_zh: 'R', figures: { train: f }, notes: [], ...extra }],
+    releases: [{
+      id: 'r1', label_en: 'R', label_zh: 'R',
+      figures: { ...SPLITS.releases[0].figures, train: f }, notes: [], ...extra,
+    }],
   });
 
   it('refuses a release figure without its source, url, locator or quote', () => {
@@ -327,5 +332,45 @@ describe('content_lint playground rules', () => {
       },
     }));
     expect(r.out).toContain("golden case for 'Z9', which has no registered component");
+  });
+
+  it('refuses a count that is only a run of digits inside a number of its quote', () => {
+    // Joining every digit of the quote let 3857 pass against "68 538 | 57 723": it straddles two
+    // numbers. A count must equal one whole number of the quote.
+    const r = lint(corpus({ splits: withFigure({ ...fig, value: 3857, quote: '| train |  68 538 | 57 723 |', index: 1 }) }));
+    expect(r.out).toContain('r1.train: value 3857 does not appear in its quote');
+  });
+
+  it('refuses a count from a quote of several numbers that does not say which one it is', () => {
+    const r = lint(corpus({ splits: withFigure({ ...fig, quote: '| **Train** | 73,538 | 68,538 |' }) }));
+    expect(r.out).toContain("r1.train: its quote holds 2 numbers; 'index' must say which one the figure is");
+  });
+
+  it('refuses a count read from the wrong column of its quote', () => {
+    // Issue #94's row is COCO then H5. Carrying the H5 figure as the COCO one names column 1 and
+    // holds column 2's number, which the joined-digit check could not see.
+    const r = lint(corpus({ splits: withFigure({ ...fig, value: 57723, quote: '| **Train** | 73,538 | 57,723 |', index: 1 }) }));
+    expect(r.out).toContain('r1.train: index 1 names 73538, not 57723');
+  });
+
+  it('accepts a count whose index names it', () => {
+    const r = lint(corpus({ splits: withFigure({ ...fig, value: 57723, quote: '| **Train** | 73,538 | 57,723 |', index: 2 }) }));
+    expect(r.ok, r.out).toBe(true);
+  });
+
+  it('refuses a coded value outside its set', () => {
+    const splits = withFigure(fig);
+    splits.releases[0].figures.val_from = { ...UNSTATED, value: 'train' };
+    splits.releases[0].figures.zero_relation = { ...UNSTATED, value: 'removed' };
+    const r = lint(corpus({ splits }));
+    expect(r.out).toContain("r1.val_from: 'train' is not one of trainval, test, or null");
+    expect(r.out).toContain("r1.zero_relation: 'removed' is not one of kept, dropped, or null");
+  });
+
+  it('refuses a release that leaves a figure out rather than saying it is not stated', () => {
+    const splits = withFigure(fig);
+    delete splits.releases[0].figures.test;
+    const r = lint(corpus({ splits }));
+    expect(r.out).toContain("r1: no 'test'. A figure the source does not state is null, with its passage.");
   });
 });

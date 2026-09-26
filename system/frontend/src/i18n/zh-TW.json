@@ -256,6 +256,7 @@
   "playground.x1.disjoint_no": "驗證集取自測試影像池",
   "playground.x1.disjoint_unknown": "驗證集是否與測試集重疊，來源未載明",
   "playground.x1.sources": "出處",
+  "playground.x1.magnitude_equals": "其絕對值等於：",
   "playground.triplet": "三元組",
   "lab.loading": "正在載入切片……",
   "lab.unknown": "查無此實作單元",

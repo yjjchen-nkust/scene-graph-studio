@@ -8,9 +8,3 @@
  */
 export const PREDICATE_GROUP: readonly string[] = ['on', 'above', 'over', 'sitting on'];
 export const OBJECT_GROUP: readonly string[] = ['man', 'person', 'people'];
-
-/**
- * VG-150's predicate count, as Xu et al. 2017 §4 states it: "we use the most frequent 150 object
- * categories and 50 predicates". Shown beside the slice's own count and labelled with its origin.
- */
-export const VG150_PREDICATES = 50;

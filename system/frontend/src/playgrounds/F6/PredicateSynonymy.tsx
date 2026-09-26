@@ -112,7 +112,9 @@ export function PredicateSynonymy() {
             value={String(edge.relationship_id)}
             options={edges.map((r) => ({
               value: String(r.relationship_id),
-              label: `${nameOf(frame, r.subject_id)} ${r.predicate} ${nameOf(frame, r.object_id)}`,
+              // With object ids: frame 2008 carries "pillow on bed" five times, between different
+              // pillows and beds, and five identical options cannot be chosen between.
+              label: `${nameOf(frame, r.subject_id)} #${r.subject_id} ${r.predicate} ${nameOf(frame, r.object_id)} #${r.object_id}`,
             }))}
             onChange={(next) => setParams({ 'F6.rel': Number(next), 'F6.sub': HEAD })}
           />

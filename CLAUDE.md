@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation and §17 the M1 playgrounds), and all 93 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds and §18 the M1 minors), and all 94 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -50,7 +50,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-22` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D93` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D94` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` is frozen** (2026-09-15) and was harvested into `data/content/`
   as the seed corpus. Do not extend it. Its `pg.js evaluate()` is a teaching toy over fifteen

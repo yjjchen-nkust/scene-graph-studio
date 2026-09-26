@@ -31,8 +31,8 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-19-playgrounds-m0.md` | The `playground` step kind, F1, F2, F8, the golden file, the lint rules | **executed** |
 | `superpowers/plans/2026-09-26-playgrounds-m1.md` | X1's cited figures, rules 9 and 12, the corrections, F6, F7, X1 | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D93. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16) and the M1 playgrounds (§17)** | live |
+| `../DEVIATIONS.md` | **D1…D94. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17) and the M1 minors (§18)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
 
@@ -289,8 +289,8 @@ projector test reports any word an ancestor cuts off. M1 went from 6
 steps to 9, the corpus from 95 to 98. See D93 and VERIFICATION §17.
 
 **Verification.** `npm run ci` green, 2026-09-26: **266 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 13 agree, i18n 275 keys both locales,
-**699 vitest** in 59 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+compare the requirement files to the interpreter), parity 13 agree, i18n 276 keys both locales,
+**716 vitest** in 59 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 43 symbols, 22 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,
@@ -356,6 +356,7 @@ until they had already happened.
 | A test suite is an instrument too: a fixture with one module and one locale cannot express a cross-module or cross-locale defect, so those rules can be deleted with the suite green, until each rule is disabled in turn | `DEVIATIONS.md` D92, `VERIFICATION.md` §16 |
 | A correction recorded in a deviation is not a correction of the document that carried the error, which keeps printing it | `DEVIATIONS.md` D92 |
 | A binding decision can describe an artefact the project never obtained, and nothing compares the two | `DEVIATIONS.md` D93 |
+| Comparing a count with every digit of its quote run together passes a figure from the wrong column, and one straddling two numbers | `DEVIATIONS.md` D94 |
 | An `overflow: hidden` box inside a scrolling step hides words no scroll can reach, and a contrast walk that asks only whether a word is painted measures them as passing | `DEVIATIONS.md` D93, `VERIFICATION.md` §17 |
 | A figure repeated across a page, a brief and a decision from one early reading is wrong everywhere at once, and only opening the source finds it | `DEVIATIONS.md` D93, `FROZEN.md` 2026-09-26 |
 | A framework that sizes in rem puts its text at the document root, not at the shell the component is mounted in, so a 24 px lecture can contain 14 px type | `DEVIATIONS.md` D88 |

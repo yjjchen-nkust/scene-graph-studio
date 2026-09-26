@@ -2785,3 +2785,74 @@ in 55 before), parity 13, **i18n 275 keys** both locales, content lint clean ove
 **22 playground cases** and **25 release figures**, ruff clean, standalone current at 250
 equations, frontend builds 763 modules. `npm run test:e2e` **48** (39 before). `npm run
 check:perf` **20** (17 before).
+
+## D94 — the final review's deferred findings, resolved
+
+**Plan:** none. The minor findings D93's final review deferred, resolved at the author's request
+on 2026-09-26, together with a trim of M1's long playground steps. Branch `fix/sgs-m1-minors`.
+
+**The long steps, trimmed rather than split.** The text above each M1 playground is one sentence
+now; what it had said at length is in the presenter notes, and the no-hierarchy point of F6 is
+kept in its one sentence. Overflow past the panel, before and after:
+
+| Step | 1024×768 | 1280×800 | 1920×1080 |
+|---|---|---|---|
+| s3, F6 | 214 → **56** | 148 → **29** | 0 → 0 |
+| s5, F7 | 306 → **188** | 183 → **105** | 0 → 0 |
+| s7, X1 | 514 → **475** | 326 → **326** | 0 → 0 |
+
+X1 is mostly its table and its sources, which do not shorten. What remains is for the author's
+decision, in D71's form; every word is reachable by the step's scroll.
+
+**Rule 12 compared a count with every digit of its quote run together, and so passed two kinds of
+wrong figure.** A number straddling two others passed: 3857 against "68 538 | 57 723". And a figure
+read from the wrong column passed: 57,723 carried as issue #94's COCO count, which is its H5 count,
+because both are in the row. A count must now equal one whole number of its quote, thousands
+separated by a comma or a single space, and a quote holding several numbers must say by `index`
+which one the figure is; twelve figures in `vg150_splits.json` gained an index, each naming the
+column the figure is read from. Coded values are checked against their sets (`trainval`,
+`test`; `kept`, `dropped`; or null), and a release that leaves a figure out is refused, since a
+missing key rendered "not stated by the source" with no source behind it. Six tests were written
+first and five failed; the sixth, for the straddling number, passed the old rule, because its
+first value, 3853, is not a substring of the joined digits. A test that passes before the fix
+proves nothing about the fix, so it carries 3857 now, which the old rule accepted and the new one
+refuses. On the real file every multi-number figure failed until indexed, and a wrong index was
+watched failing: `sgb-v1.train: index 2 names 57723, not 73538`. Disabled clause by clause, the
+suite catches 10 of 10.
+
+**X1's wording.** A negative difference is matched to its note by magnitude, so it now reads "Its
+magnitude equals:" (「其絕對值等於：」) instead of claiming that −4,844 equals a count of 4,844
+images. And the Chinese build had carried the English separators: an ASCII colon after the split
+name (「訓練集: 68,538」), a space after 「此值等於：」, and an ASCII colon in both disjointness
+lines. It takes full-width colons with no space now, and a test states it.
+
+**v1's label** read "withdrawn" (「已撤回」). The card says "A previous version of this dataset
+had a bug … This has been fixed"; it does not say the version was withdrawn. The label now reads
+"earlier version, since fixed" (「先前版本，已修正」). The spec, D93 and `FROZEN.md` keep the
+word as they wrote it on the day.
+
+**F6 from the podium.** The edge chooser's options carry object ids, because frame 2008 offered
+five indistinguishable "pillow on bed" options between different pillows and beds. The presenter
+notes start on the frame F6 opens with, 1039, "light above woman", where they had sent the
+lecturer to find frame 228 among 66 bare ids.
+
+**Code.** The unused `VG150_PREDICATES` export is removed; the i18n string carries the cited 50.
+A comment in `logic.ts` named M1's s3 where the step is now s4.
+
+**Tests.** Eleven component tests: the 繁體中文 readouts of F6, F7 and X1; no focus on mount for
+each; F6 given a frame that exists but carries no group edge (1139), and which frame it falls back
+to; X1 given an unknown comparison release; F7 given a head larger than its class count. They
+cover behaviour that already existed and passed on first run; the F6 fallback test was confirmed
+to fail with the group-edge condition removed.
+
+**README.** Two open items were stale: the overflow count, which predated the playgrounds, and
+"presenter notes exist for M0 only", closed by D76 on 2026-09-19.
+
+**Kept, and why.** The `sources` array of `vg150_splits.json`, which no code reads, records the
+card's revision and hash that spec §10 required; it is for the reader who checks whether the card
+has changed.
+
+**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **716 vitest in 59 files**, parity
+13, **i18n 276 keys** both locales, content lint clean over 13 golden cases, 22 playground cases and
+25 release figures, ruff clean, standalone current at 250 equations, frontend builds 763 modules.
+`npm run test:e2e` **48**. `npm run check:perf` **20**.

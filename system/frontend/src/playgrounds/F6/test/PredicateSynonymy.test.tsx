@@ -68,7 +68,25 @@ describe('F6', () => {
 
   it('a frame from the URL that does not exist falls back to the teaching frame', () => {
     at('?F6.img=no-such-frame');
+    expect(screen.getByTestId('F6.img')).toHaveValue('1039');
+    expect(screen.getByTestId('f6-annotated')).toHaveTextContent('light above woman');
     expect(screen.getByTestId('f6-status')).toHaveAttribute('data-recorded', 'false');
+  });
+
+  it('a frame that exists but carries no group edge also falls back to the teaching frame', () => {
+    // Frame 1139 is in the slice and has no edge from the merge group, so it offers nothing to
+    // substitute into; the panel must not blank on it.
+    at('?F6.img=1139');
+    expect(screen.getByTestId('F6.img')).toHaveValue('1039');
+    expect(screen.getByTestId('f6-annotated')).toHaveTextContent('light above woman');
+  });
+
+  it('every edge option can be told apart, even where a frame repeats a sentence', () => {
+    // Frame 2008 carries "pillow on bed" five times, between different pillows and beds.
+    at('?F6.img=2008');
+    const labels = [...screen.getByTestId('F6.rel').querySelectorAll('option')].map((o) => o.textContent);
+    expect(new Set(labels).size).toBe(labels.length);
+    expect(labels).toContain('pillow #27 sitting on bed #1');
   });
 
   it('never says true, false, correct or wrong', () => {
@@ -80,5 +98,18 @@ describe('F6', () => {
   it('shows no metric', () => {
     const { container } = at('?F6.mp=1');
     expect(container.textContent ?? '').not.toMatch(/\bmR\b|R@|recall/i);
+  });
+
+  it('reads in 繁體中文 with the same numbers', () => {
+    setLocale('zh-TW');
+    at('?F6.mp=1');
+    expect(screen.getByTestId('readout-F6.predicates')).toHaveTextContent('使用中之 predicate 類別數');
+    expect(value('F6.predicates')).toHaveTextContent(/^33$/);
+    expect(screen.getByTestId('f6-status')).toHaveTextContent('此邊收錄於 E′');
+  });
+
+  it('does not take focus when it mounts', () => {
+    at();
+    expect(document.activeElement).toBe(document.body);
   });
 });
