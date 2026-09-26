@@ -345,9 +345,13 @@ pass. The branch is merged by the user, not by the cycle.
 
 ## 10. Open items
 
-* **Issue #94's figures** were read through a summarising fetch. The plan's first task opens the
-  issue and quotes them verbatim. If any differs from §2, the reconciliation table and the golden
-  cases follow the verbatim figure, and D93 records the difference.
-* **The card's URL and revision.** The card on disk is dated 2026-09-16 by its file time. The plan
-  records the upstream URL and, if the host exposes one, the revision, so a later reader can tell
-  whether the card has changed since.
+None. Both items this section listed were closed on 2026-09-26, while the plan was written:
+
+* **Issue #94's figures**, read through a summarising fetch at first, were re-read verbatim through
+  the GitHub API: `| **Train** | 73,538 | 57,723 |`, `| **Val** | 4,844 | 5,000 |`,
+  `| **Test** | 27,032 | 26,446 |`. They match §2. The issue was opened 2026-07-15T14:12:53Z and
+  is closed.
+* **The card's URL and revision.** `https://huggingface.co/datasets/maelic/VG150-coco-format`,
+  revision `ea6fb3a56a0876eee98165ea17792fc6ec8460e6`, last modified 2026-07-16T15:49:20Z. The
+  upstream README is byte-identical to the local copy (SHA-256 `6fe84d86…a5f15`), so the card
+  quoted in §2 is the card the corpus was published with.
