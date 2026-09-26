@@ -2976,3 +2976,99 @@ them. The M1 spec's rule 12 and golden table now say what was built.
 before), parity 13, i18n 276 keys both locales, content lint clean over 13 golden cases, 22
 playground cases and 25 release figures, ruff clean, standalone current at 250 equations,
 frontend builds 763 modules. `npm run test:e2e` **48**. `npm run check:perf` **20**.
+
+## D96 — the long playgrounds split across steps, and triplets counted as a set
+
+**Plan:** `specs/2026-09-26-split-and-distinct-design.md`. **Decisions:** the author's, on
+2026-09-26, on D95's open items: split the long playground steps across steps with shared knobs;
+count distinct triplets; read the runner's logs once signed in to Gitea. Branch
+`feat/sgs-split-distinct`, from `fix/sgs-m1-review`.
+
+**A step split alone could not end the overflow.** At 1024×768 a step shows 561 px in 繁體中文 and
+517 px in English, and in its longest state each long playground's frame alone was taller: F1 705,
+F6 730, F7 577, X1 998 px in 繁體中文. Moving each step's sentence into a step of its own, which is
+what D71 meant by a split, would have left every one past the panel. The playground itself is
+divided.
+
+**Parts.** A playground may span consecutive steps: each declares `part: n` beside its `kp`, its
+tag carries `part="n"`, and `PLAYGROUND_PARTS` in `mounts.tsx` gives each split point its count.
+The stepper carries the query string, and with it the knobs, from one step to the next only when
+both mount the same point, so the release chosen on X1's first part is the one its second and
+third explain; every other step change still opens on defaults. A part shows the controls its own
+view reads. `<Playground>` names a part the table does not give on the slide, as it names an
+unknown point. The study page renders every part, one frame each. Contracts §2.4 and rules 4, 5,
+7 and 8 are amended; eight fixture tests were written first and failed, and the seven clauses they
+guard, disabled one at a time, are caught 7 of 7.
+
+| kp | Part 1 | Part 2 | Part 3 |
+|---|---|---|---|
+| F1 | the picture and its three layers, every annotated edge drawn | the density, the vocabulary, the four readouts | |
+| F6 | the two merges and the three class readouts | the predicate merge and one edge's membership | |
+| F7 | s, C and k; the model's readouts and bars | the slice's measured share and bars against the model | |
+| X1 | the counts of both releases, their differences, Xu's pool | the sentences the differences equal | where validation is drawn from, and images with no relation |
+
+**X1 took three parts, where the decision was two.** Its second part as first built carried the
+sentences, the provenance rows, two disjointness lines and their sources, and ran 387 px past the
+panel in 繁體中文 with v1 against v2; no layout within the 18 px floor brought that under 561 px.
+The provenance became a third part, one line a release, which also removed the table row that
+said a second time where validation is drawn from. The mechanism is the same, parts 1 to N.
+
+**F7's second part shows the slice without a toggle.** It is the comparison, so the overlay is
+simply on there, and the first part shows the model alone; the toggle belongs to the whole
+playground on the study page.
+
+**Layout, within the 18 px floor.** F6's readouts stand in three columns from 1024 px; F7's
+sliders are 96 px wide and share a row, its note on s shares the key's line, and its line sending
+the room to L3 stays on the study page, where the first part's sentence and both notes already
+say it; X1's release choices share a row, each capped at 20rem, its figures and differences do not
+wrap, its header is 0.875em, its cells lose 2 px of padding, its "not stated" cells are set in the
+text face, its sources run as one line, and `not both counts` / 「非皆為張數」 replaces a label
+that wrapped to three lines.
+
+**Result, px past the panel at 1024×768, longest state, 繁體中文 / English:**
+
+| Playground | Before (D95) | Part 1 | Part 2 | Part 3 |
+|---|---|---|---|---|
+| F1 | 387 / 470 | 0 / 0 | 0 / 0 | |
+| F6 | 334 / 475 | 0 / 28 | 0 / 0 | |
+| F7 | 188 / 410 | 0 / 81 | 0 / 74 | |
+| X1 | 619 / 880 | 0 / 163 | 0 / 69 | 0 / 46 |
+
+At 1280×800 every part is 0 in 繁體中文, and in English only F7's first part, 5 px. At 1920×1080
+every part is 0 in both. The projector suite now asserts, at all three sizes, that each part fits
+in its longest state. F2 and F8 stay one step each: 24 and 27 px in 繁體中文, 107 and 161 in
+English. VERIFICATION §20 has every state measured.
+
+**Content.** M0 went from 7 steps to 8 and M1 from 9 to 13; the corpus holds 103 steps a locale
+and 206 presenter notes. Budgets are kept: F1, F6 and F7 were 180 s each and are 90 + 90; X1 was
+180 and is 60 + 60 + 60. Each part carries its own notes in both locales, saying that the knobs
+carry over from the previous step. The steps after each split were renumbered, and F7's note now
+names s5 as the step that proved R = mR.
+
+**Triplets are counted as a set.** E is a set, and F6's membership panel treats it as one, but F6
+and F7 counted relationship rows: 208 of the slice's 892 repeat another (s, p, o) in the same
+frame. `predicateLabels` now yields one label per distinct triplet of a frame, after any merge,
+because a merge can make two rows of one pair the same triplet of E′. Two pairs do: frame 150289,
+clock #1 above and on pole #11; frame 2008, pillow #27 on and sitting on bed #1. F6 writes the
+merged count as `on 248 + above 11 + over 5 + sitting on 10 − 2 = 272` and says in a sentence what
+the 2 are; the object names are counted per object and do not change.
+
+| Figure | Before (rows) | After (distinct triplets) |
+|---|---|---|
+| Triplets | 892 | 684 |
+| `on` | 382 | 248 |
+| Merged `on` group | 408 | 272 |
+| Top three | on 382, has 68, near 59 = 509 | on 248, near 54, has 51 = 353 |
+| Top-1 share | 42.83% | 36.26% |
+| Top-3 share | 57.06% | 51.61% |
+
+Three golden cases are re-derived, with their arithmetic written out, and the presenter notes of
+F6 and F7 quote the new figures. Nine tests were written first and failed.
+
+**The runner's logs.** At the time of writing the browser this session drives was not signed in to
+Gitea, so runs 1 to 3 remain unread; D95 item 3 stays open.
+
+**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **751 vitest in 60 files** (724
+before), parity 13, **i18n 277 keys** both locales, content lint clean over 13 golden cases, 22
+playground cases and 25 release figures, ruff clean, standalone current at 250 equations, frontend
+builds 763 modules. `npm run test:e2e` **52** (48 before). `npm run check:perf` **20**.

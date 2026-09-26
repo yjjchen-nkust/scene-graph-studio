@@ -858,3 +858,63 @@ Commit statuses read through the Gitea API on 2026-09-26. The logs need a signed
 | 6, 7 | CI, scene-graph-studio | `677c801`, 2026-09-26 | waiting to run |
 
 §14 made the gate pass on a POSIX runner; this track's workflow has not yet passed on this one.
+
+## 20. The split playgrounds and distinct triplets — measured, 2026-09-26
+
+D96. Every number below is from the run that produced it, on branch `feat/sgs-split-distinct`.
+
+| Step | Result |
+|---|---|
+| pytest | 266 passed, 7 skipped |
+| vitest | **751 passed in 60 files** (724 before) |
+| parity | 13 cases agree |
+| i18n parity | **277 keys**, both locales complete |
+| content lint | 13 golden cases, 22 playground cases, 25 release figures, clean; 103 steps a locale |
+| standalone | up to date, 250 equations |
+| frontend build | 763 modules |
+| `npm run test:e2e` | **52 passed** (48 before) |
+| `npm run check:perf` | 20 passed |
+
+### Every part, every state
+
+Measured as §17's table was, over the production build. Pixels past the panel, the largest over
+the states listed, 繁體中文 / English.
+
+| Step | States measured | 1024×768 | 1280×800 | 1920×1080 |
+|---|---|---|---|---|
+| M0 s2, F1 part 1 | default; every layer off | 0 / 0 | 0 / 0 | 0 / 0 |
+| M0 s3, F1 part 2 | default; \|P\| 50 | 0 / 0 | 0 / 0 | 0 / 0 |
+| M0 s5, F2 | default | 24 / 107 | 0 / 0 | 0 / 0 |
+| M0 s6, F8 | default | 27 / 161 | 0 / 0 | 0 / 0 |
+| M1 s3, F6 part 1 | each merge, both, neither | 0 / 28 | 0 / 0 | 0 / 0 |
+| M1 s4, F6 part 2 | default; merged; frame 2008 merged | 0 / 0 | 0 / 0 | 0 / 0 |
+| M1 s6, F7 part 1 | default; 50 classes, k 50 | 0 / 81 | 0 / 5 | 0 / 0 |
+| M1 s7, F7 part 2 | default; 50 classes, k 50 | 0 / 74 | 0 / 0 | 0 / 0 |
+| M1 s9, X1 part 1 | all 16 ordered release pairs | 0 / 163 | 0 / 0 | 0 / 0 |
+| M1 s10, X1 part 2 | all 16 ordered release pairs | 0 / 69 | 0 / 0 | 0 / 0 |
+| M1 s11, X1 part 3 | all 16 ordered release pairs | 0 / 46 | 0 / 0 | 0 / 0 |
+
+English's largest figures at 1024×768 are F6 with the predicate merge, F7 at its default, X1 part 1
+with Xu against v1, part 2 with v1 against v2, and part 3 with Xu against the canonical protocol.
+The lecture header wraps to two lines in English at that width, which is why its step is 517 px.
+§19's figures, which this table replaces for the playground steps, stay as they were measured.
+
+### The part rules by mutation
+
+| Clause | Caught |
+|---|---|
+| rule 4: a part named for a playground not split | yes |
+| rule 4: a part beyond those registered | yes |
+| rule 4: a split playground's step naming no part | yes |
+| rule 5: the tag's part equal to the step's | yes |
+| rule 5: one tag a part in a module | yes |
+| rule 7: the part the same in both locales | yes |
+| rule 8: parts consecutive, in order, in one module | yes |
+
+7 of 7, by the method of §19.
+
+### NFR-8
+
+`npm run check:perf`, exit 0, 20 tests. The six playground cases, each on the part that carries
+its knob: F1 33.0 ms, F2 32.0, F8 33.0, F6 31.8, F7 32.2, X1 32.8, every one within a frame of its
+two-frame floor.
