@@ -101,6 +101,13 @@ describe('X1', () => {
     expect(screen.getByTestId('x1-disjoint-a')).toHaveTextContent('（現行；本機語料）：驗證集與測試集互不重疊');
   });
 
+  it('separates a source from its locator with the locale\'s comma', () => {
+    setLocale('zh-TW');
+    at();
+    expect(screen.getByTestId('x1-sources')).toHaveTextContent('vg150-sgb card，Dataset statistics');
+    expect(screen.getByTestId('x1-sources')).not.toHaveTextContent(', ');
+  });
+
   it('does not take focus when it mounts', () => {
     at();
     expect(document.activeElement).toBe(document.body);

@@ -16,6 +16,9 @@ except for the two amendments §6 states and the in-place annotations §3 lists.
 25. `assignment.json` gives M1 three of them: **F6** (predicate synonymy), **F7** (the long-tail
 distribution) and **X1** (the VG150 splits). M1 teaches them at steps s2 (math), s3 (math) and s4
 (prose). M1 also cites F5, which M0 cites too and neither owns; it is not in this cycle.
+[**Step ids as of this spec.** The plan's Task 8 renumbered M1 when the playgrounds were mounted:
+the three steps are s2, s4 and s6 now, and F6, F7 and X1 are s3, s5 and s7, so §5.2's "after s3"
+is after s4 and §5.3's "after s4" is after s6 (D95).]
 
 ### Decisions locked with the user, 2026-09-26
 
@@ -261,6 +264,12 @@ playground compute 0.7 × 108,077: that would assert a split size the paper does
 **Computes**, for the compared pair: the per-split difference, only where both figures exist, and
 states which sentence of the sources that difference equals, as in §2's reconciliation table. One
 set membership: is val disjoint from test? `sgb-v1` no, `sgb-v2` yes, each with its quotation.
+[**Amended 2026-09-26 (D95):** "`sgb-v1` no" claims an overlap no source states. The card states
+where v1's validation was drawn from, the test pool, and v1's validation and test partition that
+pool (27,032 + 4,844 = 31,876). As built, `valPool` returns the pool the source names, and X1
+reads "validation drawn from the test pool" for v1 and "validation is disjoint from test" where the
+card says so. A sentence explains a difference only on the split it is about, so each note carries
+`split`.]
 
 ---
 
@@ -274,7 +283,13 @@ same commit.
 **Rule 12 is added.** Every figure in `vg150_splits.json` carries `source`, `locator` and a
 non-empty `quote`; a numeric `value`'s digits appear among the quote's digits, which catches a
 transcription error mechanically (`68538` against "68 538"); a `null` carries the locator of the
-passage that does not state it.
+passage that does not state it. [**Amended 2026-09-26 (D94):** as built, a figure also carries
+`url`, and a count must equal one whole number of its quote, named by `index` when the quote holds
+several, because comparing digits run together passed a figure from the wrong column and one
+straddling two numbers. Coded values are checked against their sets, and every release states all
+five figures. M0 design §2.4 rule 12 holds the current wording.] [**Amended again, 2026-09-26
+(D95):** a share such as Xu's "70%" must appear in its quote as written, and every note names the
+split it explains.]
 
 Both rules get fixture tests in `tools/test/content_lint.test.mjs`, and §16's mutation method is run
 over all twelve rules. None may be missed.
@@ -285,7 +300,8 @@ over all twelve rules. None may be missed.
 
 **Arithmetic.** `playgrounds/logic.ts` gains pure functions: the merge map and the counts it
 yields, membership under a merge, head share, tail ratio, split differences and val–test
-disjointness. Each has unit tests.
+disjointness. Each has unit tests. [As built (D95): the pool validation is drawn from, in place of
+a disjointness verdict; see §5.3.]
 
 **Golden cases**, each `why` writing out its arithmetic:
 
@@ -300,6 +316,12 @@ disjointness. Each has unit tests.
 | X1 | v2 train − canonical train | 10,815 | 68,538 − 57,723 |
 | X1 | v1 train − v2 train | 5,000 | 73,538 − 68,538 |
 | X1 | v2 test − v1 test | 4,844 | 31,876 − 27,032 |
+
+[**As built, 2026-09-26:** `data/content/playground_golden.json` pins the last pair the other way
+round. `pg-X1-v1-v2-test` compares `sgb-v1` with `sgb-v2` and expects a difference of −4,844,
+explained by 4,844: X1 matches a negative difference to its note by magnitude (D94). The file
+holds thirteen M1 cases, five for F6, three for F7 and five for X1, where this table plans nine;
+the fifth X1 case, `pg-X1-xu-canonical-train`, pins Xu's difference as `null`.]
 
 **Structure, in jsdom.** Each component renders its readouts in both locales, and nothing takes
 focus on mount. `registry.test.tsx` pins M1's new step ids as it pins M0's.

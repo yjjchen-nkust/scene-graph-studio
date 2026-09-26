@@ -39,6 +39,12 @@ describe('F7', () => {
     expect(screen.getByTestId('readout-F7.measured')).toHaveTextContent('509 / 892');
   });
 
+  it('at k = 1 the overlay shows the figure s5\'s presenter note quotes', () => {
+    at('?F7.measured=1&F7.k=1');
+    expect(value('F7.measured')).toHaveTextContent(/^42\.83%$/);
+    expect(screen.getByTestId('readout-F7.measured')).toHaveTextContent('382 / 892');
+  });
+
   it('the overlay is off until asked for', () => {
     at();
     expect(screen.queryByTestId('readout-F7.measured')).toBeNull();

@@ -85,7 +85,7 @@ function corpus({
   write('data/content/kp.json', JSON.stringify([{ id: 'F1' }, { id: 'F2' }, { id: 'Z9' }]));
   write('data/content/assignment.json', JSON.stringify({ modules: assignment }));
   write('data/content/papers.json', JSON.stringify([]));
-  write('data/content/vg150_splits.json', JSON.stringify(splits));
+  if (splits !== null) write('data/content/vg150_splits.json', JSON.stringify(splits));
   write('data/content/playground_golden.json', JSON.stringify(golden ?? {
     cases: [{
       id: 'pg-1', kp: 'F1', image_id: 'x', knobs: { a: 1 }, expect: { b: 2 },
@@ -291,11 +291,19 @@ describe('content_lint playground rules', () => {
     expect(r.out).toContain('r1.train: value 68583 does not appear in its quote');
   });
 
-  it('accepts a null or a share, which have no digits to check, but not without a quote', () => {
+  it('accepts a null, but not without a quote', () => {
     expect(lint(corpus({ splits: withFigure({ ...fig, value: null }) })).ok).toBe(true);
-    expect(lint(corpus({ splits: withFigure({ ...fig, value: '70%' }) })).ok).toBe(true);
     const r = lint(corpus({ splits: withFigure({ ...fig, value: null, quote: '' }) }));
     expect(r.out).toContain("r1.train: no 'quote'");
+  });
+
+  it('accepts a share its quote states word for word, and refuses one it does not', () => {
+    // Xu's 70% and 30% are shown to students as they are; a share has no whole number to match,
+    // so it is matched as written.
+    const xu = { ...fig, quote: 'We use 70% of the images for training and the remaining 30% for testing.' };
+    expect(lint(corpus({ splits: withFigure({ ...xu, value: '70%' }) })).ok).toBe(true);
+    const r = lint(corpus({ splits: withFigure({ ...xu, value: '75%' }) }));
+    expect(r.out).toContain("r1.train: '75%' does not appear in its quote");
   });
 
   it('refuses a measurement that disagrees with the figure it measures', () => {
@@ -310,11 +318,25 @@ describe('content_lint playground rules', () => {
     expect(r.out).toContain("r1.notes[0]: no 'text_zh'");
   });
 
+  it('refuses a note that does not name the split it explains', () => {
+    const note = { ...fig, value: 68538, text_en: 'kept', text_zh: 'kept' };
+    expect(lint(corpus({ splits: withFigure(fig, { notes: [{ ...note, split: 'train' }] }) })).ok).toBe(true);
+    const r = lint(corpus({ splits: withFigure(fig, { notes: [note, { ...note, split: 'trainval' }] }) }));
+    expect(r.out).toContain("r1.notes[0]: 'split' must be one of train, val, test");
+    expect(r.out).toContain("r1.notes[1]: 'split' must be one of train, val, test");
+  });
+
   it('refuses a release without both labels, and a file with no releases', () => {
     const r = lint(corpus({ splits: withFigure(fig, { label_zh: '' }) }));
     expect(r.out).toContain("r1: no 'label_zh'");
     const empty = lint(corpus({ splits: { $schema_version: 1, releases: [] } }));
     expect(empty.out).toContain('vg150_splits.json: no releases');
+  });
+
+  it('refuses a missing release file, and one of a schema version it does not know', () => {
+    expect(lint(corpus({ splits: null })).out).toContain('vg150_splits.json: missing');
+    const future = lint(corpus({ splits: { ...SPLITS, $schema_version: 2 } }));
+    expect(future.out).toContain('vg150_splits.json: unknown schema version');
   });
 
   it('refuses a golden case whose expect is empty', () => {

@@ -2698,6 +2698,9 @@ four findings, recorded in spec §2 and acted on in Task 3.
    codebase" by a lint. Enforcement is the `DatasetId` literal and
    `test_bare_vg150_is_not_a_dataset`; bare VG150 appears in the prose of M01, M02, M04, M08 and
    M09 as the published benchmark's name. s4 now says what is enforced.
+   [**Corrected 2026-09-26 (D95):** "s4" in findings 1 and 3 is the step's id when the finding was
+   made. Task 8 renumbered M1 when the playgrounds were mounted; the VG150 step is s6 now, and s4
+   is F7's math step.]
 4. **The frozen X1's figures.** "SGG-Bench" 73,538 / 27,032 / 4,844 was the withdrawn v1 release;
    "Xu et al." 75,651 / 32,422 are not in Xu et al. 2017; the note's four figures (65.3, 64.6,
    31.0, 25.1) were verified by no table in this corpus and are removed. `FROZEN.md`, 2026-09-26.
@@ -2866,3 +2869,110 @@ has changed.
 13, **i18n 276 keys** both locales, content lint clean over 13 golden cases, 22 playground cases and
 25 release figures, ruff clean, standalone current at 250 equations, frontend builds 763 modules.
 `npm run test:e2e` **48**. `npm run check:perf` **20**.
+
+## D95 — the review of the day's merges: F6's status under its clip, and what surrounded it
+
+**Plan:** none. A review of `66281fb..677c801` on 2026-09-26, the day's four merges, by two
+reviewers: one over code, tests and data, one over the documents against the repository. Every
+figure below was re-measured here before it was acted on. Branch `fix/sgs-m1-review`.
+
+**F6's status line sat under the frame's clip in the state its step exists to show.** F6 renders
+words and figures only, yet it kept the frame's default `clip`. Ticking a merge writes the class
+count out as a sum, the readout row wraps, and the visual grows past the 46vh clip: at 1024×768
+and 1280×800 the line 「此邊收錄於 E′」 was rendered, legible and beyond every scroll. D93's
+`clipped()` test measured F6 in its default state only, the one state in which that line cleared
+the clip, although its comment said "each at its longest configuration". The entry is now
+`m01/2?F6.mp=1&F6.mo=1`. Watched to fail before the fix at XGA and WXGA, passing at 1920×1080;
+passing at all three after it. F6 passes `clip={false}`, as F1, F7 and X1 do.
+
+**D94's acceptance was measured at one configuration.** Its 56 / 188 / 475 px at XGA are each
+step's default state in 繁體中文, and the method of VERIFICATION §17 reproduces them exactly. The
+same method over every configuration and both locales, in px past the panel:
+
+| Step | State | 1024×768 zh-TW / en | 1280×800 zh-TW / en | 1920×1080 zh-TW / en |
+|---|---|---|---|---|
+| s3, F6 | default | 56 / 336 | 29 / 31 | 0 / 0 |
+| s3, F6 | both merges | 334 / 475 | 168 / 170 | 0 / 0 |
+| s5, F7 | default | 188 / 271 | 105 / 156 | 0 / 0 |
+| s5, F7 | overlay on | 188 / 410 | 105 / 156 | 0 / 0 |
+| s7, X1 | default, v2 against canonical | 475 / 714 | 326 / 443 | 0 / 0 |
+| s7, X1 | longest of the 16 ordered pairs | 619 / 880 | 531 / 587 | 39 / 78 |
+
+The longest X1 pair differs by cell; VERIFICATION §19 names each. M0's three, never re-measured
+after D93 took F1's readouts out from under the clip, in their default states:
+
+| Step | 1024×768 zh-TW / en | 1280×800 zh-TW / en | 1920×1080 zh-TW / en |
+|---|---|---|---|
+| s2, F1 | 387 / 470 | 355 / 355 | 0 / 0 |
+| s4, F2 | 24 / 107 | 0 / 0 | 0 / 0 |
+| s5, F8 | 27 / 161 | 0 / 0 | 0 / 0 |
+
+D88 recorded F1 at 146 px before that change. Every word in these states is now within the step's
+scroll, so they are D71's kind of item rather than defects. D94's acceptance stands for the
+states it measured; the rest are recorded for the author. The projector suite seeds 繁體中文, so
+English was measured only here.
+
+**The brief kept "withdrawn".** D94 relabelled v1 because the card says a previous version "had a
+bug" that "has been fixed", and kept the word only in dated records. Item 01 of the brief is not a
+record; it read "its withdrawn first release" and 「其已撤回之首版」, and "first" is not in the
+source either. It reads "an earlier release, since fixed" and 「其先前版本（已修正）」, as v1's label
+does, and the standalone build is regenerated.
+
+**X1's explanations were bound to a magnitude alone.** `explain` returned any note of either
+release whose value equalled the difference, on whatever split the difference was. Every current
+pair was right, but a release added later with a train difference of 4,844 would have been told it
+was v1's validation images. Each note now names its split, `explain` matches on it, rule 12
+refuses a note without one, and a test walks every note and requires some ordered pair of releases
+to reach it on its own split, so a note tagged with the wrong split fails.
+
+**`valDisjointFromTest(sgb-v1)` returned false, a claim no source makes.** v1's validation was
+drawn from the test pool, and its validation and test partition that pool: 27,032 + 4,844 =
+31,876. The rendered line, "validation drawn from the test pool", was accurate; the function's
+name, its test and spec §5.3 were not. It is `valPool` now and returns the pool the card names;
+spec §5.3 is amended.
+
+**Rule 12 checked counts and not shares.** Xu's "70%" and "30%" are shown to students, and "75%"
+passed. A string value outside the coded sets must now appear in its quote as written. Two
+clauses had no failing test, the missing file and the schema version, because the fixture always
+wrote a valid file; `corpus({ splits: null })` now writes none. Disabled one at a time, the four
+new or newly tested clauses are caught 4 of 4.
+
+**The golden test could skip a case.** Rule 9 accepts an F6 case with a model scope and an F7 case
+with a frame, and no block would have run either. A test now requires every case to be run by
+exactly one block; with one block's selector broken it fails.
+
+**Locale.** F6 wrote 「標註: 」 with an ASCII colon and a space, the defect D94 fixed in X1; it
+takes 「：」 now, and the 繁體中文 test states it. X1 joined each source to its locator with ", "
+in 繁體中文; the comma is the locale's now, while source names and headings stay verbatim.
+
+**F7's presenter note quoted 42.8% while the screen showed 57.06%.** The overlay opens at k = 3.
+The note now says to set k to 1 and quotes what the screen shows there, 42.83%, which a test pins.
+
+**Documents.** README still taught the three incompatible splits D93 retracted; corrected, as are
+PLAYBOOK and INDEX's D-09 row, and the PRD is annotated. D93's "s4" is annotated with the step's
+id after Task 8's renumbering, as are the M1 spec's step ids. Stale counts are corrected in README
+(the plans, the decisions, the golden vectors, the brief's size, check 6) and INDEX (the presenter
+notes, the lint suite, §5's date); dated records keep their figures, with the correction beside
+them. The M1 spec's rule 12 and golden table now say what was built.
+
+**Left for the author.**
+
+1. The overflow figures above beyond the default states D94 accepted, M0's F1 at 387 px included:
+   split the steps or leave them.
+2. "Triplets" counts annotated edges. Measured on the slice: 208 of its 892 edges repeat another
+   (s, p, o) in the same frame. Counted as distinct triplets, 684 in all, `on` is 248 rather than
+   382, the top-1 share 36.3% rather than 42.8%, and the top-3 share 51.6% rather than 57.1%, with
+   `near` and `has` as the next two. The count follows the field's convention for annotation
+   statistics, and F6's membership panel treats E as a set, so the step uses the word in two
+   senses. Relabel the figures as annotated edges, or count distinct triplets and re-derive the
+   golden cases.
+3. The gate on the Gitea runner. The commit statuses read through the API show
+   `scene-graph-studio / ci` failed on run 2 (2026-09-21, `a93eebb`), and runs 5 and 7, triggered
+   by the pushes of 2026-09-26, still "Waiting to run": no runner has taken them. The platform's
+   `CI` runs 1 and 3 failed as well. The logs need a signed-in session, which this review did not
+   have. The gate has not been green on the Gitea runner since the track moved into WekaExt.
+
+**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **724 vitest in 59 files** (716
+before), parity 13, i18n 276 keys both locales, content lint clean over 13 golden cases, 22
+playground cases and 25 release figures, ruff clean, standalone current at 250 equations,
+frontend builds 763 modules. `npm run test:e2e` **48**. `npm run check:perf` **20**.

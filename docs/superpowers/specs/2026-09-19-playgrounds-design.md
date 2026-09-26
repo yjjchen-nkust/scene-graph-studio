@@ -123,17 +123,20 @@ And over `data/content/vg150_splits.json`, added 2026-09-26 for X1 (M1 design §
 12. Every release figure and note carries `source`, `url`, `locator` and a non-empty `quote`; a
     numeric value equals one whole number of its quote, named by `index` when the quote holds
     several; coded values are within their sets; every release states all five figures; a
-    `measured` row count equals its value; every note has a numeric value and both texts; every
-    release has both labels (tightened 2026-09-26, D94).
+    `measured` row count equals its value; a share, being a string outside the coded sets,
+    appears in its quote as written; every note has a numeric value, both texts and the split it
+    explains; every release has both labels (tightened 2026-09-26, D94 and D95).
 
 Rules 5 (the `</Step>` bound), 6 and 8 were added on 2026-09-20 after review found each of them
 passing a defect that reaches the projector; `tools/test/content_lint.test.mjs` exercises all
-eleven against fixture corpora, which is what makes deleting one fail the gate rather than only
+twelve against fixture corpora, which is what makes deleting one fail the gate rather than only
 the prose.
 
 That last sentence was false until 2026-09-26 for rules 3, 7, 8 and part of 9: disabling any of
 them left the suite green, because its fixture had one module and one frontmatter. It is true now,
-measured by disabling each rule in turn (D92, VERIFICATION §16).
+measured by disabling each rule in turn (D92, VERIFICATION §16), and for rule 12, added the same
+day, by disabling each of its clauses in turn (D93, D94, D95, VERIFICATION §17 to §19). The
+suite holds 36 tests as of 2026-09-26.
 
 ### 2.5 One change outside the contract
 

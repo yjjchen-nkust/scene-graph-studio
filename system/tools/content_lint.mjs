@@ -571,6 +571,10 @@ function citedFigure(where, f, name) {
     } else if (f.index !== undefined && numbers[f.index - 1] !== f.value) {
       problems.push(`${where}: index ${f.index} names ${numbers[f.index - 1]}, not ${f.value}`);
     }
+  } else if (typeof f?.value === 'string' && !CODED[name] && !String(f.quote ?? '').includes(f.value)) {
+    // A share ("70%") has no whole number to match, so it is matched as written. A coded value
+    // is this file's vocabulary, not the source's, and is checked against its set below.
+    problems.push(`${where}: '${f.value}' does not appear in its quote. A figure is copied, not recalled.`);
   }
   if (CODED[name] && f?.value !== null && !CODED[name].includes(f?.value)) {
     problems.push(`${where}: '${f?.value}' is not one of ${CODED[name].join(', ')}, or null`);
@@ -602,6 +606,11 @@ if (!SPLITS) {
       const where = `${r.id}.notes[${i}]`;
       citedFigure(where, n);
       if (typeof n.value !== 'number') problems.push(`${where}: a note needs a numeric value`);
+      // X1 explains a difference only with a note about the same split, so a magnitude that
+      // recurs on another split cannot borrow a sentence written about this one.
+      if (!['train', 'val', 'test'].includes(n.split)) {
+        problems.push(`${where}: 'split' must be one of train, val, test`);
+      }
       for (const key of ['text_en', 'text_zh']) {
         if (typeof n[key] !== 'string' || n[key].trim() === '') problems.push(`${where}: no '${key}'`);
       }
