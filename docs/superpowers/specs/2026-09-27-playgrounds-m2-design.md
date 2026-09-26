@@ -101,6 +101,8 @@ no focus on mount; nothing computed is a metric.
 M2 gains **`s3 · playground · F3`** directly after the math step s2. The later steps renumber:
 s3 → s4, s4 → s5, s5 → s6 (lab L1), s6 → s7 (checkpoint). Cross-references to step ids in both
 locales' bodies and notes are updated with them.
+[**As built, 2026-09-27 (D97):** F3 spans two parts, s3 and s4 at 90 s each, so the later steps
+are s5 to s8 and M2 has 8 steps; see §4.6.]
 
 ### 4.2 Data
 
@@ -123,6 +125,8 @@ y 305–445).
 τ's range is L2's. The starting 0.5 is labelled on screen with its origin, "Xu et al. 2017, §4,
 p. 5", which is the one literal F3 carries, as F1's two |𝒫| presets are M0's. A query value
 outside a range is clamped, as F1's are.
+[**As built (D97):** clamped and snapped to the step, since a range input moves its thumb to the
+nearest step and would otherwise show a setting the readouts did not compute.]
 
 ### 4.4 Computes
 
@@ -145,6 +149,9 @@ With w = 90, h = 70, (c_x, c_y) = (295, 275):
   width, since an overlay of absolutely positioned children otherwise renders 0 × 0 (the
   `ImageOverlay` trap in CLAUDE.md, D96).
 * Readouts: |b ∩ b′|, |b ∪ b′|, IoU to three places, the bound to three places.
+  [**As built (D97):** a readout's label is set in capitals, so the labels are words and the notes
+  carry the arithmetic; the object's name is an HTML caption, not SVG text; the overlay sits in a
+  box the photograph alone sizes, after a stretched column put every mark 122 px below its object.]
 * Membership, worded as F8's is: 「IoU ≥ τ：視為同一物件」 against 「IoU < τ：不視為同一物件」;
   English "IoU ≥ τ: counted as the same object" against "IoU < τ: not counted as the same object".
   Never correct against wrong: s2 says a rejected box may sit at "a different, defensible place".
@@ -157,6 +164,9 @@ With w = 90, h = 70, (c_x, c_y) = (295, 275):
 F3 is one step if it fits 1024 × 768 in 繁體中文 in its longest state. If it does not, it spans two
 parts under D96, the picture and its three placement knobs, then τ and the membership, and the
 measurement that forced the split is recorded in D97.
+[**As built (D97):** split. As one step it ran 171 px past at 1024 × 768 and 105 px at
+1280 × 800. Part 2 also shows the IoU and the bound, the two numbers τ is compared with, and the
+legend stays with the picture in part 1, beside the readouts.]
 
 ---
 

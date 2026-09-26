@@ -928,3 +928,72 @@ The lecture header wraps to two lines in English at that width, which is why its
 `npm run check:perf`, exit 0, 20 tests. The six playground cases, each on the part that carries
 its knob: F1 33.0 ms, F2 32.0, F8 33.0, F6 31.8, F7 32.2, X1 32.8, every one within a frame of its
 two-frame floor.
+
+## 21. The M2 playground — measured, 2026-09-27
+
+D97. Every number below is from the run that produced it, on branch `feat/playgrounds-m2`.
+
+| Step | Result |
+|---|---|
+| pytest | 266 passed, 7 skipped |
+| vitest | **785 passed in 61 files** (755 before) |
+| parity | 13 cases agree |
+| i18n parity | **292 keys**, both locales complete (278 before) |
+| content lint | 13 golden cases, **30 playground cases**, 25 release figures, clean; 105 steps a locale |
+| standalone | up to date, 250 equations |
+| frontend build | 766 modules |
+| `npm run test:e2e` | **62 passed** (55 before) |
+| `npm run check:perf` | **21 passed** (20 before) |
+
+### The corrections
+
+The frozen page, opened in headless Chromium after the change with F3's scale set to 1.42, reads
+"scale ceiling 0.496", which is 1 / 1.42² to three places; it read 0.704 before. `npm run harvest`
+leaves `data/content/kp.json` unchanged, and `lint:frozen` reports no problems.
+
+### The arithmetic
+
+Eight golden cases, all on `ph-001` object 3 (90 × 70 at (250, 240)):
+
+| Case | Δx, Δy, λ, τ | \|b ∩ b′\| | \|b ∪ b′\| | IoU | bound | member | unreachable |
+|---|---|---|---|---|---|---|---|
+| identical | 0, 0, 1, 0.5 | 6,300 | 6,300 | 1 | 1 | yes | no |
+| λ 1.4 | 0, 0, 1.4, 0.5 | 6,300 | 12,348 | 0.510 | 0.510 | yes | no |
+| λ 1.5 | 0, 0, 1.5, 0.5 | 6,300 | 14,175 | 0.444 | 0.444 | no | yes |
+| shifted | 18, 0, 1, 0.5 | 5,040 | 7,560 | 0.667 | 1 | yes | no |
+| at τ | 30, 0, 1, 0.5 | 4,200 | 8,400 | 0.5 | 1 | yes | no |
+| touching | 90, 0, 1, 0.5 | 0 | 12,600 | 0 | 1 | no | no |
+| inside | 0, 0, 0.5, 0.5 | 1,575 | 6,300 | 0.25 | 0.25 | no | yes |
+| bound at τ | 0, 0, 2, 0.25 | 6,300 | 25,200 | 0.25 | 0.25 | yes | no |
+
+F3's quotient equals `sgg-metrics`' `boxIou` on all eight to twelve places. Over λ ∈ {0.5, 0.73, 1,
+1.4, 1.45, 1.5, 2}, Δx ∈ {−120, −30, 0, 30, 120} and Δy ∈ {−100, 0, 100}, IoU never exceeds the
+bound, and at λ = 2 the prediction stays inside the 640 × 480 photograph at all four corners of Δx
+and Δy.
+
+### Fit
+
+Pixels past the panel over the production build, the largest over each part's states, 繁體中文 /
+English. Part 1 was measured at its default, at λ 2 shifted (120, 100), at λ 0.5 shifted
+(−120, −100), and touching; part 2 at its default, at λ 2 with τ 0.95, at λ 1.5, and at Δx 30 with
+τ 0.55.
+
+| Step | 1024×768 | 1280×800 | 1920×1080 |
+|---|---|---|---|
+| F3 as one step, before the split | 171 / — | 105 / — | 0 / — |
+| M2 s3, F3 part 1 | 0 / 9 | 0 / 0 | 0 / 0 |
+| M2 s4, F3 part 2 | 0 / 0 | 0 / 0 | 0 / 0 |
+
+English was not measured before the split; the one-step figures are the projector suite's, in its
+longest state, λ 2 with τ 0.95 shifted (120, 100).
+
+The contrast walk reads 26 rows on part 1 and 16 on part 2, at every panel size, with none skipped
+and none below 7:1; the floors are 19 and 12. The overlay's box equals the photograph's to within
+1 px at all three sizes; before the fix it was 454 px tall against a 261 px photograph at
+1024 × 768.
+
+### NFR-8
+
+`npm run check:perf`, exit 0, 21 tests. F3, moving λ to 1.5 on part 1: 34.0 ms, 0.5 ms of work
+above its 33.5 ms two-frame floor. The other six: F1 32.9, F2 33.8, F8 33.1, F6 33.3, F7 34.6,
+X1 33.7.
