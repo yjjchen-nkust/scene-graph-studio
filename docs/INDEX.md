@@ -31,8 +31,8 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-19-playgrounds-m0.md` | The `playground` step kind, F1, F2, F8, the golden file, the lint rules | **executed** |
 | `superpowers/plans/2026-09-26-playgrounds-m1.md` | X1's cited figures, rules 9 and 12, the corrections, F6, F7, X1 | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D94. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17) and the M1 minors (§18)** | live |
+| `../DEVIATIONS.md` | **D1…D95. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18) and the review of the day's merges (§19)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
 
@@ -54,7 +54,7 @@ drifts.
 | **D-06** | Live inference tier list; timeboxed detectron2 spike | RelTR only |
 | **D-07** | Prediction provenance has three tiers | `measured` / `reconstructed` / `published` |
 | **D-08** | **Author downloads corpora; class gets a cut bundle** | no script downloads a dataset |
-| **D-09** | `vg150-sgb` is the split; bare `vg150` is forbidden | three things share the short name |
+| **D-09** | `vg150-sgb` is the split; bare `vg150` is forbidden | several releases share the short name; annotated 2026-09-26 (D93) |
 | **D-10** | Slice composition: 200 images, allocated per dataset | plus the selection rule |
 | **D-11** | Eval engine is pure-Python stdlib | no numpy, no pycocotools |
 | **D-12** | COCO RLE decoded in-house, both languages | |
@@ -109,7 +109,7 @@ drifts.
 
 ---
 
-## 5. State, 2026-09-20
+## 5. State, 2026-09-26
 
 **Built.** Plan 01: FastAPI backend, the evaluation engine in Python and TypeScript held identical
 by 13 golden vectors, slice ingestion with both licence gates, `/api/health`, `/api/eval`,
@@ -211,7 +211,10 @@ by the lower object id, the boundary counted as inside so the outline still work
 jsdom for the rule and in Chromium for the hit testing jsdom does not have.
 
 **Presenter notes are complete, 2026-09-19.** All 95 steps carry them in both locales, 190 in
-total, written against each step's own content: what has to land, what to put on the board before
+total [**corrected 2026-09-26:** 92 steps and 184 notes on this date, as first written and as this
+paragraph's last sentence says; 95 and 190 replaced them on 2026-09-20, after M0's playgrounds,
+and the corpus now holds 98 steps and 196 notes], written against each step's own content: what
+has to land, what to put on the board before
 the slide does, what the room usually gets wrong, what to compress when the clock is short. They
 are procedural rather than expository — none introduces a claim its module does not already make.
 `content_lint.mjs` now refuses a step without them (D76). Until this date M00 was the only module
@@ -288,9 +291,18 @@ hidden under the frame's clip at every panel size; the frame now clips only pict
 projector test reports any word an ancestor cuts off. M1 went from 6
 steps to 9, the corpus from 95 to 98. See D93 and VERIFICATION §17.
 
+**A review of the day's merges found F6's status line under the clip, 2026-09-26.** In the state
+its step exists to show, with a merge ticked, F6's readouts wrap and the line saying whether the
+edge is recorded in E′ fell below the frame's clip at 1024×768 and 1280×800; the projector test had
+measured F6 only in its default state. F6 no longer clips, and the test measures it with both
+merges. The same review bound X1's explanations to the split they are about, replaced a
+disjointness verdict no source makes with the pool the card names, made rule 12 check shares as
+written, and removed "withdrawn" from the brief. Overflow in every state, M0's included, is in
+VERIFICATION §19 for the author. See D95.
+
 **Verification.** `npm run ci` green, 2026-09-26: **266 pytest** and 7 skipped (the ten newest
 compare the requirement files to the interpreter), parity 13 agree, i18n 276 keys both locales,
-**716 vitest** in 59 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**724 vitest** in 59 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 43 symbols, 22 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,
@@ -303,7 +315,9 @@ check:perf`, 2026-09-26: 20 passed, NFR-8 measured over five labs and six playgr
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in
 turn showed it missed eight of seventeen mutants: rules 3 and 7, both halves of rule 8, and two
 clauses of rule 9. Its fixture had one module and one frontmatter, so no defect needing two of
-either could be expressed. It has 18 tests now and catches 17 of 17. The same review found
+either could be expressed. It had 18 tests after that change and caught 17 of 17. It has 36 now,
+over twelve rules (D93 to D95), and the mutation runs of VERIFICATION §17 to §19 caught 23 of 23,
+10 of 10 and 4 of 4. The same review found
 VERIFICATION §15 still printing the clamped `0.0 ms` that D91 had withdrawn, and the paper corpus
 at 60 cards against D-21's 35 with no entry recording why. See D92 and VERIFICATION §16.
 
@@ -357,6 +371,7 @@ until they had already happened.
 | A correction recorded in a deviation is not a correction of the document that carried the error, which keeps printing it | `DEVIATIONS.md` D92 |
 | A binding decision can describe an artefact the project never obtained, and nothing compares the two | `DEVIATIONS.md` D93 |
 | Comparing a count with every digit of its quote run together passes a figure from the wrong column, and one straddling two numbers | `DEVIATIONS.md` D94 |
+| A playground measured only in its default state says nothing about the state its step exists to show, and an acceptance of overflow inherits the same blind spot | `DEVIATIONS.md` D95, `VERIFICATION.md` §19 |
 | An `overflow: hidden` box inside a scrolling step hides words no scroll can reach, and a contrast walk that asks only whether a word is painted measures them as passing | `DEVIATIONS.md` D93, `VERIFICATION.md` §17 |
 | A figure repeated across a page, a brief and a decision from one early reading is wrong everywhere at once, and only opening the source finds it | `DEVIATIONS.md` D93, `FROZEN.md` 2026-09-26 |
 | A framework that sizes in rem puts its text at the document root, not at the shell the component is mounted in, so a 24 px lecture can contain 14 px type | `DEVIATIONS.md` D88 |

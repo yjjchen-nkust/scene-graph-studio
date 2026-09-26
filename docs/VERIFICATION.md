@@ -771,3 +771,90 @@ closed on that judgement, not on a code change.
 | X1 | 33.5 ms | 0.6 ms above the 32.9 ms two-frame floor |
 
 Within the instrument's resolution of about one frame, as §17 says.
+
+
+## 19. The review of the day's merges — measured, 2026-09-26
+
+D95. Every number below is from the run that produced it, on branch `fix/sgs-m1-review`.
+
+| Step | Result |
+|---|---|
+| pytest | 266 passed, 7 skipped |
+| vitest | **724 passed in 59 files** (716 before) |
+| parity | 13 cases agree |
+| i18n parity | 276 keys, both locales complete |
+| content lint | 13 golden cases, 22 playground cases, 25 release figures, clean |
+| standalone | up to date, 250 equations |
+| frontend build | 763 modules |
+| `npm run test:e2e` | 48 passed |
+| `npm run check:perf` | 20 passed |
+
+### F6 under its clip
+
+`clipped()` over `m01/2?F6.mp=1&F6.mo=1`, before the fix: failed at 1024×768 and 1280×800,
+passed at 1920×1080. After `clip={false}`: 3 of 3.
+
+### Overflow, every state
+
+Measured as §17's table was, the step container's scroll height less its client height after the
+webfonts decode, over the production build, with the locale seeded in `localStorage` as the
+projector suite seeds it. Pixels past the panel, zh-TW / en.
+
+| Step | State | 1024×768 | 1280×800 | 1920×1080 |
+|---|---|---|---|---|
+| s3, F6 | default | 56 / 336 | 29 / 31 | 0 / 0 |
+| s3, F6 | predicates merged | 195 / 336 | 168 / 170 | 0 / 0 |
+| s3, F6 | object names merged | 195 / 336 | 29 / 170 | 0 / 0 |
+| s3, F6 | both merged | 334 / 475 | 168 / 170 | 0 / 0 |
+| s5, F7 | default | 188 / 271 | 105 / 156 | 0 / 0 |
+| s5, F7 | overlay on, k = 3 | 188 / 410 | 105 / 156 | 0 / 0 |
+| s5, F7 | overlay on, k = 1 | 188 / 410 | 105 / 156 | 0 / 0 |
+| s7, X1 | default, `sgb-v2` against `canonical` | 475 / 714 | 326 / 443 | 0 / 0 |
+| s2, F1 | default | 387 / 470 | 355 / 355 | 0 / 0 |
+| s4, F2 | default | 24 / 107 | 0 / 0 | 0 / 0 |
+| s5, F8 | default | 27 / 161 | 0 / 0 | 0 / 0 |
+
+X1's longest of its 16 ordered pairs, per cell:
+
+| Panel | zh-TW | en |
+|---|---|---|
+| 1024×768 | 619, `xu-2017` against `sgb-v1` | 880, `sgb-v1` against `sgb-v2` |
+| 1280×800 | 531, `sgb-v1` against `sgb-v2` | 587, `xu-2017` against `canonical` |
+| 1920×1080 | 39, `canonical` against `sgb-v1` | 78, `canonical` against `sgb-v1` |
+
+The default zh-TW column reproduces §18's 56, 188 and 475 exactly. §18's acceptance covers those
+states; the others are recorded for the author (D95).
+
+### Rule 12 by mutation, the new clauses
+
+| Clause | Caught |
+|---|---|
+| share not in its quote as written | yes |
+| file missing | yes |
+| unknown schema version | yes |
+| note without its split | yes |
+
+4 of 4: each clause replaced by `false` or removed, the suite run, the file restored. The middle
+two existed before and had no failing test.
+
+### NFR-8
+
+| | Wall | Work |
+|---|---|---|
+| F6 | 32.9 ms | 0.3 ms above the 32.6 ms two-frame floor |
+| F7 | 33.1 ms | 0.4 ms above the 32.7 ms two-frame floor |
+| X1 | 33.1 ms | below the 33.5 ms two-frame floor |
+
+### The runner
+
+Commit statuses read through the Gitea API on 2026-09-26. The logs need a signed-in session.
+
+| Run | Workflow | Commit | Status |
+|---|---|---|---|
+| 1 | CI | `a93eebb`, 2026-09-21 | failure |
+| 2 | scene-graph-studio | `a93eebb`, 2026-09-21 | failure |
+| 3 | CI | `66281fb`, 2026-09-23 | failure |
+| 4, 5 | CI, scene-graph-studio | `b57a02e`, 2026-09-26 | waiting to run |
+| 6, 7 | CI, scene-graph-studio | `677c801`, 2026-09-26 | waiting to run |
+
+§14 made the gate pass on a POSIX runner; this track's workflow has not yet passed on this one.

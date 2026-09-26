@@ -14,7 +14,7 @@ A bilingual (繁體中文 / English), locally-run web application that teaches s
 
 Scene graphs sit at the junction of object detection, relational reasoning, and language. The literature is unusually treacherous:
 
-- Three mutually incompatible dataset splits all answer to the name "VG150".
+- Three mutually incompatible dataset splits all answer to the name "VG150". *(Annotated 2026-09-26: not supported as worded. The releases differ in the validation carve-out and in filtering, and one published release drew its validation set from the test pool; see `specs/2026-09-26-playgrounds-m1-design.md` §2 and D93.)*
 - The headline metric, Recall@K, rewards a model for predicting `on` — a pure co-occurrence prior with no access to pixels outscores the learned models of its era.
 - A major benchmark's public ranking was demonstrably wrong for two years before anyone published the correction.
 - The only public leaderboard, Papers With Code, was sunset on 24 July 2025. Nothing replaced it.

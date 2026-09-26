@@ -108,9 +108,9 @@ carrying its `k`, `protocol`, `constraint`, `source`, `verified` and `fidelity`,
 code path* that formats a bare number as a metric. A UI that receives an untagged number refuses
 to render it.
 
-**Name the split, never the family.** `vg150-sgb`, never `vg150`, because three incompatible
-things answer to the short name. Pick the unambiguous identifier once and forbid the ambiguous one
-in code and content alike.
+**Name the split, never the family.** `vg150-sgb`, never `vg150`, because several releases
+answer to the short name, differing in the validation carve-out and in filtering (D93). Pick the
+unambiguous identifier once and forbid the ambiguous one in code and content alike.
 
 ---
 

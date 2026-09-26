@@ -114,12 +114,13 @@ frontend/         Vite 8 + React 19 + TypeScript + Tailwind 4
 data/             golden vectors, slices, licence findings
 tools/            parity harness, linters, the startup script, the frozen page's validators
 system/web/knowledge-map/  a frozen static page: 93 knowledge points, 27 playgrounds, no build step
-docs/superpowers/   PRD, SRS, design, decisions, contracts, four executable plans,
-                    and the anchor paper read from the PDF (M11's source)
+docs/superpowers/   PRD, SRS, design, decisions, contracts, three later designs, the master
+                    plan and seven executable plans, and the anchor paper read from the PDF
+                    (M11's source)
 ```
 
 **Read `docs/superpowers/specs/…-decisions.md` before changing anything.** It records D-01
-through D-20 and why each was decided, including several that are not guessable from the code.
+through D-22 and why each was decided, including several that are not guessable from the code.
 
 ---
 
@@ -129,7 +130,7 @@ Everything else depends on it, so it is specified first, built first, and tested
 
 It exists **twice** — Python (authoritative) and TypeScript (so a lab can score a student's graph
 inside the 100 ms interaction budget without a round trip). The two are held identical by
-`data/golden/vectors.json`, eleven cases whose every expected value was computed on paper from
+`data/golden/vectors.json`, thirteen cases whose every expected value was computed on paper from
 the definitions before the engine was run against them. `npm run lint:parity` drives both over
 the same fixtures and fails on any disagreement; it has been verified by deliberately breaking
 one side and confirming it catches it.
@@ -213,9 +214,11 @@ a bare number as a metric — SRS §4.5 says the interface refuses to render an 
 the type is how that refusal is enforced. A `reconstructed` figure requires a note saying what it
 reproduces, and renders differently from a measured one.
 
-**One VG150.** Three mutually incompatible splits answer to the name "VG150". This project ships
-one, named `vg150-sgb` after its provenance everywhere. The bare string `vg150` appears nowhere
-except when quoting another author.
+**One VG150.** Several releases answer to the name "VG150". They differ in the validation
+carve-out and in filtering, and one published release drew its validation set from the test pool
+(D93). This project ships one, the corrected release of Neau et al.'s SGG-Benchmark, named
+`vg150-sgb` after its provenance everywhere. The schema refuses the bare string `vg150` as a
+dataset identifier, and prose uses VG150 only as the published benchmark's name.
 
 **No fallback locale.** A missing i18n key renders as `⟦key⟧` in development and throws in a
 production build. A silent fallback to English would let a half-translated build look finished.
@@ -233,8 +236,9 @@ from Google, so on a machine with no connection its equations show as raw LaTeX.
 
 **`docs/brief.standalone.html` is the one to send people.** Every equation is pre-rendered
 to SVG at build time and both remote dependencies are gone, so it renders identically from a USB
-stick, behind a campus firewall, or in five years when a CDN path has moved. One file, 962 KB,
-no network requests of any kind — asserted by `npm run lint:standalone`, not assumed.
+stick, behind a campus firewall, or in five years when a CDN path has moved. One file,
+1,066,149 bytes as built on 2026-09-26, no network requests of any kind — asserted by
+`npm run lint:standalone`, not assumed.
 
 ```bash
 npm run build:standalone   # regenerate after editing system/web/brief/index.html
@@ -296,13 +300,14 @@ A number in this application without a source is a bug. `npm run lint:content` e
 
 **Plans 01 through 04 are executed.** `docs/INDEX.md` is the current state of the project and is
 kept up to date; `docs/VERIFICATION.md` records the nine checks of design §6 with the date each
-was run and its outcome, including the one that is recorded as **not run**.
+was run and its outcome. All nine have been run and passed; check 6 was first recorded as
+**not run** (D69) and passed on 2026-09-18.
 
 `npm run ci` is green on py12: 266 Python tests (7 skipped for a corpus this machine may not
-have), 716 TypeScript tests across 59 files, parity 13/13, i18n 276 keys in both locales,
+have), 724 TypeScript tests across 59 files, parity 13/13, i18n 276 keys in both locales,
 content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 48
-passed and `npm run check:perf` is 20. All measured 2026-09-26; `docs/VERIFICATION.md` §18
-records that run, §15 to §17 the three before it, and §14 the earlier run that reconciled
+passed and `npm run check:perf` is 20. All measured 2026-09-26; `docs/VERIFICATION.md` §19
+records that run, §15 to §18 the four before it, and §14 the earlier run that reconciled
 three documents carrying three different counts.
 
 Two further checks are scripts rather than prose:
@@ -326,10 +331,12 @@ M11, so authoring that module was transcription rather than a fresh reading.
 
 * The measured prediction tier, blocked on licences (`data/predictions/PROVENANCE.md`).
 * Slides that run past the bottom of a 1024×768 projector. 25 of the then 92 were reviewed and
-  accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). The six
-  playground steps added since are measured in §15 and §18, and M1's long steps were accepted
-  the same way on 2026-09-26 (D94). The step region scrolls inside a fixed shell, so the position and the section clock
-  stay on screen, and no playground hides a word where that scroll cannot reach it (D93).
+  accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). M1's
+  three playground steps were accepted the same way on 2026-09-26 in their default states (D94).
+  Every state of all six playground steps, in both locales, is measured in §19 and awaits the
+  author (D95): F1 runs 387 px past XGA, and X1 up to 619 px in 繁體中文 and 880 px in English. The
+  step region scrolls inside a fixed shell, so the position and the section clock stay on screen,
+  and no playground hides a word where that scroll cannot reach it (D93, D95).
 * `vrd` and `haystack` state no licence, so nothing is cut from either and both gates stay shut.
 
 `DEVIATIONS.md` records every departure from the plans, with the reason. Several were defects the
