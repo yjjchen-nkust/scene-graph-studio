@@ -36,6 +36,19 @@ const step = (id, kp) => [
   `  - id: ${id}`, '    kind: playground', `    kp: ${kp}`, '    presenter_notes_LOCALE: "n"',
 ].join('\n');
 
+/** One release with one cited figure: the smallest file rule 12 accepts. */
+const SPLITS = {
+  $schema_version: 1,
+  releases: [{
+    id: 'r1', label_en: 'R', label_zh: 'R',
+    figures: {
+      train: { value: 68538, source: 'card', url: 'https://example.org/card', locator: 'Stats',
+        quote: '| train |  68 538 |' },
+    },
+    notes: [],
+  }],
+};
+
 /** One `<Step>` block mounting `kp`. */
 const block = (id, kp) => `<Step id="${id}">\n\n<Playground kp="${kp}" />\n\n</Step>`;
 
@@ -50,7 +63,7 @@ const block = (id, kp) => `<Step id="${id}">\n\n<Playground kp="${kp}" />\n\n</S
 function corpus({
   frontmatter, body, en = {}, knowledgePoints = '[F1, F2, Z9]',
   assignment = { m00: ['F1', 'F2', 'Z9'] }, others = [],
-  mounts = '  F1: A,\n  F2: B,\n', golden,
+  mounts = '  F1: A,\n  F2: B,\n', golden, splits = SPLITS,
 } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'sgs-lint-'));
   roots.push(root);
@@ -70,6 +83,7 @@ function corpus({
   write('data/content/kp.json', JSON.stringify([{ id: 'F1' }, { id: 'F2' }, { id: 'Z9' }]));
   write('data/content/assignment.json', JSON.stringify({ modules: assignment }));
   write('data/content/papers.json', JSON.stringify([]));
+  write('data/content/vg150_splits.json', JSON.stringify(splits));
   write('data/content/playground_golden.json', JSON.stringify(golden ?? {
     cases: [{
       id: 'pg-1', kp: 'F1', image_id: 'x', knobs: { a: 1 }, expect: { b: 2 },
@@ -222,9 +236,80 @@ describe('content_lint playground rules', () => {
 
   it('refuses a golden case missing a field', () => {
     const r = lint(corpus({
-      golden: { cases: [{ id: 'pg-1', kp: 'F1', knobs: {}, expect: { a: 1 }, why: 'y'.repeat(50) }] },
+      golden: { cases: [{ id: 'pg-1', kp: 'F1', image_id: 'x', expect: { a: 1 }, why: 'y'.repeat(50) }] },
     }));
-    expect(r.out).toContain("pg-1: missing 'image_id'");
+    expect(r.out).toContain("pg-1: missing 'knobs'");
+  });
+
+  it('accepts a golden case with a scope in place of a frame', () => {
+    const r = lint(corpus({
+      golden: { cases: [{ id: 'pg-1', kp: 'F1', scope: 'model', knobs: {}, expect: { a: 1 }, why: 'y'.repeat(50) }] },
+    }));
+    expect(r.out).not.toContain('pg-1');
+    expect(r.ok, r.out).toBe(true);
+  });
+
+  it('refuses a golden case with neither a frame nor a scope, and one with both', () => {
+    const base = { kp: 'F1', knobs: {}, expect: { a: 1 }, why: 'y'.repeat(50) };
+    const r = lint(corpus({
+      golden: { cases: [{ id: 'pg-1', ...base }, { id: 'pg-2', image_id: 'x', scope: 'slice', ...base }] },
+    }));
+    expect(r.out).toContain('pg-1: carries neither image_id nor a scope');
+    expect(r.out).toContain('pg-2: carries both image_id and a scope');
+  });
+
+  it('refuses a golden case whose scope is not one of the three', () => {
+    const r = lint(corpus({
+      golden: { cases: [{ id: 'pg-1', kp: 'F1', scope: 'world', knobs: {}, expect: { a: 1 }, why: 'y'.repeat(50) }] },
+    }));
+    expect(r.out).toContain("pg-1: scope 'world' is not one of slice, model, sources");
+  });
+
+  const fig = {
+    value: 68538, source: 'card', url: 'https://example.org/card', locator: 'Stats',
+    quote: '| train |  68 538 |',
+  };
+  const withFigure = (f, extra = {}) => ({
+    $schema_version: 1,
+    releases: [{ id: 'r1', label_en: 'R', label_zh: 'R', figures: { train: f }, notes: [], ...extra }],
+  });
+
+  it('refuses a release figure without its source, url, locator or quote', () => {
+    for (const key of ['source', 'url', 'locator', 'quote']) {
+      const r = lint(corpus({ splits: withFigure({ ...fig, [key]: '' }) }));
+      expect(r.out, key).toContain(`r1.train: no '${key}'`);
+    }
+  });
+
+  it('refuses a count whose digits are not in its quote', () => {
+    const r = lint(corpus({ splits: withFigure({ ...fig, value: 68583 }) }));
+    expect(r.out).toContain('r1.train: value 68583 does not appear in its quote');
+  });
+
+  it('accepts a null or a share, which have no digits to check, but not without a quote', () => {
+    expect(lint(corpus({ splits: withFigure({ ...fig, value: null }) })).ok).toBe(true);
+    expect(lint(corpus({ splits: withFigure({ ...fig, value: '70%' }) })).ok).toBe(true);
+    const r = lint(corpus({ splits: withFigure({ ...fig, value: null, quote: '' }) }));
+    expect(r.out).toContain("r1.train: no 'quote'");
+  });
+
+  it('refuses a measurement that disagrees with the figure it measures', () => {
+    const r = lint(corpus({ splits: withFigure({ ...fig, measured: { rows: 5000 } }) }));
+    expect(r.out).toContain('r1.train: measured 5000 rows but carries 68538');
+  });
+
+  it('refuses a note without a numeric value or its two texts', () => {
+    const note = { ...fig, value: '10815', text_en: 'kept' };
+    const r = lint(corpus({ splits: withFigure(fig, { notes: [note] }) }));
+    expect(r.out).toContain('r1.notes[0]: a note needs a numeric value');
+    expect(r.out).toContain("r1.notes[0]: no 'text_zh'");
+  });
+
+  it('refuses a release without both labels, and a file with no releases', () => {
+    const r = lint(corpus({ splits: withFigure(fig, { label_zh: '' }) }));
+    expect(r.out).toContain("r1: no 'label_zh'");
+    const empty = lint(corpus({ splits: { $schema_version: 1, releases: [] } }));
+    expect(empty.out).toContain('vg150_splits.json: no releases');
   });
 
   it('refuses a golden case whose expect is empty', () => {

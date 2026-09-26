@@ -228,6 +228,7 @@ const PLAYGROUND_GOLDEN = JSON.parse(
 // of this file, although they are the same kind of artefact: this rule needs REGISTERED, and a
 // const is not reachable before its declaration.
 const playgroundGoldenIds = new Set();
+const SCOPES = new Set(['slice', 'model', 'sources']);
 for (const c of PLAYGROUND_GOLDEN.cases) {
   // The same structural guard the engine's vectors get at the top of this file. It had only the
   // two rules below, so a case missing its `knobs` or `expect`, or repeating another's id, was
@@ -239,8 +240,19 @@ for (const c of PLAYGROUND_GOLDEN.cases) {
     problems.push(`duplicate playground golden case id: ${c.id}`);
   }
   playgroundGoldenIds.add(c.id);
-  for (const key of ['kp', 'image_id', 'knobs', 'expect']) {
+  for (const key of ['kp', 'knobs', 'expect']) {
     if (!c[key]) problems.push(`${c.id}: missing '${key}'`);
+  }
+  // A case pins a frame's arithmetic, or a slice's, a model's or the sources'. F1, F2, F6 and F8
+  // read a frame; F7's model and X1's cited figures have none, and demanding an `image_id` of
+  // them would have meant inventing one (spec 2026-09-26 §6).
+  if (c.scope !== undefined && !SCOPES.has(c.scope)) {
+    problems.push(`${c.id}: scope '${c.scope}' is not one of ${[...SCOPES].join(', ')}`);
+  }
+  if (Boolean(c.image_id) === (c.scope !== undefined)) {
+    problems.push(
+      `${c.id}: carries ${c.image_id ? 'both image_id and a scope' : 'neither image_id nor a scope'}`,
+    );
   }
   if (c.expect && Object.keys(c.expect).length === 0) {
     problems.push(`${c.id}: 'expect' is empty, so the case asserts nothing`);
@@ -522,6 +534,54 @@ for (const [kp, steps] of [...mountedBy].sort()) {
   }
 }
 
+// ---- X1's release figures, rule 12 ----------------------------------------
+// Every figure X1 displays is a transcription, never a recollection: it names where it was read
+// and carries the sentence, and a count's digits must be among that sentence's digits, which
+// catches `68583` typed for "68 538" without anyone re-reading the card. A null is a figure the
+// source does not state, and it still carries the passage that does not state it.
+const SPLITS_FILE = '../data/content/vg150_splits.json';
+const SPLITS = existsSync(SPLITS_FILE) ? JSON.parse(readFileSync(SPLITS_FILE, 'utf-8')) : null;
+const digitsOf = (x) => String(x).replace(/\D/g, '');
+let releaseFigures = 0;
+function citedFigure(where, f) {
+  releaseFigures += 1;
+  for (const key of ['source', 'url', 'locator', 'quote']) {
+    if (typeof f?.[key] !== 'string' || f[key].trim() === '') {
+      problems.push(`${where}: no '${key}'. X1 shows where every figure was read (NFR-2).`);
+    }
+  }
+  if (typeof f?.value === 'number' && !digitsOf(f.quote ?? '').includes(digitsOf(f.value))) {
+    problems.push(
+      `${where}: value ${f.value} does not appear in its quote. A figure is copied, not recalled.`,
+    );
+  }
+  if (f?.measured !== undefined && f.measured.rows !== f.value) {
+    problems.push(`${where}: measured ${f.measured.rows} rows but carries ${f.value}`);
+  }
+}
+if (!SPLITS) {
+  problems.push('vg150_splits.json: missing. X1 reads every figure it shows from it.');
+} else {
+  if (SPLITS.$schema_version !== 1) problems.push('vg150_splits.json: unknown schema version');
+  if (!Array.isArray(SPLITS.releases) || SPLITS.releases.length === 0) {
+    problems.push('vg150_splits.json: no releases');
+  }
+  for (const r of SPLITS.releases ?? []) {
+    for (const key of ['label_en', 'label_zh']) {
+      if (typeof r[key] !== 'string' || r[key].trim() === '') problems.push(`${r.id}: no '${key}'`);
+    }
+    for (const [name, f] of Object.entries(r.figures ?? {})) citedFigure(`${r.id}.${name}`, f);
+    for (const [i, n] of (r.notes ?? []).entries()) {
+      const where = `${r.id}.notes[${i}]`;
+      citedFigure(where, n);
+      if (typeof n.value !== 'number') problems.push(`${where}: a note needs a numeric value`);
+      for (const key of ['text_en', 'text_zh']) {
+        if (typeof n[key] !== 'string' || n[key].trim() === '') problems.push(`${where}: no '${key}'`);
+      }
+    }
+  }
+}
+
 // ---- report ---------------------------------------------------------------
 if (problems.length) {
   console.error(`content lint: ${problems.length} problem(s)\n  ` + problems.join('\n  '));
@@ -531,7 +591,8 @@ console.log(
   `content lint: ${golden.cases.length} golden cases, ` +
     // Counted, so a green run says the playground file was read. It was checked and not
     // counted, which reads to the person watching CI as though it were not checked.
-    `${PLAYGROUND_GOLDEN.cases.length} playground cases, ${gates.size} licence rows, ` +
+    `${PLAYGROUND_GOLDEN.cases.length} playground cases, ${releaseFigures} release figures, ` +
+    `${gates.size} licence rows, ` +
     `${modules.size} of ${owned.size} modules x ${LOCALES.length} locales, ` +
     `${POINTS.length} knowledge points all assigned, ${glosses.size / 2} symbols, clean`,
 );
