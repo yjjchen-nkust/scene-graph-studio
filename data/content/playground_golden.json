@@ -136,6 +136,46 @@
       "knobs": { "k": 3 },
       "expect": { "head_share": 0.570628 },
       "why": "The slice's three most frequent predicates are on 382, has 68 and near 59: 382 + 68 + 59 = 509 of 892 triplets, and 509 / 892 = 0.570628."
+    },
+    {
+      "id": "pg-X1-v2-canonical-train",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v2", "vs": "canonical", "split": "train" },
+      "expect": { "difference": 10815, "explained_by": 10815 },
+      "why": "v2 states 68,538 training images and the canonical protocol 57,723: 68,538 - 57,723 = 10,815, which is the card's own count of v2 training images kept with no relation."
+    },
+    {
+      "id": "pg-X1-v2-canonical-test",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v2", "vs": "canonical", "split": "test" },
+      "expect": { "difference": 5430, "explained_by": 5430 },
+      "why": "v2 states 31,876 test images and the canonical protocol 26,446: 31,876 - 26,446 = 5,430, the card's count of v2 test images kept with no relation."
+    },
+    {
+      "id": "pg-X1-v1-v2-train",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v1", "vs": "sgb-v2", "split": "train" },
+      "expect": { "difference": 5000, "explained_by": 5000 },
+      "why": "Issue 94 gives v1 73,538 training images against v2's 68,538: 73,538 - 68,538 = 5,000, the canonical validation set the card says v1 folded into train."
+    },
+    {
+      "id": "pg-X1-v1-v2-test",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v1", "vs": "sgb-v2", "split": "test" },
+      "expect": { "difference": -4844, "explained_by": 4844 },
+      "why": "v1 has 27,032 test images and v2 31,876: 27,032 - 31,876 = -4,844. The 4,844 are the images the card says v1 took from the test pool for its validation set."
+    },
+    {
+      "id": "pg-X1-xu-canonical-train",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "xu-2017", "vs": "canonical", "split": "train" },
+      "expect": { "difference": null, "explained_by": null },
+      "why": "Xu et al. state 70% of 108,077 images and no count, so there is no count to subtract from 57,723. Multiplying 0.7 by 108,077 would assert a split size the paper never states."
     }
   ]
 }

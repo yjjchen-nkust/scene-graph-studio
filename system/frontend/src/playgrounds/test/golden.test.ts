@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import golden from '../../../../../data/content/playground_golden.json';
 import { OBJECT_GROUP, PREDICATE_GROUP } from '../F6/groups';
 import {
-  candidateSpace, classCounts, densityCut, headShare, isInE, isInMergedE, measuredHeadShare, mergeMap,
-  objectLabels, predicateLabels, ranked, ratio, tailToHead,
+  candidateSpace, classCounts, densityCut, explain, headShare, isInE, isInMergedE, measuredHeadShare, mergeMap,
+  objectLabels, predicateLabels, ranked, ratio, splitDifference, tailToHead,
 } from '../logic';
 import { VG_FRAMES, frameById, vgFrameById } from '../slice';
+import { releaseById, type Split } from '../splits';
 
 interface Case {
   id: string;
@@ -92,5 +93,13 @@ describe('playground golden cases', () => {
   it.each(cases.filter((c) => c.kp === 'F7' && c.scope === 'slice'))('$id', (c) => {
     const rank = ranked(predicateLabels(VG_FRAMES));
     expect(measuredHeadShare(rank, c.knobs.k as number)).toBeCloseTo(c.expect.head_share as number, 6);
+  });
+
+  it.each(cases.filter((c) => c.kp === 'X1'))('$id', (c) => {
+    const a = releaseById(c.knobs.r as string)!;
+    const b = releaseById(c.knobs.vs as string)!;
+    const d = splitDifference(a, b, c.knobs.split as Split);
+    expect(d).toBe(c.expect.difference);
+    expect(d === null ? null : explain(d, [a, b])?.value ?? null).toBe(c.expect.explained_by);
   });
 });
