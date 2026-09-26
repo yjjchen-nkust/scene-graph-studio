@@ -1,4 +1,4 @@
-import type { SceneGraph, SGRelationship } from 'sgg-metrics';
+import type { BBox, SceneGraph, SGRelationship } from 'sgg-metrics';
 import type { Note, Release, Split } from './splits';
 
 /**
@@ -279,4 +279,62 @@ export function explain(difference: number, split: Split, releases: Release[]): 
 export function valPool(r: Release): 'trainval' | 'test' | null {
   const from = r.figures.val_from?.value;
   return from === 'trainval' || from === 'test' ? from : null;
+}
+
+// ---- F3: one box against its annotation ---------------------------------------------------
+
+/**
+ * The prediction: the annotated box moved by (dx, dy) and scaled by λ about its own centre.
+ *
+ * Rounded to whole pixels, so every area F3 prints is a count of pixels and |b ∩ b′| / |b ∪ b′|
+ * is a ratio of two counts, as the formula's bars say. On object 3 and λ in steps of 0.1 the
+ * rounding changes no size; it matters only for a λ a URL carries off the grid.
+ */
+export function scaledBox(gt: BBox, dx: number, dy: number, lambda: number): BBox {
+  const w = Math.round(lambda * gt.w);
+  const h = Math.round(lambda * gt.h);
+  return {
+    x: Math.round(gt.x + gt.w / 2 + dx - w / 2),
+    y: Math.round(gt.y + gt.h / 2 + dy - h / 2),
+    w,
+    h,
+  };
+}
+
+export function area(b: BBox): number {
+  return b.w * b.h;
+}
+
+/**
+ * The pixels two boxes share, or null when they share none.
+ *
+ * Half-open, as `sgg-metrics`' `boxIou` and `backend/app/eval/iou.py` are: two boxes whose edges
+ * only touch share no pixel, so F3 and the engine agree on the case a student is most likely to
+ * try.
+ */
+export function intersection(a: BBox, b: BBox): BBox | null {
+  const x = Math.max(a.x, b.x);
+  const y = Math.max(a.y, b.y);
+  const w = Math.min(a.x + a.w, b.x + b.w) - x;
+  const h = Math.min(a.y + a.h, b.y + b.h) - y;
+  if (w <= 0 || h <= 0) return null;
+  return { x, y, w, h };
+}
+
+/** A + A′ − |a ∩ b|: the pixels in either box, each counted once. */
+export function unionArea(a: BBox, b: BBox): number {
+  const shared = intersection(a, b);
+  return area(a) + area(b) - (shared ? area(shared) : 0);
+}
+
+/**
+ * min(A, A′) / max(A, A′), M2 s2's bound on IoU, before any question of placement.
+ *
+ * Taken from the two whole-pixel areas rather than from λ², so it bounds the IoU printed beside
+ * it even when rounding has moved the areas off λ²A. Zero when either box has no area.
+ */
+export function scaleBound(a: BBox, b: BBox): number {
+  const small = Math.min(area(a), area(b));
+  const large = Math.max(area(a), area(b));
+  return large > 0 ? small / large : 0;
 }

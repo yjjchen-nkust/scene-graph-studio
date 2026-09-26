@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { SceneGraph } from 'sgg-metrics';
 import { FRAMES, frameById } from '../slice';
 import { RELEASES, type Release, type Split } from '../splits';
+import { F3_FRAME, F3_OBJECT } from '../F3/setup';
 import {
-  candidateSpace, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
-  headShare, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
-  ranked, ratio, splitDifference, tailToHead, tripletKey, valPool,
+  area, candidateSpace, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
+  headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
+  ranked, ratio, scaleBound, scaledBox, splitDifference, tailToHead, tripletKey, unionArea, valPool,
 } from '../logic';
 
 const ph001 = frameById('ph-001')!;
@@ -322,5 +323,61 @@ describe('X1: differences between releases', () => {
     const unstated = release('x', 1);
     unstated.figures.val_from = { value: null, source: 's', url: 'u', locator: 'l', quote: 'q' };
     expect(valPool(unstated)).toBeNull();
+  });
+});
+
+describe('F3: one box against its annotation', () => {
+  const GT = frameById(F3_FRAME)!.objects.find((o) => o.object_id === F3_OBJECT)!.bbox;
+
+  it('reads the annotated box it is built on', () => {
+    expect(GT).toEqual({ x: 250, y: 240, w: 90, h: 70 });
+  });
+
+  it('scales about the centre and rounds to whole pixels', () => {
+    expect(scaledBox(GT, 0, 0, 1.4)).toEqual({ x: 232, y: 226, w: 126, h: 98 });
+    expect(scaledBox(GT, 0, 0, 1.5)).toEqual({ x: 228, y: 223, w: 135, h: 105 });
+    expect(scaledBox(GT, 0, 0, 0.5)).toEqual({ x: 273, y: 258, w: 45, h: 35 });
+  });
+
+  it('counts the intersection and the union in pixels', () => {
+    const p = scaledBox(GT, 18, 0, 1);
+    expect(intersection(GT, p)).toEqual({ x: 268, y: 240, w: 72, h: 70 });
+    expect(unionArea(GT, p)).toBe(7560);
+  });
+
+  it('shares no pixel with a box whose edge only touches it', () => {
+    // Half-open boxes, as sgg-metrics' boxIou and backend/app/eval/iou.py treat them.
+    expect(intersection(GT, scaledBox(GT, 90, 0, 1))).toBeNull();
+  });
+
+  it('bounds IoU by the ratio of the two areas', () => {
+    expect(scaleBound(GT, scaledBox(GT, 0, 0, 1.5))).toBeCloseTo(6300 / 14175, 12);
+  });
+
+  it('never lets IoU exceed the bound, on or off the λ grid', () => {
+    // 1.45 and 0.73 are what a hand-typed URL can carry: the sizes round to whole pixels and
+    // the bound is taken from those rounded areas, so the two readouts cannot contradict.
+    for (const lambda of [0.5, 0.73, 1, 1.4, 1.45, 1.5, 2]) {
+      for (const dx of [-120, -30, 0, 30, 120]) {
+        for (const dy of [-100, 0, 100]) {
+          const p = scaledBox(GT, dx, dy, lambda);
+          const i = intersection(GT, p);
+          const iou = ratio(i ? area(i) : 0, unionArea(GT, p));
+          expect(iou).toBeLessThanOrEqual(scaleBound(GT, p) + 1e-12);
+        }
+      }
+    }
+  });
+
+  it('keeps the prediction inside the photograph at every extreme of the knobs', () => {
+    for (const dx of [-120, 120]) {
+      for (const dy of [-100, 100]) {
+        const p = scaledBox(GT, dx, dy, 2);
+        expect(p.x).toBeGreaterThanOrEqual(0);
+        expect(p.y).toBeGreaterThanOrEqual(0);
+        expect(p.x + p.w).toBeLessThanOrEqual(640);
+        expect(p.y + p.h).toBeLessThanOrEqual(480);
+      }
+    }
   });
 });
