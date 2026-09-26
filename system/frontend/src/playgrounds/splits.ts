@@ -18,8 +18,10 @@ export interface Figure {
   measured?: { command: string; sha256: string; rows: number; date: string };
 }
 
+/** A sentence of the sources that a difference on one split equals. */
 export interface Note extends Figure {
   value: number;
+  split: Split;
   text_en: string;
   text_zh: string;
 }

@@ -1,7 +1,7 @@
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { Choice, PlaygroundFrame } from '../controls';
-import { explain, splitDifference, valDisjointFromTest } from '../logic';
+import { explain, splitDifference, valPool } from '../logic';
 import { RELEASES, releaseById, type Figure, type Release, type Split } from '../splits';
 
 /**
@@ -38,6 +38,9 @@ export function SplitReleases() {
   // Chinese takes a full-width colon with no space after it; English a colon and a space.
   const colon = locale === 'en' ? ': ' : '：';
   const gap = locale === 'en' ? ' ' : '';
+  // The source and its locator stay verbatim, being names and headings; the comma between them
+  // is the locale's.
+  const cite = (f: Figure) => `${f.source}${locale === 'en' ? ', ' : '，'}${f.locator}`;
 
   const shown = (f: Figure | undefined): string => {
     if (!f || f.value === null) return t('playground.x1.not_stated');
@@ -52,7 +55,7 @@ export function SplitReleases() {
       split, d,
       x: a.figures[split]!.value as number,
       y: b.figures[split]!.value as number,
-      note: explain(d, [a, b]),
+      note: explain(d, split, [a, b]),
     }];
   });
 
@@ -68,14 +71,16 @@ export function SplitReleases() {
     ...equalities.map((e) => e.note),
   ];
   const footnotes = [
-    ...new Set(used.flatMap((f) => (f ? [`${f.source}, ${f.locator}`] : []))),
+    ...new Set(used.flatMap((f) => (f ? [cite(f)] : []))),
   ];
   const mark = (f: Figure | undefined) =>
-    f ? <sup>{footnotes.indexOf(`${f.source}, ${f.locator}`) + 1}</sup> : null;
+    f ? <sup>{footnotes.indexOf(cite(f)) + 1}</sup> : null;
 
+  // The card states the train/val pool's validation set disjoint from test, and states only the
+  // pool for v1's; each key's text says no more than its source.
   const disjoint = (r: Release) => {
-    const v = valDisjointFromTest(r);
-    return t(v === true ? 'playground.x1.disjoint_yes' : v === false ? 'playground.x1.disjoint_no' : 'playground.x1.disjoint_unknown');
+    const pool = valPool(r);
+    return t(pool === 'trainval' ? 'playground.x1.disjoint_yes' : pool === 'test' ? 'playground.x1.disjoint_no' : 'playground.x1.disjoint_unknown');
   };
 
   const options = RELEASES.map((r) => ({ value: r.id, label: label(r) }));

@@ -46,8 +46,8 @@
         "zero_relation": { "value": null, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "Object/relation annotations themselves were not affected by this bug and are unchanged content-wise." }
       },
       "notes": [
-        { "value": 4844, "text_en": "v1's validation images, drawn from the test pool", "text_zh": "v1 之驗證影像，取自測試影像池", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "`val` was actually built from the first ~4,844 images of the *test* pool" },
-        { "value": 5000, "text_en": "the canonical validation set, folded into v1's train", "text_zh": "標準驗證集，於 v1 中併入訓練集", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "the true 5,000-image canonical validation set was silently folded into `train`" }
+        { "value": 4844, "split": "test", "text_en": "v1's validation images, drawn from the test pool", "text_zh": "v1 之驗證影像，取自測試影像池", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "`val` was actually built from the first ~4,844 images of the *test* pool" },
+        { "value": 5000, "split": "train", "text_en": "the canonical validation set, folded into v1's train", "text_zh": "標準驗證集，於 v1 中併入訓練集", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "the true 5,000-image canonical validation set was silently folded into `train`" }
       ]
     },
     {
@@ -62,8 +62,8 @@
         "zero_relation": { "value": "kept", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "Images with zero relations are kept" }
       },
       "notes": [
-        { "value": 10815, "index": 4, "text_en": "v2's training images with no relation, kept", "text_zh": "v2 保留之無關係訓練影像", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| train |  68 538 |  730 270           |  405 822   | 10 815                      |" },
-        { "value": 5430, "index": 4, "text_en": "v2's test images with no relation, kept", "text_zh": "v2 保留之無關係測試影像", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| test  |  31 876 |  352 330           |  183 640   | 5 430                       |" }
+        { "value": 10815, "index": 4, "split": "train", "text_en": "v2's training images with no relation, kept", "text_zh": "v2 保留之無關係訓練影像", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| train |  68 538 |  730 270           |  405 822   | 10 815                      |" },
+        { "value": 5430, "index": 4, "split": "test", "text_en": "v2's test images with no relation, kept", "text_zh": "v2 保留之無關係測試影像", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| test  |  31 876 |  352 330           |  183 640   | 5 430                       |" }
       ]
     }
   ]

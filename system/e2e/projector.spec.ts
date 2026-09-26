@@ -462,14 +462,16 @@ for (const size of SIZES) {
     });
 
     test('no word of a playground is clipped out of reach', async ({ page }) => {
-      // Each at its longest configuration: F7 with the overlay and its legend, X1 with the
-      // comparison that carries two explanations. The step may scroll past the panel (D71); what
+      // Each at its longest configuration: F6 with both merges, whose sums wrap its readouts, F7
+      // with the overlay and its legend, X1 with the comparison that carries two explanations. F6
+      // was measured here in its default state only, which is the one state where its status line
+      // cleared the clip (D95). The step may scroll past the panel (D71); what
       // it may not do is hide a word inside the frame where no scroll reaches it. M0's three are
       // here too: F1's candidate count and ratio sat under the clip at every panel size from
       // the day it landed, and nothing measured it (D93).
       for (const where of [
         'm00/1', 'm00/3', 'm00/4',
-        'm01/2', 'm01/4?F7.measured=1', 'm01/6?X1.r=sgb-v1&X1.vs=sgb-v2',
+        'm01/2?F6.mp=1&F6.mo=1', 'm01/4?F7.measured=1', 'm01/6?X1.r=sgb-v1&X1.vs=sgb-v2',
       ]) {
         await page.goto(`/lecture/m/${where}`);
         await expect(page.getByTestId('playground-frame')).toBeVisible();

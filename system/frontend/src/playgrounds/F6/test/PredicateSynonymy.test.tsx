@@ -106,6 +106,8 @@ describe('F6', () => {
     expect(screen.getByTestId('readout-F6.predicates')).toHaveTextContent('使用中之 predicate 類別數');
     expect(value('F6.predicates')).toHaveTextContent(/^33$/);
     expect(screen.getByTestId('f6-status')).toHaveTextContent('此邊收錄於 E′');
+    // A full-width colon with no space after it, as X1's (D94).
+    expect(screen.getByTestId('f6-annotated')).toHaveTextContent(/^標註：light above woman$/);
   });
 
   it('does not take focus when it mounts', () => {

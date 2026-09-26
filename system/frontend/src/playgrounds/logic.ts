@@ -217,25 +217,29 @@ export function splitDifference(a: Release, b: Release, split: Split): number | 
 }
 
 /**
- * The note of the sources a difference equals, if either release carries one.
+ * The note of the sources a difference on `split` equals, if either release carries one.
  *
- * Matched on magnitude, so a − b and b − a find the same note. The equality is computed here; the
- * sentence is the source's. A zero difference has nothing to explain and claims nothing.
+ * Matched on magnitude, so a − b and b − a find the same note, and on the split the note is about,
+ * so a difference on another split that happens to equal it claims nothing. The equality is
+ * computed here; the sentence is the source's. A zero difference has nothing to explain.
  */
-export function explain(difference: number, releases: Release[]): Note | undefined {
+export function explain(difference: number, split: Split, releases: Release[]): Note | undefined {
   const magnitude = Math.abs(difference);
   if (magnitude === 0) return undefined;
   for (const r of releases) {
-    const hit = r.notes.find((n) => n.value === magnitude);
+    const hit = r.notes.find((n) => n.split === split && n.value === magnitude);
     if (hit) return hit;
   }
   return undefined;
 }
 
-/** Yes when val comes from the train/val pool, no when from the test pool, null when unstated. */
-export function valDisjointFromTest(r: Release): boolean | null {
+/**
+ * The pool validation was drawn from, as the source states it, or null where it does not.
+ *
+ * Not a disjointness verdict: v1 drew validation from the test pool, yet its validation and test
+ * sets partition that pool (27,032 + 4,844 = 31,876), and no source says they overlap.
+ */
+export function valPool(r: Release): 'trainval' | 'test' | null {
   const from = r.figures.val_from?.value;
-  if (from === 'trainval') return true;
-  if (from === 'test') return false;
-  return null;
+  return from === 'trainval' || from === 'test' ? from : null;
 }

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { SceneGraph } from 'sgg-metrics';
 import { FRAMES, frameById } from '../slice';
-import type { Release } from '../splits';
+import { RELEASES, type Release, type Split } from '../splits';
 import {
   candidateSpace, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
   headShare, isInE, isInMergedE, measuredHeadShare, mergeMap, ranked, ratio, splitDifference,
-  tailToHead, tripletKey, valDisjointFromTest,
+  tailToHead, tripletKey, valPool,
 } from '../logic';
 
 const ph001 = frameById('ph-001')!;
@@ -240,7 +240,7 @@ describe('F7: the shape of a Zipf distribution', () => {
   });
 });
 
-const release = (id: string, train: number | string | null, notes: { value: number; text_en: string }[] = []): Release => {
+const release = (id: string, train: number | string | null, notes: { value: number; split: Split; text_en: string }[] = []): Release => {
   const cite = { source: 's', url: 'u', locator: 'l', quote: 'q' };
   return {
     id, label_en: id, label_zh: id,
@@ -257,23 +257,44 @@ describe('X1: differences between releases', () => {
   });
 
   it('finds the note a difference equals, in either direction', () => {
-    const a = release('a', 68538, [{ value: 10815, text_en: 'kept' }]);
+    const a = release('a', 68538, [{ value: 10815, split: 'train', text_en: 'kept' }]);
     const b = release('b', 57723);
-    expect(explain(10815, [a, b])?.text_en).toBe('kept');
-    expect(explain(-10815, [b, a])?.text_en).toBe('kept');
-    expect(explain(586, [a, b])).toBeUndefined();
+    expect(explain(10815, 'train', [a, b])?.text_en).toBe('kept');
+    expect(explain(-10815, 'train', [b, a])?.text_en).toBe('kept');
+    expect(explain(586, 'train', [a, b])).toBeUndefined();
+  });
+
+  it('a note explains only the split it is about, whatever the magnitude', () => {
+    const a = release('a', 68538, [{ value: 10815, split: 'train', text_en: 'kept' }]);
+    expect(explain(10815, 'test', [a, a])).toBeUndefined();
   });
 
   it('a zero difference claims no explanation, even when a note has value zero', () => {
-    const a = release('a', 5000, [{ value: 0, text_en: 'zero' }]);
-    expect(explain(0, [a, a])).toBeUndefined();
+    const a = release('a', 5000, [{ value: 0, split: 'train', text_en: 'zero' }]);
+    expect(explain(0, 'train', [a, a])).toBeUndefined();
   });
 
-  it('val is disjoint from test when drawn from the train/val pool, not when drawn from test', () => {
-    expect(valDisjointFromTest(release('a', 1))).toBe(true);
-    expect(valDisjointFromTest(release('leaky', 1))).toBe(false);
+  it('every note of the release file explains the difference of some pair on its own split', () => {
+    // A note tagged with the wrong split would explain nothing, and X1 would show its difference
+    // as one no sentence states.
+    for (const owner of RELEASES) {
+      for (const note of owner.notes) {
+        const reached = RELEASES.some((other) => {
+          const d = splitDifference(owner, other, note.split);
+          return d !== null && explain(d, note.split, [owner, other]) === note;
+        });
+        expect(reached, `${owner.id} ${note.value}`).toBe(true);
+      }
+    }
+  });
+
+  it('names the pool validation was drawn from, and says nothing it was not told', () => {
+    // v1's validation and test partition one pool (27,032 + 4,844 = 31,876), so "not disjoint"
+    // would be a claim no source makes; the pool is what the card states.
+    expect(valPool(release('a', 1))).toBe('trainval');
+    expect(valPool(release('leaky', 1))).toBe('test');
     const unstated = release('x', 1);
     unstated.figures.val_from = { value: null, source: 's', url: 'u', locator: 'l', quote: 'q' };
-    expect(valDisjointFromTest(unstated)).toBeNull();
+    expect(valPool(unstated)).toBeNull();
   });
 });

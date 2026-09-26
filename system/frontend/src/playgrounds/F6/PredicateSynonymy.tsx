@@ -56,7 +56,9 @@ function nameOf(frame: SceneGraph, id: number): string {
 }
 
 export function PredicateSynonymy() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  // Chinese takes a full-width colon with no space after it; English a colon and a space (D94).
+  const colon = locale === 'en' ? ': ' : '：';
   const [params, setParams] = useLabParams({
     'F6.mp': 0,
     'F6.mo': 0,
@@ -140,7 +142,7 @@ export function PredicateSynonymy() {
     membership = (
       <div className="flex flex-col gap-2">
         <p data-testid="f6-annotated" className="text-[1em] text-slate-700">
-          {t('playground.f6.annotated')}:{' '}
+          {t('playground.f6.annotated')}{colon}
           <span className="font-mono">
             {nameOf(frame, edge.subject_id)} {edge.predicate} {nameOf(frame, edge.object_id)}
           </span>
@@ -160,7 +162,7 @@ export function PredicateSynonymy() {
   }
 
   return (
-    <PlaygroundFrame title="F6" controls={controls}>
+    <PlaygroundFrame title="F6" controls={controls} clip={false}>
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-x-8 gap-y-3">
           <Readout
