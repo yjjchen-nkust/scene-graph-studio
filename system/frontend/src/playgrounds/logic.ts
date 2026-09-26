@@ -134,8 +134,26 @@ export function classCounts(labels: Iterable<string>, merge: Map<string, string>
   return out;
 }
 
-export function predicateLabels(frames: SceneGraph[]): string[] {
-  return frames.flatMap((f) => f.relationships.map((r) => r.predicate));
+/**
+ * The predicate of every distinct triplet, after `merge`.
+ *
+ * E is a set: a frame that annotates (s, p, o) twice records one triplet, and the slice's 892
+ * relationship rows are 684 triplets. The merge is applied before the rows are counted, because
+ * it can make two rows of one pair the same triplet of E′: two members of the `on` group on the
+ * same pair are one triplet once merged. Ids are a frame's own, so equal ids in two frames are two
+ * triplets.
+ */
+export function predicateLabels(frames: SceneGraph[], merge: Map<string, string> = new Map()): string[] {
+  return frames.flatMap((f) => {
+    const seen = new Set<string>();
+    return f.relationships.flatMap((r) => {
+      const predicate = canonical(r.predicate, merge);
+      const key = tripletKey({ subject_id: r.subject_id, predicate, object_id: r.object_id }, true);
+      if (seen.has(key)) return [];
+      seen.add(key);
+      return [predicate];
+    });
+  });
 }
 
 /** The first name of every object. Every object in the committed slices carries exactly one. */

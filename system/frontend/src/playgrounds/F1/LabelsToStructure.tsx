@@ -2,6 +2,7 @@ import { ImageOverlay } from '../../graph/ImageOverlay';
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { Choice, PlaygroundFrame, Readout, Slider, Toggle } from '../controls';
+import type { PlaygroundProps } from '../mounts';
 import { candidateSpace, clamp, densityCut, flag, formatRatio, ratio } from '../logic';
 import { FRAMES, SLICE_PREDICATE_COUNT, frameById } from '../slice';
 
@@ -31,8 +32,11 @@ const VG150_PREDICATES = 50;
  *
  * Computes a count, a bound and their ratio. No metric: that boundary is what separates a
  * playground from a lab.
+ *
+ * Two parts on the lecture's projector (D96): the picture and its layers, then the density, the
+ * vocabulary and the four readouts. Whole, as the study page shows it, it is both.
  */
-export function LabelsToStructure() {
+export function LabelsToStructure({ part }: PlaygroundProps = {}) {
   const { t } = useLocale();
   const [params, setParams] = useLabParams({
     'F1.img': FRAMES[0].image_id,
@@ -54,6 +58,8 @@ export function LabelsToStructure() {
   const objectCount = frame.objects.length;
   const candidates = candidateSpace(objectCount, predicateCount, true);
   const share = ratio(kept.length, candidates);
+  const layers = part !== 2;
+  const counts = part !== 1;
 
   const controls = (
     <>
@@ -64,44 +70,52 @@ export function LabelsToStructure() {
         options={FRAMES.map((f) => ({ value: f.image_id, label: f.image_id }))}
         onChange={(next) => setParams({ 'F1.img': next })}
       />
-      <Toggle
-        id="F1.labels"
-        label={t('playground.layer_labels')}
-        checked={flag(params['F1.labels'], true)}
-        onChange={(on) => setParams({ 'F1.labels': on ? 1 : 0 })}
-      />
-      <Toggle
-        id="F1.boxes"
-        label={t('playground.layer_boxes')}
-        checked={flag(params['F1.boxes'], true)}
-        onChange={(on) => setParams({ 'F1.boxes': on ? 1 : 0 })}
-      />
-      <Toggle
-        id="F1.rel"
-        label={t('playground.layer_relations')}
-        checked={flag(params['F1.rel'], true)}
-        onChange={(on) => setParams({ 'F1.rel': on ? 1 : 0 })}
-      />
-      <Slider
-        id="F1.density"
-        label={t('playground.density')}
-        value={density}
-        min={0}
-        max={1}
-        step={1 / Math.max(frame.relationships.length, 1)}
-        onChange={(next) => setParams({ 'F1.density': next })}
-        valueLabel={`${kept.length} / ${frame.relationships.length}`}
-      />
-      <Choice
-        id="F1.P"
-        label={t('playground.predicate_vocabulary')}
-        value={String(predicateCount)}
-        options={[
-          { value: String(SLICE_PREDICATE_COUNT), label: t('playground.vocab_slice') },
-          { value: String(VG150_PREDICATES), label: t('playground.vocab_vg150') },
-        ]}
-        onChange={(next) => setParams({ 'F1.P': Number(next) })}
-      />
+      {layers && (
+        <>
+          <Toggle
+            id="F1.labels"
+            label={t('playground.layer_labels')}
+            checked={flag(params['F1.labels'], true)}
+            onChange={(on) => setParams({ 'F1.labels': on ? 1 : 0 })}
+          />
+          <Toggle
+            id="F1.boxes"
+            label={t('playground.layer_boxes')}
+            checked={flag(params['F1.boxes'], true)}
+            onChange={(on) => setParams({ 'F1.boxes': on ? 1 : 0 })}
+          />
+          <Toggle
+            id="F1.rel"
+            label={t('playground.layer_relations')}
+            checked={flag(params['F1.rel'], true)}
+            onChange={(on) => setParams({ 'F1.rel': on ? 1 : 0 })}
+          />
+        </>
+      )}
+      {counts && (
+        <>
+          <Slider
+            id="F1.density"
+            label={t('playground.density')}
+            value={density}
+            min={0}
+            max={1}
+            step={1 / Math.max(frame.relationships.length, 1)}
+            onChange={(next) => setParams({ 'F1.density': next })}
+            valueLabel={`${kept.length} / ${frame.relationships.length}`}
+          />
+          <Choice
+            id="F1.P"
+            label={t('playground.predicate_vocabulary')}
+            value={String(predicateCount)}
+            options={[
+              { value: String(SLICE_PREDICATE_COUNT), label: t('playground.vocab_slice') },
+              { value: String(VG150_PREDICATES), label: t('playground.vocab_vg150') },
+            ]}
+            onChange={(next) => setParams({ 'F1.P': Number(next) })}
+          />
+        </>
+      )}
     </>
   );
 
@@ -112,48 +126,53 @@ export function LabelsToStructure() {
     // clip at every panel size (D93).
     <PlaygroundFrame title="F1" controls={controls} clip={false}>
       <div className="flex flex-col gap-4 lg:flex-row">
-        <div className="max-h-[46vh] overflow-hidden">
-          <ImageOverlay
-            imageUrl={imageUrl(frame.image_id)}
-            width={frame.width}
-            height={frame.height}
-            objects={frame.objects}
-            relationships={kept}
-            mode="view"
-            layers={{
-              boxes: flag(params['F1.boxes'], true),
-              relationships: flag(params['F1.rel'], true),
-              labels: flag(params['F1.labels'], true),
-            }}
-            className="max-w-2xl"
-          />
-        </div>
-        <div className="grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-1">
-          <Readout id="F1.objects" label={t('playground.objects')} value={String(objectCount)} note="|V|" />
-          <Readout
-            id="F1.annotated"
-            label={t('playground.annotated')}
-            value={String(kept.length)}
-            // `|E|` alone. This read `|E| / 6`, where the slash means "out of", directly above
-            // `3 / 480`, where it means division -- and NFR-2 makes this note the place a
-            // student checks the arithmetic, so a note that reads as arithmetic and is not one
-            // is the wrong thing in the wrong place. The kept-of-total fraction is on the
-            // density slider, which is the control that changes it.
-            note="|E|"
-          />
-          <Readout
-            id="F1.candidates"
-            label={t('playground.candidates')}
-            value={String(candidates)}
-            note={`${objectCount} × ${objectCount - 1} × ${predicateCount}`}
-          />
-          <Readout
-            id="F1.ratio"
-            label={t('playground.ratio')}
-            value={formatRatio(share)}
-            note={`${kept.length} / ${candidates}`}
-          />
-        </div>
+        {layers && (
+          <div className="max-h-[46vh] overflow-hidden">
+            <ImageOverlay
+              imageUrl={imageUrl(frame.image_id)}
+              width={frame.width}
+              height={frame.height}
+              objects={frame.objects}
+              // Part 1 has no density slider, so it draws the whole annotation; the cut is part 2's.
+              relationships={part === 1 ? frame.relationships : kept}
+              mode="view"
+              layers={{
+                boxes: flag(params['F1.boxes'], true),
+                relationships: flag(params['F1.rel'], true),
+                labels: flag(params['F1.labels'], true),
+              }}
+              className="max-w-2xl"
+            />
+          </div>
+        )}
+        {counts && (
+          <div className={`grid shrink-0 grid-cols-2 gap-4 ${layers ? 'lg:grid-cols-1' : 'lg:grid-cols-4'}`}>
+            <Readout id="F1.objects" label={t('playground.objects')} value={String(objectCount)} note="|V|" />
+            <Readout
+              id="F1.annotated"
+              label={t('playground.annotated')}
+              value={String(kept.length)}
+              // `|E|` alone. This read `|E| / 6`, where the slash means "out of", directly above
+              // `3 / 480`, where it means division -- and NFR-2 makes this note the place a
+              // student checks the arithmetic, so a note that reads as arithmetic and is not one
+              // is the wrong thing in the wrong place. The kept-of-total fraction is on the
+              // density slider, which is the control that changes it.
+              note="|E|"
+            />
+            <Readout
+              id="F1.candidates"
+              label={t('playground.candidates')}
+              value={String(candidates)}
+              note={`${objectCount} × ${objectCount - 1} × ${predicateCount}`}
+            />
+            <Readout
+              id="F1.ratio"
+              label={t('playground.ratio')}
+              value={formatRatio(share)}
+              note={`${kept.length} / ${candidates}`}
+            />
+          </div>
+        )}
       </div>
     </PlaygroundFrame>
   );

@@ -39,32 +39,59 @@ steps:
   - id: s3
     kind: playground
     kp: F6
-    seconds_budget: 180
-    presenter_notes_en: "Three minutes. Before ticking anything, the panel opens on frame 1039, light above woman, with on substituted: not recorded in E. Tick the predicate merge: the class count falls from 36 to 33, the merged class's triplet count becomes the written sum, and the same triplet is now recorded in E′. Say that the model did not move. If time allows, choose frame 2008 and the edge pillow #27 on bed #1: the annotator wrote both on and sitting on for that pair, which is what happens when no hierarchy says which to write."
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Tick the predicate merge: the class count falls from 36 to 33, and the merged class holds 272 distinct triplets, which the panel writes out as its members' 274 less the 2 pairs that carried two of them. E is a set, so a pair annotated twice is one triplet. Tick the object merge for the same arithmetic on names, 115 classes to 113. Say that no annotation and no model moved."
   - id: s4
+    kind: playground
+    kp: F6
+    part: 2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. The merges carry over from the previous step; untick the predicate merge first. The panel opens on frame 1039, light above woman, with on substituted: not recorded in E. Tick the merge and the same triplet is recorded in E′. Say that the model did not move. If time allows, choose frame 2008 and the edge pillow #27 on bed #1: the annotator wrote both on and sitting on for that pair, which is one of the two pairs the previous step subtracted."
+  - id: s5
     kind: math
     seconds_budget: 300
     presenter_notes_en: "Five minutes, and it is the derivation M04 and L3 both stand on: under a Zipf distribution and a head-biased model, the ratio of R to mR is a ratio of harmonic numbers. Separate the two parameters when introducing them — s belongs to the data, γ to the model. If time is short, drop the closed form and keep R ≥ mR."
-  - id: s5
+  - id: s6
     kind: playground
     kp: F7
-    seconds_budget: 180
-    presenter_notes_en: "Three minutes. Start at s = 0 and show that the head share is exactly k/C; that is the case in which s4 proved R = mR. Raise s and watch the head take the distribution. Turn on the overlay and set k to 1: this slice's top predicate holds 382 of 892 triplets, 42.83%. Let the room move s until the model's head share matches by eye, and say that no exponent is fitted. What recall does on this shape is L3's."
-  - id: s6
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Start at s = 0 and show that the head share is exactly k/C; that is the case in which s5 proved R = mR. Raise s and watch the head take the distribution."
+  - id: s7
+    kind: playground
+    kp: F7
+    part: 2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. The knobs carry over from the previous step. Set k to 1: this slice's top predicate holds 248 of its 684 distinct triplets, 36.26%. Let the room move s until the model's head share matches by eye, and say that no exponent is fitted. What recall does on this shape is L3's."
+  - id: s8
     kind: prose
     seconds_budget: 180
     presenter_notes_en: "Three minutes, and it is a naming convention rather than a result, so keep it short. The point is that several releases share the name VG150, differing in how the validation set is carved and in which images are filtered, and that one release briefly drew its validation images from the test pool; a table that mixes them is not a comparison. Say plainly that this project writes vg150-sgb as its dataset identifier and that the schema refuses the bare form. If asked which release is better, the answer is that the course does not rank them and only requires that a paper say which one it used."
-  - id: s7
+  - id: s9
     kind: playground
     kp: X1
-    seconds_budget: 180
-    presenter_notes_en: "Three minutes. Open on vg150-sgb v2, this project's own release, compared with the canonical protocol: train differs by 10,815 and test by 5,430, and both equal the card's count of images kept with no relation. Then compare v1 with v2: 4,844 images moved from test into validation, which is the leak the card's changelog records. Xu et al. state a 70/30 split and no counts, and the playground says so rather than multiplying. The point is not which release is right but that a number is comparable only when its paper names the release."
-  - id: s8
+    part: 1
+    seconds_budget: 60
+    presenter_notes_en: "One minute. Open on vg150-sgb v2, this project's own release, compared with the canonical protocol: train differs by 10,815 and test by 5,430. Then choose Xu et al.: a 70/30 split and no counts, and the playground says so rather than multiplying."
+  - id: s10
+    kind: playground
+    kp: X1
+    part: 2
+    seconds_budget: 60
+    presenter_notes_en: "One minute. The releases carry over from the previous step; set them to v2 against the canonical protocol if the room moved them. Both differences equal the card's count of images kept with no relation. Then compare v1 with v2: 4,844 images moved from test into validation, which is the leak the card's changelog records."
+  - id: s11
+    kind: playground
+    kp: X1
+    part: 3
+    seconds_budget: 60
+    presenter_notes_en: "One minute. With v1 against v2 still chosen: v1 drew its validation images from the test pool, and v2 keeps validation disjoint from test and keeps its images with no relation. The point is not which release is right but that a number is comparable only when its paper names the release."
+  - id: s12
     kind: lab
     lab: L1
     seconds_budget: 360
     presenter_notes_en: "Six minutes on L1. The task is to add edges, submit, and see which annotated edges were missed. Walk the room looking for a proposal marked spurious that is plainly true of the image — that is the incompleteness of s1, made visible, and it is worth reading one out to the room."
-  - id: s9
+  - id: s13
     kind: checkpoint
     presenter_notes_en: "Checkpoint. A complete answer has two halves: to judge the model you need the vocabulary before and after the merge and the per-predicate counts; to judge the field you need a re-evaluation under one fixed vocabulary. The room will usually produce the first half only. Ask for the second."
 ---
@@ -141,11 +168,21 @@ This is the first of several reasons a table of published figures is not a ranki
 The two merges are independent because the vocabulary has no hierarchy, so whether `above` means
 `on` is a decision, and making it moves the counts below while no annotation and no model changes.
 
-<Playground kp="F6" />
+<Playground kp="F6" part="1" />
 
 </Step>
 
 <Step id="s4">
+
+## One edge, before and after the merge
+
+Substituting a member of the group for an annotated predicate asks whether the new triplet is recorded: in E without the merge, in E′ with it.
+
+<Playground kp="F6" part="2" />
+
+</Step>
+
+<Step id="s5">
 
 <Intuition>
 
@@ -191,18 +228,29 @@ a second measurement of quality. It is a measurement of that correlation.
 
 </Step>
 
-<Step id="s5">
+<Step id="s6">
 
 ## The shape of the tail
 
-Every readout is a ratio of counts under $n_p \propto p^{-s}$, with this slice's own ranked counts
-available beside the model; what a model's recall does on such a distribution is scored in L3.
+Every readout is a ratio of counts under $n_p \propto p^{-s}$; what a model's recall does on
+such a distribution is scored in L3.
 
-<Playground kp="F7" />
+<Playground kp="F7" part="1" />
 
 </Step>
 
-<Step id="s6">
+<Step id="s7">
+
+## The slice against the model
+
+This slice's own predicate counts, ranked, beside the model's; a triplet annotated twice counts
+once.
+
+<Playground kp="F7" part="2" />
+
+</Step>
+
+<Step id="s8">
 
 ## `VG150` names several releases, not one
 
@@ -223,19 +271,39 @@ schema refuses it; prose uses VG150 only for the published benchmark's name.
 
 </Step>
 
-<Step id="s7">
+<Step id="s9">
 
 ## Four releases, one name
 
-Every figure is shown with its source and where in it the figure was read, a figure no source
-states is shown as not stated, and a computed difference names the sentence of the sources it
-equals, where one exists.
+Every figure is shown with its source and where in it the figure was read, and a figure no
+source states is shown as not stated.
 
-<Playground kp="X1" />
+<Playground kp="X1" part="1" />
 
 </Step>
 
-<Step id="s8">
+<Step id="s10">
+
+## Why the counts differ
+
+A computed difference names the sentence of the sources it equals, where one exists.
+
+<Playground kp="X1" part="2" />
+
+</Step>
+
+<Step id="s11">
+
+## Where validation comes from
+
+Each release, with where its validation images are drawn from and what it does with images
+that carry no relation.
+
+<Playground kp="X1" part="3" />
+
+</Step>
+
+<Step id="s12">
 
 ## In the lab
 
@@ -246,7 +314,7 @@ photograph and simply absent from the annotation?
 
 </Step>
 
-<Step id="s9">
+<Step id="s13">
 
 ## Checkpoint
 

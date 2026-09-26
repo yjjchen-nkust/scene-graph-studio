@@ -216,6 +216,53 @@ describe('useStepper', () => {
   });
 });
 
+describe('useStepper and a playground split across steps', () => {
+  // s2 and s3 are the two parts of X1; s1 and s4 are something else.
+  const PARTS = [{ id: 's1' }, { id: 's2', kp: 'X1' }, { id: 's3', kp: 'X1' }, { id: 's4', kp: 'F7' }];
+
+  function Where() {
+    const location = useLocation();
+    return <output data-testid="where">{`${location.pathname}${location.search}`}</output>;
+  }
+
+  function Parts() {
+    useStepper('m01', PARTS);
+    return <Where />;
+  }
+
+  function at(entry: string) {
+    render(
+      <MemoryRouter initialEntries={[entry]}>
+        <Routes>
+          <Route path="/lecture/m/:moduleId/:stepIndex" element={<Parts />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+  }
+
+  const where = () => screen.getByTestId('where').textContent;
+
+  it('carries the knobs from one part to the next, in both directions', () => {
+    at('/lecture/m/m01/1?X1.r=sgb-v1');
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(where()).toBe('/lecture/m/m01/2?X1.r=sgb-v1');
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(where()).toBe('/lecture/m/m01/1?X1.r=sgb-v1');
+  });
+
+  it('drops them on leaving the playground, as every other step change does', () => {
+    at('/lecture/m/m01/2?X1.r=sgb-v1');
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(where()).toBe('/lecture/m/m01/3');
+  });
+
+  it('does not carry a query into a playground from a step that is not part of it', () => {
+    at('/lecture/m/m01/0?X1.r=sgb-v1');
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(where()).toBe('/lecture/m/m01/1');
+  });
+});
+
 describe('useStepper keyboard policy', () => {
   function Modifiers() {
     const stepper = useStepper('m00', STEPS);

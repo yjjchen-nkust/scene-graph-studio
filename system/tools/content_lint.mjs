@@ -215,10 +215,18 @@ const ASSIGNMENT = JSON.parse(readFileSync('../data/content/assignment.json', 'u
 // the first -- which is the failure this whole file exists to catch.
 //
 // Paths in this file are relative to system/, as every other read here is.
-const REGISTERED = new Set(
-  [...readFileSync('frontend/src/playgrounds/mounts.tsx', 'utf-8')
-    .matchAll(/^\s{2}([A-Z]\d+):\s/gm)].map((m) => m[1]),
-);
+const MOUNTS_SOURCE = readFileSync('frontend/src/playgrounds/mounts.tsx', 'utf-8');
+/** One exported object literal of the mount file, as `[key, value]` pairs, one per line. */
+const mountTable = (name) =>
+  [...(MOUNTS_SOURCE.match(new RegExp(`export const ${name}[^=]*=\\s*\\{([^}]*)\\}`))?.[1] ?? '')
+    .matchAll(/^\s{2}([A-Z]\d+):\s*([^,\n]+)/gm)].map((m) => [m[1], m[2].trim()]);
+const REGISTERED = new Set(mountTable('PLAYGROUND_MOUNTS').map(([kp]) => kp));
+// How many consecutive steps each split playground spans (contracts §2.4, 2026-09-26). A point
+// absent from the table is one step, and a step naming a part of it is refused.
+const PARTS = new Map(mountTable('PLAYGROUND_PARTS').map(([kp, n]) => [kp, Number(n)]));
+/** `<Playground kp="…" part="…" />`, the part optional. */
+const TAG = /<Playground\s+kp="([^"]+)"(?:\s+part="([^"]*)")?/g;
+const partText = (part) => (part === undefined ? '' : ` part ${part}`);
 
 const PLAYGROUND_GOLDEN = JSON.parse(
   readFileSync('../data/content/playground_golden.json', 'utf-8'),
@@ -353,9 +361,10 @@ for (const [id, locales] of [...modules].sort()) {
       // the lecturer switches language mid-class, which the step-id check above cannot see.
       for (let i = 0; i < Math.min(a.length, b.length); i += 1) {
         if (a[i].kind === 'playground' || b[i].kind === 'playground') {
-          if (a[i].kind !== b[i].kind || a[i].kp !== b[i].kp) {
-            problems.push(`${id}: step '${a[i].id}' is ${a[i].kind}/${a[i].kp ?? '\u2014'} in ` +
-                          `${LOCALES[0]} and ${b[i].kind}/${b[i].kp ?? '\u2014'} in ${LOCALES[1]}. ` +
+          if (a[i].kind !== b[i].kind || a[i].kp !== b[i].kp || a[i].part !== b[i].part) {
+            const show = (s) => `${s.kind}/${s.kp ?? '\u2014'}${partText(s.part)}`;
+            problems.push(`${id}: step '${a[i].id}' is ${show(a[i])} in ` +
+                          `${LOCALES[0]} and ${show(b[i])} in ${LOCALES[1]}. ` +
                           `A playground must be the same playground in both languages.`);
           }
         }
@@ -420,22 +429,44 @@ for (const [id, locales] of [...modules].sort()) {
             problems.push(`${file}: no component is registered for '${step.kp}' in ` +
                           `frontend/src/playgrounds/mounts.tsx`);
           }
+          // A part names one view of a playground the mount table splits; a playground not
+          // split has no parts to name, and a split one shown whole would put both views on one
+          // slide, which is the overflow the split exists to end.
+          const parts = PARTS.get(step.kp) ?? 1;
+          if (step.part !== undefined) {
+            if (parts === 1) {
+              problems.push(`${file}: step '${step.id}' names part ${step.part} of '${step.kp}', ` +
+                            `which is not split`);
+            } else if (!Number.isInteger(step.part) || step.part < 1 || step.part > parts) {
+              problems.push(`${file}: step '${step.id}' names part ${step.part} of '${step.kp}', ` +
+                            `which has ${parts}`);
+            }
+          } else if (parts > 1) {
+            problems.push(`${file}: '${step.kp}' is split into ${parts} parts, and step ` +
+                          `'${step.id}' names none`);
+          }
           // One entry per module and step, not per locale: the two locale files describe the
           // same step and must not be counted as two uses of it.
-          mountedBy.set(
-            step.kp,
-            new Set([...(mountedBy.get(step.kp) ?? []), `${meta.id}:${step.id}`]),
-          );
-          const tags = [...body.matchAll(/<Playground\s+kp="([^"]+)"/g)].map((m) => m[1]);
-          const forThisStep = stepBody(body, step.id);
-          const inStep = [...forThisStep.matchAll(/<Playground\s+kp="([^"]+)"/g)].map((m) => m[1]);
-          if (inStep.length !== 1 || inStep[0] !== step.kp) {
-            problems.push(`${file}: step '${step.id}' declares kp '${step.kp}' but its body ` +
-                          `carries ${inStep.length === 0 ? 'no <Playground>' : inStep.join(', ')}. ` +
+          const uses = mountedBy.get(step.kp) ?? new Map();
+          if (!uses.has(`${meta.id}:${step.id}`)) {
+            uses.set(`${meta.id}:${step.id}`, {
+              module: meta.id, id: step.id, index: meta.steps.indexOf(step), part: step.part,
+            });
+          }
+          mountedBy.set(step.kp, uses);
+          const tagsOf = (text) =>
+            [...text.matchAll(TAG)].map((m) => ({ kp: m[1], part: m[2] === undefined ? undefined : Number(m[2]) }));
+          const tags = tagsOf(body);
+          const inStep = tagsOf(stepBody(body, step.id));
+          if (inStep.length !== 1 || inStep[0].kp !== step.kp || inStep[0].part !== step.part) {
+            const carried = inStep.map((t) => `${t.kp}${partText(t.part)}`).join(', ');
+            problems.push(`${file}: step '${step.id}' declares kp '${step.kp}'${partText(step.part)} ` +
+                          `but its body carries ${inStep.length === 0 ? 'no <Playground>' : carried}. ` +
                           `Frontmatter and body disagreeing is the defect this catches.`);
           }
-          if (tags.filter((t) => t === step.kp).length > 1) {
-            problems.push(`${file}: '${step.kp}' is mounted more than once in this module`);
+          if (tags.filter((t) => t.kp === step.kp && t.part === step.part).length > 1) {
+            problems.push(`${file}: '${step.kp}'${partText(step.part)} is mounted more than once ` +
+                          `in this module`);
           }
         }
       }
@@ -525,11 +556,32 @@ for (const [id, locales] of [...modules].sort()) {
 
 // A knowledge point has one playground, corpus-wide. Judged after every module has been walked,
 // because no single module's body can see another's.
-for (const [kp, steps] of [...mountedBy].sort()) {
-  if (steps.size > 1) {
+// A split one is its parts, 1 to N, on consecutive steps of one module and in that order: the
+// stepper carries the knobs from a step to the next only when both mount the same point, so
+// parts apart or out of order would each open on defaults.
+for (const [kp, uses] of [...mountedBy].sort()) {
+  const parts = PARTS.get(kp) ?? 1;
+  if (parts === 1) {
+    if (uses.size > 1) {
+      problems.push(
+        `'${kp}' is mounted by ${uses.size} playground steps: ${[...uses.keys()].sort().join(', ')}. ` +
+          `Contracts §2.4 gives a knowledge point one playground.`,
+      );
+    }
+    continue;
+  }
+  const inOrder = [...uses.values()].sort(
+    (x, y) => (x.module < y.module ? -1 : x.module > y.module ? 1 : x.index - y.index),
+  );
+  const [first] = inOrder;
+  const whole = inOrder.length === parts && inOrder.every(
+    (u, i) => u.module === first.module && u.index === first.index + i && u.part === i + 1,
+  );
+  if (!whole) {
     problems.push(
-      `'${kp}' is mounted by ${steps.size} playground steps: ${[...steps].sort().join(', ')}. ` +
-        `Contracts §2.4 gives a knowledge point one playground.`,
+      `'${kp}' is split into ${parts} parts and mounted as ` +
+        `${inOrder.map((u) => `${u.module}:${u.id} (${u.part ?? '—'})`).join(', ')}. Its parts ` +
+        `are ${parts} consecutive steps of one module, in order (contracts §2.4).`,
     );
   }
 }

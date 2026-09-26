@@ -92,8 +92,11 @@ describe('playground golden cases', () => {
   it.each(run('F6 slice'))('$id', (c) => {
     const predicates = c.knobs.group === 'predicates';
     const group = predicates ? PREDICATE_GROUP : OBJECT_GROUP;
-    const labels = predicates ? predicateLabels(VG_FRAMES) : objectLabels(VG_FRAMES);
-    const counts = classCounts(labels, c.knobs.merged ? mergeMap([group]) : new Map());
+    const merge = c.knobs.merged ? mergeMap([group]) : new Map<string, string>();
+    // Predicates count distinct triplets, merged before counting; object names count objects.
+    const counts = predicates
+      ? classCounts(predicateLabels(VG_FRAMES, merge), new Map())
+      : classCounts(objectLabels(VG_FRAMES), merge);
     expect(counts.size).toBe(c.expect.classes);
     expect(counts.get(group[0]!)).toBe(c.expect.group_count);
   });

@@ -54,6 +54,17 @@ const SPLITS = {
 /** One `<Step>` block mounting `kp`. */
 const block = (id, kp) => `<Step id="${id}">\n\n<Playground kp="${kp}" />\n\n</Step>`;
 
+/** A step, and its block, carrying one part of a split playground. */
+const partStep = (id, kp, part) => `${step(id, kp)}\n    part: ${part}`;
+const partBlock = (id, kp, part) =>
+  `<Step id="${id}">\n\n<Playground kp="${kp}" part="${part}" />\n\n</Step>`;
+/** F1 in two parts, as steps s1 and s2. */
+const SPLIT = {
+  parts: '  F1: 2,\n',
+  frontmatter: `${partStep('s1', 'F1', 1)}\n${partStep('s2', 'F1', 2)}`,
+  body: `${partBlock('s1', 'F1', 1)}\n\n${partBlock('s2', 'F1', 2)}`,
+};
+
 /**
  * A fixture corpus rooted at a temporary directory, returned as its `system/` path.
  *
@@ -65,7 +76,7 @@ const block = (id, kp) => `<Step id="${id}">\n\n<Playground kp="${kp}" />\n\n</S
 function corpus({
   frontmatter, body, en = {}, knowledgePoints = '[F1, F2, Z9]',
   assignment = { m00: ['F1', 'F2', 'Z9'] }, others = [],
-  mounts = '  F1: A,\n  F2: B,\n', golden, splits = SPLITS,
+  mounts = '  F1: A,\n  F2: B,\n', parts = '', golden, splits = SPLITS,
 } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'sgs-lint-'));
   roots.push(root);
@@ -96,7 +107,7 @@ function corpus({
   mkdirSync(join(root, 'system/frontend/src/content'), { recursive: true });
   mkdirSync(join(root, 'system/frontend/src/playgrounds'), { recursive: true });
   write('system/frontend/src/playgrounds/mounts.tsx',
-    `export const PLAYGROUND_MOUNTS = {\n${mounts}};\n`);
+    `export const PLAYGROUND_MOUNTS = {\n${mounts}};\n\nexport const PLAYGROUND_PARTS = {\n${parts}};\n`);
 
   const m00 = {
     id: 'm00', knowledgePoints, en,
@@ -214,6 +225,82 @@ describe('content_lint playground rules', () => {
     }));
     expect(r.out).toContain("'F1' is mounted by 2 playground steps: m00:s1, m01:s1");
     expect(r.out).not.toContain('more than once in this module');
+  });
+
+  it('accepts a playground split into parts on consecutive steps of one module', () => {
+    const r = lint(corpus(SPLIT));
+    expect(r.ok, r.out).toBe(true);
+  });
+
+  it('refuses a split playground mounted by a step that names no part', () => {
+    const r = lint(corpus({ parts: '  F1: 2,\n' }));
+    expect(r.out).toContain("'F1' is split into 2 parts, and step 's1' names none");
+  });
+
+  it('refuses a part beyond those registered, and a part of a playground not split', () => {
+    const beyond = lint(corpus({
+      ...SPLIT,
+      frontmatter: `${partStep('s1', 'F1', 1)}\n${partStep('s2', 'F1', 3)}`,
+      body: `${partBlock('s1', 'F1', 1)}\n\n${partBlock('s2', 'F1', 3)}`,
+    }));
+    expect(beyond.out).toContain("step 's2' names part 3 of 'F1', which has 2");
+    const whole = lint(corpus({ frontmatter: partStep('s1', 'F1', 1), body: partBlock('s1', 'F1', 1) }));
+    expect(whole.out).toContain("step 's1' names part 1 of 'F1', which is not split");
+  });
+
+  it('refuses a tag whose part is not its step\'s', () => {
+    const r = lint(corpus({ ...SPLIT, body: `${partBlock('s1', 'F1', 1)}\n\n${partBlock('s2', 'F1', 1)}` }));
+    expect(r.out).toContain("step 's2' declares kp 'F1' part 2 but its body carries F1 part 1");
+  });
+
+  it('refuses parts that are not consecutive steps in order', () => {
+    // Each step is well formed on its own and every part is present, so only the corpus-wide
+    // judgement can see a step standing between them, or the parts running backwards.
+    const apart = lint(corpus({
+      ...SPLIT,
+      frontmatter: `${partStep('s1', 'F1', 1)}\n${step('s2', 'F2')}\n${partStep('s3', 'F1', 2)}`,
+      body: `${partBlock('s1', 'F1', 1)}\n\n${block('s2', 'F2')}\n\n${partBlock('s3', 'F1', 2)}`,
+    }));
+    expect(apart.out).toContain("'F1' is split into 2 parts and mounted as m00:s1 (1), m00:s3 (2)");
+    const backwards = lint(corpus({
+      ...SPLIT,
+      frontmatter: `${partStep('s1', 'F1', 2)}\n${partStep('s2', 'F1', 1)}`,
+      body: `${partBlock('s1', 'F1', 2)}\n\n${partBlock('s2', 'F1', 1)}`,
+    }));
+    expect(backwards.out).toContain("'F1' is split into 2 parts and mounted as m00:s1 (2), m00:s2 (1)");
+  });
+
+  it('refuses the parts of one playground spread over two modules', () => {
+    const r = lint(corpus({
+      parts: '  F1: 2,\n',
+      frontmatter: partStep('s1', 'F1', 1),
+      body: partBlock('s1', 'F1', 1),
+      others: [{
+        id: 'm01', knowledgePoints: '[F1]', frontmatter: partStep('s1', 'F1', 2), body: partBlock('s1', 'F1', 2),
+      }],
+    }));
+    expect(r.out).toContain("'F1' is split into 2 parts and mounted as m00:s1 (1), m01:s1 (2)");
+  });
+
+  it('refuses the same part mounted twice in one module', () => {
+    const r = lint(corpus({
+      ...SPLIT,
+      frontmatter: `${partStep('s1', 'F1', 1)}\n${partStep('s2', 'F1', 1)}`,
+      body: `${partBlock('s1', 'F1', 1)}\n\n${partBlock('s2', 'F1', 1)}`,
+    }));
+    expect(r.out).toContain("'F1' part 1 is mounted more than once in this module");
+  });
+
+  it('refuses a step that is a different part in each locale', () => {
+    // Each locale is consistent with itself, so no per-file rule can see the defect.
+    const r = lint(corpus({
+      ...SPLIT,
+      en: {
+        frontmatter: `${partStep('s1', 'F1', 2)}\n${partStep('s2', 'F1', 1)}`,
+        body: `${partBlock('s1', 'F1', 2)}\n\n${partBlock('s2', 'F1', 1)}`,
+      },
+    }));
+    expect(r.out).toContain("step 's1' is playground/F1 part 1 in zh-TW and playground/F1 part 2 in en");
   });
 
   it('refuses a golden case whose why does not write out the arithmetic', () => {

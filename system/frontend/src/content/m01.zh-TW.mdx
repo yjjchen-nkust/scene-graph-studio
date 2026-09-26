@@ -39,32 +39,59 @@ steps:
   - id: s3
     kind: playground
     kp: F6
-    seconds_budget: 180
-    presenter_notes_zh: "三分鐘。勾選之前，面板開啟於影像 1039 之 light above woman，並以 on 替換：未收錄於 E。其後勾選 predicate 合併：類別數由 36 降為 33，合併後類別之三元組數即為畫面所列之加總，而同一三元組此時收錄於 E′。須明確說明模型並未改變。時間允許時，可選擇影像 2008 之 pillow #27 on bed #1：標註者對該組物件同時標有 on 與 sitting on，此即詞彙缺乏階層時之實際作法。"
+    part: 1
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。勾選 predicate 合併：類別數由 36 降為 33，合併後類別含 272 個相異三元組，畫面將其列為各成員之和 274 減去同時標註兩個成員之 2 組物件對。E 為集合，同一組物件重複標註僅計一個三元組。其後勾選物件名稱合併，以同一算式說明名稱：類別數由 115 降為 113。須說明標註與模型皆未改變。"
   - id: s4
+    kind: playground
+    kp: F6
+    part: 2
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。合併選項沿用前一步驟，請先取消 predicate 合併。面板開啟於影像 1039 之 light above woman，並以 on 替換：未收錄於 E。勾選合併後，同一三元組收錄於 E′。須明確說明模型並未改變。時間允許時，可選擇影像 2008 之 pillow #27 on bed #1：標註者對該組物件同時標有 on 與 sitting on，即前一步驟所減去之兩組物件對之一。"
+  - id: s5
     kind: math
     seconds_budget: 300
     presenter_notes_zh: "五分鐘。本步驟為 M04 與 L3 的前置推導：在 Zipf 分布與頭部偏置模型之下，R 與 mR 的比值可寫成調和數之比。s 與 γ 兩個參數須分別說明，前者屬資料、後者屬模型。時間不足時可略去封閉形式，保留 R ≥ mR 的結論。"
-  - id: s5
+  - id: s6
     kind: playground
     kp: F7
-    seconds_budget: 180
-    presenter_notes_zh: "三分鐘。自 s = 0 開始，說明頭部比例恰為 k/C，此即 s4 證明 R = mR 之情形。其後調高 s，觀察頭部逐漸占據分布。開啟疊加並將 k 設為 1：本切片最常見之 predicate 占 892 條三元組中之 382 條，即 42.83%。可請現場調整 s 使模型之頭部比例與之目測相符，並說明未作任何指數擬合。召回率於此分布下之表現屬 L3 之範圍。"
-  - id: s6
+    part: 1
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。自 s = 0 開始，說明頭部比例恰為 k/C，此即 s5 證明 R = mR 之情形。其後調高 s，觀察頭部逐漸占據分布。"
+  - id: s7
+    kind: playground
+    kp: F7
+    part: 2
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。各項設定沿用前一步驟。將 k 設為 1：本切片最常見之 predicate 占 684 個相異三元組中之 248 個，即 36.26%。可請現場調整 s 使模型之頭部比例與之目測相符，並說明未作任何指數擬合。召回率於此分布下之表現屬 L3 之範圍。"
+  - id: s8
     kind: prose
     seconds_budget: 180
     presenter_notes_zh: "三分鐘。此頁為命名慣例而非理論，宜快。要點在於數個發布版本共用 VG150 一名，彼此於驗證集之切取方式與影像篩選規則上有所不同，且其中一個版本曾自測試集抽取驗證影像；混用各版本之表格並不構成比較。請明確說明本專案以 vg150-sgb 作為資料集識別碼，且資料結構描述拒絕簡寫形式。若現場詢問何者較佳，答為本課程不作此判斷，只要求論文指明所用者。"
-  - id: s7
+  - id: s9
     kind: playground
     kp: X1
-    seconds_budget: 180
-    presenter_notes_zh: "三分鐘。先開啟本專案所用之 vg150-sgb v2，並與標準協定比較：訓練集相差 10,815，測試集相差 5,430，兩者皆等於資料卡所載保留之無關係影像數。其後比較 v1 與 v2：有 4,844 張影像自測試集移入驗證集，即資料卡變更紀錄所述之洩漏。Xu 等人僅載明 70／30 比例而未列張數，本步驟據實標示，不自行換算。重點不在於何者正確，而在於唯有論文載明所用版本，數值方可比較。"
-  - id: s8
+    part: 1
+    seconds_budget: 60
+    presenter_notes_zh: "一分鐘。先開啟本專案所用之 vg150-sgb v2，並與標準協定比較：訓練集相差 10,815，測試集相差 5,430。其後選擇 Xu 等人：僅載明 70／30 比例而未列張數，本步驟據實標示，不自行換算。"
+  - id: s10
+    kind: playground
+    kp: X1
+    part: 2
+    seconds_budget: 60
+    presenter_notes_zh: "一分鐘。版本選擇沿用前一步驟；若現場已更動，請改回 v2 與標準協定之比較。兩項差值皆等於資料卡所載保留之無關係影像數。其後比較 v1 與 v2：有 4,844 張影像自測試集移入驗證集，即資料卡變更紀錄所述之洩漏。"
+  - id: s11
+    kind: playground
+    kp: X1
+    part: 3
+    seconds_budget: 60
+    presenter_notes_zh: "一分鐘。沿用 v1 與 v2 之比較：v1 之驗證影像取自測試影像池，v2 之驗證集與測試集互不重疊，並保留無關係之影像。重點不在於何者正確，而在於唯有論文載明所用版本，數值方可比較。"
+  - id: s12
     kind: lab
     lab: L1
     seconds_budget: 360
     presenter_notes_zh: "L1 六分鐘。任務為補上邊並送出，觀察哪些已標註的邊未被找出。巡視時請留意被判為 spurious 而實際符合影像的提案，該類提案即為 s1 所述關係層不完整性的直接證據，宜於現場取一例公開說明。"
-  - id: s9
+  - id: s13
     kind: checkpoint
     presenter_notes_zh: "檢核點。完整回答分兩層：判斷該模型是否改進，需要合併前後的詞彙表與各 predicate 的樣本數；判斷該領域是否進展，則需要在同一固定詞彙表下的重複評測。現場多半只答出前者，此時請追問後者。"
 ---
@@ -129,11 +156,21 @@ $$
 
 兩項合併彼此獨立，因詞彙本身並無階層；above 是否等同 on 屬於決定，決定一經作成，下方計數隨之改變，而標註與模型皆未改變。
 
-<Playground kp="F6" />
+<Playground kp="F6" part="1" />
 
 </Step>
 
 <Step id="s4">
+
+## 合併前後之單一邊
+
+以群組成員替換已標註之 predicate，即詢問新三元組是否收錄：未合併時查 E，合併後查 E′。
+
+<Playground kp="F6" part="2" />
+
+</Step>
+
+<Step id="s5">
 
 <Intuition>
 
@@ -174,17 +211,27 @@ $$
 
 </Step>
 
-<Step id="s5">
+<Step id="s6">
 
 ## 長尾之形狀
 
-各讀數皆為 $n_p \propto p^{-s}$ 下之計數比，並可疊加本切片依次數排序之實際計數；模型召回率於此類分布下之表現由 L3 評分。
+各讀數皆為 $n_p \propto p^{-s}$ 下之計數比；模型召回率於此類分布下之表現由 L3 評分。
 
-<Playground kp="F7" />
+<Playground kp="F7" part="1" />
 
 </Step>
 
-<Step id="s6">
+<Step id="s7">
+
+## 本切片與模型之對照
+
+本切片依次數排序之 predicate 計數與模型並列；重複標註之三元組僅計一次。
+
+<Playground kp="F7" part="2" />
+
+</Step>
+
+<Step id="s8">
 
 ## `VG150` 指涉數個發布版本
 
@@ -198,17 +245,37 @@ Visual Genome 的 150 物件類別、50 predicate 子集源自 Xu 等人（2017�
 
 </Step>
 
-<Step id="s7">
+<Step id="s9">
 
 ## 四個發布版本，一個名稱
 
-每一數值皆附其出處及所在位置，來源未載明者即標示為未載明；計算所得之差值若等於來源中某一語句所載數值，即一併列出該語句。
+每一數值皆附其出處及所在位置，來源未載明者即標示為未載明。
 
-<Playground kp="X1" />
+<Playground kp="X1" part="1" />
 
 </Step>
 
-<Step id="s8">
+<Step id="s10">
+
+## 張數差異之來源
+
+計算所得之差值若等於來源中某一語句所載數值，即一併列出該語句。
+
+<Playground kp="X1" part="2" />
+
+</Step>
+
+<Step id="s11">
+
+## 驗證集之來源與無關係之影像
+
+各發布版本之驗證影像取自何處，以及無關係之影像如何處理。
+
+<Playground kp="X1" part="3" />
+
+</Step>
+
+<Step id="s12">
 
 ## 實作單元的內容
 
@@ -216,7 +283,7 @@ L1 提供一張物件已框出的影像，由學員補上邊。請建立數組�
 
 </Step>
 
-<Step id="s9">
+<Step id="s13">
 
 ## 檢核點
 

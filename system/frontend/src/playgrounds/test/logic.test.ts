@@ -4,7 +4,7 @@ import { FRAMES, frameById } from '../slice';
 import { RELEASES, type Release, type Split } from '../splits';
 import {
   candidateSpace, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
-  headShare, isInE, isInMergedE, measuredHeadShare, mergeMap, ranked, ratio, splitDifference,
+  headShare, isInE, isInMergedE, measuredHeadShare, mergeMap, predicateLabels, ranked, ratio, splitDifference,
   tailToHead, tripletKey, valPool,
 } from '../logic';
 
@@ -206,6 +206,24 @@ describe('F6: merging classes', () => {
     expect(isInMergedE(g, t, new Map())).toBe(false);
     expect(isInMergedE(g, t, mergeMap([['on', 'sitting on']]))).toBe(true);
     expect(isInMergedE(g, { ...t, subject_id: 2, object_id: 1 }, mergeMap([['on', 'sitting on']]))).toBe(false);
+  });
+});
+
+describe('predicate labels: E is a set', () => {
+  it('counts a triplet a frame annotates twice once, and the reversed pair on its own', () => {
+    const g = graph([[1, 'on', 2], [1, 'on', 2], [2, 'on', 1]]);
+    expect(predicateLabels([g])).toEqual(['on', 'on']);
+  });
+
+  it('counts the same ids in two frames twice, since they are two scenes', () => {
+    const g = graph([[1, 'on', 2]]);
+    expect(predicateLabels([g, g])).toEqual(['on', 'on']);
+  });
+
+  it('merges before it counts: two members on one pair are one triplet of E′', () => {
+    const g = graph([[1, 'on', 2], [1, 'sitting on', 2], [3, 'sitting on', 4]]);
+    expect(predicateLabels([g])).toEqual(['on', 'sitting on', 'sitting on']);
+    expect(predicateLabels([g], mergeMap([['on', 'sitting on']]))).toEqual(['on', 'on']);
   });
 });
 

@@ -58,6 +58,8 @@ export function Slider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
+        // Narrower than the browser default, so F7's three sliders share one row at 1024 px.
+        className="w-24"
       />
       <span className="font-mono text-[1em] tabular-nums text-slate-600">{valueLabel}</span>
     </span>
@@ -65,10 +67,12 @@ export function Slider({
 }
 
 export function Choice({
-  id, label, value, options, onChange,
+  id, label, value, options, onChange, width,
 }: {
   id: string; label: string; value: string;
   options: { value: string; label: string }[]; onChange: (next: string) => void;
+  /** A cap on the field's width, for options too long to share a row; the list shows them whole. */
+  width?: string;
 }) {
   return (
     <span className="inline-flex items-center gap-2">
@@ -78,7 +82,7 @@ export function Choice({
         data-testid={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={FIELD}
+        className={width ? `${FIELD} ${width}` : FIELD}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>

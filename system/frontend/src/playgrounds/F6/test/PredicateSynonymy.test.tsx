@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setLocale } from '../../../i18n/useLocale';
@@ -24,12 +24,28 @@ describe('F6', () => {
     expect(value('F6.predicates')).toHaveTextContent(/^33$/);
   });
 
-  it('writes the merged class out as the sum of its members', () => {
+  it('counts distinct triplets: on alone holds 248, not its 382 annotation rows', () => {
+    at();
+    expect(value('F6.group')).toHaveTextContent(/^248$/);
+    expect(screen.getByTestId('readout-F6.group')).toHaveTextContent('on 248');
+  });
+
+  it('writes the merged class out as its members, less the pairs that carried two of them', () => {
     at('?F6.mp=1');
-    expect(value('F6.group')).toHaveTextContent(/^408$/);
+    expect(value('F6.group')).toHaveTextContent(/^272$/);
     expect(screen.getByTestId('readout-F6.group')).toHaveTextContent(
-      'on 382 + above 11 + over 5 + sitting on 10 = 408',
+      'on 248 + above 11 + over 5 + sitting on 10 − 2 = 272',
     );
+  });
+
+  it('says in words what the subtraction is, and only when there is one', () => {
+    at('?F6.mp=1');
+    expect(screen.getByTestId('f6-collapsed')).toHaveTextContent(
+      /^2 pairs carry two members of the group; E′ records each pair once.$/,
+    );
+    cleanup();
+    at('?F6.mo=1');
+    expect(screen.queryByTestId('f6-collapsed')).toBeNull();
   });
 
   it('merges the three names for people, independently of the predicates', () => {
