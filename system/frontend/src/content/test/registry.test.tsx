@@ -142,10 +142,12 @@ describe('the playground step kind', () => {
     }
   });
 
-  it('M2 carries F3 directly after the step that teaches it', () => {
+  it('M2 carries F3, in two parts, directly after the step that teaches it', () => {
     const meta = getMeta('m02', 'en')!;
-    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}` : ''}`)).toEqual([
-      's1:prose', 's2:math', 's3:playground/F3', 's4:prose', 's5:prose', 's6:lab', 's7:checkpoint',
+    const part = (n?: number) => (n === undefined ? '' : `.${n}`);
+    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}${part(s.part)}` : ''}`)).toEqual([
+      's1:prose', 's2:math', 's3:playground/F3.1', 's4:playground/F3.2', 's5:prose', 's6:prose',
+      's7:lab', 's8:checkpoint',
     ]);
   });
 

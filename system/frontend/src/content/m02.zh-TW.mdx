@@ -27,22 +27,29 @@ steps:
   - id: s3
     kind: playground
     kp: F3
-    seconds_budget: 180
-    presenter_notes_zh: "三分鐘。先於同心位置將 λ 調至 1.4：上界為 0.510，預測框視為同一物件。將 λ 調至 1.5：上界降為 0.444，低於 τ = 0.5，任何 Δx 或 Δy 皆無法使其通過，此即 s2 之 √2 界限。其後將 λ 還原為 1，Δx 調至 30：IoU 恰為 0.500，因判定規則為 IoU ≥ τ，仍視為同一物件。最後調整 τ，並說明 0.5 為 Xu 等人所載明之數值，而非定義之一部分。"
+    part: 1
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。先於同心位置將 λ 調至 1.4：交集為整個標註框 6,300 像素，聯集為 12,348，IoU 等於上界 0.510。將 λ 調至 1.5：上界降為 0.444，任何 Δx 或 Δy 皆無法使 IoU 高於此值，此即 s2 之 √2 界限。其後將 λ 還原為 1，Δx 調至 30：8,400 像素中交集 4,200，IoU 恰為 0.500。保持此設定進入下一步驟。"
   - id: s4
+    kind: playground
+    kp: F3
+    part: 2
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。旋鈕沿用前一步驟之設定：IoU 恰為 0.500，τ = 0.5，因判定規則為 IoU ≥ τ，預測框視為同一物件。將 τ 調高一格至 0.55：不再視為同一物件，而預測框本身並無任何改變。須說明 0.5 為 Xu 等人所載明之數值，而非定義之一部分。若前一步驟之 λ 為 1.5，本面板另將載明任何位置皆無法達到 τ = 0.5。"
+  - id: s5
     kind: prose
     seconds_budget: 180
     presenter_notes_zh: "三分鐘。兩項要點：軸對齊矩形必然宣告超出物件實際佔據的面積；相互穿插的兩物件其框大幅重疊而物件本身未接觸。遮罩去除此一歧義，但引入標註成本與自身的配對規則兩項代價。`single_mpo` 與 `multi_mpo` 之分請留待 L6，此處只需指出該分別會改變已發表的數值。"
-  - id: s5
+  - id: s6
     kind: prose
     seconds_budget: 120
     presenter_notes_zh: "兩分鐘。PSG 為本課程唯一具遮罩的 Tier-1 資料集，也是 L6 得以成立的前提。閱讀其表格前須知兩點：其物件詞彙含 stuff 類別，故 predicate 分布與 VG150 不可比較；其標註為 MIT 授權而影像為 COCO 照片，授權並不及於影像，本專案因此只提交標註、不散布影像。第二點與 `data/LICENCES.md` 的兩道閘門一致，宜一併提及。"
-  - id: s6
+  - id: s7
     kind: lab
     lab: L1
     seconds_budget: 300
     presenter_notes_zh: "L1 五分鐘，開啟一張 PSG 影像並開啟遮罩圖層。兩項任務：找出遮罩與框明顯不一致的物件，再找出框大幅重疊而遮罩並未接觸的配對。後者即為「指標改以遮罩計算則分數隨之改變」的實例，宜於現場取一例公開說明。"
-  - id: s7
+  - id: s8
     kind: checkpoint
     presenter_notes_zh: "檢核點。τ = 0.3 者數值較高，且此比較對兩模型之優劣不提供任何資訊。宜藉此追問：兩篇論文均於註腳載明門檻，仍不足以構成比較，缺少的是何者。答案為同一門檻下的重新評測。"
 ---
@@ -104,13 +111,21 @@ $$
 
 <Step id="s3">
 
-## 單一邊界框之 IoU 與門檻
+## 單一邊界框之位移與縮放
 
-<Playground kp="F3" />
+<Playground kp="F3" part="1" />
 
 </Step>
 
 <Step id="s4">
+
+## 門檻與上界之比較
+
+<Playground kp="F3" part="2" />
+
+</Step>
+
+<Step id="s5">
 
 ## 框所無法表達的資訊
 
@@ -122,7 +137,7 @@ $$
 
 </Step>
 
-<Step id="s5">
+<Step id="s6">
 
 ## PSG：133 個類別、56 個 predicate、具遮罩
 
@@ -132,7 +147,7 @@ Panoptic Scene Graph 資料集以全景 segment 而非框重新標註 COCO 影�
 
 </Step>
 
-<Step id="s6">
+<Step id="s7">
 
 ## 實作單元的內容
 
@@ -140,7 +155,7 @@ Panoptic Scene Graph 資料集以全景 segment 而非框重新標註 COCO 影�
 
 </Step>
 
-<Step id="s7">
+<Step id="s8">
 
 ## 檢核點
 

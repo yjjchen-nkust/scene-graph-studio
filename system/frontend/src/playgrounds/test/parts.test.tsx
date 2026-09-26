@@ -19,8 +19,8 @@ function part(kp: string, n?: string, search = '') {
 const shown = (...ids: string[]) => ids.filter((id) => screen.queryByTestId(id) !== null);
 
 describe('a playground split across steps', () => {
-  it('registers the four playgrounds too long for one panel, X1 in three parts and the rest in two', () => {
-    expect(PLAYGROUND_PARTS).toEqual({ F1: 2, F6: 2, F7: 2, X1: 3 });
+  it('registers the five playgrounds too long for one panel, X1 in three parts and the rest in two', () => {
+    expect(PLAYGROUND_PARTS).toEqual({ F1: 2, F3: 2, F6: 2, F7: 2, X1: 3 });
   });
 
   it('F1: the picture and its layers, then the density, the vocabulary and the readouts', () => {
@@ -39,6 +39,26 @@ describe('a playground split across steps', () => {
   it('F1 part 1 draws every annotated edge, since its density slider is on the other part', () => {
     const cut = part('F1', '1', '?F1.density=0');
     expect(cut.container.querySelectorAll('[data-testid^="edge-"]').length).toBeGreaterThan(0);
+  });
+
+  it('F3: the box moved and counted, then the threshold and the membership', () => {
+    const all = [
+      'F3.dx', 'F3.dy', 'F3.lambda', 'F3.tau', 'f3-picture', 'f3-legend',
+      'readout-F3.intersection', 'readout-F3.union', 'readout-F3.iou', 'readout-F3.bound',
+      'f3-member', 'f3-unreachable',
+    ];
+    const one = part('F3', '1', '?F3.lambda=1.5');
+    expect(shown(...all)).toEqual([
+      'F3.dx', 'F3.dy', 'F3.lambda', 'f3-picture', 'f3-legend',
+      'readout-F3.intersection', 'readout-F3.union', 'readout-F3.iou', 'readout-F3.bound',
+    ]);
+    one.unmount();
+
+    // The two numbers τ is compared with stand beside it, so the membership is read, not recalled.
+    part('F3', '2', '?F3.lambda=1.5');
+    expect(shown(...all)).toEqual([
+      'F3.tau', 'readout-F3.iou', 'readout-F3.bound', 'f3-member', 'f3-unreachable',
+    ]);
   });
 
   it('F6: the merges and the class counts, then the membership of one edge', () => {

@@ -173,7 +173,7 @@ test('the node buttons of F2 take Space without advancing the slide', async ({ p
   await expect(position).toHaveText(before ?? '');
 });
 
-test('the study shell renders every playground of M0 and of M1 in one column', async ({ page }) => {
+test('the study shell renders every playground of M0, M1 and M2 in one column', async ({ page }) => {
   // Spec §4.1 says the study shell needs no special provision, which is a claim about the
   // product rather than an absence of work: it is true only if a playground renders outside the
   // lecture shell at all. M0 has three, and the student reading alone sees every one of them.
@@ -183,6 +183,8 @@ test('the study shell renders every playground of M0 and of M1 in one column', a
   await expect(page.getByTestId('readout-F1.candidates')).toContainText('480');
   await page.goto('/m/m01');
   await expect(page.getByTestId('playground-frame')).toHaveCount(7);
+  await page.goto('/m/m02');
+  await expect(page.getByTestId('playground-frame')).toHaveCount(2);
 });
 
 test('turning a knob writes it into the address bar, so the setting is a link', async ({ page }) => {
@@ -219,6 +221,7 @@ test('no playground takes focus when its step opens', async ({ page }) => {
   for (const [module, index] of [
     ['m00', 1], ['m00', 2], ['m00', 4], ['m00', 5],
     ['m01', 2], ['m01', 3], ['m01', 5], ['m01', 6], ['m01', 8], ['m01', 9], ['m01', 10],
+    ['m02', 2], ['m02', 3],
   ] as const) {
     await page.goto(`/lecture/m/${module}/${index}`);
     await expect(page.getByTestId('playground-frame')).toBeVisible();
@@ -274,6 +277,57 @@ test('M1\'s knobs write the address bar', async ({ page }) => {
   await page.goto('about:blank');
   await page.goto(shared);
   await expect(page.getByTestId('x1-train-a')).toContainText('73,538');
+});
+
+test('M2\'s playground computes with no backend running', async ({ page }) => {
+  await page.goto('/lecture/m/m02/2');
+  await expect(page.getByTestId('readout-F3.iou-value')).toHaveText('1.000');
+  await page.goto('/lecture/m/m02/3');
+  await expect(page.getByTestId('f3-member')).toHaveText(/IoU ≥ τ/);
+});
+
+test('F3\'s scale crosses from its first part to its second, and the second says no placement reaches τ', async ({ page }) => {
+  // Part 2 compares IoU and the bound with τ; the λ set on part 1 is what it compares (D96).
+  await page.goto('/lecture/m/m02/2?F3.lambda=1.5');
+  await expect(page.getByTestId('readout-F3.bound-value')).toHaveText('0.444');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('f3-unreachable')).toBeVisible();
+  await expect(page.getByTestId('readout-F3.bound-value')).toHaveText('0.444');
+});
+
+test('M2\'s knobs work from the keyboard and never advance the deck', async ({ page }) => {
+  const cases = [
+    { at: '', knob: 'F3.dx', watch: 'readout-F3.iou-value' },
+    { at: '', knob: 'F3.dy', watch: 'readout-F3.iou-value' },
+    { at: '', knob: 'F3.lambda', watch: 'readout-F3.iou-value' },
+    // Opened where IoU is exactly 0.5 = τ, so one step of τ turns "IoU ≥ τ" into "IoU < τ": the
+    // knob moves the one line it governs, and the boundary is inclusive in the browser too.
+    { at: '?F3.dx=30', knob: 'F3.tau', watch: 'f3-member', step: 3 },
+  ];
+  for (const c of cases) {
+    await page.goto(`/lecture/m/m02/${c.step ?? 2}${c.at}`);
+    const position = page.getByTestId('position');
+    const before = await position.textContent();
+    const watched = page.getByTestId(c.watch);
+    const was = await watched.textContent();
+    await page.getByTestId(c.knob).focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(watched, `${c.knob} moved nothing`).not.toHaveText(was ?? '');
+    await expect(position, `${c.knob} advanced the deck`).toHaveText(before ?? '');
+  }
+  await expect(page.getByTestId('f3-member')).toHaveText(/IoU < τ/);
+});
+
+test('M2\'s knobs write the address bar', async ({ page }) => {
+  await page.goto('/lecture/m/m02/2');
+  await page.getByTestId('F3.lambda').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page).toHaveURL(/F3.lambda=1.1/);
+  const shared = page.url();
+  await page.goto('about:blank');
+  await page.goto(shared);
+  // 99 x 77: λ = 1.1 on the 90 x 70 annotation, which the prediction contains.
+  await expect(page.getByTestId('readout-F3.union-value')).toContainText('7,623');
 });
 
 test('the knobs cross from one part of a playground to the next, and stop at its end', async ({ page }) => {
