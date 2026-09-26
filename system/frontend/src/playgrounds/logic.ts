@@ -355,3 +355,21 @@ export function scaleBound(a: BBox, b: BBox): number {
   const large = Math.max(area(a), area(b));
   return large > 0 ? small / large : 0;
 }
+
+/**
+ * numerator / denominator to three places, cut rather than rounded.
+ *
+ * F3 prints IoU beside the verdict IoU ≥ τ, and every τ on its slider has two places. Rounded,
+ * 3,800 / 7,603 = 0.49980 printed 0.500 beside "IoU < τ" at τ = 0.5, and 972 settings did the
+ * like; cut, the printed value is at least τ exactly when the quotient is. The quotient of two
+ * whole numbers below 2^53 is off by less than 1e-13 at 1,000, far inside the 1 / denominator
+ * that separates it from the next thousandth, so the floor is exact. A share above zero that cuts
+ * to zero is said to be below 0.001, as `formatRatio` says of F1's, rather than printed as a zero
+ * beside a hatched sliver.
+ */
+export function truncatedRatio(numerator: number, denominator: number): string {
+  if (denominator <= 0 || numerator <= 0) return '0.000';
+  const thousandths = Math.floor((numerator * 1000) / denominator);
+  if (thousandths === 0) return '< 0.001';
+  return (thousandths / 1000).toFixed(3);
+}

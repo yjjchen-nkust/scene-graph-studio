@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import deriv from '../../../../../data/content/deriv.json';
 import { render, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -140,6 +142,17 @@ describe('the playground step kind', () => {
       expect(mounted.container.querySelector('[data-testid="playground-unknown"]')).toBeNull();
       mounted.unmount();
     }
+  });
+
+  it('M2 s2 states the √2 boundary strictly, since at λ = √2 the concentric box reaches ½', () => {
+    // IoU ≤ λ⁻² is an equality for the concentric box, and s2's own rule accepts IoU ≥ τ, so
+    // "λ ≥ √2 ⇒ IoU < ½" is false at λ = √2. F3's case pg-F3-bound-equals-tau reaches its bound.
+    for (const file of ['../m02.en.mdx', '../m02.zh-TW.mdx']) {
+      const text = readFileSync(new URL(file, import.meta.url), 'utf8');
+      expect(text, file).toContain('\\lambda>\\sqrt{2}');
+      expect(text, file).not.toContain('\\lambda\\ge\\sqrt{2}');
+    }
+    expect((deriv as Record<string, string>).F3).toContain('\\lambda>\\sqrt{2}');
   });
 
   it('M2 carries F3, in two parts, directly after the step that teaches it', () => {

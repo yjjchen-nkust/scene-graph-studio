@@ -8,7 +8,8 @@ import { F3_FRAME, F3_OBJECT } from '../F3/setup';
 import {
   area, candidateSpace, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
   headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
-  ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, tripletKey, unionArea, valPool,
+  ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, tripletKey, truncatedRatio, unionArea,
+  valPool,
 } from '../logic';
 
 const ph001 = frameById('ph-001')!;
@@ -416,5 +417,46 @@ describe('F3 against the engine', () => {
       const shared = intersection(gt, p);
       expect(ratio(shared ? area(shared) : 0, unionArea(gt, p))).toBeCloseTo(boxIou(gt, p), 12);
     }
+  });
+});
+
+describe('truncatedRatio', () => {
+  it('cuts to three places rather than rounding, so a printed value never overstates the quotient', () => {
+    expect(truncatedRatio(3800, 7603)).toBe('0.499');
+    expect(truncatedRatio(5040, 7560)).toBe('0.666');
+    expect(truncatedRatio(4200, 8400)).toBe('0.500');
+    expect(truncatedRatio(6300, 6300)).toBe('1.000');
+    expect(truncatedRatio(0, 12600)).toBe('0.000');
+    expect(truncatedRatio(0, 0)).toBe('0.000');
+  });
+
+  it('says a share below 0.001 is below it, rather than printing zero over a visible sliver', () => {
+    expect(truncatedRatio(1, 2000)).toBe('< 0.001');
+  });
+
+  it('agrees with the membership beside it at every τ on the slider', () => {
+    const GT = frameById(F3_FRAME)!.objects.find((o) => o.object_id === F3_OBJECT)!.bbox;
+    const taus = Array.from({ length: 19 }, (_, i) => Number((0.05 * (i + 1)).toFixed(2)));
+    const disagree: string[] = [];
+    for (let l = 5; l <= 20; l++) {
+      for (let dx = -120; dx <= 120; dx += 10) {
+        for (let dy = -100; dy <= 100; dy += 2) {
+          const p = scaledBox(GT, dx, dy, l / 10);
+          const shared = intersection(GT, p);
+          const inter = shared ? area(shared) : 0;
+          const union = unionArea(GT, p);
+          const printed = truncatedRatio(inter, union);
+          const shown = printed.startsWith('<') ? 0 : Number(printed);
+          for (const tau of taus) {
+            if (shown >= tau !== ratio(inter, union) >= tau) {
+              disagree.push(`λ ${l / 10} (${dx}, ${dy}) τ ${tau}: ${printed}`);
+            }
+          }
+        }
+      }
+    }
+    // One assertion over the walk rather than 767,676 of them, which ran past vitest's five
+    // seconds under the full suite.
+    expect(disagree).toEqual([]);
   });
 });

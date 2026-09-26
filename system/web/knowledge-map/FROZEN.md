@@ -179,3 +179,12 @@ implementation". The sources opened say otherwise: Xu et al. 2017 (arXiv 1701.02
 now says that, and the rest of each note is unchanged.
 
 No option, control or knowledge point was added.
+
+### 2026-09-27 — F3's derivation: the √2 boundary made strict
+
+Found by the branch review of the M2 playground (D97). The derivation ended
+"λ ≥ √2 ⇒ IoU < ½ at τ = 0.5". The bound it follows from, IoU ≤ λ⁻², is an equality for the
+concentric box, so at λ = √2 that box has IoU = ½ exactly, which the formula above it accepts
+(accept ⇔ IoU ≥ τ). It now reads "λ > √2 ⇒ IoU < ½". `npm run harvest` carries the change into
+`data/content/deriv.json` and `kp.json`; M2 s2 carries the same line in both locales and is
+corrected with it. No option, control or knowledge point was added.

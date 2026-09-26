@@ -326,7 +326,7 @@ D97 and VERIFICATION §21.
 
 **Verification.** `npm run ci` green, 2026-09-27: **266 pytest** and 7 skipped (the ten newest
 compare the requirement files to the interpreter), parity 13 agree, i18n 292 keys both locales,
-**785 vitest** in 61 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**791 vitest** in 61 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 43 symbols, 30 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,

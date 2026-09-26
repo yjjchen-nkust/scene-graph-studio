@@ -15,7 +15,9 @@ this one is wrong.
 `assignment.json` gives M2 three points: **F3** (grounding with boxes; IoU), `status: 'live'`, and
 **F4** (panoptic masks against boxes) and **X3** (PSG), both `status: 'spec'`. M2 teaches F3 at
 s2, a math step whose Implications state the scale bound
-IoU ≤ min(λ², λ⁻²), so λ ≥ √2 ⇒ IoU < ½ at τ = 0.5.
+IoU ≤ min(λ², λ⁻²), so λ ≥ √2 ⇒ IoU < ½ at τ = 0.5. [**Corrected 2026-09-27 (D97):** at λ = √2 the
+concentric box has IoU = ½, which the rule IoU ≥ τ accepts; the implication is λ > √2 ⇒ IoU < ½,
+and s2 now says so.]
 
 ### Decisions locked with the user, 2026-09-26
 

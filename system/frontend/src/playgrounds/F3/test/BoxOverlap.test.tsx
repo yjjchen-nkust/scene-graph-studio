@@ -64,6 +64,28 @@ describe('F3', () => {
     expect(screen.getByTestId('readout-F3.iou')).toHaveTextContent('5,040 / 7,560');
   });
 
+  it('draws each outline over a white under-stroke, so it reads on dark and light ground alike', () => {
+    renderAt('/m/m02?F3.lambda=1.4');
+    for (const mark of ['f3-gt', 'f3-pred']) {
+      const line = screen.getByTestId(mark);
+      const halo = screen.getByTestId(`${mark}-halo`);
+      for (const k of ['x', 'y', 'width', 'height']) {
+        expect(halo.getAttribute(k), `${mark} ${k}`).toBe(line.getAttribute(k));
+      }
+      expect(halo.getAttribute('stroke')).toBe('#ffffff');
+      expect(Number(halo.getAttribute('stroke-width'))).toBeGreaterThan(Number(line.getAttribute('stroke-width')));
+      // Under, not over: the halo comes first in paint order.
+      expect(halo.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+  });
+
+  it('never prints an IoU of τ beside "IoU < τ"', () => {
+    // λ 0.9 shifted (−10, 16): 3,800 / 7,603 = 0.49980, which rounds to 0.500 and is below 0.5.
+    renderAt('/m/m02?F3.lambda=0.9&F3.dx=-10&F3.dy=16');
+    expect(screen.getByTestId('readout-F3.iou-value')).toHaveTextContent('0.499');
+    expect(screen.getByTestId('f3-member')).toHaveTextContent('IoU < τ');
+  });
+
   it('reads in 繁體中文', () => {
     setLocale('zh-TW');
     renderAt('/m/m02');

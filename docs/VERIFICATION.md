@@ -936,7 +936,7 @@ D97. Every number below is from the run that produced it, on branch `feat/playgr
 | Step | Result |
 |---|---|
 | pytest | 266 passed, 7 skipped |
-| vitest | **785 passed in 61 files** (755 before) |
+| vitest | **791 passed in 61 files** (755 before) |
 | parity | 13 cases agree |
 | i18n parity | **292 keys**, both locales complete (278 before) |
 | content lint | 13 golden cases, **30 playground cases**, 25 release figures, clean; 105 steps a locale |
@@ -994,6 +994,15 @@ and none below 7:1; the floors are 19 and 12. The overlay's box equals the photo
 
 ### NFR-8
 
-`npm run check:perf`, exit 0, 21 tests. F3, moving λ to 1.5 on part 1: 34.0 ms, 0.5 ms of work
-above its 33.5 ms two-frame floor. The other six: F1 32.9, F2 33.8, F8 33.1, F6 33.3, F7 34.6,
-X1 33.7.
+`npm run check:perf`, exit 0, 21 tests. F3, moving λ to 1.5 on part 1: 33.4 ms, within its
+33.6 ms two-frame floor. The other six: F1 33.1, F2 33.6, F8 33.5, F6 33.5, F7 32.2, X1 33.7.
+
+### After the branch review
+
+Three findings fixed, each with a test that failed first (D97): white under-strokes beneath both
+outlines; the IoU and the bound cut to three places rather than rounded, with a walk over 16 λ,
+25 Δx, 101 Δy and 19 τ that finds no printed value disagreeing with the membership, and which
+fails when the cut is changed back to rounding; M2 s2's implication made strict at λ > √2, in
+both locales and in the frozen derivation. The gates were run again after the fixes, and every
+figure in the table above and in this section is from that run: `npm run ci` exit 0 with 791
+vitest, `npm run test:e2e` 62 passed, `npm run check:perf` 21 passed.

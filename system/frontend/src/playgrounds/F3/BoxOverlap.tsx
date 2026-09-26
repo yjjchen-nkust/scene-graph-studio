@@ -3,7 +3,7 @@ import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { PlaygroundFrame, Readout, Slider } from '../controls';
 import { placeholderImageUrl } from '../images';
-import { area, intersection, ratio, scaleBound, scaledBox, snap, unionArea } from '../logic';
+import { area, intersection, ratio, scaleBound, scaledBox, snap, truncatedRatio, unionArea } from '../logic';
 import type { PlaygroundProps } from '../mounts';
 import { frameById } from '../slice';
 import { F3_FRAME, F3_OBJECT, F3_RANGES, XU_TAU } from './setup';
@@ -15,6 +15,15 @@ const COUNT = new Intl.NumberFormat('en-US');
 
 const GT_STROKE = '#0f172a';
 const PRED_STROKE = '#b45309';
+/**
+ * Drawn under each outline. The photograph is light in places and dark in others, and no one
+ * colour clears 3:1 on both: the prediction's amber measured 1.22:1 on the table and 1.29:1 on the
+ * person, which is where half its outline lies at λ = 1.4. On white it is 5:1 everywhere.
+ */
+const HALO = '#ffffff';
+const STROKE_WIDTH = 4;
+const HALO_WIDTH = 10;
+const PRED_DASH = '12 7';
 
 /**
  * F3 — 以 box 定位；IoU.
@@ -166,6 +175,16 @@ export function BoxOverlap({ part }: PlaygroundProps = {}) {
                   />
                 )}
                 <rect
+                  data-testid="f3-gt-halo"
+                  x={gt.x}
+                  y={gt.y}
+                  width={gt.w}
+                  height={gt.h}
+                  fill="none"
+                  stroke={HALO}
+                  strokeWidth={HALO_WIDTH}
+                />
+                <rect
                   data-testid="f3-gt"
                   x={gt.x}
                   y={gt.y}
@@ -173,7 +192,19 @@ export function BoxOverlap({ part }: PlaygroundProps = {}) {
                   height={gt.h}
                   fill="none"
                   stroke={GT_STROKE}
-                  strokeWidth={4}
+                  strokeWidth={STROKE_WIDTH}
+                />
+                {/* Dashed like the line it carries, so solid and dashed still differ in shape. */}
+                <rect
+                  data-testid="f3-pred-halo"
+                  x={pred.x}
+                  y={pred.y}
+                  width={pred.w}
+                  height={pred.h}
+                  fill="none"
+                  stroke={HALO}
+                  strokeWidth={HALO_WIDTH}
+                  strokeDasharray={PRED_DASH}
                 />
                 <rect
                   data-testid="f3-pred"
@@ -183,8 +214,8 @@ export function BoxOverlap({ part }: PlaygroundProps = {}) {
                   height={pred.h}
                   fill="none"
                   stroke={PRED_STROKE}
-                  strokeWidth={4}
-                  strokeDasharray="12 7"
+                  strokeWidth={STROKE_WIDTH}
+                  strokeDasharray={PRED_DASH}
                 />
               </svg>
             </div>
@@ -214,13 +245,13 @@ export function BoxOverlap({ part }: PlaygroundProps = {}) {
             <Readout
               id="F3.iou"
               label={t('playground.f3.iou')}
-              value={iou.toFixed(3)}
+              value={truncatedRatio(inter, union)}
               note={`IoU = ${COUNT.format(inter)} / ${COUNT.format(union)}`}
             />
             <Readout
               id="F3.bound"
               label={t('playground.f3.bound')}
-              value={bound.toFixed(3)}
+              value={truncatedRatio(small, large)}
               note={`${COUNT.format(small)} / ${COUNT.format(large)}`}
             />
           </div>

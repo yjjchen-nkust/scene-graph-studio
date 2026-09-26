@@ -3181,9 +3181,27 @@ corpus holds 105 steps a locale and 210 presenter notes. F1's placeholder image 
 F3 has Δx, Δy and one scale λ because s2's bound is stated in λ, and the frozen F3 had the same
 three. The field makes no claim about a source, so it is not a correction's business.
 
-**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **785 vitest in 61 files** (755
+**The branch review** found three things that a person at the projector would meet, and each was
+fixed with a test that failed first.
+- *The prediction's outline almost vanished on the photograph.* Its amber measured 1.22:1 on the
+  table and 1.29:1 on the person, where half of it lies at λ = 1.4, and no one colour clears 3:1 on
+  both those and the light ground. Both outlines are now drawn over a white under-stroke 10 units
+  wide, the prediction's dashed like the line it carries; on white the amber is 5:1.
+- *The IoU readout could print τ beside "IoU < τ".* Rounded to three places, 3,800 / 7,603 = 0.49980
+  printed 0.500 at τ = 0.5, and 972 settings did the like. The IoU and the bound are now cut to
+  three places, not rounded (`truncatedRatio`), so the printed value is at least τ exactly when the
+  quotient is, and a share above zero that cuts to zero reads "< 0.001". A test walks 16 λ,
+  25 Δx, 101 Δy and all 19 τ and finds no disagreement.
+- *M2 s2 said "λ ≥ √2 ⇒ IoU < ½".* At λ = √2 the concentric box has IoU = ½ exactly, which s2's own
+  rule accepts, and which F3's case `pg-F3-bound-equals-tau` shows reached. The implication is
+  strict now, in both locales and in the frozen derivation, re-harvested into `deriv.json` and
+  `kp.json`; `FROZEN.md` records it. The spec had repeated the statement.
+
+Seven minor findings are deferred to the author.
+
+**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **791 vitest in 61 files** (755
 before), parity 13, **i18n 292 keys** both locales (278 before), content lint clean over 13 golden
 cases, **30 playground cases** and 25 release figures, ruff clean, standalone current at 250
 equations, frontend builds 766 modules. `npm run test:e2e` **62** (55 before). `npm run
-check:perf` **21** (20 before); F3 34.0 ms, 0.5 ms of work above its 33.5 ms two-frame floor. See
+check:perf` **21** (20 before); F3 33.4 ms, within its 33.6 ms two-frame floor. See
 VERIFICATION §21.
