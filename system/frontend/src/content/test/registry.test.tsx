@@ -18,7 +18,7 @@ describe('the module registry', () => {
   it('reads the frontmatter the content lint validates', () => {
     const meta = getMeta('m00', 'en')!;
     expect(meta.id).toBe('m00');
-    expect(meta.steps.map((s) => s.id)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7']);
+    expect(meta.steps.map((s) => s.id)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8']);
     expect(meta.steps.find((s) => s.kind === 'lab')?.lab).toBe('L1');
     expect(meta.knowledge_points).toContain('F1');
   });
@@ -125,11 +125,13 @@ describe('the module registry', () => {
 });
 
 describe('the playground step kind', () => {
-  it('M1 carries its three playgrounds, after the steps that teach them', () => {
+  it('M1 carries its three playgrounds, in two, two and three parts, after the steps that teach them', () => {
     const meta = getMeta('m01', 'en')!;
-    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}` : ''}`)).toEqual([
-      's1:prose', 's2:math', 's3:playground/F6', 's4:math', 's5:playground/F7',
-      's6:prose', 's7:playground/X1', 's8:lab', 's9:checkpoint',
+    const part = (n?: number) => (n === undefined ? '' : `.${n}`);
+    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}${part(s.part)}` : ''}`)).toEqual([
+      's1:prose', 's2:math', 's3:playground/F6.1', 's4:playground/F6.2', 's5:math',
+      's6:playground/F7.1', 's7:playground/F7.2', 's8:prose', 's9:playground/X1.1',
+      's10:playground/X1.2', 's11:playground/X1.3', 's12:lab', 's13:checkpoint',
     ]);
     const steps = getModule('m01', 'zh-TW')!;
     for (const step of steps.filter((s) => s.kind === 'playground')) {
@@ -148,7 +150,8 @@ describe('the playground step kind', () => {
     expect(steps).not.toBeNull();
     // Without this, every assertion below sits behind an `if` that nothing forces to be entered,
     // so the test would pass unchanged on a module that had no playground at all.
-    expect(steps!.filter((s) => s.kind === 'playground')).toHaveLength(3);
+    // Four steps for three playgrounds: F1 is two parts (D96).
+    expect(steps!.filter((s) => s.kind === 'playground')).toHaveLength(4);
     // Inside a router, because a playground's knobs live in the query string and a real mount
     // therefore reaches useSearchParams. Until M0 carried a playground step this body had no
     // <Playground/> in it, so the test asserted the tag resolved against a file that never used

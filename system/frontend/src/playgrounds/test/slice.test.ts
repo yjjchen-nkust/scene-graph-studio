@@ -37,6 +37,14 @@ describe('the vg150-sgb slice, imported at build time', () => {
     expect(VG_FRAMES.reduce((n, f) => n + f.relationships.length, 0)).toBe(892);
   });
 
+  it('whose 892 rows are 684 distinct triplets: 208 repeat another in the same frame', () => {
+    const distinct = VG_FRAMES.reduce(
+      (n, f) => n + new Set(f.relationships.map((r) => `${r.subject_id}|${r.predicate}|${r.object_id}`)).size,
+      0,
+    );
+    expect(distinct).toBe(684);
+  });
+
   it('finds a frame by id and says nothing rather than guessing', () => {
     expect(vgFrameById('228')?.relationships.length).toBeGreaterThan(0);
     expect(vgFrameById('no-such-frame')).toBeUndefined();

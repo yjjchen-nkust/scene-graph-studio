@@ -368,7 +368,8 @@ const PLAYGROUND_CASES: {
   {
     module: 'm00',
     kp: 'F1',
-    step: 1,
+    // The density slider and the readouts are F1's second part (D96).
+    step: 2,
     act: { kind: 'set', testid: 'F1.density', value: '0.5' },
     readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
     why: 'moving the density slider re-cuts the edge set and re-divides the share',
@@ -376,7 +377,7 @@ const PLAYGROUND_CASES: {
   {
     module: 'm00',
     kp: 'F2',
-    step: 3,
+    step: 4,
     act: { kind: 'click', testid: 'F2.directed' },
     readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
     why: 'discarding direction halves the candidate space',
@@ -384,7 +385,7 @@ const PLAYGROUND_CASES: {
   {
     module: 'm00',
     kp: 'F8',
-    step: 4,
+    step: 5,
     act: { kind: 'click', testid: 'F8.swap' },
     // Not a readout: F8's only readout is |E| for the frame, which a swap does not move. The
     // sentence and the status are what the swap changes, and a case watching the wrong element
@@ -403,7 +404,7 @@ const PLAYGROUND_CASES: {
   {
     module: 'm01',
     kp: 'F7',
-    step: 4,
+    step: 5,
     act: { kind: 'set', testid: 'F7.s', value: '2' },
     readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
     why: 'moving s re-divides the head share',
@@ -411,7 +412,7 @@ const PLAYGROUND_CASES: {
   {
     module: 'm01',
     kp: 'X1',
-    step: 6,
+    step: 8,
     act: { kind: 'set', testid: 'X1.r', value: 'sgb-v1' },
     readout: '[data-testid^="x1-"]',
     why: 'choosing another release re-reads every figure and every difference',

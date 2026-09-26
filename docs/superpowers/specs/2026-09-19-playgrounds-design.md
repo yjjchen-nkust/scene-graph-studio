@@ -102,13 +102,18 @@ Each rule is watched failing before it is kept.
 3. That `kp` is owned by this module in `assignment.json`, or cited in its `knowledge_points`.
 4. A component is registered for it, read by scanning `playgrounds/mounts.tsx` for its keys, as
    the four-part contract is checked by scanning the MDX body.
+   A step naming a `part` names one the mount table's `PLAYGROUND_PARTS` gives that point, and a
+   point split there names its part on every step (D96).
 5. The step's body contains exactly one `<Playground kp="…" />`, whose id equals the front
    matter's. The step's body ends at its own `</Step>`: content after it belongs to no step, and
    `registry.tsx` renders it on **every** slide of the module.
+   The tag's `part` equals the step's, and no part is mounted twice in a module (D96).
 6. No `<Playground>` anywhere in the body names a `kp` that no step declares.
-7. Both locales mark the same steps as playgrounds, with the same `kp`.
+7. Both locales mark the same steps as playgrounds, with the same `kp` and the same `part`.
 8. No `kp` is used by two playground steps, **anywhere in the corpus** — not merely within one
    module, since two modules may each cite the same point.
+   A point split into N parts is mounted by N steps of one module, parts 1 to N, consecutive and in
+   order (D96).
 
 And over `data/content/playground_golden.json`, which is the same contract applied to the file
 that pins the arithmetic:
@@ -132,11 +137,12 @@ passing a defect that reaches the projector; `tools/test/content_lint.test.mjs` 
 twelve against fixture corpora, which is what makes deleting one fail the gate rather than only
 the prose.
 
-That last sentence was false until 2026-09-26 for rules 3, 7, 8 and part of 9: disabling any of
-them left the suite green, because its fixture had one module and one frontmatter. It is true now,
+That last sentence was false until 2026-09-26 for rules 3, 7, 8 and part of 9: disabling any of them
+left the suite green, because its fixture had one module and one frontmatter. It is true now,
 measured by disabling each rule in turn (D92, VERIFICATION §16), and for rule 12, added the same
-day, by disabling each of its clauses in turn (D93, D94, D95, VERIFICATION §17 to §19). The
-suite holds 36 tests as of 2026-09-26.
+day, by disabling each of its clauses in turn (D93, D94, D95, VERIFICATION §17 to §19). The suite
+holds 45 tests as of 2026-09-26; the nine on parts were each watched failing, and the eight clauses
+they guard were each disabled once and caught (D96).
 
 ### 2.5 One change outside the contract
 

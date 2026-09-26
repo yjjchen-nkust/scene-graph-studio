@@ -2,7 +2,10 @@ import type { SceneGraph, SGRelationship } from 'sgg-metrics';
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { Choice, PlaygroundFrame, Readout, Toggle } from '../controls';
-import { classCounts, flag, isInE, isInMergedE, mergeMap, objectLabels, predicateLabels } from '../logic';
+import type { PlaygroundProps } from '../mounts';
+import {
+  classCounts, flag, isInE, isInMergedE, mergeMap, objectLabels, pairsWithSeveral, predicateLabels,
+} from '../logic';
 import { VG_FRAMES, vgFrameById } from '../slice';
 import { OBJECT_GROUP, PREDICATE_GROUP } from './groups';
 
@@ -19,11 +22,15 @@ import { OBJECT_GROUP, PREDICATE_GROUP } from './groups';
 const NO_MERGE = new Map<string, string>();
 const P_MERGE = mergeMap([PREDICATE_GROUP]);
 const O_MERGE = mergeMap([OBJECT_GROUP]);
-const PREDICATES = predicateLabels(VG_FRAMES);
+// Predicates are counted as distinct triplets, merged before counting (`predicateLabels`); object
+// names are counted per object, and merging names cannot make two objects one.
+const BASE_P = classCounts(predicateLabels(VG_FRAMES), NO_MERGE);
+const MERGED_P = classCounts(predicateLabels(VG_FRAMES, P_MERGE), NO_MERGE);
 const OBJECTS = objectLabels(VG_FRAMES);
-const BASE_P = classCounts(PREDICATES, NO_MERGE);
 const BASE_O = classCounts(OBJECTS, NO_MERGE);
 const HEAD = PREDICATE_GROUP[0]!;
+/** Pairs annotated with more than one member of the group, which E′ records once each: 2 here. */
+const SEVERAL = pairsWithSeveral(VG_FRAMES, PREDICATE_GROUP);
 
 function groupEdges(frame: SceneGraph): SGRelationship[] {
   return frame.relationships.filter((r) => PREDICATE_GROUP.includes(r.predicate));
@@ -46,16 +53,28 @@ const FRAMES_WITH_GROUP = VG_FRAMES.filter((f) => groupEdges(f).length > 0);
 const DEFAULT_FRAME = VG_FRAMES.find((f) => teachingEdge(f)) ?? FRAMES_WITH_GROUP[0];
 const DEFAULT_EDGE = DEFAULT_FRAME && (teachingEdge(DEFAULT_FRAME) ?? groupEdges(DEFAULT_FRAME)[0]);
 
-function sumNote(group: readonly string[], base: Map<string, number>): string {
+/**
+ * The merged class written out as its members. Where the merged count is less than their sum, the
+ * difference is the pairs that carried two members, which E′ records once, and it is subtracted
+ * in the open rather than folded into the total.
+ */
+function sumNote(group: readonly string[], base: Map<string, number>, merged: number): string {
   const parts = group.map((g) => ({ g, n: base.get(g) ?? 0 }));
-  return `${parts.map(({ g, n }) => `${g} ${n}`).join(' + ')} = ${parts.reduce((s, p) => s + p.n, 0)}`;
+  const sum = parts.reduce((s, p) => s + p.n, 0);
+  const terms = parts.map(({ g, n }) => `${g} ${n}`).join(' + ');
+  return sum === merged ? `${terms} = ${merged}` : `${terms} − ${sum - merged} = ${merged}`;
 }
 
 function nameOf(frame: SceneGraph, id: number): string {
   return frame.objects.find((o) => o.object_id === id)?.names[0] ?? String(id);
 }
 
-export function PredicateSynonymy() {
+/**
+ * Two parts on the lecture's projector (D96): the merges and the class counts, then the
+ * membership of one edge. The predicate merge is on both, since the membership reads it; the
+ * object merge is on the first only, since nothing on the second does.
+ */
+export function PredicateSynonymy({ part }: PlaygroundProps = {}) {
   const { t, locale } = useLocale();
   // Chinese takes a full-width colon with no space after it; English a colon and a space (D94).
   const colon = locale === 'en' ? ': ' : '：';
@@ -68,8 +87,10 @@ export function PredicateSynonymy() {
   });
   const mergeP = flag(params['F6.mp'], false);
   const mergeO = flag(params['F6.mo'], false);
+  const counts = part !== 2;
+  const members = part !== 1;
 
-  const pCounts = classCounts(PREDICATES, mergeP ? P_MERGE : NO_MERGE);
+  const pCounts = mergeP ? MERGED_P : BASE_P;
   const oCounts = classCounts(OBJECTS, mergeO ? O_MERGE : NO_MERGE);
 
   // A frame from the URL that does not exist, or carries no group edge, falls back to the
@@ -89,13 +110,15 @@ export function PredicateSynonymy() {
         checked={mergeP}
         onChange={(on) => setParams({ 'F6.mp': on ? 1 : 0 })}
       />
-      <Toggle
-        id="F6.mo"
-        label={t('playground.f6.merge_objects')}
-        checked={mergeO}
-        onChange={(on) => setParams({ 'F6.mo': on ? 1 : 0 })}
-      />
-      {frame && edge && (
+      {counts && (
+        <Toggle
+          id="F6.mo"
+          label={t('playground.f6.merge_objects')}
+          checked={mergeO}
+          onChange={(on) => setParams({ 'F6.mo': on ? 1 : 0 })}
+        />
+      )}
+      {members && frame && edge && (
         <>
           <Choice
             id="F6.img"
@@ -164,27 +187,38 @@ export function PredicateSynonymy() {
   return (
     <PlaygroundFrame title="F6" controls={controls} clip={false}>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-x-8 gap-y-3">
-          <Readout
-            id="F6.predicates"
-            label={t('playground.f6.predicate_classes')}
-            value={String(pCounts.size)}
-            note={t('playground.f6.of_vg150')}
-          />
-          <Readout
-            id="F6.group"
-            label={t('playground.f6.group_triplets')}
-            value={String(pCounts.get(HEAD) ?? 0)}
-            note={mergeP ? sumNote(PREDICATE_GROUP, BASE_P) : `${HEAD} ${BASE_P.get(HEAD) ?? 0}`}
-          />
-          <Readout
-            id="F6.objects"
-            label={t('playground.f6.object_classes')}
-            value={String(oCounts.size)}
-            note={mergeO ? sumNote(OBJECT_GROUP, BASE_O) : t('playground.f6.unmerged')}
-          />
-        </div>
-        {membership}
+        {counts && (
+          <>
+            {/* Three columns from 1024 px: in a wrapping row the long sums pushed each readout onto
+                a line of its own, and the three stood 420 px tall (D96). */}
+            <div className="grid grid-cols-1 gap-x-8 gap-y-3 lg:grid-cols-3">
+              <Readout
+                id="F6.predicates"
+                label={t('playground.f6.predicate_classes')}
+                value={String(pCounts.size)}
+                note={t('playground.f6.of_vg150')}
+              />
+              <Readout
+                id="F6.group"
+                label={t('playground.f6.group_triplets')}
+                value={String(pCounts.get(HEAD) ?? 0)}
+                note={mergeP ? sumNote(PREDICATE_GROUP, BASE_P, MERGED_P.get(HEAD) ?? 0) : `${HEAD} ${BASE_P.get(HEAD) ?? 0}`}
+              />
+              <Readout
+                id="F6.objects"
+                label={t('playground.f6.object_classes')}
+                value={String(oCounts.size)}
+                note={mergeO ? sumNote(OBJECT_GROUP, BASE_O, oCounts.get(OBJECT_GROUP[0]!) ?? 0) : t('playground.f6.unmerged')}
+              />
+            </div>
+            {mergeP && SEVERAL > 0 && (
+              <p data-testid="f6-collapsed" className="text-[1em] text-slate-700">
+                {SEVERAL} {t('playground.f6.collapsed')}
+              </p>
+            )}
+          </>
+        )}
+        {members && membership}
       </div>
     </PlaygroundFrame>
   );

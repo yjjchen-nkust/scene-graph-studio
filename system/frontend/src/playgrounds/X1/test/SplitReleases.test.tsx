@@ -49,7 +49,7 @@ describe('X1', () => {
     const { container } = at('?X1.r=xu-2017&X1.vs=canonical');
     expect(screen.getByTestId('x1-train-a')).toHaveTextContent('70%');
     expect(screen.getByTestId('x1-val-a')).toHaveTextContent('not stated by the source');
-    expect(screen.getByTestId('x1-train-diff')).toHaveTextContent('not both stated as counts');
+    expect(screen.getByTestId('x1-train-diff')).toHaveTextContent('not both counts');
     expect(screen.queryByTestId('x1-equality-train')).toBeNull();
     expect(screen.getByTestId('x1-row-pool')).toHaveTextContent('108,077');
     expect(container.textContent ?? '').not.toMatch(/75,6\d\d/);

@@ -33,16 +33,16 @@ describe('F7', () => {
     expect(screen.getByTestId('F7.C')).toHaveValue('36');
   });
 
-  it('the overlay measures this slice: 509 of 892 triplets in the top three', () => {
+  it('the overlay measures this slice: 353 of 684 distinct triplets in the top three', () => {
     at('?F7.measured=1&F7.k=3');
-    expect(value('F7.measured')).toHaveTextContent(/^57\.06%$/);
-    expect(screen.getByTestId('readout-F7.measured')).toHaveTextContent('509 / 892');
+    expect(value('F7.measured')).toHaveTextContent(/^51\.61%$/);
+    expect(screen.getByTestId('readout-F7.measured')).toHaveTextContent('353 / 684');
   });
 
-  it('at k = 1 the overlay shows the figure s5\'s presenter note quotes', () => {
+  it('at k = 1 the overlay shows the figure s7\'s presenter note quotes', () => {
     at('?F7.measured=1&F7.k=1');
-    expect(value('F7.measured')).toHaveTextContent(/^42\.83%$/);
-    expect(screen.getByTestId('readout-F7.measured')).toHaveTextContent('382 / 892');
+    expect(value('F7.measured')).toHaveTextContent(/^36\.26%$/);
+    expect(screen.getByTestId('readout-F7.measured')).toHaveTextContent('248 / 684');
   });
 
   it('the overlay is off until asked for', () => {

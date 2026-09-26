@@ -15,7 +15,10 @@ import { SplitReleases } from './X1/SplitReleases';
  *
  * Entries are added by the task that builds each playground.
  */
-export const PLAYGROUND_MOUNTS: Record<string, ComponentType> = {
+/** `part` is one view of a playground split across steps; absent, the playground is whole. */
+export type PlaygroundProps = { part?: number };
+
+export const PLAYGROUND_MOUNTS: Record<string, ComponentType<PlaygroundProps>> = {
   F1: LabelsToStructure,
   F2: TripletCombinatorics,
   F6: PredicateSynonymy,
@@ -25,3 +28,17 @@ export const PLAYGROUND_MOUNTS: Record<string, ComponentType> = {
 };
 
 export const PLAYGROUND_IDS: string[] = Object.keys(PLAYGROUND_MOUNTS).sort();
+
+/**
+ * The playgrounds too long for one panel, and how many consecutive steps each spans.
+ *
+ * At 1024×768 a step shows 561 px, and each of these four is taller than that by its frame alone
+ * (D96). A point absent here is one step. `content_lint.mjs` reads this table as it reads the one
+ * above, and refuses a step naming a part the table does not give.
+ */
+export const PLAYGROUND_PARTS: Record<string, number> = {
+  F1: 2,
+  F6: 2,
+  F7: 2,
+  X1: 3,
+};

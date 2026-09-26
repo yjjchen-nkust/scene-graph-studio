@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 
 /** Contracts §2.4. `/lecture/notes` subscribes; nothing else may name this string. */
 export const PRESENTER_CHANNEL = 'sgs-presenter';
@@ -41,6 +41,8 @@ export function isPresenterHello(signal: unknown): signal is PresenterHello {
 export interface StepperStep {
   id: string;
   seconds_budget?: number;
+  /** The knowledge point a playground step mounts; two steps sharing one are parts of it. */
+  kp?: string;
 }
 
 export interface Stepper {
@@ -110,6 +112,7 @@ function clamp(value: number, count: number): number {
 export function useStepper(moduleId: string, steps: StepperStep[]): Stepper {
   const params = useParams();
   const navigate = useNavigate();
+  const { search } = useLocation();
   const count = steps.length;
   const index = clamp(Number(params.stepIndex), count);
   const budget = steps[index]?.seconds_budget ?? null;
@@ -129,6 +132,8 @@ export function useStepper(moduleId: string, steps: StepperStep[]): Stepper {
    */
   const posRef = useRef(index);
   const pendingRef = useRef<number | null>(null);
+  // The query the pending step was asked for with, read in its place while it has not rendered.
+  const pendingSearchRef = useRef('');
   if (pendingRef.current === index || posRef.current !== index) pendingRef.current = null;
   posRef.current = index;
 
@@ -136,10 +141,16 @@ export function useStepper(moduleId: string, steps: StepperStep[]): Stepper {
     (next: number) => {
       const target = clamp(next, count);
       if (target === (pendingRef.current ?? posRef.current)) return;
+      // The knobs live in the query (contracts §2.2). Between two parts of one playground they are
+      // the same knobs, so they cross; anywhere else a step opens on its own defaults, as before.
+      const from = steps[pendingRef.current ?? posRef.current]?.kp;
+      const current = pendingRef.current === null ? search : pendingSearchRef.current;
+      const carry = from !== undefined && from === steps[target]?.kp ? current : '';
       pendingRef.current = target;
-      navigate(`/lecture/m/${moduleId}/${target}`);
+      pendingSearchRef.current = carry;
+      navigate(`/lecture/m/${moduleId}/${target}${carry}`);
     },
-    [count, moduleId, navigate],
+    [count, moduleId, navigate, search, steps],
   );
 
   const step = useCallback(

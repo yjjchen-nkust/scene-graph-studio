@@ -20,6 +20,19 @@ import { expect, test, type Page } from '@playwright/test';
  * written to `test-results/projector/` so that judgement has something to be made against.
  */
 
+/**
+ * Every part of a playground split across steps, each in its longest state as measured over all of
+ * its knobs' values (D96): F6 with both merges, and on frame 2008 with the merge; F7 at fifty
+ * classes; X1 at the release pairs that carry Xu's pool, two explanations, and the longest lines
+ * of provenance.
+ */
+const PARTS_LONGEST = [
+  'm00/1', 'm00/2',
+  'm01/2?F6.mp=1&F6.mo=1', 'm01/3?F6.img=2008&F6.mp=1',
+  'm01/5?F7.C=50&F7.k=50', 'm01/6?F7.C=50&F7.k=50',
+  'm01/8?X1.r=xu-2017&X1.vs=sgb-v1', 'm01/9?X1.r=sgb-v1&X1.vs=sgb-v2', 'm01/10?X1.r=xu-2017&X1.vs=sgb-v2',
+];
+
 const SIZES = [
   { name: 'xga-1024x768', width: 1024, height: 768 },
   { name: 'wxga-1280x800', width: 1280, height: 800 },
@@ -321,13 +334,13 @@ for (const size of SIZES) {
       // panel. The step scrolls inside the shell; the page does not, so the two things that say
       // where the lecture is do not scroll away with it.
       //
-      // Index 2, not 1. The three playground steps added to M0 renumbered the deck, and this
+      // Index 3, not 2. The three playground steps added to M0 renumbered the deck, and this
       // test kept the old number. Measured at XGA, M0's seven steps overflow the panel by
-      // 0, 146, 1030, 0, 0, 0 and 0 px: index 2 is the slide the 1030 above refers to, and
-      // index 1 is now F1, whose visual is clipped at 46vh. The assertion passed at index 1
-      // too, which is the problem with leaving it there -- an assertion about a slide too long
-      // to fit, made against one that nearly does.
-      await page.goto('/lecture/m/m00/2');
+      // 0, 146, 1030, 0, 0, 0 and 0 px: index 2 was the slide the 1030 above refers to, and
+      // index 1 F1, whose visual is clipped at 46vh. The assertion passed at index 1 too, which
+      // is the problem with leaving it there -- an assertion about a slide too long to fit, made
+      // against one that nearly does. F1 in two parts moved the math step to index 3 (D96).
+      await page.goto('/lecture/m/m00/3');
       await expect(page.getByTestId('lecture-root')).toBeVisible();
 
       const pageScroll = await page.evaluate(
@@ -345,27 +358,32 @@ for (const size of SIZES) {
     });
 
     test('every painted word meets NFR-5 on the contrast the browser computed', async ({ page }) => {
-      // Four steps. Index 2 is the mathematics this was written against; 1, 3 and 4 are F1, F2
-      // and F8, whose readouts, notices and status lines are a second palette on the same deck,
-      // drawn from Tailwind's scale rather than from `palette.ts`. Before the playgrounds landed
-      // this test visited index 1 and that was the mathematics; the renumbering moved it. M1's
-      // three playgrounds (indices 2, 4, 6) joined the walk on 2026-09-26.
+      // Index 3 is the mathematics this was written against; the rest are the playground steps,
+      // whose readouts, notices and status lines are a second palette on the same deck, drawn
+      // from Tailwind's scale rather than from `palette.ts`. Before the playgrounds landed this
+      // test visited index 1 and that was the mathematics; each renumbering moved it. M1's three
+      // playgrounds joined the walk on 2026-09-26, and every part of a split one since (D96).
       //
-      // A floor per step, measured rather than guessed: at XGA the walk reads 203 rows on the
-      // mathematics step and 33, 24 and 17 on F1, F2 and F8, and 27, 34 and 52 on F6, F7
-      // and X1 at every panel size (2026-09-26). `toBeGreaterThan(3)` was kept
-      // here after the oklch finding with a comment explaining why it had failed to catch it,
+      // A floor per step, measured rather than guessed: the walk reads 203 rows on the
+      // mathematics step, 17 and 23 on F1's parts, 24 on F2 and 17 on F8, 18 and 15 on F6's, 27
+      // and 20 on F7's, and 34, 18 and 19 on X1's, at every panel size (2026-09-26, D96).
+      // `toBeGreaterThan(3)` was kept here after the oklch finding with a comment explaining why it had failed to catch it,
       // which is a floor known to be inadequate left in place. These are set below the
       // measured counts so ordinary content edits do not trip them, and far enough above zero
       // that a walk collapsing to a handful of rows is reported rather than passed.
       const pages: { module: string; step: number; floor: number }[] = [
-        { module: 'm00', step: 2, floor: 150 },
-        { module: 'm00', step: 1, floor: 25 },
-        { module: 'm00', step: 3, floor: 18 },
-        { module: 'm00', step: 4, floor: 12 },
-        { module: 'm01', step: 2, floor: 20 },
-        { module: 'm01', step: 4, floor: 25 },
-        { module: 'm01', step: 6, floor: 39 },
+        { module: 'm00', step: 3, floor: 150 },
+        { module: 'm00', step: 1, floor: 12 },
+        { module: 'm00', step: 2, floor: 17 },
+        { module: 'm00', step: 4, floor: 18 },
+        { module: 'm00', step: 5, floor: 12 },
+        { module: 'm01', step: 2, floor: 13 },
+        { module: 'm01', step: 3, floor: 11 },
+        { module: 'm01', step: 5, floor: 20 },
+        { module: 'm01', step: 6, floor: 15 },
+        { module: 'm01', step: 8, floor: 25 },
+        { module: 'm01', step: 9, floor: 13 },
+        { module: 'm01', step: 10, floor: 14 },
       ];
       for (const { module, step, floor } of pages) {
         await page.goto(`/lecture/m/${module}/${step}`);
@@ -447,10 +465,13 @@ for (const size of SIZES) {
     });
 
     test('a playground step fits the panel, with its controls reachable', async ({ page }) => {
-      // D71 accepted 25 of the then 92 slides overflowing an XGA panel (the corpus is 98 now; the
-      // six playground steps are not in that denominator). Controls above the visual is the rule
+      // D71 accepted 25 of the then 92 slides overflowing an XGA panel (the corpus is 103 now;
+      // the playground steps are not in that denominator). Controls above the visual is the rule
       // that keeps a playground off that list: the picture may be clipped, the knobs may not.
-      for (const where of ['m00/1', 'm00/3', 'm00/4', 'm01/2', 'm01/4', 'm01/6']) {
+      for (const where of [
+        'm00/1', 'm00/2', 'm00/4', 'm00/5',
+        'm01/2', 'm01/3', 'm01/5', 'm01/6', 'm01/8', 'm01/9', 'm01/10',
+      ]) {
         await page.goto(`/lecture/m/${where}`);
         const controls = page.getByTestId('playground-controls');
         await expect(controls, where).toBeInViewport();
@@ -469,18 +490,47 @@ for (const size of SIZES) {
       // it may not do is hide a word inside the frame where no scroll reaches it. M0's three are
       // here too: F1's candidate count and ratio sat under the clip at every panel size from
       // the day it landed, and nothing measured it (D93).
-      for (const where of [
-        'm00/1', 'm00/3', 'm00/4',
-        'm01/2?F6.mp=1&F6.mo=1', 'm01/4?F7.measured=1', 'm01/6?X1.r=sgb-v1&X1.vs=sgb-v2',
-      ]) {
+      for (const where of [...PARTS_LONGEST, 'm00/4', 'm00/5']) {
         await page.goto(`/lecture/m/${where}`);
         await expect(page.getByTestId('playground-frame')).toBeVisible();
         expect(await clipped(page, '[data-testid="playground-frame"]'), where).toEqual([]);
       }
     });
 
+    test('F1 shows its photograph, whole and on the screen', async ({ page }) => {
+      // The overlay's children are all absolutely positioned, so the box around it has no width
+      // of its own; in a row at 1024 px and wider it was given none, and the photograph F1 opens
+      // on rendered 0×0 on every projector from the day it landed. Its step "fit" because the
+      // picture was missing (D96).
+      await page.goto('/lecture/m/m00/1');
+      const image = page.getByTestId('playground-frame').locator('img');
+      await expect(image).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const box = await image.boundingBox();
+      expect(box, 'the photograph has no box').not.toBeNull();
+      expect(box!.width, 'the photograph has no width').toBeGreaterThan(200);
+      expect(box!.height, 'the photograph has no height').toBeGreaterThan(150);
+      const height = page.viewportSize()?.height ?? 0;
+      expect(box!.y + box!.height, 'the photograph runs below the panel').toBeLessThanOrEqual(height);
+    });
+
+    test('every part of a split playground fits the panel in its longest state', async ({ page }) => {
+      // The split exists for this (D96): at 1024x768 a step shows 561 px, and F1, F6, F7 and X1
+      // each ran past it by 334 to 619 px in some state of their knobs. Measured after the
+      // webfonts decode, as VERIFICATION §17's table was, since a fallback face sets different
+      // line breaks. English is not held to it; its header wraps and the step is 517 px there.
+      for (const where of PARTS_LONGEST) {
+        await page.goto(`/lecture/m/${where}`);
+        await expect(page.getByTestId('playground-frame')).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const past = await page.getByTestId('step').evaluate((el) => el.scrollHeight - el.clientHeight);
+        expect(past, `${where} runs ${past} px past the panel`).toBeLessThanOrEqual(0);
+      }
+    });
+
     test('every mark of an M1 playground chart meets 3:1', async ({ page }) => {
-      await page.goto('/lecture/m/m01/4?F7.measured=1');
+      // F7's second part, where the measured bars stand beside the model's.
+      await page.goto('/lecture/m/m01/6');
       await expect(page.getByTestId('f7-bars')).toBeVisible();
       const marks = await graphics(page, '[data-testid="playground-frame"]');
       expect(marks.length, 'the chart drew no marks').toBeGreaterThan(0);

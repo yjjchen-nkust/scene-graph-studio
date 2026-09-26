@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 
 /**
  * The knobs, as real form controls.
@@ -20,22 +20,38 @@ import type { ReactNode } from 'react';
  */
 
 const LABEL = 'text-[1em] font-medium text-slate-700';
+
+/**
+ * Which part of a split playground the controls below belong to (D96).
+ *
+ * The study page renders every step, so the parts of one playground share a page, and a knob's
+ * DOM id has to be unique there for its label to name it: repeated, each later label named the
+ * first part's control. The test id stays the knob's own name, which is what the suites and the
+ * URL address, so a part changes the id and nothing else.
+ */
+export const PartContext = createContext<number | undefined>(undefined);
+
+function useDomId(id: string): string {
+  const part = useContext(PartContext);
+  return part === undefined ? id : `${id}.p${part}`;
+}
 const FIELD = 'rounded border border-slate-300 bg-white px-2 py-1 text-[1em]';
 
 export function Toggle({
   id, label, checked, onChange,
 }: { id: string; label: string; checked: boolean; onChange: (next: boolean) => void }) {
+  const domId = useDomId(id);
   return (
     <span className="inline-flex items-center gap-2">
       <input
-        id={id}
+        id={domId}
         data-testid={id}
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         className="h-5 w-5"
       />
-      <label htmlFor={id} className={LABEL}>{label}</label>
+      <label htmlFor={domId} className={LABEL}>{label}</label>
     </span>
   );
 }
@@ -46,11 +62,12 @@ export function Slider({
   id: string; label: string; value: number; min: number; max: number; step: number;
   onChange: (next: number) => void; valueLabel: string;
 }) {
+  const domId = useDomId(id);
   return (
     <span className="inline-flex items-center gap-2">
-      <label htmlFor={id} className={LABEL}>{label}</label>
+      <label htmlFor={domId} className={LABEL}>{label}</label>
       <input
-        id={id}
+        id={domId}
         data-testid={id}
         type="range"
         min={min}
@@ -58,6 +75,8 @@ export function Slider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
+        // Narrower than the browser default, so F7's three sliders share one row at 1024 px.
+        className="w-24"
       />
       <span className="font-mono text-[1em] tabular-nums text-slate-600">{valueLabel}</span>
     </span>
@@ -65,20 +84,23 @@ export function Slider({
 }
 
 export function Choice({
-  id, label, value, options, onChange,
+  id, label, value, options, onChange, width,
 }: {
   id: string; label: string; value: string;
   options: { value: string; label: string }[]; onChange: (next: string) => void;
+  /** A cap on the field's width, for options too long to share a row; the list shows them whole. */
+  width?: string;
 }) {
+  const domId = useDomId(id);
   return (
     <span className="inline-flex items-center gap-2">
-      <label htmlFor={id} className={LABEL}>{label}</label>
+      <label htmlFor={domId} className={LABEL}>{label}</label>
       <select
-        id={id}
+        id={domId}
         data-testid={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={FIELD}
+        className={width ? `${FIELD} ${width}` : FIELD}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>

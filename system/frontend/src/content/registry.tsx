@@ -25,6 +25,8 @@ export interface ModuleStepMeta {
   lab?: string;
   /** The knowledge point a `playground` step demonstrates. Contracts §2.4. */
   kp?: string;
+  /** Which part of a playground split across consecutive steps this step shows. Contracts §2.4. */
+  part?: number;
   seconds_budget?: number;
   /**
    * The presenter window's notes for this step, in the locale of the file that declares them.

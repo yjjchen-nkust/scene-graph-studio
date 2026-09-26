@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors and §19 the review of the day's merges), and all 95 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges and §20 the split playgrounds), and all 96 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -42,7 +42,7 @@ cd scene-graph-studio\system ; npm run ci
 - **`npm run ci` is the gate**, twelve steps: harvest, pytest, the metrics build, vitest, ruff,
   parity, i18n, content, frozen, mockup, standalone, frontend build.
 - **Four checks `ci` does not run**, each for a reason: `npm run test:e2e` (check 8, the keyboard
-  walkthrough at three projector resolutions, 48 tests, over the production build with no backend
+  walkthrough at three projector resolutions, 55 tests, over the production build with no backend
   running), `npm run check:offline` (check 6, a torch-free interpreter with every outward request
   intercepted), `npm run check:perf` (NFR-8, cold start on five routes and input-to-paint on five
   labs and six playgrounds, against a backend it starts itself), `npm run check:pins`.
@@ -50,7 +50,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-22` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D95` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D96` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` is frozen** (2026-09-15) and was harvested into `data/content/`
   as the seed corpus. Do not extend it. Its `pg.js evaluate()` is a teaching toy over fifteen
@@ -63,8 +63,12 @@ cd scene-graph-studio\system ; npm run ci
   an object selects nothing. `pointer-events: all` would hand the choice to paint order, so the
   click handler sits on the `<svg>` and picks the smallest box containing the point, ties broken
   by the lower object id. **Do not move it back onto the rects.**
+- **`ImageOverlay` has no width of its own.** Its children are all absolutely positioned, so a
+  container that does not give it a width renders the photograph 0×0, with no error and a step
+  that "fits" the panel. F1 did so on every projector until D96; `F1 shows its photograph` in
+  `e2e/projector.spec.ts` now measures it.
 - **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
-  in both locales (**D76**). All 98 steps carry theirs; 196 notes.
+  in both locales (**D76**). All 103 steps carry theirs; 206 notes.
 - **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and
   `npm run lint:standalone` asserts they agree. Edit the source, then run
   `npm run build:standalone` in the same commit.
@@ -97,6 +101,12 @@ cd scene-graph-studio\system ; npm run ci
   three (F6, F7, X1); 22 live knowledge points have none. See D88 and D93. **`PlaygroundFrame`
   clips only a picture** (`clip`, default on): a playground of words and figures passes
   `clip={false}`, because a word under the clip is beyond the reach of the step's scroll (D93).
+  **A playground too tall for one panel spans consecutive steps as parts** (D96): `part: n` on
+  each step and its tag, the count in `PLAYGROUND_PARTS` in `mounts.tsx`, F1, F6 and F7 in two and
+  X1 in three. The stepper carries the knobs between the parts of one playground and nowhere
+  else, and the projector suite asserts that every part fits 1024×768 in 繁體中文 in its longest
+  state. **F6 and F7 count distinct triplets** (D96): E is a set, and 208 of the slice's 892
+  relationship rows repeat a triplet of the same frame.
 
 ## CI
 

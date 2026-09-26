@@ -1,6 +1,7 @@
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { PlaygroundFrame, Readout, Slider, Toggle } from '../controls';
+import type { PlaygroundProps } from '../mounts';
 import {
   clamp, flag, formatRatio, harmonic, headShare, measuredHeadShare, predicateLabels, ranked, tailToHead,
 } from '../logic';
@@ -23,7 +24,13 @@ const BAR = 10;
 const GAP = 4;
 const HEIGHT = 120;
 
-export function LongTailDistribution() {
+/**
+ * Two parts (D96): the model alone, then the slice against it. The second part is the
+ * comparison, so the overlay is simply on there and the first has none. The toggle and the line
+ * sending the room to L3 exist only when the playground is mounted without a part, as its unit
+ * tests mount it; no step does, since rule 4 refuses a split point's step that names no part.
+ */
+export function LongTailDistribution({ part }: PlaygroundProps = {}) {
   const { t } = useLocale();
   const [params, setParams] = useLabParams({
     'F7.s': 1,
@@ -34,7 +41,9 @@ export function LongTailDistribution() {
   const s = clamp(params['F7.s'], 0, S_MAX);
   const C = Math.round(clamp(params['F7.C'], C_MIN, C_MAX));
   const k = Math.round(clamp(params['F7.k'], 1, C));
-  const overlay = flag(params['F7.measured'], false);
+  const overlay = part === undefined ? flag(params['F7.measured'], false) : part === 2;
+  // Part 1 is the model alone; part 2 sets the slice against it.
+  const alone = part !== 2;
 
   const H = harmonic(C, s);
   const model = Array.from({ length: C }, (_, i) => (i + 1) ** -s / H);
@@ -76,12 +85,14 @@ export function LongTailDistribution() {
         onChange={(next) => setParams({ 'F7.k': next })}
         valueLabel={String(k)}
       />
-      <Toggle
-        id="F7.measured"
-        label={t('playground.f7.overlay')}
-        checked={overlay}
-        onChange={(on) => setParams({ 'F7.measured': on ? 1 : 0 })}
-      />
+      {part === undefined && (
+        <Toggle
+          id="F7.measured"
+          label={t('playground.f7.overlay')}
+          checked={overlay}
+          onChange={(on) => setParams({ 'F7.measured': on ? 1 : 0 })}
+        />
+      )}
     </>
   );
 
@@ -95,12 +106,14 @@ export function LongTailDistribution() {
             value={formatRatio(headShare(k, C, s))}
             note={`H_${k}(${s.toFixed(2)}) / H_${C}(${s.toFixed(2)})`}
           />
-          <Readout
-            id="F7.tail"
-            label={t('playground.f7.tail')}
-            value={formatRatio(tailToHead(C, s))}
-            note={`${C}^(−${s.toFixed(2)})`}
-          />
+          {alone && (
+            <Readout
+              id="F7.tail"
+              label={t('playground.f7.tail')}
+              value={formatRatio(tailToHead(C, s))}
+              note={`${C}^(−${s.toFixed(2)})`}
+            />
+          )}
           {overlay && (
             <Readout
               id="F7.measured"
@@ -110,10 +123,12 @@ export function LongTailDistribution() {
             />
           )}
         </div>
-        <p className="text-[0.875em] text-slate-700">{t('playground.f7.s_note')}</p>
         {/* The key above the chart it explains, so a short panel never shows bars without it. */}
+        {/* The note on s shares the key's line: on a line of its own it pushed the first part 48 px
+            past a 1024×768 panel (D96). */}
         <p className="text-[0.875em] text-slate-700">
           {t('playground.f7.legend_model')}
+          {alone && <> · {t('playground.f7.s_note')}</>}
           {overlay && <> · {t('playground.f7.legend_measured')}</>}
         </p>
         <svg
@@ -143,7 +158,9 @@ export function LongTailDistribution() {
             />
           ))}
         </svg>
-        <p className="text-[0.875em] text-slate-700">{t('playground.f7.to_l3')}</p>
+        {/* On the lecture the first part's sentence and the second part's notes send the room to
+            L3, and on the second part this line was the 41 px past the panel. */}
+        {part === undefined && <p className="text-[0.875em] text-slate-700">{t('playground.f7.to_l3')}</p>}
       </div>
     </PlaygroundFrame>
   );
