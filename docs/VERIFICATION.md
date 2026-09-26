@@ -640,13 +640,14 @@ number below is from the runs that produced this section.
 | frozen-page lints | clean |
 | standalone | up to date, 250 equations |
 | frontend build | 763 modules |
-| `npm run test:e2e` | **42 passed** |
+| `npm run test:e2e` | **48 passed** |
 | `npm run check:perf` | **20 passed** |
 
-`npm run test:e2e`: 42 where 39 passed before. The delta is the three new lecture tests: M1's
-playgrounds computing with no backend, M1's knobs working from the keyboard without advancing the
-deck, and M1's knobs writing the address bar. The projector tests did not grow in number; each of
-the three that concern playgrounds now walks M1's steps as well as M0's.
+`npm run test:e2e`: 48 where 39 passed before. Three are new lecture tests: M1's playgrounds
+computing with no backend, M1's knobs working from the keyboard without advancing the deck, and
+M1's knobs writing the address bar. Six are two new projector tests at three panel sizes, added
+after the final review: no word of any playground clipped out of reach, and every chart mark at
+3:1. The three existing projector tests that concern playgrounds now walk M1's steps as well.
 
 ### Contrast and type at three panels
 
@@ -655,15 +656,27 @@ with `skipped` empty and no row below 7:1. The floors are set at 20, 25 and 39, 
 those counts. The 18 px type floor holds on all nine M1 steps at all three sizes, and every
 playground step's controls sit inside the panel.
 
-### Overflow at XGA
+**The walk could not see clipping, and clipping was hiding the citations.** `painted()` asks
+whether a word is rendered; a word under an `overflow: hidden` ancestor is rendered and invisible.
+The final review measured X1's sources, its explanations and its disjointness lines, and F7's
+legend, below the frame's clip at every panel size, and the same measurement on M0 found F1's
+candidate count and ratio there too. `clipped()` now reports every word outside a picture that an
+ancestor has cut off; it failed on F1, F7 and X1 before the fix and passes on all six playground
+steps after it. `graphics()` measures chart marks at 3:1: F7's measured bars read **2.51:1** in
+`slate-400` and pass in `slate-600`.
+
+### Overflow at three panels
 
 | M1 step | 0 | 1 | 2 (F6) | 3 | 4 (F7) | 5 | 6 (X1) | 7 | 8 |
 |---|---|---|---|---|---|---|---|---|---|
-| px past a 1024×768 panel | 0 | 192 | 214 | 410 | 222 | 0 | 146 | 0 | 0 |
+| px past 1024×768 | 0 | 192 | 214 | 410 | 306 | 0 | 514 | 0 | 0 |
+| px past 1280×800 | 0 | 220 | 148 | 334 | 183 | 0 | 326 | 0 | 0 |
+| px past 1920×1080 | 0 | 0 | 0 | 15 | 0 | 0 | 0 | 0 | 0 |
 
 Measured as the step container's scroll height less its client height, after the webfonts decode
-(D70). The three playground steps are recorded here for the author's decision, as D71's list was;
-none is fixed in this cycle.
+(D70), after the final review's fix: F7 and X1 grew by the words that had been hidden inside the
+frame, which the step's scroll now reaches. The long steps are recorded here for the author's
+decision, as D71's list was; none is split in this cycle.
 
 ### NFR-8, on the three new components
 
@@ -671,13 +684,14 @@ none is fixed in this cycle.
 
 | | Wall | Work |
 |---|---|---|
-| F6, merging the four predicates | 33.7 ms | 0.1 ms above the 33.6 ms two-frame floor |
-| F7, moving s | 33.7 ms | 0.1 ms above the 33.6 ms two-frame floor |
-| X1, choosing another release | 32.2 ms | below the 35.0 ms two-frame floor |
+| F6, merging the four predicates | 33.2 ms | below the 33.5 ms two-frame floor |
+| F7, moving s | 33.3 ms | below the 34.4 ms two-frame floor |
+| X1, choosing another release | 32.4 ms | below the 34.1 ms two-frame floor |
 
 The work figures are at the instrument's resolution, which is about one frame; they show only
 that each interaction finishes inside the two frames the harness waits, not how much of a frame
-it used (D91). Cold start on the five routes was 210–318 ms against a ten-second budget.
+it used (D91). Cold start on the five routes was 207–330 ms against a ten-second budget. The figures are from the
+run after the final review's fix.
 
 ### The lint rules by mutation
 

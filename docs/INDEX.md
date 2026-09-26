@@ -104,7 +104,7 @@ drifts.
 | The eight labs L1–L8 | `PRD.md` §6.2; per-lab tasks in plans 02–04 |
 | The anchor paper's four equations | `design.md` §4.5 and `2026-09-16-indvissgg-reading.md` |
 | The `playground` step kind, and its twelve lint rules | `contracts.md` §2.4; rules in `system/tools/content_lint.mjs` |
-| The playground arithmetic, and the nine cases that pin it | `system/frontend/src/playgrounds/logic.ts`; `data/content/playground_golden.json` |
+| The playground arithmetic, and the twenty-two cases that pin it | `system/frontend/src/playgrounds/logic.ts`; `data/content/playground_golden.json` |
 | How to build a project like this again | `PLAYBOOK.md` |
 
 ---
@@ -282,7 +282,10 @@ releases, every figure with the passage it was copied from, and computes differe
 to equal figures the sources state independently. Opening those sources found that M1 s4's "share
 a name and not a test set" was not supported, that D-09 described an `h5` corpus the project never
 had, and that the frozen X1 labelled a withdrawn release as current; each is corrected or annotated
-in place. A twelfth lint rule checks every X1 figure's digits against its quote. M1 went from 6
+in place. A twelfth lint rule checks every X1 figure's digits against its quote. The final review
+found X1's citations, F7's legend and, older than this branch, F1's candidate count and ratio
+hidden under the frame's clip at every panel size; the frame now clips only pictures, and the
+projector test reports any word an ancestor cuts off. M1 went from 6
 steps to 9, the corpus from 95 to 98. See D93 and VERIFICATION §17.
 
 **Verification.** `npm run ci` green, 2026-09-26: **266 pytest** and 7 skipped (the ten newest
@@ -292,7 +295,7 @@ assigned, 43 symbols, 22 playground cases, 25 release figures, **and every step'
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,
 2026-09-26:
-42 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
+48 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
 check:perf`, 2026-09-26: 20 passed, NFR-8 measured over five labs and six playgrounds, plus the D75 selection guard.
 
@@ -353,6 +356,7 @@ until they had already happened.
 | A test suite is an instrument too: a fixture with one module and one locale cannot express a cross-module or cross-locale defect, so those rules can be deleted with the suite green, until each rule is disabled in turn | `DEVIATIONS.md` D92, `VERIFICATION.md` §16 |
 | A correction recorded in a deviation is not a correction of the document that carried the error, which keeps printing it | `DEVIATIONS.md` D92 |
 | A binding decision can describe an artefact the project never obtained, and nothing compares the two | `DEVIATIONS.md` D93 |
+| An `overflow: hidden` box inside a scrolling step hides words no scroll can reach, and a contrast walk that asks only whether a word is painted measures them as passing | `DEVIATIONS.md` D93, `VERIFICATION.md` §17 |
 | A figure repeated across a page, a brief and a decision from one early reading is wrong everywhere at once, and only opening the source finds it | `DEVIATIONS.md` D93, `FROZEN.md` 2026-09-26 |
 | A framework that sizes in rem puts its text at the document root, not at the shell the component is mounted in, so a 24 px lecture can contain 14 px type | `DEVIATIONS.md` D88 |
 | A generated file that git checks out with different line endings than the generator writes leaves `git status` dirty after every green run, with `git diff` showing nothing | `DEVIATIONS.md` D89, and the rule above it in `.gitattributes` |

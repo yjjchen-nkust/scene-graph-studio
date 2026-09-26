@@ -2730,12 +2730,19 @@ failing, each by its own message: `sgb-v2.train: value 68583 does not appear in 
 rule by a fragment of its message rather than by line number, which is what D92's version could
 not do. VERIFICATION §17 lists them.
 
-**M1 at XGA.** Overflow past a 1024×768 panel, per step: 0, 192, 214, 410, 222, 0, 146, 0 and
-0 px. The three playground steps overflow by 214 (F6), 222 (F7) and 146 (X1) px; M0's F1 step
-overflowed by 146 px in D88. Their controls sit inside the panel at all three sizes, which the
-projector test asserts. The overflow is the step's prose and the lower part of the visual, which
-the frame clips. **This is a decision for the author, not a fix made here**, in the same form as
-D71's: split the steps or leave them.
+**M1 at three panels, after the final review.** Overflow past the panel, per M1 step:
+
+| Panel | 0 | 1 | 2 (F6) | 3 | 4 (F7) | 5 | 6 (X1) | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1024×768 | 0 | 192 | 214 | 410 | 306 | 0 | 514 | 0 | 0 |
+| 1280×800 | 0 | 220 | 148 | 334 | 183 | 0 | 326 | 0 | 0 |
+| 1920×1080 | 0 | 0 | 0 | 15 | 0 | 0 | 0 | 0 | 0 |
+
+Every word of every playground is reachable by scrolling the step, and every playground's
+controls sit inside the panel at all three sizes; the projector test asserts both. **Whether to
+split the long steps is a decision for the author, not a fix made here**, in the same form as
+D71's. The first version of this paragraph reported X1 at 146 px: that was the step's overflow
+while the frame hid another 368 px of X1 where no scroll reached it (below).
 
 **Rulings taken during execution.** Task 2: the plan's predicted test counts were miscounted
 (9 failing and 18 passing before the rules existed, not 7 and 14; 27 after, not 25). Task 3: the
@@ -2751,8 +2758,30 @@ manifest: D-09 is annotated, not implemented after the fact. Opening Tang's or N
 for the canonical protocol's own statement of its counts: the canonical row is attributed to the
 card, which is where the figures were read. The other 22 live points.
 
+**The final review, and what it changed.** A fresh-context review of the whole branch found one
+defect it graded critical, and it was right. X1's explanations, its disjointness lines and its
+list of sources sat below the frame's `max-h-[46vh] overflow-hidden` at every panel size, and so
+did F7's legend: rendered, legible, and out of sight, inside a step whose own scroll could not
+reach them. The contrast walk measured them anyway, because it asks whether a word is painted and
+not whether anyone can see it. Measuring the same thing on M0 found the defect older than this
+branch: F1's candidate count and ratio, the two numbers F1 exists to show, sat under the clip at
+every panel size from the day F1 landed. The frame now clips only when told to (`clip`, default
+on); F1 clips its photograph and not its readouts, and F7 and X1 clip nothing. Two instruments
+were added and each was watched failing first: `clipped()` reports every word outside a picture
+that an `overflow: hidden` ancestor has cut off, over all six playground steps, and `graphics()`
+measures every chart mark against its backdrop at WCAG 1.4.11's 3:1, which F7's measured bars
+failed at 2.51:1 in `slate-400`; they are `slate-600` now, and F7's legend stands above its
+chart. The review also found that the canonical row's `val_from` quote described v1's bug
+rather than the canonical protocol; it now cites the card's direct sentence about the canonical
+validation set. s7 promised "the passage" each figure was read from and showed only the source and
+the locator; it now says what it shows. INDEX §4 still counted nine golden cases. And the frozen
+X1's "SGG-Bench" row now carries the current release's figures, where spec §3 said to label the
+v1 figures as v1: a departure from the spec, recorded here, taken because the option's label
+names the release the card publishes, while the v1 figures stay quoted in `FROZEN.md` and in X1.
+Twelve minor findings were deferred; the author has the list.
+
 **Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **699 vitest in 59 files** (632
 in 55 before), parity 13, **i18n 275 keys** both locales, content lint clean over 13 golden cases,
 **22 playground cases** and **25 release figures**, ruff clean, standalone current at 250
-equations, frontend builds 763 modules. `npm run test:e2e` **42** (39 before). `npm run
+equations, frontend builds 763 modules. `npm run test:e2e` **48** (39 before). `npm run
 check:perf` **20** (17 before).

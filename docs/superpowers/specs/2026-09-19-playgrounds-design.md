@@ -234,6 +234,10 @@ without anyone deciding to grow it. Controls sit **above** the visual and the vi
 height, so a short panel clips the picture and leaves the knobs reachable, rather than the
 reverse.
 
+*Amended 2026-09-26 (D93):* the max height clips only a picture. The whole visual was clipped, and
+F1's readouts, standing beside the picture, sat under the clip at every panel size; a playground
+of words and figures (F7, X1) passes `clip={false}` and lets the step scroll.
+
 ### 4.3 Knob state
 
 In the query string, through the existing `useLabParams`, namespaced by knowledge-point id:

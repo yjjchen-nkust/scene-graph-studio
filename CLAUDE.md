@@ -42,7 +42,7 @@ cd scene-graph-studio\system ; npm run ci
 - **`npm run ci` is the gate**, twelve steps: harvest, pytest, the metrics build, vitest, ruff,
   parity, i18n, content, frozen, mockup, standalone, frontend build.
 - **Four checks `ci` does not run**, each for a reason: `npm run test:e2e` (check 8, the keyboard
-  walkthrough at three projector resolutions, 42 tests, over the production build with no backend
+  walkthrough at three projector resolutions, 48 tests, over the production build with no backend
   running), `npm run check:offline` (check 6, a torch-free interpreter with every outward request
   intercepted), `npm run check:perf` (NFR-8, cold start on five routes and input-to-paint on five
   labs and six playgrounds, against a backend it starts itself), `npm run check:pins`.
@@ -93,7 +93,9 @@ cd scene-graph-studio\system ; npm run ci
   count, a bound or a set membership, never a metric** — a metric is a lab's business and the
   boundary is the point. Nothing in `frontend/src/playgrounds/` imports from `sgg-metrics` except
   its types. M0 carries three (F1, F2, F8) and M1
-  three (F6, F7, X1); 22 live knowledge points have none. See D88 and D93.
+  three (F6, F7, X1); 22 live knowledge points have none. See D88 and D93. **`PlaygroundFrame`
+  clips only a picture** (`clip`, default on): a playground of words and figures passes
+  `clip={false}`, because a word under the clip is beyond the reach of the step's scroll (D93).
 
 ## CI
 

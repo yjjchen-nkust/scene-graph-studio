@@ -86,7 +86,7 @@ export function SplitReleases() {
   const cell = 'px-2 py-1 text-left align-top';
 
   return (
-    <PlaygroundFrame title="X1" controls={controls}>
+    <PlaygroundFrame title="X1" controls={controls} clip={false}>
       <div className="flex flex-col gap-3">
         <table data-testid="x1-table" className="w-full border-collapse text-[1em] text-slate-900">
           <thead>

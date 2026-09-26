@@ -86,7 +86,7 @@ export function LongTailDistribution() {
   );
 
   return (
-    <PlaygroundFrame title="F7" controls={controls}>
+    <PlaygroundFrame title="F7" controls={controls} clip={false}>
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-x-8 gap-y-3">
           <Readout
@@ -111,6 +111,11 @@ export function LongTailDistribution() {
           )}
         </div>
         <p className="text-[0.875em] text-slate-700">{t('playground.f7.s_note')}</p>
+        {/* The key above the chart it explains, so a short panel never shows bars without it. */}
+        <p className="text-[0.875em] text-slate-700">
+          {t('playground.f7.legend_model')}
+          {overlay && <> · {t('playground.f7.legend_measured')}</>}
+        </p>
         <svg
           data-testid="f7-bars"
           viewBox={`0 0 ${bars * (BAR + GAP)} ${HEIGHT}`}
@@ -120,7 +125,9 @@ export function LongTailDistribution() {
         >
           {overlay &&
             measured.map((v, i) => (
-              <rect key={`m${i}`} x={i * (BAR + GAP) + 2} y={HEIGHT - h(v)} width={BAR - 4} height={h(v)} className="fill-slate-400" />
+              // slate-600, not slate-400: a chart mark needs 3:1 against the frame (WCAG 1.4.11),
+              // and slate-400 on slate-50 measured 2.51:1 at every panel size.
+              <rect key={`m${i}`} x={i * (BAR + GAP) + 2} y={HEIGHT - h(v)} width={BAR - 4} height={h(v)} className="fill-slate-600" />
             ))}
           {model.map((v, i) => (
             <rect
@@ -136,10 +143,6 @@ export function LongTailDistribution() {
             />
           ))}
         </svg>
-        <p className="text-[0.875em] text-slate-700">
-          {t('playground.f7.legend_model')}
-          {overlay && <> · {t('playground.f7.legend_measured')}</>}
-        </p>
         <p className="text-[0.875em] text-slate-700">{t('playground.f7.to_l3')}</p>
       </div>
     </PlaygroundFrame>

@@ -300,7 +300,7 @@ was run and its outcome, including the one that is recorded as **not run**.
 
 `npm run ci` is green on py12: 266 Python tests (7 skipped for a corpus this machine may not
 have), 699 TypeScript tests across 59 files, parity 13/13, i18n 275 keys in both locales,
-content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 42
+content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 48
 passed and `npm run check:perf` is 20. All measured 2026-09-26; `docs/VERIFICATION.md` §17
 records that run, §15 and §16 the two before it, and §14 the earlier run that reconciled
 three documents carrying three different counts.
