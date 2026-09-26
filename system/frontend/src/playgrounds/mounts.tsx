@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { LabelsToStructure } from './F1/LabelsToStructure';
 import { TripletCombinatorics } from './F2/TripletCombinatorics';
+import { BoxOverlap } from './F3/BoxOverlap';
 import { PredicateSynonymy } from './F6/PredicateSynonymy';
 import { LongTailDistribution } from './F7/LongTailDistribution';
 import { DirectedEdges } from './F8/DirectedEdges';
@@ -21,6 +22,7 @@ export type PlaygroundProps = { part?: number };
 export const PLAYGROUND_MOUNTS: Record<string, ComponentType<PlaygroundProps>> = {
   F1: LabelsToStructure,
   F2: TripletCombinatorics,
+  F3: BoxOverlap,
   F6: PredicateSynonymy,
   F7: LongTailDistribution,
   F8: DirectedEdges,

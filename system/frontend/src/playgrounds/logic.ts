@@ -102,6 +102,23 @@ export function clamp(value: number, low: number, high: number): number {
   return Math.min(Math.max(value, low), high);
 }
 
+/**
+ * `clamp`, then onto the slider's step, and onto the decimal the step is written in.
+ *
+ * A range input moves its thumb to the nearest step whatever value it is handed, so a URL carrying
+ * `F3.lambda=1.45` would show the thumb at 1.5 while the readouts computed 1.45. Snapping here keeps
+ * the two the same setting. The decimal rounding is not cosmetic: `k * 0.05` can land one ulp off
+ * the value its string names, and a τ one ulp above 0.5 rejects an IoU of exactly 0.5.
+ */
+export function snap(value: number, low: number, high: number, step: number): number {
+  const places = (String(step).split('.')[1] ?? '').length;
+  // The count of steps is itself rounded to ten places first: (1.45 - 0.5) / 0.1 is 9.4999…98 in
+  // binary, and the browser, which works in decimal, puts 1.45 exactly half way and rounds up.
+  const steps = Math.round(Number(((clamp(value, low, high) - low) / step).toFixed(10)));
+  const onStep = steps * step + low;
+  return Number(clamp(onStep, low, high).toFixed(places));
+}
+
 // ---- F6: merging classes ------------------------------------------------------------------
 
 /**

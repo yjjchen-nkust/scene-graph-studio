@@ -276,5 +276,19 @@
   "quiz.empty": "This checkpoint has no generated items.",
   "nav.resume": "Resume",
   "export.json": "Export JSON",
-  "export.svg": "Export SVG"
+  "export.svg": "Export SVG",
+  "playground.f3.dx": "Shift Δx",
+  "playground.f3.dy": "Shift Δy",
+  "playground.f3.lambda": "Scale λ",
+  "playground.f3.tau": "Threshold τ",
+  "playground.f3.tau_origin": "τ starts at 0.5: Xu et al. 2017, §4, p. 5",
+  "playground.f3.intersection": "Intersection, pixels",
+  "playground.f3.union": "Union, pixels",
+  "playground.f3.iou": "Overlap ratio",
+  "playground.f3.bound": "Bound",
+  "playground.f3.member": "IoU ≥ τ: counted as the same object",
+  "playground.f3.not_member": "IoU < τ: not counted as the same object",
+  "playground.f3.unreachable": "At this λ the bound is below τ: no placement reaches τ.",
+  "playground.f3.legend": "Solid: the annotation. Dashed: the prediction. Hatched: their intersection.",
+  "playground.f3.picture": "Frame ph-001: the annotated box and the prediction"
 }

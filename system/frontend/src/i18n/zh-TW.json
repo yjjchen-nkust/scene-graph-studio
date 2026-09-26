@@ -276,5 +276,19 @@
   "quiz.empty": "本檢核點沒有可生成的題目。",
   "nav.resume": "繼續閱讀",
   "export.json": "匯出 JSON",
-  "export.svg": "匯出 SVG"
+  "export.svg": "匯出 SVG",
+  "playground.f3.dx": "水平位移 Δx",
+  "playground.f3.dy": "垂直位移 Δy",
+  "playground.f3.lambda": "尺度 λ",
+  "playground.f3.tau": "門檻 τ",
+  "playground.f3.tau_origin": "τ 起始值 0.5：Xu 等人 2017，§4，第 5 頁",
+  "playground.f3.intersection": "交集（像素）",
+  "playground.f3.union": "聯集（像素）",
+  "playground.f3.iou": "重疊比值",
+  "playground.f3.bound": "上界",
+  "playground.f3.member": "IoU ≥ τ：視為同一物件",
+  "playground.f3.not_member": "IoU < τ：不視為同一物件",
+  "playground.f3.unreachable": "此 λ 下上界低於 τ：任何位置皆無法達到 τ。",
+  "playground.f3.legend": "實線：標註框；虛線：預測框；斜線：兩者之交集。",
+  "playground.f3.picture": "影格 ph-001：標註框與預測框"
 }

@@ -6,7 +6,7 @@ import { F3_FRAME, F3_OBJECT } from '../F3/setup';
 import {
   area, candidateSpace, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
   headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
-  ranked, ratio, scaleBound, scaledBox, splitDifference, tailToHead, tripletKey, unionArea, valPool,
+  ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, tripletKey, unionArea, valPool,
 } from '../logic';
 
 const ph001 = frameById('ph-001')!;
@@ -379,5 +379,23 @@ describe('F3: one box against its annotation', () => {
         expect(p.y + p.h).toBeLessThanOrEqual(480);
       }
     }
+  });
+});
+
+describe('snap', () => {
+  it('clamps to the range and lands on the step, as the slider thumb does', () => {
+    expect(snap(-999, -120, 120, 2)).toBe(-120);
+    expect(snap(31, -120, 120, 2)).toBe(32);
+    expect(snap(1.45, 0.5, 2, 0.1)).toBe(1.5);
+    expect(snap(9, 0.5, 2, 0.1)).toBe(2);
+    expect(snap(Number.NaN, 0.05, 0.95, 0.05)).toBe(0.05);
+  });
+
+  it('lands exactly on the decimal, so IoU = 0.5 still meets τ = 0.5', () => {
+    // 10 x 0.05 in binary floating point is not guaranteed to be the double nearest 0.5; a τ one
+    // ulp above 0.5 would turn the at-threshold case into a rejection.
+    expect(snap(0.5000000001, 0.05, 0.95, 0.05)).toBe(0.5);
+    expect(snap(0.55, 0.05, 0.95, 0.05)).toBe(0.55);
+    expect(snap(1.4000000000000001, 0.5, 2, 0.1)).toBe(1.4);
   });
 });
