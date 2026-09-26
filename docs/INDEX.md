@@ -66,7 +66,7 @@ drifts.
 | **D-18** | Mini-ISG licence gate precedes any frame commit | |
 | **D-19** | Effort estimates and the cut order | 44 days, four plans |
 | **D-20** | The track is documented in the repo `CLAUDE.md` | **superseded 2026-09-19 by D-22** |
-| **D-21** | Paper corpus is two tiers; only scored methods carry numbers | 35 cards decided; 60 built, reason unrecorded (D92); no unverified tier |
+| **D-21** | Paper corpus is two tiers; only scored methods carry numbers | 35 cards decided; 60 built, reason never recorded, closed at 60 (D92); no unverified tier |
 | **D-22** | Repository lives at `scene-graph-studio/` inside WekaExt | supersedes D-01, D-20; still not its own repo |
 
 ---
