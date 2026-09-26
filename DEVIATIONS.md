@@ -2655,6 +2655,14 @@ and the reason is the author's to add. What D-21 exists to protect is unaffected
 an unverified number, and check 9 counted ten cards carrying 87 figures. D-21 is annotated in place,
 and INDEX §2 now gives both figures.
 
+**Searched, and closed without a reason, 2026-09-26.** The generator of that commit,
+`system/tools/gen_papers.py` at `291f67f`, holds D-21's two rules in its docstring, the tier-A
+figures read from IndVisSGG's Table 2, Tang et al.'s Table 1 and KERN's Table 1, and the helpers
+that build rows and cards. It holds no card list and no statement of the count, so the 60 cards
+were written into `papers.json` directly and the reason was never recorded anywhere. The author
+closed the question on that basis: the count stays 60, and D-21's rule that no card carries an
+unverified number holds.
+
 **Counts.** CLAUDE.md and INDEX §4 said the lint holds eight playground rules; contracts §2.4 and
 design §2.4 said eleven. It is eleven, and both now say so.
 
