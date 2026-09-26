@@ -112,6 +112,30 @@
       "knobs": { "relationship_id": 5, "substitute": "on", "merged": true },
       "expect": { "annotated_predicate": "sitting on", "recorded": true },
       "why": "With on and sitting on merged, glass (10) sitting on table (2) and glass on table share the key (10, on, 2), so the substituted triplet is in E prime. No annotation and no model changed."
+    },
+    {
+      "id": "pg-F7-model-flat",
+      "kp": "F7",
+      "scope": "model",
+      "knobs": { "s": 0, "C": 36, "k": 3 },
+      "expect": { "head_share": 0.083333, "tail_to_head": 1 },
+      "why": "At s = 0 every class holds the same count, so the three most frequent of 36 hold 3 / 36 = 1/12 = 0.083333, and the rarest is as frequent as the first: 36^0 = 1."
+    },
+    {
+      "id": "pg-F7-model-s1-C4-k1",
+      "kp": "F7",
+      "scope": "model",
+      "knobs": { "s": 1, "C": 4, "k": 1 },
+      "expect": { "head_share": 0.48, "tail_to_head": 0.25 },
+      "why": "H_4 at s = 1 is 1 + 1/2 + 1/3 + 1/4 = 25/12. The first class holds 1 / (25/12) = 12/25 = 0.48. The fourth is 4^(-1) = 0.25 of the first."
+    },
+    {
+      "id": "pg-F7-slice-top3",
+      "kp": "F7",
+      "scope": "slice",
+      "knobs": { "k": 3 },
+      "expect": { "head_share": 0.570628 },
+      "why": "The slice's three most frequent predicates are on 382, has 68 and near 59: 382 + 68 + 59 = 509 of 892 triplets, and 509 / 892 = 0.570628."
     }
   ]
 }

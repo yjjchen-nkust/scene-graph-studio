@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import golden from '../../../../../data/content/playground_golden.json';
 import { OBJECT_GROUP, PREDICATE_GROUP } from '../F6/groups';
 import {
-  candidateSpace, classCounts, densityCut, isInE, isInMergedE, mergeMap, objectLabels, predicateLabels, ratio,
+  candidateSpace, classCounts, densityCut, headShare, isInE, isInMergedE, measuredHeadShare, mergeMap,
+  objectLabels, predicateLabels, ranked, ratio, tailToHead,
 } from '../logic';
 import { VG_FRAMES, frameById, vgFrameById } from '../slice';
 
@@ -80,5 +81,16 @@ describe('playground golden cases', () => {
     const triplet = { subject_id: rel.subject_id, predicate: c.knobs.substitute as string, object_id: rel.object_id };
     const merge = c.knobs.merged ? mergeMap([PREDICATE_GROUP]) : new Map<string, string>();
     expect(isInMergedE(frame, triplet, merge)).toBe(c.expect.recorded);
+  });
+
+  it.each(cases.filter((c) => c.kp === 'F7' && c.scope === 'model'))('$id', (c) => {
+    const { s, C, k } = c.knobs as { s: number; C: number; k: number };
+    expect(headShare(k, C, s)).toBeCloseTo(c.expect.head_share as number, 6);
+    expect(tailToHead(C, s)).toBeCloseTo(c.expect.tail_to_head as number, 6);
+  });
+
+  it.each(cases.filter((c) => c.kp === 'F7' && c.scope === 'slice'))('$id', (c) => {
+    const rank = ranked(predicateLabels(VG_FRAMES));
+    expect(measuredHeadShare(rank, c.knobs.k as number)).toBeCloseTo(c.expect.head_share as number, 6);
   });
 });
