@@ -22,15 +22,17 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/specs/2026-09-15-…-contracts.md` | **Normative field names, types, enum spellings** | live |
 | `superpowers/specs/2026-09-16-indvissgg-reading.md` | The anchor paper read as M11's source | reference |
 | `superpowers/specs/2026-09-19-playgrounds-design.md` | The `playground` step kind, and the three that complete M0 | **executed** |
+| `superpowers/specs/2026-09-26-playgrounds-m1-design.md` | F6, F7, X1, and what the opened sources say about VG150 | **executed** |
 | `superpowers/plans/…-00-master.md` | Index, dependency graph, global constraints | live |
 | `superpowers/plans/…-01-skeleton-and-eval-engine.md` | Phases 1–2 | **executed** |
 | `superpowers/plans/…-02-graph-labs-and-content.md` | Phases 3–4: graph, L1, L2, harvest, corpus | **executed** |
 | `superpowers/plans/…-03-models-and-vlm.md` | Phases 5–6: registry, RelTR, L4, L6, L5 | **executed**; the measured prediction tier is blocked on licences, see PROVENANCE.md |
 | `superpowers/plans/…-04-labs-shells-hardening.md` | Phases 7–9: L3, L7, L8, shells, hardening | **executed** |
 | `superpowers/plans/2026-09-19-playgrounds-m0.md` | The `playground` step kind, F1, F2, F8, the golden file, the lint rules | **executed** |
+| `superpowers/plans/2026-09-26-playgrounds-m1.md` | X1's cited figures, rules 9 and 12, the corrections, F6, F7, X1 | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D92. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15) and the lint suite by mutation (§16)** | live |
+| `../DEVIATIONS.md` | **D1…D93. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16) and the M1 playgrounds (§17)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
 
@@ -101,7 +103,7 @@ drifts.
 | Why the frozen page must not be extended | `FROZEN.md`, and D-13 / D-14 |
 | The eight labs L1–L8 | `PRD.md` §6.2; per-lab tasks in plans 02–04 |
 | The anchor paper's four equations | `design.md` §4.5 and `2026-09-16-indvissgg-reading.md` |
-| The `playground` step kind, and its eleven lint rules | `contracts.md` §2.4; rules in `system/tools/content_lint.mjs` |
+| The `playground` step kind, and its twelve lint rules | `contracts.md` §2.4; rules in `system/tools/content_lint.mjs` |
 | The playground arithmetic, and the nine cases that pin it | `system/frontend/src/playgrounds/logic.ts`; `data/content/playground_golden.json` |
 | How to build a project like this again | `PLAYBOOK.md` |
 
@@ -267,20 +269,32 @@ and `amber-900`, measured at 9.90, 9.20 and 8.66. The playgrounds were also the 
 the corpus at 14 px, because Tailwind sizes in rem against the document root rather than em
 against the 24 px shell, and they are sized in `em` now. See D88 and VERIFICATION §15.
 
-**Twenty-five live knowledge points still have no playground.** `kp.json` marks 27 points
-`status: 'live'`; F1 and F2 are two of them, and F8 is not among them at all, so 25 remain. Each is
-its own cycle against the pattern this one established.
+**Twenty-two live knowledge points still have no playground.** `kp.json` marks 27 points
+`status: 'live'`; F1, F2, F6, F7 and X1 are five of them, and F8 is not among them at all, so 22
+remain. Each is its own cycle against the pattern M0 established.
+
+**M1's three playgrounds landed 2026-09-26, after the premise X1 rested on was corrected.** F6
+merges four spatial predicates and three names for people over the committed `vg150-sgb` slice,
+reporting class counts, the merged count as its written sum, and whether a substituted predicate
+is recorded in E or in E′. F7 shows the shape of a Zipf distribution as ratios of counts, with the
+slice's own ranking beside it and no recall at all, because L3 scores that. X1 shows four VG150
+releases, every figure with the passage it was copied from, and computes differences that turn out
+to equal figures the sources state independently. Opening those sources found that M1 s4's "share
+a name and not a test set" was not supported, that D-09 described an `h5` corpus the project never
+had, and that the frozen X1 labelled a withdrawn release as current; each is corrected or annotated
+in place. A twelfth lint rule checks every X1 figure's digits against its quote. M1 went from 6
+steps to 9, the corpus from 95 to 98. See D93 and VERIFICATION §17.
 
 **Verification.** `npm run ci` green, 2026-09-26: **266 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 13 agree, i18n 229 keys both locales,
-**632 vitest** in 55 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
-assigned, 43 symbols, **and every step's presenter notes in both locales**), `ruff` clean over
+compare the requirement files to the interpreter), parity 13 agree, i18n 275 keys both locales,
+**699 vitest** in 59 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+assigned, 43 symbols, 22 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,
-2026-09-20:
-39 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
+2026-09-26:
+42 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
-check:perf`, 2026-09-20: 17 passed, NFR-8 measured over five labs and three playgrounds, plus the D75 selection guard.
+check:perf`, 2026-09-26: 20 passed, NFR-8 measured over five labs and six playgrounds, plus the D75 selection guard.
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in
@@ -338,6 +352,8 @@ until they had already happened.
 | A lint rule watched failing by hand and then only described in prose leaves nothing that notices its deletion | `DEVIATIONS.md` D91 |
 | A test suite is an instrument too: a fixture with one module and one locale cannot express a cross-module or cross-locale defect, so those rules can be deleted with the suite green, until each rule is disabled in turn | `DEVIATIONS.md` D92, `VERIFICATION.md` §16 |
 | A correction recorded in a deviation is not a correction of the document that carried the error, which keeps printing it | `DEVIATIONS.md` D92 |
+| A binding decision can describe an artefact the project never obtained, and nothing compares the two | `DEVIATIONS.md` D93 |
+| A figure repeated across a page, a brief and a decision from one early reading is wrong everywhere at once, and only opening the source finds it | `DEVIATIONS.md` D93, `FROZEN.md` 2026-09-26 |
 | A framework that sizes in rem puts its text at the document root, not at the shell the component is mounted in, so a 24 px lecture can contain 14 px type | `DEVIATIONS.md` D88 |
 | A generated file that git checks out with different line endings than the generator writes leaves `git status` dirty after every green run, with `git diff` showing nothing | `DEVIATIONS.md` D89, and the rule above it in `.gitattributes` |
 | An input-to-paint measurement that awaits two animation frames cannot report less than two frame intervals, so five different labs all came back at the display's cadence | `DEVIATIONS.md` D74 |

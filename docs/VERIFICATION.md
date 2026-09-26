@@ -619,3 +619,85 @@ rule fails a test. It does not show that the rules are the right rules. Only the
 section was mutated; the lint's older sections (the engine's golden vectors, the licence gates,
 the four-part contract, the presenter notes) were not, and nothing here says whether any test
 notices their deletion.
+
+## 17. The M1 playgrounds — measured, 2026-09-26
+
+The three playgrounds M1 owns (`plans/2026-09-26-playgrounds-m1.md`, tasks 1–10; D93). Every
+number below is from the runs that produced this section.
+
+### The gate
+
+`npm run ci`, exit 0:
+
+| Step | Result |
+|---|---|
+| pytest | 266 passed, 7 skipped |
+| vitest | **699 passed in 59 files** (632 in 55 before this cycle) |
+| ruff over `backend` and `tools` | clean |
+| parity | 13 cases agree |
+| i18n parity | **275 keys**, both locales complete (229 before) |
+| content lint | 13 golden cases, **22 playground cases**, **25 release figures**, 7 licence rows, 15 of 15 modules × 2 locales, 93 points assigned, 43 symbols, clean |
+| frozen-page lints | clean |
+| standalone | up to date, 250 equations |
+| frontend build | 763 modules |
+| `npm run test:e2e` | **42 passed** |
+| `npm run check:perf` | **20 passed** |
+
+`npm run test:e2e`: 42 where 39 passed before. The delta is the three new lecture tests: M1's
+playgrounds computing with no backend, M1's knobs working from the keyboard without advancing the
+deck, and M1's knobs writing the address bar. The projector tests did not grow in number; each of
+the three that concern playgrounds now walks M1's steps as well as M0's.
+
+### Contrast and type at three panels
+
+The contrast walk reads **27, 34 and 52 rows** on F6, F7 and X1 at XGA, WXGA and 1920×1080 alike,
+with `skipped` empty and no row below 7:1. The floors are set at 20, 25 and 39, three quarters of
+those counts. The 18 px type floor holds on all nine M1 steps at all three sizes, and every
+playground step's controls sit inside the panel.
+
+### Overflow at XGA
+
+| M1 step | 0 | 1 | 2 (F6) | 3 | 4 (F7) | 5 | 6 (X1) | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|---|
+| px past a 1024×768 panel | 0 | 192 | 214 | 410 | 222 | 0 | 146 | 0 | 0 |
+
+Measured as the step container's scroll height less its client height, after the webfonts decode
+(D70). The three playground steps are recorded here for the author's decision, as D71's list was;
+none is fixed in this cycle.
+
+### NFR-8, on the three new components
+
+`npm run check:perf`, exit 0, 20 tests where 17 ran before. Printed as measured:
+
+| | Wall | Work |
+|---|---|---|
+| F6, merging the four predicates | 33.7 ms | 0.1 ms above the 33.6 ms two-frame floor |
+| F7, moving s | 33.7 ms | 0.1 ms above the 33.6 ms two-frame floor |
+| X1, choosing another release | 32.2 ms | below the 35.0 ms two-frame floor |
+
+The work figures are at the instrument's resolution, which is about one frame; they show only
+that each interaction finishes inside the two frames the harness waits, not how much of a frame
+it used (D91). Cold start on the five routes was 210–318 ms against a ten-second budget.
+
+### The lint rules by mutation
+
+23 mutants, one per clause of the twelve playground rules, each applied alone to
+`content_lint.mjs`, with `tools/test/content_lint.test.mjs` run after it:
+
+| Rules | Mutants | Caught |
+|---|---|---|
+| 1–8, the step and its body | 9 (rule 8 has a per-module and a corpus-wide clause) | 9 |
+| 9–11, the golden file | 8 (rule 9: id, duplicate, missing field, unknown scope, frame-or-scope, empty `expect`) | 8 |
+| 12, the release figures | 6 (uncited, digits, measured, note value, labels, no releases) | 6 |
+
+The harness addresses each rule by a fragment of its message and, where a fragment occurs twice,
+by its occurrence, so it survives edits that move line numbers. It is not committed; the method is
+what repeats.
+
+### What this section does not claim
+
+The measurements are from this machine, the development machine of D-02's pair, not the ARM64
+ship target. The contrast figures are the browser's computed values at three panel sizes, not a
+statement about a projector in a lit room. X1's figures are as the sources state them on
+2026-09-26; the card's revision is recorded in `data/content/vg150_splits.json` so a later change
+to it can be detected.

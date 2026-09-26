@@ -2662,3 +2662,97 @@ design §2.4 said eleven. It is eleven, and both now say so.
 13, i18n 229 keys both locales, content lint clean over 13 golden cases and 9 playground cases, ruff
 clean, standalone current, frontend builds 756 modules. `npm run test:e2e` and `npm run check:perf`
 were not re-run: nothing under `frontend/` or `e2e/` changed.
+
+## D93 — M1's three playgrounds, and the premise X1 could not be built on
+
+**Plan:** `plans/2026-09-26-playgrounds-m1.md`, tasks 1–10. **Spec:**
+`specs/2026-09-26-playgrounds-m1-design.md`.
+
+**X1's premise was corrected before X1 was built.** Opening the sources for X1's figures produced
+four findings, recorded in spec §2 and acted on in Task 3.
+
+1. **M1 s4's premise was not supported.** s4 said the releases "share a name and not a test set",
+   and kp X1 said "three distinct (D_train, D_val, D_test)". The `vg150-sgb` dataset card states
+   that its current release's test is "the full, untouched test pool" and that its relation-bearing
+   counts match "the canonical VG150 protocol exactly". Xu et al. 2017, §4, state a 70/30 split of
+   108,077 images and mention no validation set. What the sources support is that releases differ
+   in the validation carve-out and in filtering, and that one published release drew its
+   validation set from the test pool. Corrected: s4's body and presenter notes in both locales;
+   kp X1's title, knobs and statement in the frozen page, then harvested; the frozen X1; item 01
+   of `web/brief/index.html`, and its standalone build; the adapter docstring. SRS §10 hazard 1
+   and design §2.3 gotcha 1 are annotated in place.
+2. **D-09 described a corpus the project never had.** It named `Scene-Graph-Benchmark.pytorch`'s
+   `VG-SGG.h5` and a manifest carrying that file's SHA-256. The corpus is the COCO-format parquet
+   release `maelic/VG150-coco-format` of Neau et al.'s SGG-Benchmark, and the manifest carries
+   per-image hashes, the seed and the distribution mode only. D-09 is annotated in place; the
+   decision itself stands.
+3. **s4 overstated D-09's enforcement.** It said the short form was forbidden "anywhere in the
+   codebase" by a lint. Enforcement is the `DatasetId` literal and
+   `test_bare_vg150_is_not_a_dataset`; bare VG150 appears in the prose of M01, M02, M04, M08 and
+   M09 as the published benchmark's name. s4 now says what is enforced.
+4. **The frozen X1's figures.** "SGG-Bench" 73,538 / 27,032 / 4,844 was the withdrawn v1 release;
+   "Xu et al." 75,651 / 32,422 are not in Xu et al. 2017; the note's four figures (65.3, 64.6,
+   31.0, 25.1) were verified by no table in this corpus and are removed. `FROZEN.md`, 2026-09-26.
+
+The sources were confirmed twice: once while the plan was written and again at Task 1. Issue #94,
+re-read verbatim through the GitHub API, gives the v1 counts as the spec quotes them. The card's
+upstream revision is `ea6fb3a56a0876eee98165ea17792fc6ec8460e6` and its README is byte-identical
+to the copy on disk. The local val parquet has 5,000 rows, so the corpus is the corrected release
+and the `vg150-sgb` slice was not cut from leaked test images.
+
+**The metric boundary held.** F6 shows class counts, the merged class's triplet count written out
+as its sum, and membership in E or E′; it shows no mR, which s2's inequality carries. F7 shows the
+head share H_k^(s) / H_C^(s), the tail ratio C^(−s) and the slice's measured head share; it shows
+no γ, R or mR, because L3 already scores R against mR under a Zipf control and a second scorer
+would repeat the F2/L1 collision M0 settled. X1 computes only the difference between two stated
+counts and whether a release's validation set can overlap its test set. It never turns Xu's
+70% of 108,077 into a count, and a golden case pins that difference as `null`.
+
+**X1's arithmetic reconciles the sources.** Every operand is a quoted figure, and every result
+equals a figure or a sentence the same sources state independently:
+
+| Difference | Arithmetic | Equals |
+|---|---|---|
+| v2 train − canonical train | 68,538 − 57,723 = 10,815 | v2's zero-relation training images, kept |
+| v2 test − canonical test | 31,876 − 26,446 = 5,430 | v2's zero-relation test images, kept |
+| v1 train − v2 train | 73,538 − 68,538 = 5,000 | the canonical validation set, folded into v1's train |
+| v1 test − v2 test | 27,032 − 31,876 = −4,844 | v1's validation images, drawn from the test pool |
+
+**Rule 9 amended, rule 12 added.** Rule 9 required an `image_id`, and F7's model and X1's sources
+have no frame; a case now carries exactly one of `image_id` or `scope` ∈ {`slice`, `model`,
+`sources`}. Rule 12 refuses a release figure without its source, url, locator and quote, and a
+count whose digits are not among its quote's digits. Three breaks of the real file were watched
+failing, each by its own message: `sgb-v2.train: value 68583 does not appear in its quote`,
+`canonical.test: no 'locator'`, `sgb-v2.val: measured 4844 rows but carries 5000`.
+
+**The mutation run.** 23 mutants, one per clause of the twelve rules, each applied alone to
+`content_lint.mjs` with the suite run after it: 23 caught, none missed. The harness addresses each
+rule by a fragment of its message rather than by line number, which is what D92's version could
+not do. VERIFICATION §17 lists them.
+
+**M1 at XGA.** Overflow past a 1024×768 panel, per step: 0, 192, 214, 410, 222, 0, 146, 0 and
+0 px. The three playground steps overflow by 214 (F6), 222 (F7) and 146 (X1) px; M0's F1 step
+overflowed by 146 px in D88. Their controls sit inside the panel at all three sizes, which the
+projector test asserts. The overflow is the step's prose and the lower part of the visual, which
+the frame clips. **This is a decision for the author, not a fix made here**, in the same form as
+D71's: split the steps or leave them.
+
+**Rulings taken during execution.** Task 2: the plan's predicted test counts were miscounted
+(9 failing and 18 passing before the rules existed, not 7 and 14; 27 after, not 25). Task 3: the
+brief's item 01 carried the same premise and was not in the plan's list of expected hits; it was
+corrected by the same rule. Task 9: the M1 row counts for the contrast floors were read from one
+run with the floor assertion soft, then the hard assertion was restored with floors of 20, 25 and
+39, three quarters of the 27, 34 and 52 rows measured at every panel size.
+
+**Not done, and why.** mR in F6, and R, mR and γ in F7: the metric stays in the lab. The frozen
+F7 note's "s ≈ 1.1": not examined. A fourth option or any new control on the frozen X1: that
+would extend the frozen page. Re-cutting the `vg150-sgb` slice or adding a source-file hash to its
+manifest: D-09 is annotated, not implemented after the fact. Opening Tang's or Neural Motifs' code
+for the canonical protocol's own statement of its counts: the canonical row is attributed to the
+card, which is where the figures were read. The other 22 live points.
+
+**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **699 vitest in 59 files** (632
+in 55 before), parity 13, **i18n 275 keys** both locales, content lint clean over 13 golden cases,
+**22 playground cases** and **25 release figures**, ruff clean, standalone current at 250
+equations, frontend builds 763 modules. `npm run test:e2e` **42** (39 before). `npm run
+check:perf` **20** (17 before).
