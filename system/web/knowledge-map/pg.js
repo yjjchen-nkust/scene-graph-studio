@@ -545,8 +545,8 @@ pg({id:'F3',en:'Grounding with boxes; IoU',zh:'以 box 定位；IoU',
   {t:'range',k:'dy',label:'predicted box Δy',min:-100,max:100,step:2,val:20,fmt:function(v){return v+' px'}},
   {t:'range',k:'sc',label:'predicted box scale',min:.4,max:1.8,step:.02,val:1,fmt:function(v){return fx(v,2)+'×'}},
   {t:'range',k:'tau',label:'threshold τ',min:.1,max:.95,step:.05,val:.5,fmt:function(v){return fx(v,2)}}],
- note_en:'\\(\\operatorname{IoU}=\\lvert b\\cap b\'\\rvert/\\lvert b\\cup b\'\\rvert\\). Scale alone caps the achievable value: a box twice the correct area cannot exceed \\(0.5\\) however perfectly centred. The threshold \\(\\tau=0.5\\) is convention inherited from Xu et al., never stated in the reference metric implementation — so treat it as a parameter, not a law.',
- note_zh:'\\(\\operatorname{IoU}=\\lvert b\\cap b\'\\rvert/\\lvert b\\cup b\'\\rvert\\)。光是尺度就會壓住可達上限：面積兩倍於正解的 box，就算完美對中也不可能超過 \\(0.5\\)。門檻 \\(\\tau=0.5\\) 是沿襲 Xu et al. 的慣例，參考實作從未寫明——所以請把它當參數，不是定律。',
+ note_en:'\\(\\operatorname{IoU}=\\lvert b\\cap b\'\\rvert/\\lvert b\\cup b\'\\rvert\\). Scale alone caps the achievable value: a box twice the correct area cannot exceed \\(0.5\\) however perfectly centred. The threshold \\(\\tau=0.5\\) is stated by Xu et al. (2017, §4) and set in the reference implementation\'s configuration, though not in its METRICS.md — so treat it as a parameter, not a law.',
+ note_zh:'\\(\\operatorname{IoU}=\\lvert b\\cap b\'\\rvert/\\lvert b\\cup b\'\\rvert\\)。光是尺度就會壓住可達上限：面積兩倍於正解的 box，就算完美對中也不可能超過 \\(0.5\\)。門檻 \\(\\tau=0.5\\) 由 Xu et al.（2017，§4）載明，並設定於參考實作之組態，惟其 METRICS.md 未載——所以請把它當參數，不是定律。',
  draw:function(s){
    var g=OBJ.box, cx=g.x+g.w/2+s.dx, cy=g.y+g.h/2+s.dy, w=g.w*s.sc, h=g.h*s.sc;
    var p={x:cx-w/2,y:cy-h/2,w:w,h:h};
@@ -564,7 +564,7 @@ pg({id:'F3',en:'Grounding with boxes; IoU',zh:'以 box 定位；IoU',
    return {vis:'<svg class="stage" viewBox="0 0 680 384" role="img" aria-label="box overlap">'+sv+'</svg>',
      out:[{k:'IoU',v:fx(iou),cls:ok?'up':'dn'},
           {k:'verdict',v:ok?'counts':'rejected',cls:ok?'up':'dn',s:'τ = '+fx(s.tau,2)},
-          {k:'scale ceiling',v:fx(Math.min(1,1/Math.max(s.sc,1/s.sc)),3),s:'max IoU at this scale'}]};
+          {k:'scale ceiling',v:fx(Math.min(s.sc*s.sc,1/(s.sc*s.sc)),3),s:'max IoU at this scale'}]};
  }});
 
 /* F6 — predicate synonymy */
