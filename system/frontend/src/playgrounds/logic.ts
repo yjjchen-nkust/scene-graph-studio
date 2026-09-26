@@ -156,6 +156,25 @@ export function predicateLabels(frames: SceneGraph[], merge: Map<string, string>
   });
 }
 
+/**
+ * How many pairs, across the frames, carry more than one member of `group`, each counted once.
+ *
+ * These are the pairs a merge makes one triplet of E′. It is not the number of rows a merge
+ * removes: three members on one pair are one pair and two rows, and the sentence F6 writes under
+ * its subtraction names pairs.
+ */
+export function pairsWithSeveral(frames: SceneGraph[], group: readonly string[]): number {
+  return frames.reduce((n, f) => {
+    const members = new Map<string, Set<string>>();
+    for (const r of f.relationships) {
+      if (!group.includes(r.predicate)) continue;
+      const pair = `${r.subject_id}|${r.object_id}`;
+      members.set(pair, (members.get(pair) ?? new Set()).add(r.predicate));
+    }
+    return n + [...members.values()].filter((m) => m.size > 1).length;
+  }, 0);
+}
+
 /** The first name of every object. Every object in the committed slices carries exactly one. */
 export function objectLabels(frames: SceneGraph[]): string[] {
   return frames.flatMap((f) => f.objects.flatMap((o) => (o.names[0] === undefined ? [] : [o.names[0]])));
@@ -177,7 +196,7 @@ export function isInMergedE(graph: SceneGraph, t: Triplet, merge: Map<string, st
 
 // ---- F7: the shape of the tail --------------------------------------------------------------
 
-/** H_m^(s) = Σ_{p=1}^{m} p^(−s), the generalized harmonic number M1's s4 uses. */
+/** H_m^(s) = Σ_{p=1}^{m} p^(−s), the generalized harmonic number M1's s5 uses. */
 export function harmonic(m: number, s: number): number {
   let sum = 0;
   for (let p = 1; p <= m; p += 1) sum += p ** -s;

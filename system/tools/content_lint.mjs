@@ -476,15 +476,18 @@ for (const [id, locales] of [...modules].sort()) {
     // the other direction -- does the step this frontmatter declares carry its tag -- and a tag
     // belonging to no step at all is invisible to it, because it only ever looks for `step.kp`.
     // An undeclared tag renders the amber `playground-unknown` panel on a slide, or a real
-    // playground on a slide that never asked for one, with the gate green either way.
+    // playground on a slide that never asked for one, with the gate green either way. A tag is
+    // its point and its part: keyed by the point alone, a whole tag for a split playground, or a
+    // part it does not have, answered to the steps that declare its parts (D96).
     {
+      const tagText = (kp, part) => `<Playground kp="${kp}"${part === undefined ? '' : ` part="${part}"`} />`;
       const declared = new Set(
-        (meta.steps ?? []).filter((s) => s.kind === 'playground' && s.kp).map((s) => s.kp),
+        (meta.steps ?? []).filter((s) => s.kind === 'playground' && s.kp).map((s) => tagText(s.kp, s.part)),
       );
-      const inBody = [...body.matchAll(/<Playground\s+kp="([^"]+)"/g)].map((m) => m[1]);
-      for (const kp of [...new Set(inBody)]) {
-        if (!declared.has(kp)) {
-          problems.push(`${file}: the body mounts <Playground kp="${kp}" />, which no step in ` +
+      const inBody = [...body.matchAll(TAG)].map((m) => tagText(m[1], m[2] === undefined ? undefined : Number(m[2])));
+      for (const tag of [...new Set(inBody)]) {
+        if (!declared.has(tag)) {
+          problems.push(`${file}: the body mounts ${tag}, which no step in ` +
                         `this module's frontmatter declares. Every playground is a step.`);
         }
       }

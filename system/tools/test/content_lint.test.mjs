@@ -282,6 +282,15 @@ describe('content_lint playground rules', () => {
     expect(r.out).toContain("'F1' is split into 2 parts and mounted as m00:s1 (1), m01:s1 (2)");
   });
 
+  it('refuses a tag for a split playground that no step declares, whole or by a part it lacks', () => {
+    // Each step carries its own part correctly, so only the body-wide rule can see a stray tag;
+    // until the parts were keyed into it, it compared the point alone, and F1 is declared.
+    const whole = lint(corpus({ ...SPLIT, body: `${SPLIT.body}\n\n<Playground kp="F1" />` }));
+    expect(whole.out).toContain('the body mounts <Playground kp="F1" />, which no step');
+    const third = lint(corpus({ ...SPLIT, body: `${SPLIT.body}\n\n<Playground kp="F1" part="3" />` }));
+    expect(third.out).toContain('the body mounts <Playground kp="F1" part="3" />, which no step');
+  });
+
   it('refuses the same part mounted twice in one module', () => {
     const r = lint(corpus({
       ...SPLIT,

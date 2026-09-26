@@ -22,6 +22,9 @@ function imageUrl(imageId: string): string {
 /** VG-150's predicate count, which M0's own worked example computes with. */
 const VG150_PREDICATES = 50;
 
+/** The photograph's height at most, in viewport heights: part 1 fits 1024×768 with it (D96). */
+const PICTURE_VH = 38;
+
 /**
  * F1 — 從標籤到結構.
  *
@@ -33,8 +36,8 @@ const VG150_PREDICATES = 50;
  * Computes a count, a bound and their ratio. No metric: that boundary is what separates a
  * playground from a lab.
  *
- * Two parts on the lecture's projector (D96): the picture and its layers, then the density, the
- * vocabulary and the four readouts. Whole, as the study page shows it, it is both.
+ * Two parts (D96): the picture and its layers, then the density, the vocabulary and the four
+ * readouts. Mounted without a part, as its unit tests mount it, it is both.
  */
 export function LabelsToStructure({ part }: PlaygroundProps = {}) {
   const { t } = useLocale();
@@ -120,14 +123,20 @@ export function LabelsToStructure({ part }: PlaygroundProps = {}) {
   );
 
   return (
-    // The picture is clipped, the readouts are not. The whole visual was clipped until
-    // 2026-09-26, and at 1024 px and wider the readouts stand in one column beside the picture,
-    // so the candidate count and the ratio -- the two numbers F1 exists to show -- sat under the
-    // clip at every panel size (D93).
+    // Nothing here is clipped. The whole visual was until 2026-09-26, and at 1024 px and wider
+    // the readouts stand in one column beside the picture, so the candidate count and the ratio --
+    // the two numbers F1 exists to show -- sat under the clip at every panel size (D93).
     <PlaygroundFrame title="F1" controls={controls} clip={false}>
       <div className="flex flex-col gap-4 lg:flex-row">
         {layers && (
-          <div className="max-h-[46vh] overflow-hidden">
+          // Sized, not clipped: at most PICTURE_VH tall and never wider than the frame, so the
+          // photograph is whole. The overlay's children are all absolutely positioned and give
+          // its box no width, and in the row at 1024 px and wider this box was given none either,
+          // so the photograph rendered 0×0 on every projector from the day F1 landed (D96).
+          <div
+            className="min-w-0 flex-1"
+            style={{ maxWidth: `calc(${PICTURE_VH}vh * ${frame.width} / ${frame.height})` }}
+          >
             <ImageOverlay
               imageUrl={imageUrl(frame.image_id)}
               width={frame.width}
@@ -141,7 +150,7 @@ export function LabelsToStructure({ part }: PlaygroundProps = {}) {
                 relationships: flag(params['F1.rel'], true),
                 labels: flag(params['F1.labels'], true),
               }}
-              className="max-w-2xl"
+              className="w-full"
             />
           </div>
         )}

@@ -3,7 +3,9 @@ import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { Choice, PlaygroundFrame, Readout, Toggle } from '../controls';
 import type { PlaygroundProps } from '../mounts';
-import { classCounts, flag, isInE, isInMergedE, mergeMap, objectLabels, predicateLabels } from '../logic';
+import {
+  classCounts, flag, isInE, isInMergedE, mergeMap, objectLabels, pairsWithSeveral, predicateLabels,
+} from '../logic';
 import { VG_FRAMES, vgFrameById } from '../slice';
 import { OBJECT_GROUP, PREDICATE_GROUP } from './groups';
 
@@ -27,9 +29,8 @@ const MERGED_P = classCounts(predicateLabels(VG_FRAMES, P_MERGE), NO_MERGE);
 const OBJECTS = objectLabels(VG_FRAMES);
 const BASE_O = classCounts(OBJECTS, NO_MERGE);
 const HEAD = PREDICATE_GROUP[0]!;
-/** Pairs annotated with two members of the group, which E′ records once. 2 on the slice. */
-const COLLAPSED =
-  PREDICATE_GROUP.reduce((n, g) => n + (BASE_P.get(g) ?? 0), 0) - (MERGED_P.get(HEAD) ?? 0);
+/** Pairs annotated with more than one member of the group, which E′ records once each: 2 here. */
+const SEVERAL = pairsWithSeveral(VG_FRAMES, PREDICATE_GROUP);
 
 function groupEdges(frame: SceneGraph): SGRelationship[] {
   return frame.relationships.filter((r) => PREDICATE_GROUP.includes(r.predicate));
@@ -210,9 +211,9 @@ export function PredicateSynonymy({ part }: PlaygroundProps = {}) {
                 note={mergeO ? sumNote(OBJECT_GROUP, BASE_O, oCounts.get(OBJECT_GROUP[0]!) ?? 0) : t('playground.f6.unmerged')}
               />
             </div>
-            {mergeP && COLLAPSED > 0 && (
+            {mergeP && SEVERAL > 0 && (
               <p data-testid="f6-collapsed" className="text-[1em] text-slate-700">
-                {COLLAPSED} {t('playground.f6.collapsed')}
+                {SEVERAL} {t('playground.f6.collapsed')}
               </p>
             )}
           </>

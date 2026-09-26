@@ -66,7 +66,7 @@ export function SplitReleases({ part }: PlaygroundProps = {}) {
 
   // Three parts on the lecture's projector (D96): the counts, the sentences their differences
   // equal, and where each release draws validation from and what it does with images that carry
-  // no relation. Whole, as the study page shows it, it is all three.
+  // no relation. Mounted without a part, as its unit tests mount it, it is all three.
   const counts = part === undefined || part === 1;
   const reasons = part === undefined || part === 2;
   const provenance = part === undefined || part === 3;
@@ -150,7 +150,10 @@ export function SplitReleases({ part }: PlaygroundProps = {}) {
           </table>
         )}
         {reasons && equalities.length === 0 && (
-          <p data-testid="x1-no-equality" className="text-[1em] text-slate-700">{t('playground.x1.no_equality')}</p>
+          // Nothing to subtract, or nothing that differs: Xu states shares, which is not agreement.
+          <p data-testid="x1-no-equality" className="text-[1em] text-slate-700">
+            {t(SPLITS.some((s) => splitDifference(a, b, s) !== null) ? 'playground.x1.counts_agree' : 'playground.x1.no_common_count')}
+          </p>
         )}
         {reasons && equalities.map((e) => (
           <p key={e.split} data-testid={`x1-equality-${e.split}`} data-explained={String(Boolean(e.note))} className="text-[1em] text-slate-700">
@@ -184,7 +187,8 @@ export function SplitReleases({ part }: PlaygroundProps = {}) {
           // One flowing line rather than a line a source, numbered as the marks are.
           <div className="text-[0.875em] text-slate-700">
             <span className="font-medium">{t('playground.x1.sources')}</span>{colon}
-            <ol data-testid="x1-sources" className="inline">
+            {/* role="list": an inline list without markers loses the role in WebKit. */}
+            <ol data-testid="x1-sources" role="list" className="inline">
               {footnotes.map((f, i) => <li key={f} className="mr-4 inline">{i + 1}. {f}</li>)}
             </ol>
           </div>

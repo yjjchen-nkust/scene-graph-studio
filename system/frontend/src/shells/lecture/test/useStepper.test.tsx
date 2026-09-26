@@ -256,6 +256,18 @@ describe('useStepper and a playground split across steps', () => {
     expect(where()).toBe('/lecture/m/m01/3');
   });
 
+  it('carries the query the pending step would have, when presses outrun the renders', () => {
+    // From F7 back through X1's two parts before either renders: the first press opens part 2
+    // with no query, since F7's knobs are not X1's, so the second must carry that empty query
+    // to part 1 and not F7's, which is still the rendered one.
+    at('/lecture/m/m01/3?X1.r=sgb-v1');
+    act(() => {
+      fireEvent.keyDown(window, { key: 'ArrowLeft' });
+      fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    });
+    expect(where()).toBe('/lecture/m/m01/1');
+  });
+
   it('does not carry a query into a playground from a step that is not part of it', () => {
     at('/lecture/m/m01/0?X1.r=sgb-v1');
     fireEvent.keyDown(window, { key: 'ArrowRight' });

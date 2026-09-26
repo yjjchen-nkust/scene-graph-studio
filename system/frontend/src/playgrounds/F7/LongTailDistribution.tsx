@@ -25,9 +25,10 @@ const GAP = 4;
 const HEIGHT = 120;
 
 /**
- * Two parts on the lecture's projector (D96): the model alone, then the slice against it. The
- * second part is the comparison, so the overlay is simply on there and the first has none; the
- * toggle belongs to the whole playground, as the study page shows it.
+ * Two parts (D96): the model alone, then the slice against it. The second part is the
+ * comparison, so the overlay is simply on there and the first has none. The toggle and the line
+ * sending the room to L3 exist only when the playground is mounted without a part, as its unit
+ * tests mount it; no step does, since rule 4 refuses a split point's step that names no part.
  */
 export function LongTailDistribution({ part }: PlaygroundProps = {}) {
   const { t } = useLocale();
@@ -157,8 +158,8 @@ export function LongTailDistribution({ part }: PlaygroundProps = {}) {
             />
           ))}
         </svg>
-        {/* The first part's sentence and both notes send the room to L3; on the second part this
-            line was the 41 px past the panel. */}
+        {/* On the lecture the first part's sentence and the second part's notes send the room to
+            L3, and on the second part this line was the 41 px past the panel. */}
         {part === undefined && <p className="text-[0.875em] text-slate-700">{t('playground.f7.to_l3')}</p>}
       </div>
     </PlaygroundFrame>

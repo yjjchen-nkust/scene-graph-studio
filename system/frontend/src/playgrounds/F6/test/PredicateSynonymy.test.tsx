@@ -41,7 +41,7 @@ describe('F6', () => {
   it('says in words what the subtraction is, and only when there is one', () => {
     at('?F6.mp=1');
     expect(screen.getByTestId('f6-collapsed')).toHaveTextContent(
-      /^2 pairs carry two members of the group; E′ records each pair once.$/,
+      /^2 pairs carry more than one member of the group; E′ records each pair once\.$/,
     );
     cleanup();
     at('?F6.mo=1');

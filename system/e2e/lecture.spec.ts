@@ -261,8 +261,8 @@ test('M1\'s knobs write the address bar', async ({ page }) => {
   await page.goto('/lecture/m/m01/2');
   await page.getByTestId('F6.mp').click();
   await expect(page).toHaveURL(/F6\.mp=1/);
-  // F7's overlay toggle belongs to the whole playground; on the lecture its second part simply
-  // shows the slice (D96), so the knob written here is the head.
+  // F7's overlay toggle exists only when the playground is mounted without a part, which no step
+  // does; its second part shows the slice (D96), so the knob written here is the head.
   await page.goto('/lecture/m/m01/5');
   await page.getByTestId('F7.k').focus();
   await page.keyboard.press('ArrowRight');

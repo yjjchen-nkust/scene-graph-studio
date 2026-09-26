@@ -132,6 +132,8 @@ export function useStepper(moduleId: string, steps: StepperStep[]): Stepper {
    */
   const posRef = useRef(index);
   const pendingRef = useRef<number | null>(null);
+  // The query the pending step was asked for with, read in its place while it has not rendered.
+  const pendingSearchRef = useRef('');
   if (pendingRef.current === index || posRef.current !== index) pendingRef.current = null;
   posRef.current = index;
 
@@ -142,8 +144,10 @@ export function useStepper(moduleId: string, steps: StepperStep[]): Stepper {
       // The knobs live in the query (contracts §2.2). Between two parts of one playground they are
       // the same knobs, so they cross; anywhere else a step opens on its own defaults, as before.
       const from = steps[pendingRef.current ?? posRef.current]?.kp;
-      const carry = from !== undefined && from === steps[target]?.kp ? search : '';
+      const current = pendingRef.current === null ? search : pendingSearchRef.current;
+      const carry = from !== undefined && from === steps[target]?.kp ? current : '';
       pendingRef.current = target;
+      pendingSearchRef.current = carry;
       navigate(`/lecture/m/${moduleId}/${target}${carry}`);
     },
     [count, moduleId, navigate, search, steps],

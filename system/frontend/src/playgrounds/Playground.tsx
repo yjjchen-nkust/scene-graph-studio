@@ -1,4 +1,5 @@
 import { useLocale } from '../i18n/useLocale';
+import { PartContext } from './controls';
 import { PLAYGROUND_MOUNTS, PLAYGROUND_PARTS } from './mounts';
 
 /**
@@ -24,5 +25,9 @@ export function Playground({ kp, part }: { kp: string; part?: string }) {
       </p>
     );
   }
-  return <Mount part={n} />;
+  return (
+    <PartContext.Provider value={n}>
+      <Mount part={n} />
+    </PartContext.Provider>
+  );
 }

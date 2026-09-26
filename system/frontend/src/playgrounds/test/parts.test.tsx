@@ -89,10 +89,14 @@ describe('a playground split across steps', () => {
     expect(screen.getByTestId('x1-row-pool')).toHaveTextContent('108,077');
   });
 
-  it('X1 part 2 says when there is no difference to explain, and cites nothing', () => {
-    part('X1', '2', '?X1.r=xu-2017&X1.vs=canonical');
-    expect(screen.getByTestId('x1-no-equality')).toHaveTextContent('No two stated counts of these releases differ.');
+  it('X1 part 2 says why there is no difference to explain, and cites nothing', () => {
+    // Xu states shares, so nothing can be subtracted; that is not the counts agreeing.
+    const xu = part('X1', '2', '?X1.r=xu-2017&X1.vs=canonical');
+    expect(screen.getByTestId('x1-no-equality')).toHaveTextContent('No split is stated as a count by both releases.');
     expect(screen.queryByTestId('x1-sources')).toBeNull();
+    xu.unmount();
+    part('X1', '2', '?X1.r=canonical&X1.vs=canonical');
+    expect(screen.getByTestId('x1-no-equality')).toHaveTextContent('Where both releases state a count, the counts are equal.');
   });
 
   it('X1 numbers the sources of each part from one, citing only what that part shows', () => {
@@ -109,6 +113,26 @@ describe('a playground split across steps', () => {
 
     part('X1', '3', '?X1.r=sgb-v1&X1.vs=sgb-v2');
     expect(screen.getByTestId('x1-disjoint-a').querySelector('sup')?.textContent).toBe('1');
+  });
+
+  it('gives each part its own control ids, so every label names its own control', () => {
+    // The study page renders every step, so the parts of one playground share a page, and a
+    // repeated id left each later label naming the first part's control (WCAG 1.3.1, 4.1.2).
+    const { container } = render(
+      <MemoryRouter initialEntries={['/m/m01']}>
+        {['1', '2', '3'].map((n) => <Playground key={n} kp="X1" part={n} />)}
+        {['1', '2'].map((n) => <Playground key={`F7.${n}`} kp="F7" part={n} />)}
+      </MemoryRouter>,
+    );
+    const ids = [...container.querySelectorAll('[id]')].map((e) => e.id);
+    expect(ids.length).toBeGreaterThan(0);
+    expect(new Set(ids).size, `repeated: ${ids.filter((id, i) => ids.indexOf(id) !== i)}`).toBe(ids.length);
+    const labels = [...container.querySelectorAll('label')];
+    const named = labels.map((l) => container.querySelector(`[id="${l.htmlFor}"]`));
+    expect(named.every((el) => el !== null)).toBe(true);
+    expect(new Set(named).size).toBe(labels.length);
+    // The test ids stay the knob's name, which is what the suites and the URL address.
+    expect(screen.getAllByTestId('X1.r')).toHaveLength(3);
   });
 
   it('names a part a playground does not have, rather than guessing one', () => {

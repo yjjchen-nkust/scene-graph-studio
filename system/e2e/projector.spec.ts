@@ -497,6 +497,23 @@ for (const size of SIZES) {
       }
     });
 
+    test('F1 shows its photograph, whole and on the screen', async ({ page }) => {
+      // The overlay's children are all absolutely positioned, so the box around it has no width
+      // of its own; in a row at 1024 px and wider it was given none, and the photograph F1 opens
+      // on rendered 0×0 on every projector from the day it landed. Its step "fit" because the
+      // picture was missing (D96).
+      await page.goto('/lecture/m/m00/1');
+      const image = page.getByTestId('playground-frame').locator('img');
+      await expect(image).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const box = await image.boundingBox();
+      expect(box, 'the photograph has no box').not.toBeNull();
+      expect(box!.width, 'the photograph has no width').toBeGreaterThan(200);
+      expect(box!.height, 'the photograph has no height').toBeGreaterThan(150);
+      const height = page.viewportSize()?.height ?? 0;
+      expect(box!.y + box!.height, 'the photograph runs below the panel').toBeLessThanOrEqual(height);
+    });
+
     test('every part of a split playground fits the panel in its longest state', async ({ page }) => {
       // The split exists for this (D96): at 1024x768 a step shows 561 px, and F1, F6, F7 and X1
       // each ran past it by 334 to 619 px in some state of their knobs. Measured after the

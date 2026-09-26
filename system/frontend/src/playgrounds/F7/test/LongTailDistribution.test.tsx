@@ -39,7 +39,7 @@ describe('F7', () => {
     expect(screen.getByTestId('readout-F7.measured')).toHaveTextContent('353 / 684');
   });
 
-  it('at k = 1 the overlay shows the figure s5\'s presenter note quotes', () => {
+  it('at k = 1 the overlay shows the figure s7\'s presenter note quotes', () => {
     at('?F7.measured=1&F7.k=1');
     expect(value('F7.measured')).toHaveTextContent(/^36\.26%$/);
     expect(screen.getByTestId('readout-F7.measured')).toHaveTextContent('248 / 684');
