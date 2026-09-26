@@ -43,7 +43,7 @@ steps:
   - id: s4
     kind: prose
     seconds_budget: 180
-    presenter_notes_en: "Three minutes, and it is a naming convention rather than a result, so keep it short. The point is that three distinct re-releases share the name VG150 and do not share a test set, so a table that mixes them is not a comparison. Say plainly that this project writes vg150-sgb everywhere and that D-09 is enforced by a lint rather than by memory. If asked which split is better, the answer is that the course does not rank them and only requires that a paper say which one it used."
+    presenter_notes_en: "Three minutes, and it is a naming convention rather than a result, so keep it short. The point is that several releases share the name VG150, differing in how the validation set is carved and in which images are filtered, and that one release briefly drew its validation images from the test pool; a table that mixes them is not a comparison. Say plainly that this project writes vg150-sgb as its dataset identifier and that the schema refuses the bare form. If asked which release is better, the answer is that the course does not rank them and only requires that a paper say which one it used."
   - id: s5
     kind: lab
     lab: L1
@@ -167,19 +167,22 @@ a second measurement of quality. It is a measurement of that correlation.
 
 <Step id="s4">
 
-## `VG150` names three different datasets
+## `VG150` names several releases, not one
 
 $$
-\texttt{VG150}\ \mapsto\ \text{three distinct }(\mathcal{D}_{\text{train}},\mathcal{D}_{\text{val}},\mathcal{D}_{\text{test}})\ \Longrightarrow\ \text{numbers not comparable}
+\texttt{VG150}\ \mapsto\ \text{releases } r,\ \text{each with its own }(\mathcal{D}_{\text{train}},\mathcal{D}_{\text{val}},\mathcal{D}_{\text{test}})_r\ \Longrightarrow\ \text{a number is comparable only when its } r \text{ is named}
 $$
 
-The 150-object, 50-predicate subset of Visual Genome has been redistributed in several splits
-that share a name and not a test set. A figure from one split placed in a table beside a figure
-from another is not a comparison, and nothing in either paper's notation says which was used.
+The 150-object, 50-predicate subset of Visual Genome comes from Xu et al. (2017), who state a
+70/30 split of the images and mention no validation set. Later releases carved a validation set
+out of the training images, kept or dropped the images that carry no relation, and in one
+published version drew the validation set from the test pool. They share a name, and the numbers
+they produce differ for reasons unrelated to any model. A figure beside another in a table is a
+comparison only when both papers say which release they used.
 
-This project therefore never writes bare `vg150`. The dataset identifier is `vg150-sgb`, naming
-the redistribution, and decision D-09 forbids the short form anywhere in the codebase — a rule
-enforced by lint rather than by memory, because the two names are one character apart.
+This project names its own: the dataset identifier is `vg150-sgb`, the corrected release of
+Neau et al.'s SGG-Benchmark. Decision D-09 forbids `vg150` as a dataset identifier, and the
+schema refuses it; prose uses VG150 only for the published benchmark's name.
 
 </Step>
 

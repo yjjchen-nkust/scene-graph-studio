@@ -1,7 +1,8 @@
 """VG150, as maelic publishes it: COCO-format parquet, images embedded.
 
-The split is `vg150-sgb` and never bare `vg150` (D-09): three incompatible things answer to the
-short name, and this is the SGG-Benchmark one. 150 object categories, 50 predicates.
+The split is `vg150-sgb` and never bare `vg150` (D-09): several releases answer to the short
+name, and this is the corrected release of Neau et al.'s SGG-Benchmark,
+`maelic/VG150-coco-format`. 150 object categories, 50 predicates.
 """
 
 from __future__ import annotations

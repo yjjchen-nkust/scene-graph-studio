@@ -152,6 +152,7 @@ var ZH={
   'on / above → contact-or-above':'on ／ above → 接觸或位於上方',
   'picking up / holding → grasping':'picking up ／ holding → 抓握',
   'Xu et al.':'Xu 等人',
+  'not stated':'來源未載明',
   /* readout keys */
   'VLM calls / frame':'VLM 呼叫次數／影格',
   'approx. tokens':'約略 token 數',
@@ -375,7 +376,7 @@ L10:"\\[ \\hat p\\notin\\mathcal{P}\\ \\Longrightarrow\\ \\hat t\\not\\simeq t\\
 S1:"\\[ G=(V,E,T),\\qquad E=\\bigcup_{t\\in T}E_t,\\qquad e\\in E_t\\iff \\mathrm{born}(e)\\le t\\le\\mathrm{die}(e)\\ \\wedge\\ w_e\\ge\\theta \\]",
 G2:"\\[ \\mathcal{G}_{\\ell+1}=\\Phi_{\\ell}(\\mathcal{G}_{\\ell}),\\qquad \\lvert V_{\\ell+1}\\rvert\\ll\\lvert V_{\\ell}\\rvert,\\qquad \\text{tokens}\\approx 7\\,\\lvert V_{\\ell}\\rvert \\]",
 G4:"\\[ V_{\\text{task}}=\\{v\\in V:\\ \\mathrm{sim}(v,\\text{task})>\\theta\\};\\qquad \\text{granularity is a property of the task, not the scene} \\]",
-X1:"\\[ \\texttt{VG150}\\ \\mapsto\\ \\text{three distinct }(\\mathcal{D}_{\\text{train}},\\mathcal{D}_{\\text{val}},\\mathcal{D}_{\\text{test}})\\ \\Longrightarrow\\ \\text{numbers not comparable} \\]",
+X1:"\\[ \\texttt{VG150}\\ \\mapsto\\ \\text{releases } r,\\ \\text{each with its own }(\\mathcal{D}_{\\text{train}},\\mathcal{D}_{\\text{val}},\\mathcal{D}_{\\text{test}})_r\\ \\Longrightarrow\\ \\text{a number is comparable only when its } r \\text{ is named} \\]",
 X2:"\\[ R@k \\text{ on VRD depends on } k=\\lvert\\{p:\\langle s,p,o\\rangle\\in X\\}\\rvert\\in\\{1,10,70\\},\\ \\text{usually undeclared} \\]"
 };
 
@@ -999,22 +1000,21 @@ pg({id:'G4',en:'Clio: task-driven granularity',zh:'Clio：任務驅動的粒度'
      {k:'graph reduction',v:fx(1-n/8,2),cls:n<8?'up':'',s:'nodes dropped as irrelevant'}]};
  }});
 
-/* X1 — the three VG150 splits */
-pg({id:'X1',en:'VG150 names three different splits',zh:'VG150 是三個不同的切分',
+/* X1 — the VG150 releases */
+pg({id:'X1',en:'VG150 names several releases',zh:'VG150 指涉數個發布版本',
  ctrls:[{t:'knob',k:'sp',label:'which VG150?',val:'xu',
    opts:[['xu','Xu et al.'],['tang','Tang'],['bench','SGG-Bench']]}],
- note_en:'Three incompatible splits circulate under one name, and papers rarely say which they used. The same method reports Neural Motifs PredCls R@50 as <b>65.3</b> in the PE-Net table and <b>64.6</b> in the RA-SGG table; MOTIFS SGDet R@50 appears as <b>31.0</b> in one table and <b>25.1</b> in another. Backbone, codebase and epoch budget differ too. This is why the app shows per-paper tables with a non-comparability banner and never one merged leaderboard.',
- note_zh:'三個互不相容的切分共用同一個名字，而論文很少交代用的是哪一個。同一個方法，Neural Motifs 的 PredCls R@50 在 PE-Net 表中是 <b>65.3</b>，在 RA-SGG 表中是 <b>64.6</b>；MOTIFS 的 SGDet R@50 在某張表是 <b>31.0</b>，在另一張是 <b>25.1</b>。Backbone、程式庫與訓練輪數也都不同。這正是本應用程式只呈現逐論文的表格並加上「不可比較」橫幅、而絕不合併成單一排行榜的原因。',
+ note_en:'Several releases circulate under one name. They differ in how the validation set is carved and in which images are filtered, and one published SGG-Benchmark release drew its validation set from the test pool. Xu et al. (2017, §4) state a 70/30 split of 108,077 images and no counts. The Tang and SGG-Bench figures are read from the vg150-sgb dataset card: images with at least one relation, and the current release as published. This is why the app shows per-paper tables with a non-comparability banner and never one merged leaderboard.',
+ note_zh:'數個發布版本共用同一名稱，彼此於驗證集之切取方式與影像篩選規則上有所不同，且 SGG-Benchmark 曾有一個已發布版本自測試集抽取驗證集。Xu 等人（2017，§4）載明 108,077 張影像依 70／30 比例切分，未列張數。Tang 與 SGG-Bench 之數值取自 vg150-sgb 資料卡：前者為至少含一條關係之影像數，後者為現行發布版本之數值。這正是本應用程式只呈現逐論文的表格並加上「不可比較」橫幅、而絕不合併成單一排行榜的原因。',
  draw:function(s){
-   var d={xu:{tr:75651,te:32422,v:0,src:'Xu et al., CVPR 2017'},
-          tang:{tr:57723,te:26446,v:5000,src:'Neural Motifs lineage'},
-          bench:{tr:73538,te:27032,v:4844,src:'SGG-Benchmark re-export'}}[s.sp];
-   var items=[{k:'train',v:d.tr/76000,l:d.tr.toLocaleString(),c:'var(--accent)'},
-              {k:'val',v:d.v/76000,l:d.v?d.v.toLocaleString():'none',c:'var(--m-loc)'},
-              {k:'test',v:d.te/76000,l:d.te.toLocaleString(),c:'var(--muted)'}];
+   var d={xu:{tr:null,te:null,v:null,src:'Xu et al. 2017, §4: 70% / 30% of 108,077 images, no counts'},
+          tang:{tr:57723,te:26446,v:5000,src:'vg150-sgb card: the canonical protocol, images with at least one relation'},
+          bench:{tr:68538,te:31876,v:5000,src:'vg150-sgb card: the current release, as published'}}[s.sp];
+   function row(k,n,c){return {k:k,v:n?n/76000:0,l:n?n.toLocaleString():uiT('not stated'),c:c}}
+   var items=[row('train',d.tr,'var(--accent)'),row('val',d.v,'var(--m-loc)'),row('test',d.te,'var(--muted)')];
    return {vis:bars(items,1,''),out:[
-     {k:'train images',v:d.tr.toLocaleString()},
-     {k:'test images',v:d.te.toLocaleString()},
+     {k:'train images',v:d.tr?d.tr.toLocaleString():uiT('not stated')},
+     {k:'test images',v:d.te?d.te.toLocaleString():uiT('not stated')},
      {k:'source',v:'<span style="font-size:12px">'+d.src+'</span>'}]};
  }});
 

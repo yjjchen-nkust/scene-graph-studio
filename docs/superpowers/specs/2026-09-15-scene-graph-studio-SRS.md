@@ -211,7 +211,7 @@ Test-driven development applies without exception to the evaluation engine and i
 
 These are not footnotes; each is surfaced in the interface at the point where it would otherwise mislead.
 
-1. "VG150" names three incompatible splits.
+1. "VG150" names three incompatible splits. *(Annotated 2026-09-26: not supported as worded. The releases differ in the validation carve-out and in filtering, and one published release drew its validation set from the test pool; see `specs/2026-09-26-playgrounds-m1-design.md` §2 and D93.)*
 2. Graph-constraint versus no-constraint swings Recall by ten to twenty points.
 3. VRD Recall depends on an undeclared *k*, the number of predicates permitted per pair.
 4. Missing annotations are scored as false positives in VG, VRD, and VidVRD.

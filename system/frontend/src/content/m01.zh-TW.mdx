@@ -43,7 +43,7 @@ steps:
   - id: s4
     kind: prose
     seconds_budget: 180
-    presenter_notes_zh: "三分鐘。此頁為命名慣例而非理論，宜快。要點在於三組不同的重新發布版本共用 `VG150` 一名而不共用測試集，故跨表比較不成立。請明確說明本專案一律使用 `vg150-sgb`，且 D-09 以 lint 而非人為記憶強制。若現場詢問何種分割較佳，答為本課程不作此判斷，只要求指明所用者。"
+    presenter_notes_zh: "三分鐘。此頁為命名慣例而非理論，宜快。要點在於數個發布版本共用 VG150 一名，彼此於驗證集之切取方式與影像篩選規則上有所不同，且其中一個版本曾自測試集抽取驗證影像；混用各版本之表格並不構成比較。請明確說明本專案以 vg150-sgb 作為資料集識別碼，且資料結構描述拒絕簡寫形式。若現場詢問何者較佳，答為本課程不作此判斷，只要求論文指明所用者。"
   - id: s5
     kind: lab
     lab: L1
@@ -151,15 +151,15 @@ $$
 
 <Step id="s4">
 
-## `VG150` 指涉三組不同的資料集
+## `VG150` 指涉數個發布版本
 
 $$
-\texttt{VG150}\ \mapsto\ \text{three distinct }(\mathcal{D}_{\text{train}},\mathcal{D}_{\text{val}},\mathcal{D}_{\text{test}})\ \Longrightarrow\ \text{numbers not comparable}
+\texttt{VG150}\ \mapsto\ \text{releases } r,\ \text{each with its own }(\mathcal{D}_{\text{train}},\mathcal{D}_{\text{val}},\mathcal{D}_{\text{test}})_r\ \Longrightarrow\ \text{a number is comparable only when its } r \text{ is named}
 $$
 
-Visual Genome 的 150 物件類別、50 predicate 子集，已由數種分割方式重新發布；這些分割共用同一名稱，卻不共用同一測試集。取自甲分割的數值與取自乙分割的數值並列於同一表格，並不構成比較，而兩篇論文的符號系統均未載明所採用者為何。
+Visual Genome 的 150 物件類別、50 predicate 子集源自 Xu 等人（2017）；原論文載明影像以 70／30 比例分為訓練與測試，未提及驗證集。其後的發布版本自訓練影像另切驗證集，對不含任何關係的影像或保留或剔除，其中一個已發布版本更曾自測試集抽取驗證集。各版本共用同一名稱，所得數值之差異與模型無關。兩篇論文之數值並列於同一表格，唯有雙方皆載明所採用之發布版本，方構成比較。
 
-因此本專案一律不使用裸寫的 `vg150`。資料集識別碼為 `vg150-sgb`，明確指出所依據的重新發布版本；決策 D-09 禁止程式庫任何位置使用簡寫形式，並以 lint 而非人為記憶強制執行——兩個名稱僅相差一個字元。
+本專案明確命名所採用之版本：資料集識別碼為 `vg150-sgb`，即 Neau 等人 SGG-Benchmark 之修正後發布版本。決策 D-09 禁止以 `vg150` 作為資料集識別碼，並由資料結構描述（schema）拒絕之；正文僅於指稱既有基準名稱時使用 VG150。
 
 </Step>
 
