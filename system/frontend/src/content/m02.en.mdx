@@ -23,21 +23,33 @@ steps:
   - id: s2
     kind: math
     seconds_budget: 300
-    presenter_notes_en: "Five minutes. Scale invariance is why IoU was adopted; its severity under a size mismatch is the price. Derive the bound first — two concentric boxes past a certain size ratio cannot pass the threshold however well placed they are — and only then return to the choice of τ. That bound is what the τ slider in L2 is demonstrating."
+    presenter_notes_en: "Five minutes. Scale invariance is why IoU was adopted; its severity under a size mismatch is the price. Derive the bound first — two concentric boxes past a certain size ratio cannot pass the threshold however well placed they are — and only then return to the choice of τ. The playground at s3 moves λ past √2 and shows the bound; L2's τ slider moves the threshold over boxes of the right size."
   - id: s3
+    kind: playground
+    kp: F3
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Open concentric and set λ to 1.4: the intersection is the whole annotation, 6,300 pixels, the union 12,348, and IoU equals the bound, 0.510. Move λ to 1.5: the bound falls to 0.444, and no Δx or Δy raises IoU above it; that is s2's √2 made visible. Return λ to 1 and move Δx to 30: 4,200 of 8,400 pixels, IoU exactly 0.500. Leave it there for the next step."
+  - id: s4
+    kind: playground
+    kp: F3
+    part: 2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. The knobs carry over from the previous step: IoU is exactly 0.500 at τ = 0.5, and the box counts as the same object, because the rule is IoU ≥ τ. Move τ one step to 0.55: it no longer counts, though nothing about the box changed. Say that 0.5 is the value Xu et al. state, not part of the definition. At λ = 1.5 from the previous step the panel would also state that no placement reaches τ = 0.5."
+  - id: s5
     kind: prose
     seconds_budget: 180
     presenter_notes_en: "Three minutes, two points. An axis-aligned rectangle always claims more area than the object occupies, and two interleaved objects have heavily overlapping boxes while the objects themselves never touch. Masks remove that ambiguity and bring two costs of their own: annotation expense, and a pairing rule they now need. Leave single_mpo against multi_mpo for L6; here it is enough to say that the choice moves published numbers."
-  - id: s4
+  - id: s6
     kind: prose
     seconds_budget: 120
     presenter_notes_en: "Two minutes. PSG is the only Tier-1 dataset in this course that carries masks, and it is what makes L6 possible. Two things before any PSG table is read: its object vocabulary includes stuff classes, so its predicate distribution is not comparable with VG150; and its annotations are MIT while the photographs are COCO, which the licence does not cover — this project commits the annotations and distributes no PSG image. The second point is the same pair of gates as data/LICENCES.md, and it is worth saying so."
-  - id: s5
+  - id: s7
     kind: lab
     lab: L1
     seconds_budget: 300
     presenter_notes_en: "Five minutes on L1, on a PSG image with the mask layer on. Two things to find: an object whose mask and box disagree visibly, and a pair whose boxes overlap heavily while the masks never touch. The second is the case where the score changes when the metric is computed on masks instead of rectangles, and it is worth reading one out to the room."
-  - id: s6
+  - id: s8
     kind: checkpoint
     presenter_notes_en: "Checkpoint. The one at τ = 0.3 is higher, and the comparison says nothing about which model is better. Push once more: both papers stated their threshold in a footnote and it still is not a comparison — what is missing is a re-evaluation at one common threshold."
 ---
@@ -90,7 +102,7 @@ $$
 
 $$
 \begin{gathered}\text{With } A(b')=\lambda^2 A(b):\quad \operatorname{IoU}\le\min(\lambda^2,\lambda^{-2}),
-\quad\text{so } \lambda\ge\sqrt{2}\ \Rightarrow\ \operatorname{IoU}<\tfrac12 \text{ at } \tau=0.5.\end{gathered}
+\quad\text{so } \lambda>\sqrt{2}\ \Rightarrow\ \operatorname{IoU}<\tfrac12 \text{ at } \tau=0.5.\end{gathered}
 $$
 
 A box 1.42 times too large in each direction is rejected no matter where it sits. The bound holds
@@ -113,6 +125,22 @@ is reused, read the module it belongs to.
 
 <Step id="s3">
 
+## One box, moved and scaled
+
+<Playground kp="F3" part="1" />
+
+</Step>
+
+<Step id="s4">
+
+## The threshold, against the bound
+
+<Playground kp="F3" part="2" />
+
+</Step>
+
+<Step id="s5">
+
 ## What a box cannot express
 
 A bounding box is an axis-aligned rectangle, so for anything that is not roughly rectangular it
@@ -130,7 +158,7 @@ L6 exists to score one fixed prediction under both.
 
 </Step>
 
-<Step id="s4">
+<Step id="s6">
 
 ## PSG: 133 classes, 56 predicates, masks
 
@@ -147,7 +175,7 @@ ships no PSG image.
 
 </Step>
 
-<Step id="s5">
+<Step id="s7">
 
 ## In the lab
 
@@ -157,7 +185,7 @@ one whose score would change if the metric read masks instead of rectangles.
 
 </Step>
 
-<Step id="s6">
+<Step id="s8">
 
 ## Checkpoint
 

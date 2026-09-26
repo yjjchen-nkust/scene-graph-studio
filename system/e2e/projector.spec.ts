@@ -24,13 +24,15 @@ import { expect, test, type Page } from '@playwright/test';
  * Every part of a playground split across steps, each in its longest state as measured over all of
  * its knobs' values (D96): F6 with both merges, and on frame 2008 with the merge; F7 at fifty
  * classes; X1 at the release pairs that carry Xu's pool, two explanations, and the longest lines
- * of provenance.
+ * of provenance. F3 at λ = 2 shifted to the corner, where its readout notes are longest, and with τ at
+ * 0.95, where both of its status lines show.
  */
 const PARTS_LONGEST = [
   'm00/1', 'm00/2',
   'm01/2?F6.mp=1&F6.mo=1', 'm01/3?F6.img=2008&F6.mp=1',
   'm01/5?F7.C=50&F7.k=50', 'm01/6?F7.C=50&F7.k=50',
   'm01/8?X1.r=xu-2017&X1.vs=sgb-v1', 'm01/9?X1.r=sgb-v1&X1.vs=sgb-v2', 'm01/10?X1.r=xu-2017&X1.vs=sgb-v2',
+  'm02/2?F3.lambda=2&F3.dx=120&F3.dy=100', 'm02/3?F3.lambda=2&F3.tau=0.95&F3.dx=120&F3.dy=100',
 ];
 
 const SIZES = [
@@ -366,7 +368,8 @@ for (const size of SIZES) {
       //
       // A floor per step, measured rather than guessed: the walk reads 203 rows on the
       // mathematics step, 17 and 23 on F1's parts, 24 on F2 and 17 on F8, 18 and 15 on F6's, 27
-      // and 20 on F7's, and 34, 18 and 19 on X1's, at every panel size (2026-09-26, D96).
+      // and 20 on F7's, and 34, 18 and 19 on X1's, at every panel size (2026-09-26, D96); and 26 and 16 on
+      // F3's (2026-09-27, D97).
       // `toBeGreaterThan(3)` was kept here after the oklch finding with a comment explaining why it had failed to catch it,
       // which is a floor known to be inadequate left in place. These are set below the
       // measured counts so ordinary content edits do not trip them, and far enough above zero
@@ -384,6 +387,8 @@ for (const size of SIZES) {
         { module: 'm01', step: 8, floor: 25 },
         { module: 'm01', step: 9, floor: 13 },
         { module: 'm01', step: 10, floor: 14 },
+        { module: 'm02', step: 2, floor: 19 },
+        { module: 'm02', step: 3, floor: 12 },
       ];
       for (const { module, step, floor } of pages) {
         await page.goto(`/lecture/m/${module}/${step}`);
@@ -430,6 +435,7 @@ for (const size of SIZES) {
       for (const [module, step] of [
         ...[0, 1, 2, 3, 4, 5, 6].map((s) => ['m00', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((s) => ['m01', s] as const),
+        ...[0, 1, 2, 3, 4, 5, 6, 7].map((s) => ['m02', s] as const),
       ]) {
         await page.goto(`/lecture/m/${module}/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
@@ -471,6 +477,7 @@ for (const size of SIZES) {
       for (const where of [
         'm00/1', 'm00/2', 'm00/4', 'm00/5',
         'm01/2', 'm01/3', 'm01/5', 'm01/6', 'm01/8', 'm01/9', 'm01/10',
+        'm02/2', 'm02/3',
       ]) {
         await page.goto(`/lecture/m/${where}`);
         const controls = page.getByTestId('playground-controls');
@@ -497,21 +504,40 @@ for (const size of SIZES) {
       }
     });
 
-    test('F1 shows its photograph, whole and on the screen', async ({ page }) => {
+    test('F1 and F3 show their photographs, whole and on the screen', async ({ page }) => {
       // The overlay's children are all absolutely positioned, so the box around it has no width
       // of its own; in a row at 1024 px and wider it was given none, and the photograph F1 opens
       // on rendered 0×0 on every projector from the day it landed. Its step "fit" because the
-      // picture was missing (D96).
-      await page.goto('/lecture/m/m00/1');
-      const image = page.getByTestId('playground-frame').locator('img');
+      // picture was missing (D96). F3 draws its own overlay over the same kind of photograph,
+      // so it is held to the same measure.
+      for (const where of ['m00/1', 'm02/2']) {
+        await page.goto(`/lecture/m/${where}`);
+        const image = page.getByTestId('playground-frame').locator('img');
+        await expect(image, where).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const box = await image.boundingBox();
+        expect(box, `${where}: the photograph has no box`).not.toBeNull();
+        expect(box!.width, `${where}: the photograph has no width`).toBeGreaterThan(200);
+        expect(box!.height, `${where}: the photograph has no height`).toBeGreaterThan(150);
+        const height = page.viewportSize()?.height ?? 0;
+        expect(box!.y + box!.height, `${where}: the photograph runs below the panel`).toBeLessThanOrEqual(height);
+      }
+    });
+
+    test('F3 draws its marks on its photograph, not beside it', async ({ page }) => {
+      // The overlay is laid over the photograph, and its viewBox is the frame's own 640 × 480, so
+      // it lands on the objects only if it has the photograph's box exactly. It first took the
+      // box of its stretched column instead, and `meet` scaling centred the marks 122 px below
+      // the objects they outline at 1024 × 768, with every readout still correct.
+      await page.goto('/lecture/m/m02/2?F3.dx=18');
+      const image = page.getByTestId('f3-picture').locator('img');
+      const overlay = page.getByTestId('f3-picture').locator('svg');
       await expect(image).toBeVisible();
-      await page.evaluate(() => document.fonts.ready);
-      const box = await image.boundingBox();
-      expect(box, 'the photograph has no box').not.toBeNull();
-      expect(box!.width, 'the photograph has no width').toBeGreaterThan(200);
-      expect(box!.height, 'the photograph has no height').toBeGreaterThan(150);
-      const height = page.viewportSize()?.height ?? 0;
-      expect(box!.y + box!.height, 'the photograph runs below the panel').toBeLessThanOrEqual(height);
+      const [a, b] = [await image.boundingBox(), await overlay.boundingBox()];
+      expect(a && b, 'the photograph or its overlay has no box').toBeTruthy();
+      for (const k of ['x', 'y', 'width', 'height'] as const) {
+        expect(Math.abs(a![k] - b![k]), `overlay ${k} is ${b![k]}, photograph ${a![k]}`).toBeLessThanOrEqual(1);
+      }
     });
 
     test('every part of a split playground fits the panel in its longest state', async ({ page }) => {

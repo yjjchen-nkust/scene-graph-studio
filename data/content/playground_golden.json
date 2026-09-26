@@ -176,6 +176,70 @@
       "knobs": { "r": "xu-2017", "vs": "canonical", "split": "train" },
       "expect": { "difference": null, "explained_by": null },
       "why": "Xu et al. state 70% of 108,077 images and no count, so there is no count to subtract from 57,723. Multiplying 0.7 by 108,077 would assert a split size the paper never states."
+    },
+    {
+      "id": "pg-F3-identical",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 0, "dy": 0, "lambda": 1, "tau": 0.5 },
+      "expect": { "intersection": 6300, "union": 6300, "iou": 1, "bound": 1, "member": true, "unreachable": false },
+      "why": "Object 3 of ph-001 is 90 x 70 at (250, 240), A = 6300. At lambda 1 with no shift the prediction is the same box: intersection 6300, union 6300 + 6300 - 6300 = 6300, IoU = 6300 / 6300 = 1."
+    },
+    {
+      "id": "pg-F3-lambda-14",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 0, "dy": 0, "lambda": 1.4, "tau": 0.5 },
+      "expect": { "intersection": 6300, "union": 12348, "iou": 0.510204, "bound": 0.510204, "member": true, "unreachable": false },
+      "why": "At lambda 1.4 the prediction is round(1.4 x 90) x round(1.4 x 70) = 126 x 98 = 12348, centred at (295, 275): x 232 to 358, y 226 to 324, containing the annotation. IoU = 6300 / 12348 = 0.510, which meets tau = 0.5; the bound 6300 / 12348 is the same number."
+    },
+    {
+      "id": "pg-F3-lambda-15",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 0, "dy": 0, "lambda": 1.5, "tau": 0.5 },
+      "expect": { "intersection": 6300, "union": 14175, "iou": 0.444444, "bound": 0.444444, "member": false, "unreachable": true },
+      "why": "At lambda 1.5 the prediction is 135 x 105 = 14175 and contains the annotation, so IoU = 6300 / 14175 = 0.444. The bound 6300 / 14175 = 0.444 is below tau = 0.5, so no shift reaches tau: lambda is past sqrt(2)."
+    },
+    {
+      "id": "pg-F3-shift-18",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 18, "dy": 0, "lambda": 1, "tau": 0.5 },
+      "expect": { "intersection": 5040, "union": 7560, "iou": 0.666667, "bound": 1, "member": true, "unreachable": false },
+      "why": "Shifted 18 px right the prediction spans x 268 to 358. The overlap is (340 - 268) x 70 = 5040 and the union 6300 + 6300 - 5040 = 7560, so IoU = 5040 / 7560 = 0.667. Both areas are 6300, so the bound is 6300 / 6300 = 1."
+    },
+    {
+      "id": "pg-F3-at-threshold",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 30, "dy": 0, "lambda": 1, "tau": 0.5 },
+      "expect": { "intersection": 4200, "union": 8400, "iou": 0.5, "bound": 1, "member": true, "unreachable": false },
+      "why": "Object 3 is 90 x 70 at (250, 240), A = 6300. Shifted 30 px right it spans x 280 to 370, so the overlap is (340 - 280) x 70 = 4200 and the union is 6300 + 6300 - 4200 = 8400. IoU = 4200 / 8400 = 0.5, which meets tau = 0.5 because acceptance is IoU >= tau."
+    },
+    {
+      "id": "pg-F3-touching",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 90, "dy": 0, "lambda": 1, "tau": 0.5 },
+      "expect": { "intersection": 0, "union": 12600, "iou": 0, "bound": 1, "member": false, "unreachable": false },
+      "why": "Shifted 90 px right the prediction starts at x = 295 + 90 - 45 = 340, the annotation right edge. Boxes are half-open, so they share no pixel: intersection 0, union 6300 + 6300 - 0 = 12600, IoU = 0 / 12600 = 0. The bound is still 6300 / 6300 = 1."
+    },
+    {
+      "id": "pg-F3-inside",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 0, "dy": 0, "lambda": 0.5, "tau": 0.5 },
+      "expect": { "intersection": 1575, "union": 6300, "iou": 0.25, "bound": 0.25, "member": false, "unreachable": true },
+      "why": "At lambda 0.5 the prediction is 45 x 35 = 1575 at (273, 258), inside the annotation. Intersection 1575, union 6300 + 1575 - 1575 = 6300, IoU = 1575 / 6300 = 0.25; the bound 1575 / 6300 = 0.25 is below tau = 0.5, so no shift reaches it."
+    },
+    {
+      "id": "pg-F3-bound-equals-tau",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 0, "dy": 0, "lambda": 2, "tau": 0.25 },
+      "expect": { "intersection": 6300, "union": 25200, "iou": 0.25, "bound": 0.25, "member": true, "unreachable": false },
+      "why": "At lambda 2 the prediction is 180 x 140 = 25200 at (205, 205) and contains the annotation: IoU = 6300 / 25200 = 0.25, and the bound 6300 / 25200 = 0.25. With tau = 0.25 the concentric box meets tau exactly, so it counts, and the bound is not below tau."
     }
   ]
 }

@@ -24,6 +24,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/specs/2026-09-19-playgrounds-design.md` | The `playground` step kind, and the three that complete M0 | **executed** |
 | `superpowers/specs/2026-09-26-playgrounds-m1-design.md` | F6, F7, X1, and what the opened sources say about VG150 | **executed** |
 | `superpowers/specs/2026-09-26-split-and-distinct-design.md` | A playground split across steps as parts; triplets counted as a set | **executed** |
+| `superpowers/specs/2026-09-27-playgrounds-m2-design.md` | F3, and three statements about IoU the opened sources contradict | **executed** |
 | `superpowers/plans/…-00-master.md` | Index, dependency graph, global constraints | live |
 | `superpowers/plans/…-01-skeleton-and-eval-engine.md` | Phases 1–2 | **executed** |
 | `superpowers/plans/…-02-graph-labs-and-content.md` | Phases 3–4: graph, L1, L2, harvest, corpus | **executed** |
@@ -31,9 +32,10 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/…-04-labs-shells-hardening.md` | Phases 7–9: L3, L7, L8, shells, hardening | **executed** |
 | `superpowers/plans/2026-09-19-playgrounds-m0.md` | The `playground` step kind, F1, F2, F8, the golden file, the lint rules | **executed** |
 | `superpowers/plans/2026-09-26-playgrounds-m1.md` | X1's cited figures, rules 9 and 12, the corrections, F6, F7, X1 | **executed** |
+| `superpowers/plans/2026-09-27-playgrounds-m2.md` | The IoU corrections, F3's arithmetic and golden cases, the component, M2 s3 and s4 | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D96. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19) and the split playgrounds (§20)** | live |
+| `../DEVIATIONS.md` | **D1…D97. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20) and the M2 playground (§21)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
 
@@ -105,7 +107,7 @@ drifts.
 | The eight labs L1–L8 | `PRD.md` §6.2; per-lab tasks in plans 02–04 |
 | The anchor paper's four equations | `design.md` §4.5 and `2026-09-16-indvissgg-reading.md` |
 | The `playground` step kind, and its twelve lint rules | `contracts.md` §2.4; rules in `system/tools/content_lint.mjs` |
-| The playground arithmetic, and the twenty-two cases that pin it | `system/frontend/src/playgrounds/logic.ts`; `data/content/playground_golden.json` |
+| The playground arithmetic, and the thirty cases that pin it | `system/frontend/src/playgrounds/logic.ts`; `data/content/playground_golden.json` |
 | How to build a project like this again | `PLAYBOOK.md` |
 
 ---
@@ -214,7 +216,7 @@ jsdom for the rule and in Chromium for the hit testing jsdom does not have.
 **Presenter notes are complete, 2026-09-19.** All 95 steps carry them in both locales, 190 in
 total [**corrected 2026-09-26:** 92 steps and 184 notes on this date, as first written and as this
 paragraph's last sentence says; 95 and 190 replaced them on 2026-09-20, after M0's playgrounds,
-the corpus held 98 steps and 196 notes after M1's playgrounds, and holds 103 and 206 since D96], written against each step's own content: what
+the corpus held 98 steps and 196 notes after M1's playgrounds, held 103 and 206 after D96, and holds 105 and 210 since D97], written against each step's own content: what
 has to land, what to put on the board before
 the slide does, what the room usually gets wrong, what to compress when the clock is short. They
 are procedural rather than expository — none introduces a claim its module does not already make.
@@ -311,16 +313,27 @@ triplets, 684 of the slice's 892 rows, and F6 writes out the two pairs its merge
 D96 and VERIFICATION §20. The branch review found F1's photograph rendering 0×0 at 1024 px and
 wider, in both shells; it is sized now, and the projector suite measures it.
 
-**Verification.** `npm run ci` green, 2026-09-26: **266 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 13 agree, i18n 278 keys both locales,
-**755 vitest** in 60 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
-assigned, 43 symbols, 22 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
+**M2's playground, F3, 2026-09-27.** One annotated box of `ph-001` and a prediction moved by Δx and
+Δy and scaled by λ; F3 counts the pixels the two share and the pixels in either, divides them, and
+sets the quotient against M2 s2's bound min(A, A′) / max(A, A′) and against τ, which starts at the
+0.5 Xu et al. state. It spans two parts, M2 going from 6 steps to 8. Three statements about IoU the
+opened sources contradict were corrected first: the frozen F3's scale ceiling was min(λ, λ⁻¹)
+rather than min(λ², λ⁻²), its note said the reference implementation never states the threshold,
+which its configuration does, and M2 s2's presenter notes said L2 demonstrates the bound, which
+its same-size boxes cannot. A screenshot found F3's marks drawn 122 px below the objects with
+every readout correct; the projector suite now measures the overlay against the photograph. See
+D97 and VERIFICATION §21.
+
+**Verification.** `npm run ci` green, 2026-09-27: **266 pytest** and 7 skipped (the ten newest
+compare the requirement files to the interpreter), parity 13 agree, i18n 292 keys both locales,
+**791 vitest** in 61 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+assigned, 43 symbols, 30 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,
-2026-09-26:
-55 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
+2026-09-27:
+62 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
-check:perf`, 2026-09-26: 20 passed, NFR-8 measured over five labs and six playgrounds, plus the D75 selection guard.
+check:perf`, 2026-09-27: 21 passed, NFR-8 measured over five labs and seven playgrounds, plus the D75 selection guard.
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in
@@ -385,6 +398,7 @@ until they had already happened.
 | A playground measured only in its default state says nothing about the state its step exists to show, and an acceptance of overflow inherits the same blind spot | `DEVIATIONS.md` D95, `VERIFICATION.md` §19 |
 | Moving a step's text to a step of its own cannot fit a playground whose frame alone is taller than the panel; the playground itself has to be divided, and its knobs carried across the division | `DEVIATIONS.md` D96, `VERIFICATION.md` §20 |
 | A count of relationship rows is not a count of triplets when a frame annotates one twice, and a merge can make two rows of one pair the same triplet | `DEVIATIONS.md` D96 |
+| An overlay on a photograph is right only if it has the photograph's box; given a stretched column instead, `meet` scaling moves every mark off its object while every number beside it stays right, and only a picture of the slide shows it | `DEVIATIONS.md` D97, `VERIFICATION.md` §21 |
 | An `overflow: hidden` box inside a scrolling step hides words no scroll can reach, and a contrast walk that asks only whether a word is painted measures them as passing | `DEVIATIONS.md` D93, `VERIFICATION.md` §17 |
 | A figure repeated across a page, a brief and a decision from one early reading is wrong everywhere at once, and only opening the source finds it | `DEVIATIONS.md` D93, `FROZEN.md` 2026-09-26 |
 | A framework that sizes in rem puts its text at the document root, not at the shell the component is mounted in, so a 24 px lecture can contain 14 px type | `DEVIATIONS.md` D88 |

@@ -3104,3 +3104,104 @@ before), parity 13, **i18n 277 keys** both locales, content lint clean over 13 g
 playground cases and 25 release figures, ruff clean, standalone current at 250 equations, frontend
 builds 763 modules. `npm run test:e2e` **52** (48 before). `npm run check:perf` **20**. After the
 branch review: see VERIFICATION §20.
+
+## D97 — M2's playground, F3, and three statements about IoU the sources contradict
+
+**Plan:** `specs/2026-09-27-playgrounds-m2-design.md`, `plans/2026-09-27-playgrounds-m2.md`.
+**Decisions:** the author's, on 2026-09-26: F3 only, since F4 and X3 are `spec` and F4 needs masks
+over a picture PSG does not license; the committed placeholder photograph; Δx, Δy, λ and τ as the
+knobs; the corrections before the playground. Branch `feat/playgrounds-m2`, from `main` at
+`443abcb`.
+
+**Three findings, from sources opened on 2026-09-26.** Xu et al. 2017 (arXiv 1701.02426v2, §4,
+"Setup", item 3, p. 5) state the threshold: "An object is considered to be correctly detected if it
+has at least 0.5 IoU overlap with the ground-truth box." `Scene-Graph-Benchmark.pytorch`'s
+`METRICS.md` contains no occurrence of "IoU", so M2 s2's sentence that it does not state the
+threshold holds; its `maskrcnn_benchmark/config/defaults.py` line 570 sets
+`_C.TEST.RELATION.IOU_THRESHOLD = 0.5`, and `sgg_eval.py` applies it at line 524.
+
+1. **The frozen F3's "scale ceiling" was wrong by a square.** It printed min(λ, λ⁻¹) for a box
+   scaled by λ in both directions, whose area ratio is λ²: at λ = 1.42 it read 0.704 where the bound
+   is 0.496, contradicting M2 s2, the module it was harvested into. Corrected; read at 1.42 in
+   Chromium after the change, 0.496.
+2. **The frozen F3's note said the threshold was "never stated in the reference metric
+   implementation".** The configuration states it. The clause now names what states it and what
+   does not, in both locales; the rest of each note is unchanged. `FROZEN.md` records both.
+3. **M2 s2's presenter notes said L2's τ slider demonstrates the bound.** L2's two imperfect boxes
+   are same-size translations of their ground truth, so it has no scale mismatch to show. The notes
+   now send the room to s3.
+
+`npm run harvest` leaves `kp.json` unchanged: it extracts only `MATH` and `DERIV` from `pg.js`.
+
+**F3.** Object 3 of `ph-001`, `box`, 90 × 70 at (250, 240), is the annotation; λ in steps of 0.1
+gives whole-pixel sizes for 90 and 70, and the prediction stays inside the photograph at every
+knob extreme, which a test asserts. `playgrounds/logic.ts` computes the prediction, the pixels the
+two boxes share (half-open, so boxes whose edges touch share none, as the engine's `boxIou` and
+`backend/app/eval/iou.py` hold), the union, and s2's bound min(A, A′) / max(A, A′) from the two
+whole-pixel areas. IoU is the quotient of two counts, and membership, IoU ≥ τ, reads 「IoU ≥ τ：視為
+同一物件」 or 「IoU < τ：不視為同一物件」, as F8 words its own, since s2 says a rejected box may sit at a
+defensible place. One test imports `boxIou` and holds F3's quotient to it on every golden case; it
+is the only value import from `sgg-metrics` under `playgrounds/`. Eight golden cases pin the
+arithmetic, two of them at a boundary: Δx = 30 gives 4,200 / 8,400 = 0.5, which meets τ = 0.5, and
+λ = 2 gives a bound of exactly 0.25, which at τ = 0.25 is reached and so not called unreachable.
+
+**Knobs snap as well as clamp.** A range input moves its thumb to the nearest step whatever value
+it is handed, so `?F3.lambda=1.45` would have shown the thumb at 1.5 while the readouts computed
+1.45. `snap` puts each knob on its step, counting steps at decimal precision because
+(1.45 − 0.5) / 0.1 is 9.4999…98 in binary and the browser rounds 1.45 up, and lands τ exactly on
+its decimal, because a τ one ulp above 0.5 would reject an IoU of exactly 0.5.
+
+**The overlay sat 122 px below the objects it outlined.** The marks are an `<svg>` over the
+photograph on the frame's own 640 × 480 viewBox, and it filled the column the flex row stretched
+to 505 px rather than the 261 px photograph, so `meet` scaling centred every mark below its
+object at 1024 × 768 with every readout correct. No jsdom test could see it; a screenshot did. A
+projector test now asserts that the overlay and the photograph have the same box, at all three
+sizes; it failed at all three first.
+
+**F3 spans two parts** (D96). As one step, in its longest state, it ran 171 px past a 1024 × 768
+panel in 繁體中文 and 105 px past at 1280 × 800. Part 1 is the box moved and counted: Δx, Δy and λ,
+the photograph, the four readouts and the legend. Part 2 is the threshold: τ with its origin, the
+IoU and the bound it is compared against, the membership, and the sentence that no placement
+reaches τ when the bound is below it. The legend first stood under the photograph and part 1 ran
+33 px past; beside the readouts it is one line in 繁體中文 and the part fits. Measured over the
+production build, the largest over each part's states, 繁體中文 / English: part 1, 0 / 9 at
+1024 × 768 and 0 / 0 at the other two; part 2, 0 / 0 at all three.
+
+**Copy.** A readout's label is set in capitals, which would print b as B and IoU as IOU, so the
+labels are words (交集（像素）、聯集（像素）、重疊比值、上界) and the notes carry the arithmetic:
+`72 × 70`, `6,300 + 6,300 − 5,040`, `IoU = 5,040 / 7,560`, `6,300 / 6,300`. The object's name
+and id are an HTML caption under the photograph, not SVG text, which the viewBox would scale below
+the 18 px floor while its computed size read 24 px.
+
+**Content.** M2 went from 6 steps to 8, s3 and s4 at 90 s each with notes in both locales; the
+corpus holds 105 steps a locale and 210 presenter notes. F1's placeholder image lookup moved to
+`playgrounds/images.ts`, which F3 shares.
+
+**Not changed, recorded.** kp F3's `knobs` field names "sliders: x, y, w, h of the predicted box";
+F3 has Δx, Δy and one scale λ because s2's bound is stated in λ, and the frozen F3 had the same
+three. The field makes no claim about a source, so it is not a correction's business.
+
+**The branch review** found three things that a person at the projector would meet, and each was
+fixed with a test that failed first.
+- *The prediction's outline almost vanished on the photograph.* Its amber measured 1.22:1 on the
+  table and 1.29:1 on the person, where half of it lies at λ = 1.4, and no one colour clears 3:1 on
+  both those and the light ground. Both outlines are now drawn over a white under-stroke 10 units
+  wide, the prediction's dashed like the line it carries; on white the amber is 5:1.
+- *The IoU readout could print τ beside "IoU < τ".* Rounded to three places, 3,800 / 7,603 = 0.49980
+  printed 0.500 at τ = 0.5, and 972 settings did the like. The IoU and the bound are now cut to
+  three places, not rounded (`truncatedRatio`), so the printed value is at least τ exactly when the
+  quotient is, and a share above zero that cuts to zero reads "< 0.001". A test walks 16 λ,
+  25 Δx, 101 Δy and all 19 τ and finds no disagreement.
+- *M2 s2 said "λ ≥ √2 ⇒ IoU < ½".* At λ = √2 the concentric box has IoU = ½ exactly, which s2's own
+  rule accepts, and which F3's case `pg-F3-bound-equals-tau` shows reached. The implication is
+  strict now, in both locales and in the frozen derivation, re-harvested into `deriv.json` and
+  `kp.json`; `FROZEN.md` records it. The spec had repeated the statement.
+
+Seven minor findings are deferred to the author.
+
+**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **791 vitest in 61 files** (755
+before), parity 13, **i18n 292 keys** both locales (278 before), content lint clean over 13 golden
+cases, **30 playground cases** and 25 release figures, ruff clean, standalone current at 250
+equations, frontend builds 766 modules. `npm run test:e2e` **62** (55 before). `npm run
+check:perf` **21** (20 before); F3 33.4 ms, within its 33.6 ms two-frame floor. See
+VERIFICATION §21.

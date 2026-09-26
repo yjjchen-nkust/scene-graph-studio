@@ -417,6 +417,14 @@ const PLAYGROUND_CASES: {
     readout: '[data-testid^="x1-"]',
     why: 'choosing another release re-reads every figure and every difference',
   },
+  {
+    module: 'm02',
+    kp: 'F3',
+    step: 2,
+    act: { kind: 'set', testid: 'F3.lambda', value: '1.5' },
+    readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'scaling the prediction re-counts its intersection and union',
+  },
 ];
 
 test.describe('playground interaction', () => {
@@ -448,12 +456,12 @@ test.describe('playground interaction', () => {
     });
   }
 
-  test('all six playgrounds were actually measured', () => {
+  test('all seven playgrounds were actually measured', () => {
     const timed = measured.filter((l) => l.startsWith('playground'));
     expect(
       timed.length,
-      `only ${timed.length} playgrounds were timed; M0 and M1 carry six`,
-    ).toBe(6);
+      `only ${timed.length} playgrounds were timed; M0, M1 and M2 carry seven`,
+    ).toBe(7);
   });
 });
 

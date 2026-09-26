@@ -161,3 +161,30 @@ verifies them in the role the note gave them.
 and is corrected by the same rule; `docs/brief.standalone.html` is rebuilt from it.
 
 No option, control or knowledge point was added. One UI string, `not stated`, entered the `ZH` table.
+
+### 2026-09-27 — F3's scale ceiling and its note
+
+Opened for the M2 playground (`docs/superpowers/specs/2026-09-27-playgrounds-m2-design.md` §2).
+
+**1 · The ceiling.** The page printed `Math.min(1, 1/Math.max(s.sc, 1/s.sc))`, which is
+min(λ, λ⁻¹). Its `sc` scales width and height alike, so the area ratio is λ² and the ceiling is
+min(λ², λ⁻²): at λ = 1.42 the page read 0.704 where the bound is 0.496, contradicting M2 s2, the
+module it was harvested into. It now prints `Math.min(s.sc*s.sc, 1/(s.sc*s.sc))`.
+
+**2 · The note.** Both locales said the 0.5 threshold was "never stated in the reference metric
+implementation". The sources opened say otherwise: Xu et al. 2017 (arXiv 1701.02426v2, §4,
+"Setup", item 3, p. 5) state "at least 0.5 IoU overlap with the ground-truth box";
+`Scene-Graph-Benchmark.pytorch`'s `maskrcnn_benchmark/config/defaults.py` line 570 sets
+`_C.TEST.RELATION.IOU_THRESHOLD = 0.5`; its `METRICS.md` contains no occurrence of "IoU". The clause
+now says that, and the rest of each note is unchanged.
+
+No option, control or knowledge point was added.
+
+### 2026-09-27 — F3's derivation: the √2 boundary made strict
+
+Found by the branch review of the M2 playground (D97). The derivation ended
+"λ ≥ √2 ⇒ IoU < ½ at τ = 0.5". The bound it follows from, IoU ≤ λ⁻², is an equality for the
+concentric box, so at λ = √2 that box has IoU = ½ exactly, which the formula above it accepts
+(accept ⇔ IoU ≥ τ). It now reads "λ > √2 ⇒ IoU < ½". `npm run harvest` carries the change into
+`data/content/deriv.json` and `kp.json`; M2 s2 carries the same line in both locales and is
+corrected with it. No option, control or knowledge point was added.

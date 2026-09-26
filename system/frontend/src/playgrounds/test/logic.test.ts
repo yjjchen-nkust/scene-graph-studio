@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { SceneGraph } from 'sgg-metrics';
+import { boxIou } from 'sgg-metrics';
+import golden from '../../../../../data/content/playground_golden.json';
 import { FRAMES, frameById } from '../slice';
 import { RELEASES, type Release, type Split } from '../splits';
+import { F3_FRAME, F3_OBJECT } from '../F3/setup';
 import {
-  candidateSpace, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
-  headShare, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
-  ranked, ratio, splitDifference, tailToHead, tripletKey, valPool,
+  area, candidateSpace, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
+  headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
+  ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, tripletKey, truncatedRatio, unionArea,
+  valPool,
 } from '../logic';
 
 const ph001 = frameById('ph-001')!;
@@ -322,5 +326,137 @@ describe('X1: differences between releases', () => {
     const unstated = release('x', 1);
     unstated.figures.val_from = { value: null, source: 's', url: 'u', locator: 'l', quote: 'q' };
     expect(valPool(unstated)).toBeNull();
+  });
+});
+
+describe('F3: one box against its annotation', () => {
+  const GT = frameById(F3_FRAME)!.objects.find((o) => o.object_id === F3_OBJECT)!.bbox;
+
+  it('reads the annotated box it is built on', () => {
+    expect(GT).toEqual({ x: 250, y: 240, w: 90, h: 70 });
+  });
+
+  it('scales about the centre and rounds to whole pixels', () => {
+    expect(scaledBox(GT, 0, 0, 1.4)).toEqual({ x: 232, y: 226, w: 126, h: 98 });
+    expect(scaledBox(GT, 0, 0, 1.5)).toEqual({ x: 228, y: 223, w: 135, h: 105 });
+    expect(scaledBox(GT, 0, 0, 0.5)).toEqual({ x: 273, y: 258, w: 45, h: 35 });
+  });
+
+  it('counts the intersection and the union in pixels', () => {
+    const p = scaledBox(GT, 18, 0, 1);
+    expect(intersection(GT, p)).toEqual({ x: 268, y: 240, w: 72, h: 70 });
+    expect(unionArea(GT, p)).toBe(7560);
+  });
+
+  it('shares no pixel with a box whose edge only touches it', () => {
+    // Half-open boxes, as sgg-metrics' boxIou and backend/app/eval/iou.py treat them.
+    expect(intersection(GT, scaledBox(GT, 90, 0, 1))).toBeNull();
+  });
+
+  it('bounds IoU by the ratio of the two areas', () => {
+    expect(scaleBound(GT, scaledBox(GT, 0, 0, 1.5))).toBeCloseTo(6300 / 14175, 12);
+  });
+
+  it('never lets IoU exceed the bound, on or off the λ grid', () => {
+    // 1.45 and 0.73 are what a hand-typed URL can carry: the sizes round to whole pixels and
+    // the bound is taken from those rounded areas, so the two readouts cannot contradict.
+    for (const lambda of [0.5, 0.73, 1, 1.4, 1.45, 1.5, 2]) {
+      for (const dx of [-120, -30, 0, 30, 120]) {
+        for (const dy of [-100, 0, 100]) {
+          const p = scaledBox(GT, dx, dy, lambda);
+          const i = intersection(GT, p);
+          const iou = ratio(i ? area(i) : 0, unionArea(GT, p));
+          expect(iou).toBeLessThanOrEqual(scaleBound(GT, p) + 1e-12);
+        }
+      }
+    }
+  });
+
+  it('keeps the prediction inside the photograph at every extreme of the knobs', () => {
+    for (const dx of [-120, 120]) {
+      for (const dy of [-100, 100]) {
+        const p = scaledBox(GT, dx, dy, 2);
+        expect(p.x).toBeGreaterThanOrEqual(0);
+        expect(p.y).toBeGreaterThanOrEqual(0);
+        expect(p.x + p.w).toBeLessThanOrEqual(640);
+        expect(p.y + p.h).toBeLessThanOrEqual(480);
+      }
+    }
+  });
+});
+
+describe('snap', () => {
+  it('clamps to the range and lands on the step, as the slider thumb does', () => {
+    expect(snap(-999, -120, 120, 2)).toBe(-120);
+    expect(snap(31, -120, 120, 2)).toBe(32);
+    expect(snap(1.45, 0.5, 2, 0.1)).toBe(1.5);
+    expect(snap(9, 0.5, 2, 0.1)).toBe(2);
+    expect(snap(Number.NaN, 0.05, 0.95, 0.05)).toBe(0.05);
+  });
+
+  it('lands exactly on the decimal, so IoU = 0.5 still meets τ = 0.5', () => {
+    // 10 x 0.05 in binary floating point is not guaranteed to be the double nearest 0.5; a τ one
+    // ulp above 0.5 would turn the at-threshold case into a rejection.
+    expect(snap(0.5000000001, 0.05, 0.95, 0.05)).toBe(0.5);
+    expect(snap(0.55, 0.05, 0.95, 0.05)).toBe(0.55);
+    expect(snap(1.4000000000000001, 0.5, 2, 0.1)).toBe(1.4);
+  });
+});
+
+describe('F3 against the engine', () => {
+  it("F3's IoU equals the engine's boxIou on every golden case", () => {
+    // The one value import from sgg-metrics under playgrounds/: F3 counts pixels itself so the
+    // screen can show both counts, and this holds its quotient to the engine's, which
+    // lint:parity holds to backend/app/eval/iou.py.
+    const cases = (golden as unknown as { cases: { kp: string; image_id?: string; knobs: Record<string, number> }[] }).cases
+      .filter((c) => c.kp === 'F3');
+    expect(cases).toHaveLength(8);
+    for (const c of cases) {
+      const gt = frameById(c.image_id!)!.objects.find((o) => o.object_id === F3_OBJECT)!.bbox;
+      const p = scaledBox(gt, c.knobs.dx!, c.knobs.dy!, c.knobs.lambda!);
+      const shared = intersection(gt, p);
+      expect(ratio(shared ? area(shared) : 0, unionArea(gt, p))).toBeCloseTo(boxIou(gt, p), 12);
+    }
+  });
+});
+
+describe('truncatedRatio', () => {
+  it('cuts to three places rather than rounding, so a printed value never overstates the quotient', () => {
+    expect(truncatedRatio(3800, 7603)).toBe('0.499');
+    expect(truncatedRatio(5040, 7560)).toBe('0.666');
+    expect(truncatedRatio(4200, 8400)).toBe('0.500');
+    expect(truncatedRatio(6300, 6300)).toBe('1.000');
+    expect(truncatedRatio(0, 12600)).toBe('0.000');
+    expect(truncatedRatio(0, 0)).toBe('0.000');
+  });
+
+  it('says a share below 0.001 is below it, rather than printing zero over a visible sliver', () => {
+    expect(truncatedRatio(1, 2000)).toBe('< 0.001');
+  });
+
+  it('agrees with the membership beside it at every τ on the slider', () => {
+    const GT = frameById(F3_FRAME)!.objects.find((o) => o.object_id === F3_OBJECT)!.bbox;
+    const taus = Array.from({ length: 19 }, (_, i) => Number((0.05 * (i + 1)).toFixed(2)));
+    const disagree: string[] = [];
+    for (let l = 5; l <= 20; l++) {
+      for (let dx = -120; dx <= 120; dx += 10) {
+        for (let dy = -100; dy <= 100; dy += 2) {
+          const p = scaledBox(GT, dx, dy, l / 10);
+          const shared = intersection(GT, p);
+          const inter = shared ? area(shared) : 0;
+          const union = unionArea(GT, p);
+          const printed = truncatedRatio(inter, union);
+          const shown = printed.startsWith('<') ? 0 : Number(printed);
+          for (const tau of taus) {
+            if (shown >= tau !== ratio(inter, union) >= tau) {
+              disagree.push(`λ ${l / 10} (${dx}, ${dy}) τ ${tau}: ${printed}`);
+            }
+          }
+        }
+      }
+    }
+    // One assertion over the walk rather than 767,676 of them, which ran past vitest's five
+    // seconds under the full suite.
+    expect(disagree).toEqual([]);
   });
 });

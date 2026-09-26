@@ -4,20 +4,8 @@ import { useLabParams } from '../../labs/useLabParams';
 import { Choice, PlaygroundFrame, Readout, Slider, Toggle } from '../controls';
 import type { PlaygroundProps } from '../mounts';
 import { candidateSpace, clamp, densityCut, flag, formatRatio, ratio } from '../logic';
+import { placeholderImageUrl } from '../images';
 import { FRAMES, SLICE_PREDICATE_COUNT, frameById } from '../slice';
-
-// Vite resolves these at build time and emits them as assets on this origin, so the playground
-// draws a photograph with no backend running.
-const IMAGES = import.meta.glob('../../../../../data/slices/placeholder/images/*.png', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-}) as Record<string, string>;
-
-function imageUrl(imageId: string): string {
-  const hit = Object.entries(IMAGES).find(([path]) => path.endsWith(`/${imageId}.png`));
-  return hit?.[1] ?? '';
-}
 
 /** VG-150's predicate count, which M0's own worked example computes with. */
 const VG150_PREDICATES = 50;
@@ -138,7 +126,7 @@ export function LabelsToStructure({ part }: PlaygroundProps = {}) {
             style={{ maxWidth: `calc(${PICTURE_VH}vh * ${frame.width} / ${frame.height})` }}
           >
             <ImageOverlay
-              imageUrl={imageUrl(frame.image_id)}
+              imageUrl={placeholderImageUrl(frame.image_id)}
               width={frame.width}
               height={frame.height}
               objects={frame.objects}
