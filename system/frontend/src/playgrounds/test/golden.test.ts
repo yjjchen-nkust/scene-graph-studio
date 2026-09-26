@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import golden from '../../../../../data/content/playground_golden.json';
+import { F3_FRAME, F3_OBJECT } from '../F3/setup';
 import { OBJECT_GROUP, PREDICATE_GROUP } from '../F6/groups';
 import {
-  candidateSpace, classCounts, densityCut, explain, headShare, isInE, isInMergedE, measuredHeadShare, mergeMap,
-  objectLabels, predicateLabels, ranked, ratio, splitDifference, tailToHead,
+  area, candidateSpace, classCounts, densityCut, explain, headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap,
+  objectLabels, predicateLabels, ranked, ratio, scaleBound, scaledBox, splitDifference, tailToHead, unionArea,
 } from '../logic';
 import { VG_FRAMES, frameById, vgFrameById } from '../slice';
 import { releaseById, type Split } from '../splits';
@@ -27,6 +28,7 @@ const cases = (golden as unknown as { cases: Case[] }).cases;
 const RUNS: Record<string, (c: Case) => boolean> = {
   F1: (c) => c.kp === 'F1',
   F2: (c) => c.kp === 'F2',
+  F3: (c) => c.kp === 'F3',
   F8: (c) => c.kp === 'F8',
   'F6 slice': (c) => c.kp === 'F6' && c.scope === 'slice',
   'F6 frame': (c) => c.kp === 'F6' && Boolean(c.image_id),
@@ -74,6 +76,27 @@ describe('playground golden cases', () => {
         c.knobs.directed as boolean,
       ),
     ).toBe(c.expect.candidates);
+  });
+
+  it("pins all eight of F3's cases, so its block cannot pass by running none", () => {
+    expect(run('F3')).toHaveLength(8);
+  });
+
+  it.each(run('F3'))('$id', (c) => {
+    const gt = frameById(c.image_id!)!.objects.find((o) => o.object_id === F3_OBJECT)!.bbox;
+    const p = scaledBox(gt, c.knobs.dx as number, c.knobs.dy as number, c.knobs.lambda as number);
+    const shared = intersection(gt, p);
+    const inter = shared ? area(shared) : 0;
+    const union = unionArea(gt, p);
+    const iou = ratio(inter, union);
+    const bound = scaleBound(gt, p);
+    expect(c.image_id).toBe(F3_FRAME);
+    expect(inter).toBe(c.expect.intersection);
+    expect(union).toBe(c.expect.union);
+    expect(iou).toBeCloseTo(c.expect.iou as number, 6);
+    expect(bound).toBeCloseTo(c.expect.bound as number, 6);
+    expect(iou >= (c.knobs.tau as number)).toBe(c.expect.member);
+    expect(bound < (c.knobs.tau as number)).toBe(c.expect.unreachable);
   });
 
   it.each(run('F8'))('$id', (c) => {

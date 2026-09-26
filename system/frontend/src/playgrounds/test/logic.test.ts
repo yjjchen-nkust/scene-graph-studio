@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SceneGraph } from 'sgg-metrics';
+import { boxIou } from 'sgg-metrics';
+import golden from '../../../../../data/content/playground_golden.json';
 import { FRAMES, frameById } from '../slice';
 import { RELEASES, type Release, type Split } from '../splits';
 import { F3_FRAME, F3_OBJECT } from '../F3/setup';
@@ -397,5 +399,22 @@ describe('snap', () => {
     expect(snap(0.5000000001, 0.05, 0.95, 0.05)).toBe(0.5);
     expect(snap(0.55, 0.05, 0.95, 0.05)).toBe(0.55);
     expect(snap(1.4000000000000001, 0.5, 2, 0.1)).toBe(1.4);
+  });
+});
+
+describe('F3 against the engine', () => {
+  it("F3's IoU equals the engine's boxIou on every golden case", () => {
+    // The one value import from sgg-metrics under playgrounds/: F3 counts pixels itself so the
+    // screen can show both counts, and this holds its quotient to the engine's, which
+    // lint:parity holds to backend/app/eval/iou.py.
+    const cases = (golden as unknown as { cases: { kp: string; image_id?: string; knobs: Record<string, number> }[] }).cases
+      .filter((c) => c.kp === 'F3');
+    expect(cases).toHaveLength(8);
+    for (const c of cases) {
+      const gt = frameById(c.image_id!)!.objects.find((o) => o.object_id === F3_OBJECT)!.bbox;
+      const p = scaledBox(gt, c.knobs.dx!, c.knobs.dy!, c.knobs.lambda!);
+      const shared = intersection(gt, p);
+      expect(ratio(shared ? area(shared) : 0, unionArea(gt, p))).toBeCloseTo(boxIou(gt, p), 12);
+    }
   });
 });
