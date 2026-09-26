@@ -1,15 +1,16 @@
 import type { SceneGraph, SGRelationship } from 'sgg-metrics';
+import type { Note, Release, Split } from './splits';
 
 /**
- * The arithmetic every M0 playground displays, with no React in it.
+ * The arithmetic every playground displays, with no React in it.
  *
  * Separate from the components because `data/content/playground_golden.json` tests these
  * functions directly: a golden case states knobs and an expected number, and a component test
  * would have to render to check one. `labs/L3/freq.ts` is split from its lab for the same
  * reason.
  *
- * Nothing here is a metric. A count, a bound and a set membership are quantities M0's own
- * definitions contain; R@K is a lab's business and belongs to `sgg-metrics`.
+ * Nothing here is a metric. A count, a bound and a set membership are quantities their modules'
+ * own definitions contain; R@K is a lab's business and belongs to `sgg-metrics`.
  */
 
 export interface Triplet {
@@ -99,4 +100,142 @@ export function flag(value: number, fallback: boolean): boolean {
 export function clamp(value: number, low: number, high: number): number {
   if (!Number.isFinite(value)) return low;
   return Math.min(Math.max(value, low), high);
+}
+
+// ---- F6: merging classes ------------------------------------------------------------------
+
+/**
+ * Each member of each group mapped to the group's first member.
+ *
+ * F6's checkboxes build this. A label in no group maps to itself through `canonical`, so an
+ * empty map is the vocabulary exactly as annotated.
+ */
+export function mergeMap(groups: readonly (readonly string[])[]): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const group of groups) {
+    const head = group[0];
+    if (head === undefined) continue;
+    for (const member of group) out.set(member, head);
+  }
+  return out;
+}
+
+export function canonical(label: string, merge: Map<string, string>): string {
+  return merge.get(label) ?? label;
+}
+
+/** How often each class occurs once the merge is applied. `.size` is the class count. */
+export function classCounts(labels: Iterable<string>, merge: Map<string, string>): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const label of labels) {
+    const c = canonical(label, merge);
+    out.set(c, (out.get(c) ?? 0) + 1);
+  }
+  return out;
+}
+
+export function predicateLabels(frames: SceneGraph[]): string[] {
+  return frames.flatMap((f) => f.relationships.map((r) => r.predicate));
+}
+
+/** The first name of every object. Every object in the committed slices carries exactly one. */
+export function objectLabels(frames: SceneGraph[]): string[] {
+  return frames.flatMap((f) => f.objects.flatMap((o) => (o.names[0] === undefined ? [] : [o.names[0]])));
+}
+
+/**
+ * Whether the triplet is one the annotator wrote, once synonyms are merged.
+ *
+ * Keyed on the two object ids and the predicate's class, as `isInE` is keyed on the ids and the
+ * predicate itself; with an empty merge the two agree. F6 reports it in F8's words, recorded in
+ * E′, never correct. Direction is kept: merging synonyms does not make a relation symmetric.
+ */
+export function isInMergedE(graph: SceneGraph, t: Triplet, merge: Map<string, string>): boolean {
+  const p = canonical(t.predicate, merge);
+  return graph.relationships.some(
+    (r) => r.subject_id === t.subject_id && r.object_id === t.object_id && canonical(r.predicate, merge) === p,
+  );
+}
+
+// ---- F7: the shape of the tail --------------------------------------------------------------
+
+/** H_m^(s) = Σ_{p=1}^{m} p^(−s), the generalized harmonic number M1's s3 uses. */
+export function harmonic(m: number, s: number): number {
+  let sum = 0;
+  for (let p = 1; p <= m; p += 1) sum += p ** -s;
+  return sum;
+}
+
+function classCount(C: number): number {
+  return Number.isFinite(C) ? Math.max(1, Math.round(C)) : 1;
+}
+
+/**
+ * The share of all triplets held by the k most frequent of C classes when n_p ∝ p^(−s).
+ *
+ * H_k^(s) / H_C^(s): a ratio of two counts and nothing else. F7 shows how the data is shaped;
+ * what a model's recall does on that shape is L3's to score.
+ */
+export function headShare(k: number, C: number, s: number): number {
+  const classes = classCount(C);
+  const head = Number.isFinite(k) ? Math.min(Math.max(1, Math.round(k)), classes) : 1;
+  return harmonic(head, s) / harmonic(classes, s);
+}
+
+/** n_C / n_1 = C^(−s): the rarest class as a fraction of the most frequent. */
+export function tailToHead(C: number, s: number): number {
+  return classCount(C) ** -s;
+}
+
+export interface RankedClass {
+  label: string;
+  count: number;
+}
+
+/** Classes by count, most frequent first, ties broken by label so the order never depends on input order. */
+export function ranked(labels: Iterable<string>): RankedClass[] {
+  return [...classCounts(labels, new Map())]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
+}
+
+/** The share of all counted triplets held by the first k classes of a ranking. */
+export function measuredHeadShare(rank: RankedClass[], k: number): number {
+  const total = rank.reduce((n, c) => n + c.count, 0);
+  if (total === 0) return 0;
+  const head = Number.isFinite(k) ? Math.min(Math.max(0, Math.round(k)), rank.length) : 0;
+  return rank.slice(0, head).reduce((n, c) => n + c.count, 0) / total;
+}
+
+// ---- X1: releases compared ------------------------------------------------------------------
+
+/** a − b for one split, only when both releases state it as a count. A share is not a count. */
+export function splitDifference(a: Release, b: Release, split: Split): number | null {
+  const x = a.figures[split]?.value;
+  const y = b.figures[split]?.value;
+  return typeof x === 'number' && typeof y === 'number' ? x - y : null;
+}
+
+/**
+ * The note of the sources a difference equals, if either release carries one.
+ *
+ * Matched on magnitude, so a − b and b − a find the same note. The equality is computed here; the
+ * sentence is the source's. A zero difference has nothing to explain and claims nothing.
+ */
+export function explain(difference: number, releases: Release[]): Note | undefined {
+  const magnitude = Math.abs(difference);
+  if (magnitude === 0) return undefined;
+  for (const r of releases) {
+    const hit = r.notes.find((n) => n.value === magnitude);
+    if (hit) return hit;
+  }
+  return undefined;
+}
+
+/** Yes when val comes from the train/val pool, no when from the test pool, null when unstated. */
+export function valDisjointFromTest(r: Release): boolean | null {
+  const from = r.figures.val_from?.value;
+  if (from === 'trainval') return true;
+  if (from === 'test') return false;
+  return null;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FRAMES, PREDICATES, SLICE_PREDICATE_COUNT, frameById } from '../slice';
+import { FRAMES, PREDICATES, SLICE_PREDICATE_COUNT, VG_FRAMES, frameById, vgFrameById } from '../slice';
 
 describe('the placeholder slice, imported at build time', () => {
   it('carries the six committed frames', () => {
@@ -28,5 +28,17 @@ describe('the placeholder slice, imported at build time', () => {
   it('finds a frame by id and says nothing rather than guessing', () => {
     expect(frameById('ph-003')?.objects).toHaveLength(6);
     expect(frameById('ph-999')).toBeUndefined();
+  });
+});
+
+describe('the vg150-sgb slice, imported at build time', () => {
+  it('carries the 80 committed frames and their 892 annotated edges', () => {
+    expect(VG_FRAMES).toHaveLength(80);
+    expect(VG_FRAMES.reduce((n, f) => n + f.relationships.length, 0)).toBe(892);
+  });
+
+  it('finds a frame by id and says nothing rather than guessing', () => {
+    expect(vgFrameById('228')?.relationships.length).toBeGreaterThan(0);
+    expect(vgFrameById('no-such-frame')).toBeUndefined();
   });
 });

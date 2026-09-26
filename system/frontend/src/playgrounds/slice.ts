@@ -1,5 +1,6 @@
 import type { SceneGraph } from 'sgg-metrics';
 import raw from '../../../../data/slices/placeholder/annotations.json';
+import vgRaw from '../../../../data/slices/vg150-sgb/annotations.json';
 
 /**
  * The one place a playground's data comes from.
@@ -33,3 +34,19 @@ export const PREDICATES: string[] = [
 ].sort();
 
 export const SLICE_PREDICATE_COUNT = PREDICATES.length;
+
+const vgParsed = vgRaw as unknown as { dataset: string; graphs: SceneGraph[] };
+
+/**
+ * The committed `vg150-sgb` slice: 80 frames of annotation, and no images.
+ *
+ * F6 and F7 count over a real vocabulary, and the placeholder's 16 predicates are this project's
+ * own and carry no synonyms. The images of this slice are not committed (D-08) and neither
+ * playground draws one, so both still compute with no backend, network or corpus. 583 KB raw,
+ * 34 KB gzipped.
+ */
+export const VG_FRAMES: SceneGraph[] = vgParsed.graphs;
+
+export function vgFrameById(imageId: string): SceneGraph | undefined {
+  return VG_FRAMES.find((frame) => frame.image_id === imageId);
+}
