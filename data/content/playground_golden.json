@@ -72,6 +72,46 @@
       "knobs": { "relationship_id": 2, "swapped": true },
       "expect": { "recorded": false },
       "why": "ph-001 relationship 2 is object 2 (person) --near--> object 1 (table). `near` reads as symmetric, but the annotator wrote one direction only, so table --near--> person is not in E. This is the case worth showing: the absence is a fact about the annotation, not about the world."
+    },
+    {
+      "id": "pg-F6-slice-predicates-merged",
+      "kp": "F6",
+      "scope": "slice",
+      "knobs": { "group": "predicates", "merged": true },
+      "expect": { "classes": 33, "group_count": 408 },
+      "why": "The 80 frames carry 36 predicates. Merging on, above, over and sitting on turns four classes into one: 36 - 4 + 1 = 33. Their triplets add: 382 + 11 + 5 + 10 = 408."
+    },
+    {
+      "id": "pg-F6-slice-predicates-unmerged",
+      "kp": "F6",
+      "scope": "slice",
+      "knobs": { "group": "predicates", "merged": false },
+      "expect": { "classes": 36, "group_count": 382 },
+      "why": "Unmerged, the slice uses 36 predicates, and on alone carries 382 of the 892 triplets. The other three members keep their own 11, 5 and 10."
+    },
+    {
+      "id": "pg-F6-slice-objects-merged",
+      "kp": "F6",
+      "scope": "slice",
+      "knobs": { "group": "objects", "merged": true },
+      "expect": { "classes": 113, "group_count": 127 },
+      "why": "The slice uses 115 object names. Merging man, person and people turns three into one: 115 - 3 + 1 = 113, with 56 + 52 + 19 = 127 objects in the merged class."
+    },
+    {
+      "id": "pg-F6-228-membership-unmerged",
+      "kp": "F6",
+      "image_id": "228",
+      "knobs": { "relationship_id": 5, "substitute": "on", "merged": false },
+      "expect": { "annotated_predicate": "sitting on", "recorded": false },
+      "why": "Frame 228, relationship 5 is glass (10) sitting on table (2). The frame carries no on edge from 10 to 2, so glass on table is not in E before the merge."
+    },
+    {
+      "id": "pg-F6-228-membership-merged",
+      "kp": "F6",
+      "image_id": "228",
+      "knobs": { "relationship_id": 5, "substitute": "on", "merged": true },
+      "expect": { "annotated_predicate": "sitting on", "recorded": true },
+      "why": "With on and sitting on merged, glass (10) sitting on table (2) and glass on table share the key (10, on, 2), so the substituted triplet is in E prime. No annotation and no model changed."
     }
   ]
 }
