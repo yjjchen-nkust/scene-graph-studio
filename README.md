@@ -299,10 +299,10 @@ kept up to date; `docs/VERIFICATION.md` records the nine checks of design §6 wi
 was run and its outcome, including the one that is recorded as **not run**.
 
 `npm run ci` is green on py12: 266 Python tests (7 skipped for a corpus this machine may not
-have), 699 TypeScript tests across 59 files, parity 13/13, i18n 275 keys in both locales,
+have), 716 TypeScript tests across 59 files, parity 13/13, i18n 276 keys in both locales,
 content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 48
-passed and `npm run check:perf` is 20. All measured 2026-09-26; `docs/VERIFICATION.md` §17
-records that run, §15 and §16 the two before it, and §14 the earlier run that reconciled
+passed and `npm run check:perf` is 20. All measured 2026-09-26; `docs/VERIFICATION.md` §18
+records that run, §15 to §17 the three before it, and §14 the earlier run that reconciled
 three documents carrying three different counts.
 
 Two further checks are scripts rather than prose:
@@ -325,12 +325,11 @@ M11, so authoring that module was transcription rather than a fresh reading.
 **Open, and each with a stated reason rather than a silence:**
 
 * The measured prediction tier, blocked on licences (`data/predictions/PROVENANCE.md`).
-* 25 slides of 92 run past the bottom of a 1024×768 projector. Reviewed and accepted as it
-  stands (DEVIATIONS D71); the step region scrolls inside a fixed shell, so the position and the
-  section clock stay on screen. The measurement is in `docs/VERIFICATION.md` §8 if a different
-  hall makes it matter again.
-* Presenter notes exist for M0 only. The mechanism is wired and linted; the other fourteen
-  modules are the lecturer's to write (DEVIATIONS D56, D57).
+* Slides that run past the bottom of a 1024×768 projector. 25 of the then 92 were reviewed and
+  accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). The six
+  playground steps added since are measured in §15 and §18, and M1's long steps await the same
+  decision. The step region scrolls inside a fixed shell, so the position and the section clock
+  stay on screen, and no playground hides a word where that scroll cannot reach it (D93).
 * `vrd` and `haystack` state no licence, so nothing is cut from either and both gates stay shut.
 
 `DEVIATIONS.md` records every departure from the plans, with the reason. Several were defects the

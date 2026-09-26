@@ -715,3 +715,57 @@ ship target. The contrast figures are the browser's computed values at three pan
 statement about a projector in a lit room. X1's figures are as the sources state them on
 2026-09-26; the card's revision is recorded in `data/content/vg150_splits.json` so a later change
 to it can be detected.
+
+## 18. The M1 minors — measured, 2026-09-26
+
+D93's deferred findings, resolved (D94). Every number below is from the run that produced it.
+
+| Step | Result |
+|---|---|
+| pytest | 266 passed, 7 skipped |
+| vitest | **716 passed in 59 files** (699 before) |
+| parity | 13 cases agree |
+| i18n parity | **276 keys**, both locales complete |
+| content lint | 13 golden cases, 22 playground cases, 25 release figures, clean |
+| standalone | up to date, 250 equations |
+| frontend build | 763 modules |
+| `npm run test:e2e` | 48 passed |
+| `npm run check:perf` | 20 passed |
+
+### M1's overflow after the trim
+
+| M1 step | 0 | 1 | 2 (F6) | 3 | 4 (F7) | 5 | 6 (X1) | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|---|
+| px past 1024×768 | 0 | 192 | 56 | 410 | 188 | 0 | 475 | 0 | 0 |
+| px past 1280×800 | 0 | 220 | 29 | 334 | 105 | 0 | 326 | 0 | 0 |
+| px past 1920×1080 | 0 | 0 | 0 | 15 | 0 | 0 | 0 | 0 | 0 |
+
+Measured as §17's table was. Before the trim the three playground steps read 214, 306 and 514 at
+XGA. The remainder awaits the author's decision, in D71's form.
+
+### Rule 12 by mutation
+
+| Clause | Caught |
+|---|---|
+| figure without source, url, locator or quote | yes |
+| count not a whole number of its quote | yes |
+| quote of several numbers without `index` | yes |
+| `index` naming another number | yes |
+| coded value outside its set | yes |
+| `measured` rows disagreeing | yes |
+| release leaving a figure out | yes |
+| note without a numeric value | yes |
+| release without both labels | yes |
+| file with no releases | yes |
+
+10 of 10, by the fragment-addressed method of §17.
+
+### NFR-8
+
+| | Wall | Work |
+|---|---|---|
+| F6 | 33.2 ms | 0.1 ms above the 33.1 ms two-frame floor |
+| F7 | 33.7 ms | 0.2 ms above the 33.5 ms two-frame floor |
+| X1 | 33.5 ms | 0.6 ms above the 32.9 ms two-frame floor |
+
+Within the instrument's resolution of about one frame, as §17 says.

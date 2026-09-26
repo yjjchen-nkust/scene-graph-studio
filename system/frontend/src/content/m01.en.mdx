@@ -40,7 +40,7 @@ steps:
     kind: playground
     kp: F6
     seconds_budget: 180
-    presenter_notes_en: "Three minutes. Tick the predicate merge first and read the class count fall from 36 to 33 while the merged class's triplet count becomes the written sum. Then choose frame 228, glass sitting on table, with on substituted: not recorded in E, and recorded in E′ once the merge is ticked. Say that the model did not move. If time allows, frame 2008 carries both on and sitting on for the same pillow and bed, which is what an annotator does when no hierarchy says which to write."
+    presenter_notes_en: "Three minutes. Before ticking anything, the panel opens on frame 1039, light above woman, with on substituted: not recorded in E. Tick the predicate merge: the class count falls from 36 to 33, the merged class's triplet count becomes the written sum, and the same triplet is now recorded in E′. Say that the model did not move. If time allows, choose frame 2008 and the edge pillow #27 on bed #1: the annotator wrote both on and sitting on for that pair, which is what happens when no hierarchy says which to write."
   - id: s4
     kind: math
     seconds_budget: 300
@@ -138,14 +138,8 @@ This is the first of several reasons a table of published figures is not a ranki
 
 ## Merging synonyms, counted
 
-Two independent boxes over the 80 annotated frames of this project's `vg150-sgb` slice: one merges
-four spatial predicates, one merges three names for people. The boxes are independent because the
-vocabulary has no hierarchy; whether `above` means `on` is a decision, and two papers deciding
-differently report numbers that cannot be compared.
-
-Each merge moves a class count and a triplet count. The lower panel substitutes a synonym into one
-annotated edge: not recorded without the merge, recorded with it, and neither the annotation nor
-the model moved.
+The two merges are independent because the vocabulary has no hierarchy, so whether `above` means
+`on` is a decision, and making it moves the counts below while no annotation and no model changes.
 
 <Playground kp="F6" />
 
@@ -201,12 +195,8 @@ a second measurement of quality. It is a measurement of that correlation.
 
 ## The shape of the tail
 
-$s$ shapes the distribution, $C$ sets how many classes share it, and $k$ marks the head. Every
-readout is a ratio of counts: the share of all triplets held by the $k$ most frequent classes, and
-the rarest class as a fraction of the most frequent. At $s = 0$ the head holds exactly $k/C$.
-
-The overlay places this slice's own predicate counts, ranked, beside the model. What a model's
-recall does on such a distribution is scored in L3, not here.
+Every readout is a ratio of counts under $n_p \propto p^{-s}$, with this slice's own ranked counts
+available beside the model; what a model's recall does on such a distribution is scored in L3.
 
 <Playground kp="F7" />
 
@@ -237,9 +227,9 @@ schema refuses it; prose uses VG150 only for the published benchmark's name.
 
 ## Four releases, one name
 
-Choose a release and a second to compare it with. Every figure is shown with its source and the
-place in it where the figure was read, and a figure no source states is shown as not stated. The differences are computed;
-where a sentence of the sources states the same number, the playground names it.
+Every figure is shown with its source and where in it the figure was read, a figure no source
+states is shown as not stated, and a computed difference names the sentence of the sources it
+equals, where one exists.
 
 <Playground kp="X1" />
 

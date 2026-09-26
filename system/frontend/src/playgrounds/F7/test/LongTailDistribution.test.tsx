@@ -60,4 +60,22 @@ describe('F7', () => {
     const { container } = at('?F7.measured=1');
     expect(container.textContent ?? '').not.toMatch(/\bmR\b|R@|γ|gamma/i);
   });
+
+  it('a head larger than the class count from the URL is the whole distribution', () => {
+    at('?F7.s=1&F7.C=4&F7.k=9');
+    expect(value('F7.head')).toHaveTextContent(/^100\.00%$/);
+    expect(screen.getByTestId('F7.k')).toHaveValue('4');
+  });
+
+  it('reads in 繁體中文 with the same numbers', () => {
+    setLocale('zh-TW');
+    at('?F7.s=1&F7.C=4&F7.k=1');
+    expect(screen.getByTestId('readout-F7.head')).toHaveTextContent('頭部比例（模型）');
+    expect(value('F7.head')).toHaveTextContent(/^48\.00%$/);
+  });
+
+  it('does not take focus when it mounts', () => {
+    at();
+    expect(document.activeElement).toBe(document.body);
+  });
 });

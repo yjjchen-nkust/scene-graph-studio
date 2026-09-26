@@ -536,24 +536,44 @@ for (const [kp, steps] of [...mountedBy].sort()) {
 
 // ---- X1's release figures, rule 12 ----------------------------------------
 // Every figure X1 displays is a transcription, never a recollection: it names where it was read
-// and carries the sentence, and a count's digits must be among that sentence's digits, which
-// catches `68583` typed for "68 538" without anyone re-reading the card. A null is a figure the
-// source does not state, and it still carries the passage that does not state it.
+// and carries the sentence, and a count must equal one whole number of that sentence, which
+// catches `68583` typed for "68 538" without anyone re-reading the card. When the sentence holds
+// several numbers -- a table row, "57,723 / 5,000 / 26,446" -- the figure says which one it is by
+// `index`, so a figure read from the wrong column fails. Until 2026-09-26 this compared the value
+// against every digit of the quote run together, which passed a wrong column and a number
+// straddling two others (D94). A null is a figure the source does not state, and it still
+// carries the passage that does not state it.
 const SPLITS_FILE = '../data/content/vg150_splits.json';
 const SPLITS = existsSync(SPLITS_FILE) ? JSON.parse(readFileSync(SPLITS_FILE, 'utf-8')) : null;
-const digitsOf = (x) => String(x).replace(/\D/g, '');
+/** The whole numbers of a quote, thousands separated by a comma or a single space ("68 538"). */
+const numbersOf = (text) =>
+  (String(text).match(/\d{1,3}(?:[ ,]\d{3})+(?!\d)|\d+/g) ?? []).map((n) => Number(n.replace(/[ ,]/g, '')));
+const CODED = { val_from: ['trainval', 'test'], zero_relation: ['kept', 'dropped'] };
+const REQUIRED_FIGURES = ['train', 'val', 'test', 'val_from', 'zero_relation'];
 let releaseFigures = 0;
-function citedFigure(where, f) {
+function citedFigure(where, f, name) {
   releaseFigures += 1;
   for (const key of ['source', 'url', 'locator', 'quote']) {
     if (typeof f?.[key] !== 'string' || f[key].trim() === '') {
       problems.push(`${where}: no '${key}'. X1 shows where every figure was read (NFR-2).`);
     }
   }
-  if (typeof f?.value === 'number' && !digitsOf(f.quote ?? '').includes(digitsOf(f.value))) {
-    problems.push(
-      `${where}: value ${f.value} does not appear in its quote. A figure is copied, not recalled.`,
-    );
+  if (typeof f?.value === 'number') {
+    const numbers = numbersOf(f.quote ?? '');
+    if (!numbers.includes(f.value)) {
+      problems.push(
+        `${where}: value ${f.value} does not appear in its quote. A figure is copied, not recalled.`,
+      );
+    } else if (numbers.length > 1 && f.index === undefined) {
+      problems.push(
+        `${where}: its quote holds ${numbers.length} numbers; 'index' must say which one the figure is`,
+      );
+    } else if (f.index !== undefined && numbers[f.index - 1] !== f.value) {
+      problems.push(`${where}: index ${f.index} names ${numbers[f.index - 1]}, not ${f.value}`);
+    }
+  }
+  if (CODED[name] && f?.value !== null && !CODED[name].includes(f?.value)) {
+    problems.push(`${where}: '${f?.value}' is not one of ${CODED[name].join(', ')}, or null`);
   }
   if (f?.measured !== undefined && f.measured.rows !== f.value) {
     problems.push(`${where}: measured ${f.measured.rows} rows but carries ${f.value}`);
@@ -570,7 +590,14 @@ if (!SPLITS) {
     for (const key of ['label_en', 'label_zh']) {
       if (typeof r[key] !== 'string' || r[key].trim() === '') problems.push(`${r.id}: no '${key}'`);
     }
-    for (const [name, f] of Object.entries(r.figures ?? {})) citedFigure(`${r.id}.${name}`, f);
+    // Every release states every figure, or says it is not stated: a key left out rendered
+    // "not stated by the source" with no source at all behind the claim.
+    for (const key of REQUIRED_FIGURES) {
+      if (!(key in (r.figures ?? {}))) {
+        problems.push(`${r.id}: no '${key}'. A figure the source does not state is null, with its passage.`);
+      }
+    }
+    for (const [name, f] of Object.entries(r.figures ?? {})) citedFigure(`${r.id}.${name}`, f, name);
     for (const [i, n] of (r.notes ?? []).entries()) {
       const where = `${r.id}.notes[${i}]`;
       citedFigure(where, n);

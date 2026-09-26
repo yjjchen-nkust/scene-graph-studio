@@ -79,4 +79,30 @@ describe('X1', () => {
     at();
     expect(screen.getByTestId('X1.r')).toHaveTextContent('SGG-Benchmark 發布版本 v2');
   });
+
+  it('a negative difference is matched by its magnitude, and says so', () => {
+    at('?X1.r=sgb-v1&X1.vs=sgb-v2');
+    expect(screen.getByTestId('x1-equality-test')).toHaveTextContent('Its magnitude equals:');
+    expect(screen.getByTestId('x1-equality-test')).not.toHaveTextContent('This equals:');
+    expect(screen.getByTestId('x1-equality-train')).toHaveTextContent('This equals:');
+  });
+
+  it('an unknown comparison release in the URL falls back to the canonical protocol', () => {
+    at('?X1.vs=nope');
+    expect(screen.getByTestId('x1-train-b')).toHaveTextContent('57,723');
+  });
+
+  it('explains in 繁體中文 with the same arithmetic', () => {
+    setLocale('zh-TW');
+    at();
+    // Full-width colons with no space after them: 「訓練集：」, 「此值等於：」.
+    expect(screen.getByTestId('x1-equality-train')).toHaveTextContent('訓練集：68,538 − 57,723 = 10,815');
+    expect(screen.getByTestId('x1-equality-train')).toHaveTextContent('此值等於：v2 保留之無關係訓練影像');
+    expect(screen.getByTestId('x1-disjoint-a')).toHaveTextContent('（現行；本機語料）：驗證集與測試集互不重疊');
+  });
+
+  it('does not take focus when it mounts', () => {
+    at();
+    expect(document.activeElement).toBe(document.body);
+  });
 });
