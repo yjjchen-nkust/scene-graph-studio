@@ -536,13 +536,19 @@ on its own lecture step, with no backend behind it:
 
 | | Wall | Idle floor | Work | Budget |
 |---|---|---|---|---|
-| F1, the density slider | 33.0 ms | 34.1 ms | 0.0 ms | 100 ms |
-| F2, discarding direction | 32.6 ms | 34.1 ms | 0.0 ms | 100 ms |
-| F8, swapping subject and object | 32.6 ms | 33.6 ms | 0.0 ms | 100 ms |
+| F1, the density slider | 33.0 ms | 34.1 ms | ~~0.0 ms~~ below the floor | 100 ms |
+| F2, discarding direction | 32.6 ms | 34.1 ms | ~~0.0 ms~~ below the floor | 100 ms |
+| F8, swapping subject and object | 32.6 ms | 33.6 ms | ~~0.0 ms~~ below the floor | 100 ms |
 
 The floor is two animation frames at the display's cadence, subtracted as D74 established; all
 three do their work inside the frame that carries the input. Cold start on the five routes was
 214–419 ms against a ten-second budget.
+
+**Marked in place, 2026-09-26 (D92).** The `0.0 ms` figures were `Math.max(0, wall - floor)`, and
+in every row the wall is below the floor, so each difference was negative and clamped. D91 found
+this and changed the harness, but the table and the sentence above were left standing. The data
+show only that the work is below the harness's resolution of about 33 ms. They do not show that
+the work fits inside the frame that carries the input.
 
 Three details the cases had to get right, each of which would otherwise have measured nothing.
 F8's only `Readout` is |E| for the frame, which a swap does not move, so its change guard watches
@@ -566,3 +572,50 @@ The playgrounds are measured on this machine, which is the development machine o
 not the ship target. Nothing here re-measures the ARM64 side. The contrast figures are the
 browser's computed values at three panel sizes, which is what `projector.spec.ts` asserts and is
 not a statement about a real projector in a lit room — §8 already records that boundary.
+
+## 16. The lint suite by mutation — measured, 2026-09-26
+
+`tools/test/content_lint.test.mjs` exists so that deleting a playground rule from
+`content_lint.mjs` turns the gate red (D91). This section measures whether it does (D92).
+
+**Method.** Each mutant below was applied alone to `content_lint.mjs`, the suite was run with
+`npx vitest run tools/test/content_lint.test.mjs`, and the file was restored before the next
+mutant. A mutant is either a rule's `problems.push(` replaced by a no-op call, or a condition
+narrowed. The same seventeen mutants were run against the suite at `66281fb` (11 tests) and against
+the suite this section records (18 tests). The harness is not committed: it addresses the rules by
+line number, which holds for one revision only. The method is what repeats.
+
+| Mutant | Rule (design §2.4) | Before, 11 tests | After, 18 tests |
+|---|---|---|---|
+| step names no kp | 1 | caught | caught |
+| kp not in `kp.json` | 2 | caught | caught |
+| neither owned nor cited | 3 | **missed** | caught |
+| rule 3 checks ownership only | 3 | **missed** | caught |
+| no registered component | 4 | caught | caught |
+| body disagrees with frontmatter | 5 | caught | caught |
+| undeclared `<Playground>` tag | 6 | caught | caught |
+| locales disagree on the playground | 7 | **missed** | caught |
+| rule 7 compares kind only | 7 | **missed** | caught |
+| duplicate within one module | 8 | **missed** | caught |
+| duplicate across modules | 8 | **missed** | caught |
+| golden case with no `id` | 9 | **missed** | caught |
+| duplicate golden case `id` | 9 | caught | caught |
+| golden case missing a field | 9 | caught | caught |
+| golden case with empty `expect` | 9 | **missed** | caught |
+| `why` too short | 10 | caught | caught |
+| golden case for an unregistered kp | 11 | caught | caught |
+
+Eight of seventeen missed before, none after. Every "after" mutant failed exactly one test, except
+rule 5, which fails two: the body carrying a different kp, and the tag sitting outside its step.
+
+**The gate after the change.** `npm run ci`, exit 0: 266 pytest and 7 skipped, **632 vitest in 55
+files** (625 before), parity 13 cases agree, i18n 229 keys both locales, content lint clean over 13
+golden cases and 9 playground cases, ruff clean, standalone up to date at 250 equations, frontend
+build 756 modules. `npm run test:e2e` and `npm run check:perf` were not re-run, because nothing
+under `frontend/` or `e2e/` changed; §15's 39 and 17 stand.
+
+**What this section does not claim.** A caught mutant shows that deleting or narrowing that one
+rule fails a test. It does not show that the rules are the right rules. Only the playground
+section was mutated; the lint's older sections (the engine's golden vectors, the licence gates,
+the four-part contract, the presenter notes) were not, and nothing here says whether any test
+notices their deletion.
