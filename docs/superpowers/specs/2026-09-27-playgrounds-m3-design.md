@@ -179,6 +179,11 @@ or `spurious`, with t `missed`.
 {table, panel}; of those eight label triples only (box, on, table) is annotated in `ph-001`, so
 the verdict against the whole frame equals the verdict against t. A test asserts it.
 
+[**As built, 2026-09-27 (D98):** E1 spans two parts. As one step it ran 229 px past 1024 × 768 with
+every toggle on. Part 1 is the defects on the photograph and the five conjuncts; part 2 is Φ_cls and
+Φ_loc, the relation, the failure mode and the verdict. Both show the five toggles, since both read
+them.]
+
 ### 5.2 E10, after s3: what each protocol hands over, as counts
 
 **Knobs.** `E10.pr`, the protocol: PredCls, SGCls or SGDet. `E10.voc`, the vocabulary: this
@@ -202,6 +207,12 @@ The SGDet counts exceed 2^53 and are computed with `BigInt`. PredCls's 480 and 1
 
 No recall is shown. The presenter note sends the room to L2 at its step, where the same fixture
 is scored under all three protocols.
+
+[**As built, 2026-09-27 (D98):** E10 spans two parts, having run 96 px past as one step: what the
+protocol hands over, then the vocabulary and the three counts. The vocabulary labels carry no
+count ("This slice", "VG-150 (Xu et al. 2017, §4)"); the computed |V|, |𝒞| and |𝒫| stand on a line
+of their own, so regenerating the slice cannot make a label lie. M3 has 11 steps: E1 at s3 and
+s4, the protocol step at s5, E10 at s6 and s7, L2 at s10.]
 
 ---
 
