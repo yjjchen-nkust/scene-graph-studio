@@ -314,7 +314,7 @@
   "playground.e10.voc_slice": "本切片",
   "playground.e10.voc_vg150": "VG-150（Xu 等人 2017，§4）",
   "playground.e10.given": "提供予模型：",
-  "playground.e10.no_labels": "無標籤",
+  "playground.e10.boxes_only": "框 #1 至 #{n}；無標籤",
   "playground.e10.nothing": "無框、無標籤",
   "playground.e10.count": "每個三元組之假設數",
   "playground.e10.boxes_note": "B = C(641, 2) · C(481, 2) 個整數像素框",

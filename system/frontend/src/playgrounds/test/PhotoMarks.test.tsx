@@ -64,6 +64,24 @@ describe('PhotoMarks', () => {
     expect(screen.getByTestId('shared').getAttribute('fill')).toMatch(/^url\(#/);
   });
 
+  it('puts badges on the photograph as HTML, at each box\'s corner in percent of the frame', () => {
+    render(
+      <PhotoMarks
+        frame={frame}
+        marks={[]}
+        badges={[{ box, text: '#3', testid: 'badge-3' }]}
+        maxVh={34}
+        alt="ph-001"
+        testid="picture"
+      />,
+    );
+    const badge = screen.getByTestId('badge-3');
+    expect(badge).toHaveTextContent('#3');
+    expect(badge.closest('svg')).toBeNull();
+    expect(badge.style.left).toBe(`${(250 / 640) * 100}%`);
+    expect(badge.style.top).toBe(`${(240 / 480) * 100}%`);
+  });
+
   it('renders what it is given beneath the picture, and no text inside it', () => {
     draw();
     expect(screen.getByTestId('caption')).toBeInTheDocument();

@@ -64,9 +64,15 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
     ? []
     : frame.objects.map((o) => ({ box: o.bbox, line: 'solid', stroke: MARK_ANNOTATED, testid: `e10-box-${o.object_id}` }));
   const separator = locale === 'zh-TW' ? '、' : ', ';
+  // The boxes are numbered on the photograph, so PredCls's labels say which box each belongs to.
+  const badges = protocol === 'sgdet'
+    ? []
+    : frame.objects.map((o) => ({ box: o.bbox, text: `#${o.object_id}`, testid: `e10-badge-${o.object_id}` }));
   const given = protocol === 'predcls'
-    ? frame.objects.map((o) => o.names[0]).join(separator)
-    : t(protocol === 'sgcls' ? 'playground.e10.no_labels' : 'playground.e10.nothing');
+    ? frame.objects.map((o) => `#${o.object_id} ${o.names[0]}`).join(separator)
+    : protocol === 'sgcls'
+      ? t('playground.e10.boxes_only').replace('{n}', String(objects))
+      : t('playground.e10.nothing');
 
   const controls = (
     <>
@@ -96,7 +102,14 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
     <PlaygroundFrame title="E10" controls={controls} clip={false}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {givenView && (
-          <PhotoMarks frame={frame} marks={marks} maxVh={PICTURE_VH} alt={t('playground.e10.picture')} testid="e10-picture" />
+          <PhotoMarks
+            frame={frame}
+            marks={marks}
+            badges={badges}
+            maxVh={PICTURE_VH}
+            alt={t('playground.e10.picture')}
+            testid="e10-picture"
+          />
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           {givenView && (
@@ -107,18 +120,21 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
           )}
           {countView && (
             <p data-testid="e10-vocabulary" className="font-mono text-[1em] text-slate-700">
-              {`|V| = ${objects}, |𝒞| = ${classes}, |𝒫| = ${predicates}`}
+              {/* |V| is handed over under PredCls and SGCls and not under SGDet (D100). */}
+              {`${protocol === 'sgdet' ? '' : `|V| = ${objects}, `}|𝒞| = ${classes}, |𝒫| = ${predicates}`}
             </p>
           )}
-          <p data-testid="e10-inclusion" className="font-mono text-[1em] text-slate-900">
-            ℋ<sub>PredCls</sub> ⊆ ℋ<sub>SGCls</sub> ⊆ ℋ<sub>SGDet</sub>
-          </p>
           {/* The inclusion is a fact about hypotheses of one shape, and only when what a protocol hands
-              over is itself a hypothesis of the next (D98). */}
-          <p data-testid="e10-inclusion-if" className="text-[0.875em] text-slate-700">
-            {t('playground.e10.inclusion_if')}
+              over is itself a hypothesis of the next (D98); the two read as one sentence. */}
+          <p className="text-[1em] text-slate-900">
+            <span data-testid="e10-inclusion" className="font-mono">
+              ℋ<sub>PredCls</sub> ⊆ ℋ<sub>SGCls</sub> ⊆ ℋ<sub>SGDet</sub>
+            </span>
+            {locale === 'zh-TW' ? '，' : ' '}
+            <span data-testid="e10-inclusion-if" className="text-[0.875em] text-slate-700">
+              {t('playground.e10.inclusion_if')}
+            </span>
           </p>
-          {countView && <p className="text-[0.875em] text-slate-700">{t('playground.e10.to_l2')}</p>}
         </div>
       </div>
       {countView && (
@@ -131,9 +147,12 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
                   key={p}
                   data-testid={`e10-row-${p}`}
                   aria-current={p === protocol ? 'true' : undefined}
-                  className={p === protocol ? 'bg-white font-semibold text-slate-900' : 'text-slate-700'}
+                  className={p === protocol ? 'border-l-4 border-slate-900 bg-white font-semibold text-slate-900' : 'text-slate-700'}
                 >
-                  <th scope="row" className="py-0.5 pr-4 text-left font-sans">{NAMES[p]}</th>
+                  <th scope="row" className="py-0.5 pl-2 pr-4 text-left font-sans">
+                    {p === protocol && <span data-testid="e10-chosen" aria-hidden="true">► </span>}
+                    {NAMES[p]}
+                  </th>
                   <td className="py-0.5 pr-4">{formula[p]}</td>
                   <td className="py-0.5 text-right tabular-nums">
                     {hypothesisSpace(p, objects, classes, predicates, boxes).toLocaleString('en-US')}
@@ -142,7 +161,10 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
               ))}
             </tbody>
           </table>
-          <p className="mt-1 font-mono text-[0.875em] text-slate-700">{t('playground.e10.boxes_note')}</p>
+          <div className="mt-1 flex flex-wrap justify-between gap-x-4 text-[0.875em] text-slate-700">
+            <p className="font-mono">{t('playground.e10.boxes_note')}</p>
+            <p>{t('playground.e10.to_l2')}</p>
+          </div>
         </>
       )}
     </PlaygroundFrame>

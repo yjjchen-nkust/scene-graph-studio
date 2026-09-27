@@ -551,6 +551,20 @@ for (const size of SIZES) {
       }
     });
 
+    test('E1\'s first part and E10\'s second fit the panel in English too', async ({ page }) => {
+      // English is not held to the panel in general. At 1024 x 768 E1's first part ran 43 px past
+      // it (D98) and E10's second 71 px, 15 px before its inclusion's condition was added; both were
+      // brought inside it (D100), so a regression is caught here.
+      await page.addInitScript(() => localStorage.setItem('sgs:v1:lang', '"en"'));
+      for (const where of ['m03/2?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1', 'm03/6?E10.pr=sgdet&E10.voc=vg150']) {
+        await page.goto(`/lecture/m/${where}`);
+        await expect(page.getByTestId('playground-frame')).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const past = await page.getByTestId('step').evaluate((el) => el.scrollHeight - el.clientHeight);
+        expect(past, `${where} runs ${past} px past the panel in English`).toBeLessThanOrEqual(0);
+      }
+    });
+
     test('every part of a split playground fits the panel in its longest state', async ({ page }) => {
       // The split exists for this (D96): at 1024x768 a step shows 561 px, and F1, F6, F7 and X1
       // each ran past it by 334 to 619 px in some state of their knobs. Measured after the

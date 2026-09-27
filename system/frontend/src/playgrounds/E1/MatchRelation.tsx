@@ -111,9 +111,7 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
             maxVh={PICTURE_VH}
             alt={t('playground.e1.picture')}
             testid="e1-picture"
-          >
-            <p className="mt-1 text-[0.875em] text-slate-700">{t('playground.e1.legend')}</p>
-          </PhotoMarks>
+          />
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           {conjunctView && (
@@ -135,6 +133,11 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
                 })}
               </tbody>
             </table>
+          )}
+          {/* Beside the conjuncts rather than under the photograph: there it took two lines in
+              English, and the first part ran 43 px past a 1024×768 panel (D100). */}
+          {conjunctView && (
+            <p data-testid="e1-legend" className="text-[0.875em] text-slate-700">{t('playground.e1.legend')}</p>
           )}
           {verdictView && (
             <>

@@ -36,14 +36,17 @@ export interface Mark {
  *
  * Marks differ in shape as well as colour (NFR-5): solid, dashed, and a hatch for a shared
  * region. They carry no text: SVG text is scaled by the viewBox below the lecture's 18 px floor
- * while its computed size reads unscaled, so a label goes in `children`, as HTML.
+ * while its computed size reads unscaled. A label goes in `children`, and a badge naming a box is
+ * an HTML element over the photograph, placed in percent of the frame, so the floor measures it.
  */
 export function PhotoMarks({
-  frame, marks, hatch = null, maxVh, alt, testid, children,
+  frame, marks, hatch = null, badges = [], maxVh, alt, testid, children,
 }: {
   frame: SceneGraph;
   marks: Mark[];
   hatch?: { box: BBox; testid: string } | null;
+  /** Short HTML labels at each box's top-left corner, such as `#3`. */
+  badges?: { box: BBox; text: string; testid: string }[];
   maxVh: number;
   alt: string;
   testid: string;
@@ -96,6 +99,16 @@ export function PhotoMarks({
             );
           })}
         </svg>
+        {badges.map((b) => (
+          <span
+            key={b.testid}
+            data-testid={b.testid}
+            className="absolute bg-white px-1 font-mono text-[0.75em] leading-tight text-slate-900 ring-1 ring-slate-900"
+            style={{ left: `${(b.box.x / frame.width) * 100}%`, top: `${(b.box.y / frame.height) * 100}%` }}
+          >
+            {b.text}
+          </span>
+        ))}
       </div>
       {children}
     </div>
