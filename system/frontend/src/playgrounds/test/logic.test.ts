@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SceneGraph } from 'sgg-metrics';
-import { boxIou } from 'sgg-metrics';
+import { boxIou, classify, toTriplets } from 'sgg-metrics';
 import golden from '../../../../../data/content/playground_golden.json';
 import { FRAMES, SLICE_CLASS_COUNT, frameById } from '../slice';
 import { RELEASES, type Release, type Split } from '../splits';
@@ -11,8 +11,11 @@ import {
   canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
   headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
   ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, tripletKey, truncatedRatio, unionArea,
-  valPool, wholePixelBoxes, withDefects,
+  valPool, wholePixelBoxes, withDefects, type BoxTriplet,
 } from '../logic';
+
+/** The engine's triplet, which `sgg-metrics` does not export by name. */
+type Triplet = Parameters<typeof classify>[0];
 
 const ph001 = frameById('ph-001')!;
 
@@ -530,5 +533,43 @@ describe('E10: what each protocol leaves to search', () => {
 
   it("counts the slice's own classes", () => {
     expect(SLICE_CLASS_COUNT).toBe(10);
+  });
+});
+
+describe('E1 against the engine', () => {
+  const frame = frameById(E1_FRAME)!;
+  const t = annotatedTriplet(frame, E1_RELATIONSHIP);
+  const states = Array.from({ length: 32 }, (_, n) => ({
+    cs: Boolean(n & 1), co: Boolean(n & 2), p: Boolean(n & 4), bs: Boolean(n & 8), bo: Boolean(n & 16),
+  }));
+  const asEngine = (b: BoxTriplet): Triplet => ({
+    index: 0,
+    relationship_id: 0,
+    subject_name: b.subject.name,
+    predicate: b.predicate,
+    object_name: b.object.name,
+    subject_bbox: b.subject.box,
+    object_bbox: b.object.box,
+    subject_mask: null,
+    object_mask: null,
+    score: null,
+  });
+
+  it("E1's verdict equals the engine's classify in all 32 toggle states", () => {
+    // The one value import from sgg-metrics beside F3's boxIou: E1 restates the engine's rule for
+    // one prediction, and this holds the restatement to the rule.
+    const gts = toTriplets(frame);
+    for (const s of states) {
+      const pred = withDefects(t, s);
+      const engine = classify(asEngine(pred), gts, gts.map(() => false), 0.5, false)[0];
+      expect(frameVerdict(pred, frame, 0.5), JSON.stringify(s)).toBe(engine);
+    }
+  });
+
+  it('no toggle state names another annotated triplet of ph-001', () => {
+    const annotated = new Set(toTriplets(frame).map((g) => `${g.subject_name}|${g.predicate}|${g.object_name}`));
+    const named = new Set(states.map((s) => withDefects(t, s)).map((p) => `${p.subject.name}|${p.predicate}|${p.object.name}`));
+    expect(named.size).toBe(8);
+    expect([...named].filter((k) => annotated.has(k))).toEqual(['box|on|table']);
   });
 });

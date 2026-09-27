@@ -20,7 +20,7 @@ describe('Playground', () => {
     // `Object.keys(PLAYGROUND_MOUNTS).sort()`, which is `mounts.tsx`'s own definition copied into
     // the test: it passes with the table empty, with a component missing, or with every entry
     // wrong. There is nothing for a derivation to drift from; what can drift is the set itself.
-    expect(PLAYGROUND_IDS).toEqual(['F1', 'F2', 'F3', 'F6', 'F7', 'F8', 'X1']);
+    expect(PLAYGROUND_IDS).toEqual(['E1', 'F1', 'F2', 'F3', 'F6', 'F7', 'F8', 'X1']);
     for (const id of PLAYGROUND_IDS) expect(PLAYGROUND_MOUNTS[id]).toBeTypeOf('function');
   });
 });
