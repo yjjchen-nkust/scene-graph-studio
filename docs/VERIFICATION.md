@@ -1101,11 +1101,11 @@ D99. Every number below is from the run that produced it, on branch `fix/sgs-gra
 
 | Step | Result |
 |---|---|
-| pytest | **273 passed**, 7 skipped (266 before) |
-| vitest | **854 passed in 64 files** (845 before) |
-| parity | **14 cases agree** (13 before) |
+| pytest | **275 passed**, 7 skipped (266 before) |
+| vitest | **857 passed in 64 files** (845 before) |
+| parity | **16 cases agree** (13 before) |
 | i18n parity | 322 keys, both locales complete |
-| content lint | **14 golden cases**, 42 playground cases, 25 release figures, clean |
+| content lint | **16 golden cases**, 42 playground cases, 25 release figures, clean |
 | standalone | up to date, 254 equations |
 | frontend build | 771 modules |
 | `npm run test:e2e` | 66 passed |
@@ -1129,3 +1129,13 @@ the committed one by this case alone (165 lines added, none removed).
 Under the graph constraint at K = 100, four of forty frames score below 1.0: isg-011 (9 of 10),
 isg-013 (8 of 9), isg-025 (8 of 9) and isg-035 (9 of 10), each with one hand holding and assembling
 one object. D51 recorded thirteen under the class-pair key. Under `none`, all forty score 1.0.
+
+### After the branch review
+
+`gv-015` and `gv-016` put two predicted objects on one pair of masks under the graph constraint:
+R 0.5 with `single_mpo`, which keeps one prediction per mask pair, and 1.0 with `multi_mpo`, since
+the graph constraint now keeps one per object pair. With both engines put back on the class-pair
+key, `gv-014` and `gv-016` fail in both; restored, all sixteen pass and agree. The records test
+added with them failed on the course's "Action Genome's semi constraint" before the text changed.
+The gate was run again: `npm run ci` exit 0 with 275 pytest, 857 vitest and parity 16;
+`npm run test:e2e` 66 passed.

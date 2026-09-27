@@ -157,9 +157,11 @@ def test_a_two_stage_style_model_is_unchanged():
 
 
 def test_the_graph_constraint_already_caps_what_single_mpo_would_cap():
-    """Under `graph` the constrained pool is one prediction per ordered *class* pair, which is
-    coarser than one per mask pair, so R cannot move. ngR reads the unconstrained pool and does.
-    This is why the correction shows up on the no-constraint numbers PSG leaderboards quote."""
+    """Under `graph` the constrained pool is one prediction per ordered object pair. Here each
+    object has its own masks, so that is one per mask pair and R cannot move; ngR reads the
+    unconstrained pool and does. Where two predicted objects reuse one pair of masks, `graph`
+    keeps both and `single_mpo` one, so R moves under `graph` as well (gv-015, gv-016; D99).
+    The PSG figures the correction overturned are no-constraint numbers."""
     out = {
         mode: evaluate(
             EvalRequest(

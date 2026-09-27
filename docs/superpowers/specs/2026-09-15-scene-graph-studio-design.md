@@ -312,7 +312,7 @@ Authority: [arXiv 2404.09616](https://arxiv.org/abs/2404.09616) and `Scene-Graph
 
 **Protocols.** `PredCls` (GT boxes + GT labels given; predict predicates) · `SGCls` (GT boxes; predict labels + predicates) · `SGDet` (predict everything). The API response carries an explicit warning field restating that PredCls/SGCls supply ground-truth **boxes, not pairs**.
 
-**Constraint modes.** `graph` (≤1 predicate per ordered pair) · `none` · `semi` (Action Genome). Every returned number is tagged with its mode; the UI refuses to render an untagged number.
+**Constraint modes.** `graph` (≤1 predicate per ordered pair) · `none` · `semi` (Action Genome). Every returned number is tagged with its mode; the UI refuses to render an untagged number. [**Corrected 2026-09-27 (D99):** `graph` keys on the ordered object pair, as Tang's evaluator does; `semi` is a cap per object pair, not the Semi Constraint STTran proposed for Action Genome.]
 
 **PSG mask-pairing modes.** `multi_mpo` (original, gameable) and `single_mpo` (corrected). L6 runs both over identical predictions and diffs them.
 

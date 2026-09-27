@@ -1253,8 +1253,8 @@ is looking at the photograph. A test pins it in both directions: a set that quie
 1.0 would mean somebody had annotated the collision away.
 
 [**Corrected 2026-09-27 (D99):** the thirteen came from keying the graph constraint on class pairs.
-Nine of them are two hands on one assembly, two object pairs, which Tang's evaluator keeps and the
-engine now keeps. Four frames, isg-011, isg-013, isg-025 and isg-035, carry two predicates on one
+Nine of them are two hands on one object, two object pairs (seven on an assembly, isg-007 on a
+wheel, isg-033 on a beam), which Tang's evaluator keeps and the engine now keeps. Four frames, isg-011, isg-013, isg-025 and isg-035, carry two predicates on one
 object pair, one hand both holding and assembling, and still score below 1.0 against themselves.
 "This is the engine correct" did not hold.]
 
@@ -3335,9 +3335,11 @@ spans two or more object pairs of the same frame:
 
 **Resolution.** `Triplet` carries `subject_id` and `object_id` in both engines, and both
 constraints key on the ordered object pair. `none` and mask pairing are unchanged; mask pairing
-already keyed on mask instances (D36). Unit tests in both languages were written first and
-watched failing: two object pairs of one class pair each keep their top predicate; one object pair
-keeps one; duplicate detections are two pairs; `semi` caps per object pair; a self-pair is a pair.
+already keyed on mask instances (D36). Unit tests in both languages were written first:
+two object pairs of one class pair each keep their top predicate; one object pair keeps one;
+duplicate detections are two pairs; `semi` caps per object pair; a self-pair is a pair. The first,
+the third and the `semi` cap failed under the class-pair key; the one-pair and self-pair tests pass
+under either key and pin what the two share.
 
 **The fourteenth vector.** `gv-014-graph-constraint-per-object-pair`: two hands on one assembly,
 one predicate each, R 1.0 under the graph constraint where the class-pair key gave 0.5, failing in
@@ -3353,13 +3355,15 @@ the pair and R@50 is 0.5; with two box pairs of its own, each at IoU 9,604 / 10,
 near-identical boxes did not prove its claim.
 
 **D51 corrected.** Its thirteen frames below 1.0 were the class-pair key. Nine are two hands on one
-assembly, two object pairs, which the engine now keeps. Four remain, one hand both holding and
+object (seven on an assembly, isg-007 on a wheel, isg-033 on a beam), two object pairs, which the
+engine now keeps. Four remain, one hand both holding and
 assembling one object: isg-011 (hand#1, assembly#2), isg-013 (hand#1, assembly#4), isg-025
 (hand#2, wheel#4) and isg-035 (hand#2, assembly#3). Counted from the annotations before the change,
 and the re-keyed engine finds exactly those four.
 
 **`semi` described as the cap it is.** STTran's `lib/evaluation_recall.py` (commit
-`bcc72cf691015fc5a435ceb95975418b1becdeb4`) evaluates Action Genome's semi constraint as the top
+`bcc72cf691015fc5a435ceb95975418b1becdeb4`) evaluates the Semi Constraint its authors proposed
+for Action Genome (Cong et al. 2021, arXiv 2107.12309, section 3) as the top
 attention predicate plus every spatial or contacting predicate above 0.9 per object pair. The
 application's `semi` caps predicates per object pair at 2. M4 s5 and M12 s2 and s4, both locales,
 body and notes, now say so; M12's "the mode that matches the data" is gone. SRS §4.5 and the
@@ -3369,6 +3373,27 @@ contracts are annotated.
 object pairs. Figures computed at run time on vg150-sgb, indoorvg or psg predictions, where they
 exist, move wherever a frame does.
 
-**Verification.** `npm run ci` exit 0: 273 pytest and 7 skipped (266 before), **854 vitest in 64
-files** (845 before), parity **14** (13 before), i18n 322 keys, content lint clean over **14 golden
-cases**. `npm run test:e2e` 66. `npm run check:perf` 23. See VERIFICATION §23.
+**The branch review** found four statements false and three records inexact; each was fixed with
+a test that failed first.
+- *Mask pairing under the graph constraint.* D36 concluded that `graph` already caps what
+  `single_mpo` caps, because the class pair is coarser than the mask pair. Keyed on object pairs,
+  that holds only while no two predicted objects share a mask: where objects 3 and 4 repeat the
+  masks of 1 and 2, `graph` keeps both predictions and `single_mpo` one. `gv-015` (single_mpo,
+  R 0.5) and `gv-016` (multi_mpo, R 1.0) pin it; under the class-pair key `gv-016` fails in both
+  engines. D36's note, `test_pairing`'s docstring and L6's comment now say so.
+- *`gv-007`'s why* said the graph constraint would collapse its nine predictions to one; they are
+  nine object pairs, which it keeps.
+- *The mini-ISG README* still gave thirteen frames, 3.7%, and "the engine behaving correctly", in
+  both locales; each is annotated in place with the four frames and 1.1%.
+- *The Semi Constraint is STTran's own proposal* ("we propose a new strategy named Semi
+  Constraint", Cong et al. 2021, arXiv 2107.12309, section 3), evaluated on Action Genome. The
+  course, both engines' docstrings, the SRS and design notes and this record called it Action
+  Genome's; all now name STTran.
+- Inexact: "nine hands on one assembly" (two of the nine hold a wheel and a beam); "watched
+  failing" for all five unit tests (two pass under either key); the golden counts and section
+  pointers in INDEX and README that Task 3 had to update.
+
+**Verification.** `npm run ci` exit 0: 275 pytest and 7 skipped (266 before), **857 vitest in 64
+files** (845 before), parity **16** (13 before), i18n 322 keys, content lint clean over **16 golden
+cases**. `npm run test:e2e` 66. `npm run check:perf` 23, on the engine before the review's text
+changes, which touched no code path. See VERIFICATION §23.

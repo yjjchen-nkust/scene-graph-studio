@@ -839,7 +839,7 @@
     },
     {
       "id": "gv-007-single-instance-predicate-class",
-      "why": "Nine GT instances of 'on' and one of 'rare'. All nine 'on' are predicted; 'rare' is not. R = 9/10 = 0.9, weighted by how often each class occurs. mR averages the per-class recalls without weighting: (9/9 + 0/1)/2 = 0.5. The single-instance class weighs exactly as much as the nine-instance one, which is the whole reason mean Recall exists and the denominator trap SRS section 8 names. Constraint is 'none' deliberately: every relationship here is the ordered class pair (a, b), so the graph constraint would collapse all nine predictions to one.",
+      "why": "Nine GT instances of 'on' and one of 'rare'. All nine 'on' are predicted; 'rare' is not. R = 9/10 = 0.9, weighted by how often each class occurs. mR averages the per-class recalls without weighting: (9/9 + 0/1)/2 = 0.5. The single-instance class weighs exactly as much as the nine-instance one, which is the whole reason mean Recall exists and the denominator trap SRS section 8 names. Constraint is 'none' deliberately, so the case isolates the averaging: the nine 'on' predictions sit on nine object pairs (1..9 -> 10), which the graph constraint would also keep, and 'none' leaves it nothing to decide.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv7",
@@ -2498,6 +2498,426 @@
             "pred_index": 1,
             "verdict": "match"
           }
+        ]
+      }
+    },
+    {
+      "id": "gv-015-duplicate-masks-single-mpo-under-graph",
+      "why": "Objects 3 and 4 repeat the masks of 1 and 2 ('04<', '448'), so the prediction puts 'on' 0.9 on 1->2 and 'near' 0.8 on 3->4 over one ordered pair of masks. single_mpo keeps one prediction per mask pair and runs after ranking, so 'on' survives and 'near' is dropped before the graph constraint or any matching. 'on' matches GT 1 (every mask IoU 1.0); GT 2 is missed. R@20 = 1/2 = 0.5; mR@20 = (1/1 + 0/1)/2 = 0.5; the unconstrained pool is cut by the same pairing, so ngR@20 = 0.5. zR is null. Compare gv-016, the same scene under multi_mpo.",
+      "hand_checked": true,
+      "gt": {
+        "image_id": "gv-pairing",
+        "dataset": "psg",
+        "width": 4,
+        "height": 4,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 0,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "04<",
+              "size": [
+                4,
+                4
+              ]
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 2,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "448",
+              "size": [
+                4,
+                4
+              ]
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on"
+          },
+          {
+            "relationship_id": 2,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "near"
+          }
+        ],
+        "provenance": {
+          "kind": "ground_truth",
+          "fidelity": "measured"
+        }
+      },
+      "pred": {
+        "image_id": "gv-pairing",
+        "dataset": "psg",
+        "width": 4,
+        "height": 4,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 0,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "04<",
+              "size": [
+                4,
+                4
+              ]
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 2,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "448",
+              "size": [
+                4,
+                4
+              ]
+            }
+          },
+          {
+            "object_id": 3,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 0,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "04<",
+              "size": [
+                4,
+                4
+              ]
+            }
+          },
+          {
+            "object_id": 4,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 2,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "448",
+              "size": [
+                4,
+                4
+              ]
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on",
+            "score": 0.9
+          },
+          {
+            "relationship_id": 2,
+            "subject_id": 3,
+            "object_id": 4,
+            "predicate": "near",
+            "score": 0.8
+          }
+        ],
+        "provenance": {
+          "kind": "model",
+          "fidelity": "measured",
+          "model": "fixture"
+        }
+      },
+      "params": {
+        "protocol": "sgdet",
+        "constraint": "graph",
+        "k": [
+          20
+        ],
+        "iou_thresh": 0.5,
+        "mask_pairing": "single_mpo"
+      },
+      "expect": {
+        "R": {
+          "20": 0.5
+        },
+        "mR": {
+          "20": 0.5
+        },
+        "ngR": {
+          "20": 0.5
+        },
+        "zR": {
+          "20": null
+        },
+        "verdicts": [
+          {
+            "pred_index": 0,
+            "verdict": "match"
+          },
+          {
+            "pred_index": -1,
+            "verdict": "missed"
+          }
+        ],
+        "warnings": [
+          "zero_shot_unavailable"
+        ]
+      }
+    },
+    {
+      "id": "gv-016-duplicate-masks-multi-mpo-under-graph",
+      "why": "The scene of gv-015 under multi_mpo, which admits both predictions at the one mask pair. The graph constraint keys on the ordered object pair, and 1->2 and 3->4 are two pairs, so both survive it: 'on' matches GT 1 and 'near' matches GT 2, every mask IoU 1.0. R@20 = 2/2 = 1.0; mR@20 = (1/1 + 1/1)/2 = 1.0; ngR@20 = 1.0. Keyed on class pairs, the graph constraint put both on (person, table) and kept one, R 0.5, so under graph the two modes could not differ; now they do (D99).",
+      "hand_checked": true,
+      "gt": {
+        "image_id": "gv-pairing",
+        "dataset": "psg",
+        "width": 4,
+        "height": 4,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 0,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "04<",
+              "size": [
+                4,
+                4
+              ]
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 2,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "448",
+              "size": [
+                4,
+                4
+              ]
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on"
+          },
+          {
+            "relationship_id": 2,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "near"
+          }
+        ],
+        "provenance": {
+          "kind": "ground_truth",
+          "fidelity": "measured"
+        }
+      },
+      "pred": {
+        "image_id": "gv-pairing",
+        "dataset": "psg",
+        "width": 4,
+        "height": 4,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 0,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "04<",
+              "size": [
+                4,
+                4
+              ]
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 2,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "448",
+              "size": [
+                4,
+                4
+              ]
+            }
+          },
+          {
+            "object_id": 3,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 0,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "04<",
+              "size": [
+                4,
+                4
+              ]
+            }
+          },
+          {
+            "object_id": 4,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 0,
+              "y": 2,
+              "w": 2,
+              "h": 2
+            },
+            "mask": {
+              "counts": "448",
+              "size": [
+                4,
+                4
+              ]
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on",
+            "score": 0.9
+          },
+          {
+            "relationship_id": 2,
+            "subject_id": 3,
+            "object_id": 4,
+            "predicate": "near",
+            "score": 0.8
+          }
+        ],
+        "provenance": {
+          "kind": "model",
+          "fidelity": "measured",
+          "model": "fixture"
+        }
+      },
+      "params": {
+        "protocol": "sgdet",
+        "constraint": "graph",
+        "k": [
+          20
+        ],
+        "iou_thresh": 0.5,
+        "mask_pairing": "multi_mpo"
+      },
+      "expect": {
+        "R": {
+          "20": 1.0
+        },
+        "mR": {
+          "20": 1.0
+        },
+        "ngR": {
+          "20": 1.0
+        },
+        "zR": {
+          "20": null
+        },
+        "verdicts": [
+          {
+            "pred_index": 0,
+            "verdict": "match"
+          },
+          {
+            "pred_index": 1,
+            "verdict": "match"
+          }
+        ],
+        "warnings": [
+          "zero_shot_unavailable"
         ]
       }
     }

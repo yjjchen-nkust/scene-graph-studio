@@ -22,9 +22,9 @@ export function recallUnder(
     gt,
     pred,
     protocol: 'sgdet',
-    // `none`, not `graph`: the graph constraint already caps the coarser class pair, so under it
-    // the correction cannot move R at all. The PSG figures it overturned are no-constraint
-    // numbers, and this lab is about those. See DEVIATIONS D36.
+    // `none`, not `graph`: the PSG figures the correction overturned are no-constraint numbers,
+    // and this lab is about those. Under `graph` the correction moves R only where two predicted
+    // objects reuse one pair of masks (gv-015, gv-016). See DEVIATIONS D36 and D99.
     constraint: 'none',
     k: [k],
     iou_thresh: 0.5,

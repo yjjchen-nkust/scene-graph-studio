@@ -49,7 +49,7 @@ $\iff \forall\, t\ne t'\in X_k:\ \pi(t)\ne\pi(t')$, with $s$ and $o$ the objects
 **STTran, `lib/evaluation_recall.py`, commit `bcc72cf691015fc5a435ceb95975418b1becdeb4`,
 `evaluate_from_dict`:** with `method == 'semi'`, for each pair in `pred_rel_inds` it keeps the top
 attention predicate and every spatial or contacting predicate whose score exceeds `threshold`,
-0.9 by default. This is Action Genome's semi constraint as the video work evaluates it: per object
+0.9 by default. This is the Semi Constraint as the video work evaluates it [corrected in the branch review: STTran proposed it, "we propose a new strategy named Semi Constraint" (Cong et al. 2021, arXiv 2107.12309, section 3), for Action Genome; it is not Action Genome's own]: per object
 pair, one attention relation and any number of confident spatial and contacting ones.
 
 ### Findings

@@ -61,8 +61,8 @@ cd scene-graph-studio\system ; npm run ci
 - **The graph constraint keys on the ordered object pair, not the class pair** (D99). Tang's
   evaluator keeps one predicate per pair of predicted object indices, and so do both engines:
   `Triplet` carries `subject_id` and `object_id`. Two hands on one assembly are two pairs.
-  `semi` caps predicates per object pair; it is not Action Genome's semi constraint, which the
-  course states and the engine does not compute.
+  `semi` caps predicates per object pair; it is not the Semi Constraint STTran proposed for Action
+  Genome, which the course states and the engine does not compute.
 - **Box selection is `geometry.pickObjectAt`, not the browser's hit test** (deviation **D75**). A
   bounding box is drawn `fill="none"`, so SVG hit-tests its outline and a click in the middle of
   an object selects nothing. `pointer-events: all` would hand the choice to paint order, so the

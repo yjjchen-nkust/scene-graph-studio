@@ -148,8 +148,9 @@ def test_the_reference_set_cannot_score_one_against_itself_under_graph_constrain
     R < 1.0 on exactly those frames, isg-011, isg-013, isg-025 and isg-035, and 1.0 under `none`.
 
     D51 pinned thirteen, because the engine keyed the constraint on class pairs: nine of them are
-    two hands on one assembly, `<hand#a, holding, assembly>` and `<hand#b, assembling, assembly>`,
-    two object pairs that Tang's evaluator keeps and that the engine now keeps (D99). The four that
+    two hands on one object (seven an assembly, isg-007 a wheel, isg-033 a beam), such as
+    `<hand#a, holding, assembly>` and `<hand#b, assembling, assembly>`, two object pairs that
+    Tang's evaluator keeps and that the engine now keeps (D99). The four that
     remain are two relations the annotator put on one pair of objects, which graph constraint can
     express one of. Pinned in both directions: a count that rose would mean the key had drifted back
     toward class names, one that fell would mean a true relation had been deleted.

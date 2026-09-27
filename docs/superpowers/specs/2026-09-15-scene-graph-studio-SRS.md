@@ -131,7 +131,7 @@ Every response carries an explicit warning field restating that PredCls and SGCl
 
 `graph` — at most one predicate per ordered subject-object pair. `none` — the no-constraint variant. `semi` — the Action Genome semi-constraint mode.
 
-[**Corrected 2026-09-27 (D99):** `graph` keeps one predicate per ordered object pair, as Tang's evaluator keys it on predicted object indices (`sgg_eval.py`, commit fca9860, line 66); the engine had keyed it on class pairs. `semi` keeps at most `semi_constraint_max_per_pair` predicates per ordered object pair and is not Action Genome's semi constraint, which STTran implements as one attention predicate plus every spatial or contacting predicate above 0.9 (`lib/evaluation_recall.py`, commit bcc72cf) and which this application does not implement.]
+[**Corrected 2026-09-27 (D99):** `graph` keeps one predicate per ordered object pair, as Tang's evaluator keys it on predicted object indices (`sgg_eval.py`, commit fca9860, line 66); the engine had keyed it on class pairs. `semi` keeps at most `semi_constraint_max_per_pair` predicates per ordered object pair and is not the Semi Constraint STTran proposed for Action Genome (Cong et al. 2021, arXiv 2107.12309, section 3), which STTran implements as one attention predicate plus every spatial or contacting predicate above 0.9 (`lib/evaluation_recall.py`, commit bcc72cf) and which this application does not implement.]
 
 Every returned number is tagged with its mode. The interface refuses to render an untagged number.
 

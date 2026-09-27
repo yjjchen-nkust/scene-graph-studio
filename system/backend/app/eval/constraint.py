@@ -34,9 +34,10 @@ def apply_constraint(ranked: list[Triplet], mode: Constraint, max_per_pair: int)
     key was the ordered class pair until D99, which kept one predicate between two hands holding one
     assembly where the reference keeps one each.
 
-    `semi` caps predicates per ordered object pair at `max_per_pair`. It is not Action Genome's
-    semi constraint, which STTran (`lib/evaluation_recall.py`, commit bcc72cf) evaluates as the
-    top attention predicate plus every spatial or contacting predicate above 0.9 per pair (D99).
+    `semi` caps predicates per ordered object pair at `max_per_pair`. It is not the Semi
+    Constraint STTran proposed for Action Genome (Cong et al. 2021, arXiv 2107.12309, section 3),
+    which `lib/evaluation_recall.py` (commit bcc72cf) evaluates as the top attention predicate
+    plus every spatial or contacting predicate above 0.9 per pair (D99).
     """
     if mode == "none":
         return list(ranked)

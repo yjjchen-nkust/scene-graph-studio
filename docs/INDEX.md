@@ -84,7 +84,7 @@ drifts.
 |---|---|---|
 | **NFR-1** | Offline-complete; every P0 feature works with the network down and `torch` absent | the committed placeholder slice |
 | **NFR-2** | Honest numbers: every figure carries a source and a `verified` flag | `content_lint.mjs` |
-| **NFR-3** | Two implementations, one truth | `parity.mjs`, 13 golden vectors |
+| **NFR-3** | Two implementations, one truth | `parity.mjs`, 16 golden vectors |
 | **NFR-4** | Determinism, including tie-break order | `sorted(key=(-score, relationship_id))` |
 | **NFR-5** | Projector-legible; colour-blind-safe diff | lecture shell |
 | **NFR-6** | Bilingual parity; no fallback locale | `i18n_parity.mjs` |
@@ -103,7 +103,7 @@ drifts.
 | Protocols `predcls` / `sgcls` / `sgdet` | `design.md` §4.3; the `gt_boxes_not_pairs` warning is unconditional |
 | Constraint modes `graph` / `none` / `semi` | `design.md` §4.3 |
 | Mask pairing `single_mpo` / `multi_mpo` | `design.md` §4.3; L6 runs both |
-| The 13 golden vectors | `system/backend/scripts/build_golden.py`, each with a `why` |
+| The 16 golden vectors | `system/backend/scripts/build_golden.py`, each with a `why` |
 | Corpus layouts, per dataset | `system/backend/app/datasets/adapters/__init__.py` — `LAYOUTS` |
 | Which datasets may be committed or distributed | `data/LICENCES.md` |
 | The slice selection rule | `system/backend/app/datasets/loader.py` — `SELECTION_RULE` |
@@ -119,7 +119,7 @@ drifts.
 ## 5. State, 2026-09-26
 
 **Built.** Plan 01: FastAPI backend, the evaluation engine in Python and TypeScript held identical
-by 13 golden vectors, slice ingestion with both licence gates, `/api/health`, `/api/eval`,
+by golden vectors (13 at plan 01's close, 16 since D99), slice ingestion with both licence gates, `/api/health`, `/api/eval`,
 `/api/datasets`, the Vite frontend skeleton, and CI as one command.
 
 **Data.** Corpora at `C:\DataRaw` (`SGS_CORPUS_ROOT`). Three slices cut with seed 20260915:
@@ -348,12 +348,12 @@ difference, and the golden builder now reproduces the two vectors it had been mi
 thirteen imperfect mini-ISG frames are four, and `semi` is described in M4 and M12 as the cap it
 is. See D99 and VERIFICATION §23.
 
-**Verification.** `npm run ci` green, 2026-09-27, after D99: **273 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 14 agree, i18n 322 keys both locales,
-**854 vitest** in 64 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**Verification.** `npm run ci` green, 2026-09-27, after D99: **275 pytest** and 7 skipped (the ten newest
+compare the requirement files to the interpreter), parity 16 agree, i18n 322 keys both locales,
+**857 vitest** in 64 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 44 symbols, 42 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
-frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,
+frozen-page lints clean, standalone current (254 equations), frontend builds. `npm run test:e2e`,
 2026-09-27:
 66 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run

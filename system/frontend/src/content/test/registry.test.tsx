@@ -220,6 +220,37 @@ describe('the playground step kind', () => {
     expect(srs).toContain('[**Corrected 2026-09-27 (D99):**');
   });
 
+  it('the course, the code and the records say what the re-keyed engine does (D99 review)', () => {
+    // Semi Constraint is STTran's proposal (Cong et al. 2021, arXiv 2107.12309, section 3), evaluated
+    // on Action Genome; it is not Action Genome's own.
+    for (const file of ['../m04.en.mdx', '../m12.en.mdx', '../m04.zh-TW.mdx', '../m12.zh-TW.mdx']) {
+      const text = source(file);
+      expect(text, file).toContain('STTran');
+      expect(text, file).not.toContain("Action Genome's semi constraint");
+      expect(text, file).not.toContain("Action Genome's rule");
+      expect(text, file).not.toContain('Action Genome 之 semi constraint');
+      expect(text, file).not.toContain('Action Genome 之規則');
+    }
+    for (const file of ['../../../../backend/app/eval/constraint.py', '../../../../packages/sgg-metrics/src/constraint.ts']) {
+      expect(source(file), file).not.toMatch(/Action Genome's\s+semi/);
+    }
+    // Keyed on objects, the graph constraint no longer caps what single_mpo caps when two predicted
+    // objects reuse one pair of masks.
+    for (const file of ['../../../../backend/tests/test_pairing.py', '../../labs/L6/forensics.ts']) {
+      expect(source(file), file).not.toMatch(/class pair, which is coarser|coarser class pair/);
+    }
+    expect(source('../../../../backend/scripts/build_golden.py')).not.toContain('collapse all nine predictions to one');
+    const readme = source('../../../../../data/mini-isg/README.md');
+    expect(readme.split('D99').length - 1).toBeGreaterThanOrEqual(2);
+    const deviations = source('../../../../../DEVIATIONS.md');
+    expect(deviations).not.toMatch(/Nine (of them )?are two hands on one assembly/);
+    expect(deviations).not.toMatch(/written first and\s+watched failing: two object pairs/);
+    expect(source('../../../../../docs/INDEX.md')).not.toContain('13 golden vectors');
+    expect(source('../../../../../README.md')).not.toContain('thirteen cases');
+    expect(source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-design.md'))
+      .toContain('[**Corrected 2026-09-27 (D99):**');
+  });
+
   it('the protocol ordering survives nowhere as a law', () => {
     // The brief, the SRS and an L2 comment repeated what M3 s3 no longer claims (D98).
     const brief = source('../../../../web/brief/index.html');

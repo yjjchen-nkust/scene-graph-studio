@@ -242,9 +242,9 @@ cases.append({
         "R = 9/10 = 0.9, weighted by how often each class occurs. mR averages the per-class "
         "recalls without weighting: (9/9 + 0/1)/2 = 0.5. The single-instance class weighs exactly "
         "as much as the nine-instance one, which is the whole reason mean Recall exists and the "
-        "denominator trap SRS section 8 names. Constraint is 'none' deliberately: every "
-        "relationship here is the ordered class pair (a, b), so the graph constraint would "
-        "collapse all nine predictions to one."
+        "denominator trap SRS section 8 names. Constraint is 'none' deliberately, so the case "
+        "isolates the averaging: the nine 'on' predictions sit on nine object pairs (1..9 -> 10), "
+        "which the graph constraint would also keep, and 'none' leaves it nothing to decide."
     ),
     "hand_checked": True,
     "gt": graph("gv7", gv7_objs,
@@ -520,6 +520,69 @@ cases.append({
             {"pred_index": 0, "verdict": "match"},
             {"pred_index": 1, "verdict": "match"},
         ],
+    },
+})
+
+
+# ---------------------------------------------------------------- gv-015 and gv-016
+# Two predicted objects reuse one pair of masks, under the graph constraint (D99 review). Keyed on
+# object pairs, graph no longer caps what single_mpo caps: the two modes now differ under graph too.
+DUP_GT = pairing_graph([rel(1, 1, "on", 2), rel(2, 1, "near", 2)], "gt")
+DUP_PRED = {
+    **pairing_graph([rel(1, 1, "on", 2, 0.9), rel(2, 3, "near", 4, 0.8)], "pred"),
+}
+DUP_PRED["objects"] = DUP_PRED["objects"] + [
+    {**DUP_PRED["objects"][0], "object_id": 3},
+    {**DUP_PRED["objects"][1], "object_id": 4},
+]
+P_DUP = {"protocol": "sgdet", "constraint": "graph", "k": [20], "iou_thresh": 0.5}
+
+cases.append({
+    "id": "gv-015-duplicate-masks-single-mpo-under-graph",
+    "why": (
+        "Objects 3 and 4 repeat the masks of 1 and 2 ('04<', '448'), so the prediction puts 'on' "
+        "0.9 on 1->2 and 'near' 0.8 on 3->4 over one ordered pair of masks. single_mpo keeps one "
+        "prediction per mask pair and runs after ranking, so 'on' survives and 'near' is dropped "
+        "before the graph constraint or any matching. 'on' matches GT 1 (every mask IoU 1.0); GT 2 "
+        "is missed. R@20 = 1/2 = 0.5; mR@20 = (1/1 + 0/1)/2 = 0.5; the unconstrained pool is cut "
+        "by the same pairing, so ngR@20 = 0.5. zR is null. Compare gv-016, the same scene under "
+        "multi_mpo."
+    ),
+    "hand_checked": True,
+    "gt": DUP_GT,
+    "pred": DUP_PRED,
+    "params": {**P_DUP, "mask_pairing": "single_mpo"},
+    "expect": {
+        "R": {"20": 0.5}, "mR": {"20": 0.5}, "ngR": {"20": 0.5}, "zR": {"20": None},
+        "verdicts": [
+            {"pred_index": 0, "verdict": "match"},
+            {"pred_index": -1, "verdict": "missed"},
+        ],
+        "warnings": ["zero_shot_unavailable"],
+    },
+})
+
+cases.append({
+    "id": "gv-016-duplicate-masks-multi-mpo-under-graph",
+    "why": (
+        "The scene of gv-015 under multi_mpo, which admits both predictions at the one mask pair. "
+        "The graph constraint keys on the ordered object pair, and 1->2 and 3->4 are two pairs, so "
+        "both survive it: 'on' matches GT 1 and 'near' matches GT 2, every mask IoU 1.0. R@20 = "
+        "2/2 = 1.0; mR@20 = (1/1 + 1/1)/2 = 1.0; ngR@20 = 1.0. Keyed on class pairs, the graph "
+        "constraint put both on (person, table) and kept one, R 0.5, so under graph the two modes "
+        "could not differ; now they do (D99)."
+    ),
+    "hand_checked": True,
+    "gt": DUP_GT,
+    "pred": DUP_PRED,
+    "params": {**P_DUP, "mask_pairing": "multi_mpo"},
+    "expect": {
+        "R": {"20": 1.0}, "mR": {"20": 1.0}, "ngR": {"20": 1.0}, "zR": {"20": None},
+        "verdicts": [
+            {"pred_index": 0, "verdict": "match"},
+            {"pred_index": 1, "verdict": "match"},
+        ],
+        "warnings": ["zero_shot_unavailable"],
     },
 })
 
