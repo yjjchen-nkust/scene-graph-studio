@@ -108,7 +108,10 @@ cases.append({
         "GT carries objects but no relationships. Recall is |matched| / |GT| and |GT| = 0, so "
         "every metric is undefined and must be null -- never 0, which would read as 'the model "
         "scored nothing' rather than 'the question does not apply'. The prediction cannot match "
-        "anything, so it is spurious."
+        "anything, so it is spurious. Warnings: the GT has no relationship, so empty_ground_truth; "
+        "PredCls hands over boxes, not pairs, so gt_boxes_not_pairs; no training split is "
+        "supplied, so zero_shot_unavailable. One score cannot tie, neither graph carries masks, "
+        "and the prediction is not empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph("gv2", [obj(1, "person", PERSON), obj(2, "table", TABLE)], [], "gt"),
@@ -118,7 +121,7 @@ cases.append({
     "expect": {
         "R": {"20": None}, "mR": {"20": None}, "ngR": {"20": None}, "zR": {"20": None},
         "verdicts": [{"pred_index": 0, "verdict": "spurious"}],
-        "warnings": ["empty_ground_truth"],
+        "warnings": ["gt_boxes_not_pairs", "empty_ground_truth", "zero_shot_unavailable"],
     },
 })
 
@@ -130,7 +133,10 @@ cases.append({
     "why": (
         "Three GT relationships, no predictions. R = 0/3 = 0. Predicate classes present in GT "
         "are 'on' (2 instances, 0 hits) and 'near' (1 instance, 0 hits), so "
-        "mR = (0/2 + 0/1)/2 = 0. Every GT is reported missed."
+        "mR = (0/2 + 0/1)/2 = 0. Every GT is reported missed. Warnings: nothing is predicted, so "
+        "empty_prediction; PredCls hands over boxes, not pairs, so gt_boxes_not_pairs; no "
+        "training split is supplied, so zero_shot_unavailable. No score exists to tie, neither "
+        "graph carries masks, and the GT is not empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph("gv3", [obj(1, "person", PERSON), obj(2, "table", TABLE), obj(3, "box", BOX3)],
@@ -141,7 +147,7 @@ cases.append({
     "expect": {
         "R": {"20": 0.0}, "mR": {"20": 0.0}, "ngR": {"20": 0.0}, "zR": {"20": None},
         "verdicts": [{"pred_index": -1, "verdict": "missed"}],
-        "warnings": ["empty_prediction"],
+        "warnings": ["gt_boxes_not_pairs", "empty_prediction", "zero_shot_unavailable"],
     },
 })
 
@@ -156,7 +162,10 @@ cases.append({
         "rid 7 then finds it consumed and is reported localization. Reversing the tie-break "
         "would swap the two verdicts, which is why the verdicts and not only the metrics are "
         "pinned here. Both subject boxes clear tau: IoU((0,0,10,10),(1,1,10,10)) = 81/119 = "
-        "0.6807. R = 1/1 = 1, mR = 1, ngR = 1."
+        "0.6807. R = 1/1 = 1, mR = 1, ngR = 1. Warnings: the two scores are equal, so "
+        "ties_broken_by_index; PredCls hands over boxes, not pairs, so gt_boxes_not_pairs; no "
+        "training split is supplied, so zero_shot_unavailable. Neither graph carries masks and "
+        "neither is empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph("gv4", [obj(1, "person", PERSON), obj(2, "table", TABLE)],
@@ -175,7 +184,7 @@ cases.append({
             {"pred_index": 1, "verdict": "match"},
             {"pred_index": 0, "verdict": "localization"},
         ],
-        "warnings": ["ties_broken_by_index"],
+        "warnings": ["gt_boxes_not_pairs", "ties_broken_by_index", "zero_shot_unavailable"],
     },
 })
 
@@ -188,7 +197,9 @@ cases.append({
         "Assignment is one-to-one, so the GT is credited once: R = 1/3. The second copy finds "
         "its only candidate consumed and is reported localization, not a second match. "
         "Predicate classes: 'on' has 2 GT and 1 hit, 'near' has 1 GT and 0 hits, so "
-        "mR = (1/2 + 0/1)/2 = 0.25."
+        "mR = (1/2 + 0/1)/2 = 0.25. Warnings: PredCls hands over boxes, not pairs, and no "
+        "training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; 0.9 and "
+        "0.8 differ, neither graph carries masks, and neither is empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph("gv5", [obj(1, "person", PERSON), obj(2, "table", TABLE), obj(3, "box", BOX3)],
@@ -202,6 +213,7 @@ cases.append({
             {"pred_index": 0, "verdict": "match"},
             {"pred_index": 1, "verdict": "localization"},
         ],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
     },
 })
 
@@ -215,7 +227,9 @@ cases.append({
         "box gives inter = 100, union = 100 + 200 - 100 = 200, IoU = 0.5 exactly. Offsetting two "
         "10x10 boxes by 10/3 does NOT -- it yields 0.4999999999999999 and silently tests the "
         "wrong side of the boundary (deviation D4). Object boxes are identical, IoU 1.0. "
-        "Verdict match, so R = mR = ngR = 1."
+        "Verdict match, so R = mR = ngR = 1. Warnings: PredCls hands over boxes, not pairs, and "
+        "no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; one "
+        "score cannot tie, neither graph carries masks, and neither is empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph("gv6", [obj(1, "person", PERSON), obj(2, "table", TABLE)],
@@ -226,6 +240,7 @@ cases.append({
     "expect": {
         "R": {"20": 1.0}, "mR": {"20": 1.0}, "ngR": {"20": 1.0}, "zR": {"20": None},
         "verdicts": [{"pred_index": 0, "verdict": "match"}],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
     },
 })
 
@@ -244,7 +259,11 @@ cases.append({
         "as much as the nine-instance one, which is the whole reason mean Recall exists and the "
         "denominator trap SRS section 8 names. Constraint is 'none' deliberately, so the case "
         "isolates the averaging: the nine 'on' predictions sit on nine object pairs (1..9 -> 10), "
-        "which the graph constraint would also keep, and 'none' leaves it nothing to decide."
+        "which the graph constraint would also keep, and 'none' leaves it nothing to decide. "
+        "Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so "
+        "gt_boxes_not_pairs and zero_shot_unavailable; the nine scores run 0.90 down to 0.82 in "
+        "steps of 0.01 and differ, neither graph carries masks, and neither is empty, so no "
+        "other."
     ),
     "hand_checked": True,
     "gt": graph("gv7", gv7_objs,
@@ -254,6 +273,7 @@ cases.append({
     "params": dict(P_NONE),
     "expect": {
         "R": {"20": 0.9}, "mR": {"20": 0.5}, "ngR": {"20": 0.9}, "zR": {"20": None},
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
     },
 })
 
@@ -272,7 +292,10 @@ cases.append({
         "(the lowest unused index), leaving P2 with nothing: R = 1/2 = 0.5. A maximum bipartite "
         "matching would pair P1 with GT-B and P2 with GT-A and score 2/2 = 1.0. The engine "
         "records the greedy answer, and this case is what makes the gap visible rather than "
-        "hidden. mR = 1/2 over the single class 'on'."
+        "hidden. mR = 1/2 over the single class 'on'. Warnings: PredCls hands over boxes, not "
+        "pairs, and no training split is supplied, so gt_boxes_not_pairs and "
+        "zero_shot_unavailable; 0.9 and 0.8 differ, neither graph carries masks, and neither is "
+        "empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph(
@@ -296,6 +319,7 @@ cases.append({
             {"pred_index": 0, "verdict": "match"},
             {"pred_index": 1, "verdict": "localization"},
         ],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
     },
 })
 
@@ -309,7 +333,11 @@ cases.append({
         "mask covers pixels 4-11 (counts 4,8,4). Intersection 4, union 12, IoU = 1/3 < 0.5, so "
         "the localization conjunct fails and the verdict is localization. The BOXES are identical "
         "in both graphs, so a build that quietly ignored masks would score this a match and R = 1 "
-        "-- which is exactly what this case exists to catch. R = mR = ngR = 0."
+        "-- which is exactly what this case exists to catch. R = mR = ngR = 0. Warnings: PredCls "
+        "hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs "
+        "and zero_shot_unavailable; masks_ignored is raised when one graph carries masks and the "
+        "other does not, and here both do; one score cannot tie, and neither graph is empty, so "
+        "no other."
     ),
     "hand_checked": True,
     "gt": graph(
@@ -328,6 +356,7 @@ cases.append({
     "expect": {
         "R": {"20": 0.0}, "mR": {"20": 0.0}, "ngR": {"20": 0.0}, "zR": {"20": None},
         "verdicts": [{"pred_index": 0, "verdict": "localization"}],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
     },
 })
 
@@ -342,7 +371,10 @@ cases.append({
         "R = 0/1 = 0. ng-R is computed on the unconstrained pool by definition, where 'on' "
         "survives and matches, so ngR = 1/1 = 1. The gap between 0 and 1 on identical predictions "
         "is the constraint effect, and this is the fixture plan 04's verification item 3 leans "
-        "on. mR follows R at 0, because the only GT class is 'on'."
+        "on. mR follows R at 0, because the only GT class is 'on'. Warnings: PredCls hands over "
+        "boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and "
+        "zero_shot_unavailable; 0.9 and 0.8 differ, neither graph carries masks, and neither is "
+        "empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph("gv10", [obj(1, "person", PERSON), obj(2, "table", TABLE)],
@@ -353,6 +385,7 @@ cases.append({
     "expect": {
         "R": {"20": 0.0}, "mR": {"20": 0.0}, "ngR": {"20": 1.0}, "zR": {"20": None},
         "verdicts": [{"pred_index": 0, "verdict": "spurious"}],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
     },
 })
 
@@ -366,7 +399,10 @@ cases.append({
         "training split contains (a,on,b) and (c,on,d), so only (e,under,f) is zero-shot and the "
         "zR denominator is 1, not 3. Predictions match (a,on,b) and (e,under,f). "
         "R = 2/3. mR over classes 'on' (2 GT, 1 hit) and 'under' (1 GT, 1 hit) = (0.5 + 1)/2 = "
-        "0.75. zR = 1/1 = 1.0: the model got the only unseen triplet right, which R alone hides."
+        "0.75. zR = 1/1 = 1.0: the model got the only unseen triplet right, which R alone hides. "
+        "Warnings: PredCls hands over boxes, not pairs, so gt_boxes_not_pairs; a training split "
+        "is supplied, so not zero_shot_unavailable; 0.9 and 0.8 differ, neither graph carries "
+        "masks, and neither is empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph(
@@ -387,6 +423,7 @@ cases.append({
     "params": {**P_NONE, "zero_shot_train_triplets": [["a", "on", "b"], ["c", "on", "d"]]},
     "expect": {
         "R": {"20": 2 / 3}, "mR": {"20": 0.75}, "ngR": {"20": 2 / 3}, "zR": {"20": 1.0},
+        "warnings": ["gt_boxes_not_pairs"],
     },
 })
 
@@ -498,7 +535,9 @@ cases.append({
         "predicted object indices, so both survive and both match: R = 2/2 = 1.0. Two predicate "
         "classes, each 1 GT and 1 hit: mR = (1/1 + 1/1)/2 = 1.0. ngR reads the unconstrained pool: "
         "1.0. Keyed on class pairs, one would be dropped and R would be 1/2 = 0.5, which is what "
-        "this vector exists to refuse (D99)."
+        "this vector exists to refuse (D99). Warnings: PredCls hands over boxes, not pairs, and "
+        "no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; 0.9 and "
+        "0.8 differ, neither graph carries masks, and neither is empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph(
@@ -520,6 +559,7 @@ cases.append({
             {"pred_index": 0, "verdict": "match"},
             {"pred_index": 1, "verdict": "match"},
         ],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
     },
 })
 

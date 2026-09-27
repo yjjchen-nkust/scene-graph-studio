@@ -131,7 +131,7 @@
     },
     {
       "id": "gv-002-empty-ground-truth",
-      "why": "GT carries objects but no relationships. Recall is |matched| / |GT| and |GT| = 0, so every metric is undefined and must be null -- never 0, which would read as 'the model scored nothing' rather than 'the question does not apply'. The prediction cannot match anything, so it is spurious.",
+      "why": "GT carries objects but no relationships. Recall is |matched| / |GT| and |GT| = 0, so every metric is undefined and must be null -- never 0, which would read as 'the model scored nothing' rather than 'the question does not apply'. The prediction cannot match anything, so it is spurious. Warnings: the GT has no relationship, so empty_ground_truth; PredCls hands over boxes, not pairs, so gt_boxes_not_pairs; no training split is supplied, so zero_shot_unavailable. One score cannot tie, neither graph carries masks, and the prediction is not empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv2",
@@ -245,13 +245,15 @@
           }
         ],
         "warnings": [
-          "empty_ground_truth"
+          "gt_boxes_not_pairs",
+          "empty_ground_truth",
+          "zero_shot_unavailable"
         ]
       }
     },
     {
       "id": "gv-003-empty-prediction",
-      "why": "Three GT relationships, no predictions. R = 0/3 = 0. Predicate classes present in GT are 'on' (2 instances, 0 hits) and 'near' (1 instance, 0 hits), so mR = (0/2 + 0/1)/2 = 0. Every GT is reported missed.",
+      "why": "Three GT relationships, no predictions. R = 0/3 = 0. Predicate classes present in GT are 'on' (2 instances, 0 hits) and 'near' (1 instance, 0 hits), so mR = (0/2 + 0/1)/2 = 0. Every GT is reported missed. Warnings: nothing is predicted, so empty_prediction; PredCls hands over boxes, not pairs, so gt_boxes_not_pairs; no training split is supplied, so zero_shot_unavailable. No score exists to tie, neither graph carries masks, and the GT is not empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv3",
@@ -400,13 +402,15 @@
           }
         ],
         "warnings": [
-          "empty_prediction"
+          "gt_boxes_not_pairs",
+          "empty_prediction",
+          "zero_shot_unavailable"
         ]
       }
     },
     {
       "id": "gv-004-all-tied-scores",
-      "why": "Two predictions of the same triplet, both scoring 0.5, submitted in the order relationship_id 7 then 3. The tie-break is (-score, relationship_id) ascending, so rid 3 -- submitted second, at pred_index 1 -- ranks first and takes the single GT; rid 7 then finds it consumed and is reported localization. Reversing the tie-break would swap the two verdicts, which is why the verdicts and not only the metrics are pinned here. Both subject boxes clear tau: IoU((0,0,10,10),(1,1,10,10)) = 81/119 = 0.6807. R = 1/1 = 1, mR = 1, ngR = 1.",
+      "why": "Two predictions of the same triplet, both scoring 0.5, submitted in the order relationship_id 7 then 3. The tie-break is (-score, relationship_id) ascending, so rid 3 -- submitted second, at pred_index 1 -- ranks first and takes the single GT; rid 7 then finds it consumed and is reported localization. Reversing the tie-break would swap the two verdicts, which is why the verdicts and not only the metrics are pinned here. Both subject boxes clear tau: IoU((0,0,10,10),(1,1,10,10)) = 81/119 = 0.6807. R = 1/1 = 1, mR = 1, ngR = 1. Warnings: the two scores are equal, so ties_broken_by_index; PredCls hands over boxes, not pairs, so gt_boxes_not_pairs; no training split is supplied, so zero_shot_unavailable. Neither graph carries masks and neither is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv4",
@@ -550,13 +554,15 @@
           }
         ],
         "warnings": [
-          "ties_broken_by_index"
+          "gt_boxes_not_pairs",
+          "ties_broken_by_index",
+          "zero_shot_unavailable"
         ]
       }
     },
     {
       "id": "gv-005-duplicate-predictions",
-      "why": "The same triplet predicted twice at 0.9 and 0.8 against three GT relationships. Assignment is one-to-one, so the GT is credited once: R = 1/3. The second copy finds its only candidate consumed and is reported localization, not a second match. Predicate classes: 'on' has 2 GT and 1 hit, 'near' has 1 GT and 0 hits, so mR = (1/2 + 0/1)/2 = 0.25.",
+      "why": "The same triplet predicted twice at 0.9 and 0.8 against three GT relationships. Assignment is one-to-one, so the GT is credited once: R = 1/3. The second copy finds its only candidate consumed and is reported localization, not a second match. Predicate classes: 'on' has 2 GT and 1 hit, 'near' has 1 GT and 0 hits, so mR = (1/2 + 0/1)/2 = 0.25. Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; 0.9 and 0.8 differ, neither graph carries masks, and neither is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv5",
@@ -710,12 +716,16 @@
             "pred_index": 1,
             "verdict": "localization"
           }
+        ],
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
         ]
       }
     },
     {
       "id": "gv-006-iou-exactly-at-threshold",
-      "why": "The match relation is IoU >= tau, so tau itself must match. The construction must land on 0.5 with no rounding: a 10x20 predicted subject box containing the 10x10 GT subject box gives inter = 100, union = 100 + 200 - 100 = 200, IoU = 0.5 exactly. Offsetting two 10x10 boxes by 10/3 does NOT -- it yields 0.4999999999999999 and silently tests the wrong side of the boundary (deviation D4). Object boxes are identical, IoU 1.0. Verdict match, so R = mR = ngR = 1.",
+      "why": "The match relation is IoU >= tau, so tau itself must match. The construction must land on 0.5 with no rounding: a 10x20 predicted subject box containing the 10x10 GT subject box gives inter = 100, union = 100 + 200 - 100 = 200, IoU = 0.5 exactly. Offsetting two 10x10 boxes by 10/3 does NOT -- it yields 0.4999999999999999 and silently tests the wrong side of the boundary (deviation D4). Object boxes are identical, IoU 1.0. Verdict match, so R = mR = ngR = 1. Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; one score cannot tie, neither graph carries masks, and neither is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv6",
@@ -834,12 +844,16 @@
             "pred_index": 0,
             "verdict": "match"
           }
+        ],
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
         ]
       }
     },
     {
       "id": "gv-007-single-instance-predicate-class",
-      "why": "Nine GT instances of 'on' and one of 'rare'. All nine 'on' are predicted; 'rare' is not. R = 9/10 = 0.9, weighted by how often each class occurs. mR averages the per-class recalls without weighting: (9/9 + 0/1)/2 = 0.5. The single-instance class weighs exactly as much as the nine-instance one, which is the whole reason mean Recall exists and the denominator trap SRS section 8 names. Constraint is 'none' deliberately, so the case isolates the averaging: the nine 'on' predictions sit on nine object pairs (1..9 -> 10), which the graph constraint would also keep, and 'none' leaves it nothing to decide.",
+      "why": "Nine GT instances of 'on' and one of 'rare'. All nine 'on' are predicted; 'rare' is not. R = 9/10 = 0.9, weighted by how often each class occurs. mR averages the per-class recalls without weighting: (9/9 + 0/1)/2 = 0.5. The single-instance class weighs exactly as much as the nine-instance one, which is the whole reason mean Recall exists and the denominator trap SRS section 8 names. Constraint is 'none' deliberately, so the case isolates the averaging: the nine 'on' predictions sit on nine object pairs (1..9 -> 10), which the graph constraint would also keep, and 'none' leaves it nothing to decide. Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; the nine scores run 0.90 down to 0.82 in steps of 0.01 and differ, neither graph carries masks, and neither is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv7",
@@ -1302,12 +1316,16 @@
         },
         "zR": {
           "20": null
-        }
+        },
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
+        ]
       }
     },
     {
       "id": "gv-008-greedy-vs-maximum-matching",
-      "why": "The adversarial fixture SRS section 11.2 requires: score-ordered greedy matching is an ASSUMPTION, not a theorem, and this case discharges it rather than asserting it. Two GT triplets share the class signature (a, on, b) and differ only in the object box: GT-A at (0,0,10,10) and GT-B at (6,0,10,10), whose mutual IoU is 40/160 = 0.25. P1 (score 0.9) has object box (3,0,10,10), whose IoU is 70/130 = 0.5385 against BOTH, so it can match either. P2 (score 0.8) has object box (0,0,10,10): IoU 1.0 against GT-A but 0.25 against GT-B, so it can match only GT-A. Greedy takes P1 first and gives it GT-A (the lowest unused index), leaving P2 with nothing: R = 1/2 = 0.5. A maximum bipartite matching would pair P1 with GT-B and P2 with GT-A and score 2/2 = 1.0. The engine records the greedy answer, and this case is what makes the gap visible rather than hidden. mR = 1/2 over the single class 'on'.",
+      "why": "The adversarial fixture SRS section 11.2 requires: score-ordered greedy matching is an ASSUMPTION, not a theorem, and this case discharges it rather than asserting it. Two GT triplets share the class signature (a, on, b) and differ only in the object box: GT-A at (0,0,10,10) and GT-B at (6,0,10,10), whose mutual IoU is 40/160 = 0.25. P1 (score 0.9) has object box (3,0,10,10), whose IoU is 70/130 = 0.5385 against BOTH, so it can match either. P2 (score 0.8) has object box (0,0,10,10): IoU 1.0 against GT-A but 0.25 against GT-B, so it can match only GT-A. Greedy takes P1 first and gives it GT-A (the lowest unused index), leaving P2 with nothing: R = 1/2 = 0.5. A maximum bipartite matching would pair P1 with GT-B and P2 with GT-A and score 2/2 = 1.0. The engine records the greedy answer, and this case is what makes the gap visible rather than hidden. mR = 1/2 over the single class 'on'. Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; 0.9 and 0.8 differ, neither graph carries masks, and neither is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv8",
@@ -1467,12 +1485,16 @@
             "pred_index": 1,
             "verdict": "localization"
           }
+        ],
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
         ]
       }
     },
     {
       "id": "gv-009-mask-iou",
-      "why": "Both graphs carry COCO RLE masks on a 4x4 canvas, so mask IoU substitutes for box IoU (SRS section 4.1). GT subject mask covers pixels 0-7 (counts 0,8,8); predicted subject mask covers pixels 4-11 (counts 4,8,4). Intersection 4, union 12, IoU = 1/3 < 0.5, so the localization conjunct fails and the verdict is localization. The BOXES are identical in both graphs, so a build that quietly ignored masks would score this a match and R = 1 -- which is exactly what this case exists to catch. R = mR = ngR = 0.",
+      "why": "Both graphs carry COCO RLE masks on a 4x4 canvas, so mask IoU substitutes for box IoU (SRS section 4.1). GT subject mask covers pixels 0-7 (counts 0,8,8); predicted subject mask covers pixels 4-11 (counts 4,8,4). Intersection 4, union 12, IoU = 1/3 < 0.5, so the localization conjunct fails and the verdict is localization. The BOXES are identical in both graphs, so a build that quietly ignored masks would score this a match and R = 1 -- which is exactly what this case exists to catch. R = mR = ngR = 0. Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; masks_ignored is raised when one graph carries masks and the other does not, and here both do; one score cannot tie, and neither graph is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv9",
@@ -1619,12 +1641,16 @@
             "pred_index": 0,
             "verdict": "localization"
           }
+        ],
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
         ]
       }
     },
     {
       "id": "gv-010-constraint-gap",
-      "why": "One ordered pair (person, table) with two predicted predicates, the wrong one scoring higher: 'near' at 0.9 and the correct 'on' at 0.8. The graph constraint admits at most one predicate per ordered pair and keeps the arg-max, so only 'near' survives and R = 0/1 = 0. ng-R is computed on the unconstrained pool by definition, where 'on' survives and matches, so ngR = 1/1 = 1. The gap between 0 and 1 on identical predictions is the constraint effect, and this is the fixture plan 04's verification item 3 leans on. mR follows R at 0, because the only GT class is 'on'.",
+      "why": "One ordered pair (person, table) with two predicted predicates, the wrong one scoring higher: 'near' at 0.9 and the correct 'on' at 0.8. The graph constraint admits at most one predicate per ordered pair and keeps the arg-max, so only 'near' survives and R = 0/1 = 0. ng-R is computed on the unconstrained pool by definition, where 'on' survives and matches, so ngR = 1/1 = 1. The gap between 0 and 1 on identical predictions is the constraint effect, and this is the fixture plan 04's verification item 3 leans on. mR follows R at 0, because the only GT class is 'on'. Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; 0.9 and 0.8 differ, neither graph carries masks, and neither is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv10",
@@ -1750,12 +1776,16 @@
             "pred_index": 0,
             "verdict": "spurious"
           }
+        ],
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
         ]
       }
     },
     {
       "id": "gv-011-zero-shot-recall",
-      "why": "Added beyond the ten the plan required, because no other case exercises zR with a non-null value and an always-null metric is not a tested metric. Three GT triplets; the training split contains (a,on,b) and (c,on,d), so only (e,under,f) is zero-shot and the zR denominator is 1, not 3. Predictions match (a,on,b) and (e,under,f). R = 2/3. mR over classes 'on' (2 GT, 1 hit) and 'under' (1 GT, 1 hit) = (0.5 + 1)/2 = 0.75. zR = 1/1 = 1.0: the model got the only unseen triplet right, which R alone hides.",
+      "why": "Added beyond the ten the plan required, because no other case exercises zR with a non-null value and an always-null metric is not a tested metric. Three GT triplets; the training split contains (a,on,b) and (c,on,d), so only (e,under,f) is zero-shot and the zR denominator is 1, not 3. Predictions match (a,on,b) and (e,under,f). R = 2/3. mR over classes 'on' (2 GT, 1 hit) and 'under' (1 GT, 1 hit) = (0.5 + 1)/2 = 0.75. zR = 1/1 = 1.0: the model got the only unseen triplet right, which R alone hides. Warnings: PredCls hands over boxes, not pairs, so gt_boxes_not_pairs; a training split is supplied, so not zero_shot_unavailable; 0.9 and 0.8 differ, neither graph carries masks, and neither is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv11",
@@ -1971,7 +2001,10 @@
         },
         "zR": {
           "20": 1.0
-        }
+        },
+        "warnings": [
+          "gt_boxes_not_pairs"
+        ]
       }
     },
     {
@@ -2338,7 +2371,7 @@
     },
     {
       "id": "gv-014-graph-constraint-per-object-pair",
-      "why": "Two hands, one assembly: (hand#1, holding, assembly#3) and (hand#2, assembling, assembly#3) share the class pair (hand, assembly) but are two object pairs. The graph constraint keeps one predicate per ordered object pair, as Tang's evaluator keys it on predicted object indices, so both survive and both match: R = 2/2 = 1.0. Two predicate classes, each 1 GT and 1 hit: mR = (1/1 + 1/1)/2 = 1.0. ngR reads the unconstrained pool: 1.0. Keyed on class pairs, one would be dropped and R would be 1/2 = 0.5, which is what this vector exists to refuse (D99).",
+      "why": "Two hands, one assembly: (hand#1, holding, assembly#3) and (hand#2, assembling, assembly#3) share the class pair (hand, assembly) but are two object pairs. The graph constraint keeps one predicate per ordered object pair, as Tang's evaluator keys it on predicted object indices, so both survive and both match: R = 2/2 = 1.0. Two predicate classes, each 1 GT and 1 hit: mR = (1/1 + 1/1)/2 = 1.0. ngR reads the unconstrained pool: 1.0. Keyed on class pairs, one would be dropped and R would be 1/2 = 0.5, which is what this vector exists to refuse (D99). Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; 0.9 and 0.8 differ, neither graph carries masks, and neither is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv14",
@@ -2498,6 +2531,10 @@
             "pred_index": 1,
             "verdict": "match"
           }
+        ],
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
         ]
       }
     },

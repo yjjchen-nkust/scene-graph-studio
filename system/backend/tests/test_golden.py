@@ -38,6 +38,11 @@ def test_every_case_says_why_it_exists():
     assert [c["id"] for c in CASES if not c.get("why")] == []
 
 
+def test_every_case_lists_its_warnings():
+    # A case that lists none would leave the engine's warnings unchecked (D103).
+    assert [c["id"] for c in CASES if "warnings" not in c["expect"]] == []
+
+
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c["id"])
 def test_engine_matches_the_hand_computed_expectation(case):
     body = evaluate(
@@ -58,5 +63,7 @@ def test_engine_matches_the_hand_computed_expectation(case):
     for want in case["expect"].get("verdicts", []):
         row = next(v for v in body["verdicts"] if v["pred_index"] == want["pred_index"])
         assert row["verdict"] == want["verdict"], f"{case['id']} pred {want['pred_index']}"
-    for code in case["expect"].get("warnings", []):
-        assert code in {w["code"] for w in body["warnings"]}, f"{case['id']} missing {code}"
+    # The exact set, so a warning the engine should not emit fails too (D103).
+    assert sorted(w["code"] for w in body["warnings"]) == sorted(case["expect"]["warnings"]), (
+        f"{case['id']} warnings"
+    )

@@ -54,9 +54,10 @@ describe('golden vectors', () => {
         const row = body.verdicts.find((v) => v.pred_index === want.pred_index);
         expect(row?.verdict, `${c.id} pred ${want.pred_index}`).toBe(want.verdict);
       }
-      for (const code of (c.expect.warnings ?? [])) {
-        expect(body.warnings.map((w) => w.code), c.id).toContain(code);
-      }
+      // The exact set, so a warning the engine should not emit fails too (D103).
+      expect(c.expect.warnings, `${c.id} lists its warnings`).toBeDefined();
+      expect(body.warnings.map((w) => w.code).sort(), `${c.id} warnings`)
+        .toEqual([...c.expect.warnings].sort());
     });
   }
 });
