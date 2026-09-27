@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground and §22 the M3 playgrounds), and all 98 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds and §23 the graph constraint's key), and all 99 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -50,7 +50,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-22` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D98` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D99` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` is frozen** (2026-09-15) and was harvested into `data/content/`
   as the seed corpus. Do not extend it. Its `pg.js evaluate()` is a teaching toy over fifteen
@@ -58,6 +58,11 @@ cd scene-graph-studio\system ; npm run ci
   `system/tools/audit.js` and `check.js` validate it; `audit.js` exists to catch a `\` line break
   inside display math outside an alignment, which MathJax renders as a visible red error rather
   than failing loudly.
+- **The graph constraint keys on the ordered object pair, not the class pair** (D99). Tang's
+  evaluator keeps one predicate per pair of predicted object indices, and so do both engines:
+  `Triplet` carries `subject_id` and `object_id`. Two hands on one assembly are two pairs.
+  `semi` caps predicates per object pair; it is not the Semi Constraint STTran proposed for Action
+  Genome, which the course states and the engine does not compute.
 - **Box selection is `geometry.pickObjectAt`, not the browser's hit test** (deviation **D75**). A
   bounding box is drawn `fill="none"`, so SVG hit-tests its outline and a click in the middle of
   an object selects nothing. `pointer-events: all` would hand the choice to paint order, so the

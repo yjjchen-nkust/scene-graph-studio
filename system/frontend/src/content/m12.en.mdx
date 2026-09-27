@@ -32,7 +32,7 @@ steps:
     kind: lab
     lab: L2
     seconds_budget: 300
-    presenter_notes_en: "Five minutes back in L2 rather than in a new lab. Switch the constraint mode to semi and, on a pair that genuinely carries both an attention relation and a contacting one, look at what graph throws away and what none lets in. Say the key sentence in the room: the middle setting is not a compromise — for this kind of data it is the correct one."
+    presenter_notes_en: "Five minutes back in L2 rather than in a new lab. Switch the constraint mode to semi and, on a pair that genuinely carries both an attention relation and a contacting one, look at what graph throws away and what none lets in. Say the key sentence in the room: the middle setting is closer to this data than either end, and it is a cap of two per ordered object pair, not the Semi Constraint STTran proposed for Action Genome, which keeps one attention predicate and every spatial or contacting predicate above 0.9."
   - id: s5
     kind: checkpoint
     presenter_notes_en: "Checkpoint. A case where raising it helps: the downstream use is coarse event counting or activity segmentation, where flicker from noisy edges costs more than a miss. A case where it destroys the point of the recording: the video exists to capture a brief event — a momentary contact, a single handover — and the higher threshold filters out the only thing worth recording. If only the first comes back, ask for the second; the second is the question."
@@ -97,7 +97,10 @@ fact about the world rather than an annotation artefact: a person can be *lookin
 
 This is where M4's third constraint mode earns its place. The graph constraint would force one
 predicate per pair and discard two thirds of a legitimate annotation; no constraint at all admits
-every runner-up. `semi`, with $m$ fixed small, is the mode that matches the data.
+every runner-up. The Semi Constraint STTran proposed for Action Genome (Cong et al. 2021) keeps for each object pair
+the top attention predicate and every spatial or contacting predicate scoring above 0.9. The
+application's `semi` is a cap, at most two predicates per ordered object pair, which approximates
+that rule without computing it.
 
 </Implications>
 
@@ -132,7 +135,7 @@ and notice that each removal makes the remaining failure modes easier to see rat
 
 Return to L2 and switch the constraint mode to `semi`. On a pair that genuinely carries an
 attention relation and a contacting relation at once, watch what `graph` throws away and what
-`none` lets in. The middle setting is not a compromise; on this data it is the correct one.
+`none` lets in. The middle setting is closer to this data than either end, and it is still a cap of two per ordered object pair, not STTran's rule.
 
 </Step>
 

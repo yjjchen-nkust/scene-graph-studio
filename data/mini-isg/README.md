@@ -97,6 +97,14 @@ project exists to refuse, and the collision is the clearest demonstration availa
 constraint costs — the two-hands frame is a better example than any figure in the literature,
 because the student is looking at the photograph. A test pins the count in both directions.
 
+[**Corrected 2026-09-27 (D99):** the thirteen came from an engine that keyed the graph constraint on
+class pairs. Keyed on object pairs, as Tang's evaluator keys it, nine of those frames are two hands
+on one object (seven on an assembly, isg-007 on a wheel, isg-033 on a beam) and score 1.0. Four
+frames, isg-011, isg-013, isg-025 and isg-035, carry two predicates on one object pair, one hand
+both holding and assembling, and score 0.889 to 0.9: four relations of three hundred and fifty,
+1.1%, are unreachable under the constraint. The two-hands frame is what the constraint now keeps,
+not what it costs; the test pins the four.]
+
 **The predicate distribution is severely head-heavy**, and deliberately so:
 
 | predicate | count |
@@ -193,6 +201,12 @@ Informatics 65 (2025) 103107）所述方法，就公開之第一人稱視角影�
 上述關係並未予以刪除。為使數值達於 1.0 而刪去為真之關係，正是本專案所拒斥者；且該項衝突正是
 說明 graph constraint 代價之最佳實例——雙手影格較文獻中任何示意圖更為明確，蓋學員所面對者為
 實際照片。相關測項就此計數之上下二方向均予以固定。
+
+［**2026-09-27 更正（D99）：**前述十三張影格源自以類別配對為鍵之評估引擎。改以物件配對為鍵（與 Tang 之
+評估程式一致）後，其中九張為雙手作用於同一物件（七張為組件，isg-007 為車輪，isg-033 為樑），得分為
+1.0。其餘四張，即 isg-011、isg-013、isg-025 與 isg-035，於同一物件配對上具有兩個 predicate（同一隻手
+同時握持且組裝），得分介於 0.889 至 0.9：三百五十條關係中有四條（1.1%）於該約束之下無從表達。雙手影格
+為此約束所保留者，而非其代價；相關測項固定上述四張。］
 
 **predicate 之分布明顯偏向頭部類別**，且係刻意如此：
 

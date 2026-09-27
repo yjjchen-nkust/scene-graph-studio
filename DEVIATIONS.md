@@ -757,7 +757,8 @@ and `gv-013-mask-pairing-single-mpo` are the same scene under the two modes, R@2
 0.5, and each `why` names the other.
 
 **Where the correction is visible.** `apply_constraint` keys on the ordered *class* pair, which is
-coarser than a mask pair, so under `constraint: graph` the constrained pool cannot move and R is
+coarser than a mask pair, [**Corrected 2026-09-27 (D99):** it keys on the ordered object pair now;
+with one mask per object that is the mask pair, so the conclusion below still holds] so under `constraint: graph` the constrained pool cannot move and R is
 identical under both modes; only `ngR`, which reads the unconstrained pool, separates them. That
 is consistent with the field: the PSG figures the correction overturned are no-graph-constraint
 numbers. `test_the_graph_constraint_already_caps_what_single_mpo_would_cap` pins it.
@@ -1250,6 +1251,12 @@ reads 1.0 is the thing this project exists to refuse, and the two-hands frame is
 illustration of what graph constraint costs than any figure in the literature, because the student
 is looking at the photograph. A test pins it in both directions: a set that quietly started scoring
 1.0 would mean somebody had annotated the collision away.
+
+[**Corrected 2026-09-27 (D99):** the thirteen came from keying the graph constraint on class pairs.
+Nine of them are two hands on one object, two object pairs (seven on an assembly, isg-007 on a
+wheel, isg-033 on a beam), which Tang's evaluator keeps and the engine now keeps. Four frames, isg-011, isg-013, isg-025 and isg-035, carry two predicates on one
+object pair, one hand both holding and assembling, and still score below 1.0 against themselves.
+"This is the engine correct" did not hold.]
 
 **Seven objects took part in no relationship.** Boxes the overlay draws, no metric can reach, and
 that exist only because I gave them a box. All seven earned a relation rather than being deleted,
@@ -3300,3 +3307,93 @@ before), parity 13, **i18n 322 keys** (292 before), content lint clean over 13 g
 playground cases** and 25 release figures with 44 symbols, standalone current at 254 equations,
 frontend builds 771 modules. `npm run test:e2e` **66** (62 before). `npm run check:perf` **23** (21
 before); E1 33.3 ms and E10 32.9 ms, each within its two-frame floor. See VERIFICATION §22.
+
+## D99 — the graph constraint was keyed on class pairs; the reference keys it on object pairs
+
+**Plan:** `specs/2026-09-27-graph-constraint-key-design.md`, `plans/2026-09-27-graph-constraint-key.md`.
+**Found by:** checking a review finding of the M3 branch (D98): a counterexample that should have
+given SGDet recall 1.0 against SGCls 0.5 gave 0.5 for both. **Decisions:** the author's, on
+2026-09-27: the engine before the review minors; the graph constraint keyed on object pairs; the
+semi constraint re-keyed and described as the cap it is. Branch `fix/sgs-graph-constraint-key`,
+from `main` at `df93d63`.
+
+**Problem.** `apply_constraint` in both engines keyed the graph and semi constraints on the ordered
+pair of class names; its docstring said so, and the key entered in plan 01 with no stated reason.
+Tang's `sgg_eval.py` (commit `fca98604916f9fb2fbeca4fbf430c5b515b42a91`, line 66) keeps one
+predicate for each pair of predicted object indices, M4's E4 writes π(⟨s,p,o⟩) = (s,o) on objects,
+and SRS §4.5 says "per ordered subject-object pair". Two object pairs with the same class names
+kept one predicate between them. In the committed slices, relations sitting on a class pair that
+spans two or more object pairs of the same frame:
+
+| Slice | Frames | Frames affected | Relations on such class pairs |
+|---|---|---|---|
+| placeholder | 6 | 0 | 0 of 36 |
+| vg150-sgb | 80 | 55 | 463 of 892 |
+| indoorvg | 20 | 12 | 88 of 212 |
+| mini-isg | 40 | 9 | 18 of 350 |
+| psg | 50 | 26 | 99 of 349 |
+
+**Resolution.** `Triplet` carries `subject_id` and `object_id` in both engines, and both
+constraints key on the ordered object pair. `none` and mask pairing are unchanged; mask pairing
+already keyed on mask instances (D36). Unit tests in both languages were written first:
+two object pairs of one class pair each keep their top predicate; one object pair keeps one;
+duplicate detections are two pairs; `semi` caps per object pair; a self-pair is a pair. The first,
+the third and the `semi` cap failed under the class-pair key; the one-pair and self-pair tests pass
+under either key and pin what the two share.
+
+**The fourteenth vector.** `gv-014-graph-constraint-per-object-pair`: two hands on one assembly,
+one predicate each, R 1.0 under the graph constraint where the class-pair key gave 0.5, failing in
+both engines before the change. Writing it found that `build_golden.py` built eleven of the
+thirteen committed vectors: D36's `gv-012` and `gv-013` had been written into `vectors.json` by
+hand, and re-running the builder deleted them. Both are now in the builder, value for value, and
+the regenerated file differs from the committed one only by `gv-014`. Parity: 14 cases agree.
+
+**The ordering is not forced, now by the engine's own account.** Ground truths (man#1, on,
+table#2) and (man#1, near, table#2): on the given boxes the graph constraint keeps one predicate for
+the pair and R@50 is 0.5; with two box pairs of its own, each at IoU 9,604 / 10,396 = 0.924, R@50 is
+1.0. Both engines assert it. This is the sound form of D98's finding 1, whose argument from
+near-identical boxes did not prove its claim.
+
+**D51 corrected.** Its thirteen frames below 1.0 were the class-pair key. Nine are two hands on one
+object (seven on an assembly, isg-007 on a wheel, isg-033 on a beam), two object pairs, which the
+engine now keeps. Four remain, one hand both holding and
+assembling one object: isg-011 (hand#1, assembly#2), isg-013 (hand#1, assembly#4), isg-025
+(hand#2, wheel#4) and isg-035 (hand#2, assembly#3). Counted from the annotations before the change,
+and the re-keyed engine finds exactly those four.
+
+**`semi` described as the cap it is.** STTran's `lib/evaluation_recall.py` (commit
+`bcc72cf691015fc5a435ceb95975418b1becdeb4`) evaluates the Semi Constraint its authors proposed
+for Action Genome (Cong et al. 2021, arXiv 2107.12309, section 3) as the top
+attention predicate plus every spatial or contacting predicate above 0.9 per object pair. The
+application's `semi` caps predicates per object pair at 2. M4 s5 and M12 s2 and s4, both locales,
+body and notes, now say so; M12's "the mode that matches the data" is gone. SRS §4.5 and the
+contracts are annotated.
+
+**What moved.** No committed lab fixture: none of their predictions spreads one class pair over two
+object pairs. Figures computed at run time on vg150-sgb, indoorvg or psg predictions, where they
+exist, move wherever a frame does.
+
+**The branch review** found four statements false and three records inexact; each was fixed with
+a test that failed first.
+- *Mask pairing under the graph constraint.* D36 concluded that `graph` already caps what
+  `single_mpo` caps, because the class pair is coarser than the mask pair. Keyed on object pairs,
+  that holds only while no two predicted objects share a mask: where objects 3 and 4 repeat the
+  masks of 1 and 2, `graph` keeps both predictions and `single_mpo` one. `gv-015` (single_mpo,
+  R 0.5) and `gv-016` (multi_mpo, R 1.0) pin it; under the class-pair key `gv-016` fails in both
+  engines. D36's note, `test_pairing`'s docstring and L6's comment now say so.
+- *`gv-007`'s why* said the graph constraint would collapse its nine predictions to one; they are
+  nine object pairs, which it keeps.
+- *The mini-ISG README* still gave thirteen frames, 3.7%, and "the engine behaving correctly", in
+  both locales; each is annotated in place with the four frames and 1.1%.
+- *The Semi Constraint is STTran's own proposal* ("we propose a new strategy named Semi
+  Constraint", Cong et al. 2021, arXiv 2107.12309, section 3), evaluated on Action Genome. The
+  course, both engines' docstrings, the SRS and design notes and this record called it Action
+  Genome's; all now name STTran.
+- Inexact: "nine hands on one assembly" (two of the nine hold a wheel and a beam); "watched
+  failing" for all five unit tests (two pass under either key); the golden counts and section
+  pointers in INDEX and README that Task 3 had to update.
+
+**Verification.** `npm run ci` exit 0: 275 pytest and 7 skipped (266 before), **857 vitest in 64
+files** (845 before), parity **16** (13 before), i18n 322 keys, content lint clean over **16 golden
+cases**. `npm run test:e2e` 66. `npm run check:perf` 23, on the engine before the review's text
+changes, which touched no code path. See VERIFICATION §23.

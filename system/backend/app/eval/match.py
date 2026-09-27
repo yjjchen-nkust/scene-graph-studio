@@ -14,6 +14,8 @@ Verdict = Literal["match", "spurious", "localization", "missed"]
 class Triplet:
     index: int
     relationship_id: int
+    subject_id: int
+    object_id: int
     subject_name: str
     predicate: str
     object_name: str
@@ -36,6 +38,8 @@ def to_triplets(graph: SceneGraph) -> list[Triplet]:
             Triplet(
                 index=i,
                 relationship_id=r.relationship_id,
+                subject_id=r.subject_id,
+                object_id=r.object_id,
                 subject_name=s.name,
                 predicate=r.predicate,
                 object_name=o.name,
