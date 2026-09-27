@@ -3369,6 +3369,6 @@ contracts are annotated.
 object pairs. Figures computed at run time on vg150-sgb, indoorvg or psg predictions, where they
 exist, move wherever a frame does.
 
-**Verification.** `npm run ci` exit 0: 273 pytest and 7 skipped (266 before), **853 vitest in 64
+**Verification.** `npm run ci` exit 0: 273 pytest and 7 skipped (266 before), **854 vitest in 64
 files** (845 before), parity **14** (13 before), i18n 322 keys, content lint clean over **14 golden
 cases**. `npm run test:e2e` 66. `npm run check:perf` 23. See VERIFICATION §23.

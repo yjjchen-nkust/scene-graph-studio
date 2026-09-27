@@ -1102,7 +1102,7 @@ D99. Every number below is from the run that produced it, on branch `fix/sgs-gra
 | Step | Result |
 |---|---|
 | pytest | **273 passed**, 7 skipped (266 before) |
-| vitest | **853 passed in 64 files** (845 before) |
+| vitest | **854 passed in 64 files** (845 before) |
 | parity | **14 cases agree** (13 before) |
 | i18n parity | 322 keys, both locales complete |
 | content lint | **14 golden cases**, 42 playground cases, 25 release figures, clean |

@@ -350,7 +350,7 @@ is. See D99 and VERIFICATION §23.
 
 **Verification.** `npm run ci` green, 2026-09-27, after D99: **273 pytest** and 7 skipped (the ten newest
 compare the requirement files to the interpreter), parity 14 agree, i18n 322 keys both locales,
-**853 vitest** in 64 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**854 vitest** in 64 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 44 symbols, 42 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,
