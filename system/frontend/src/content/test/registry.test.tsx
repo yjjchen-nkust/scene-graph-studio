@@ -167,7 +167,7 @@ describe('the playground step kind', () => {
       expect(derivations[id], id).not.toContain('four diff colours');
     }
     for (const locale of ['en', 'zh-TW'] as const) {
-      for (const step of getModule('m03', locale)!.filter((s) => s.id === 's2' || s.id === 's3')) {
+      for (const step of getModule('m03', locale)!.filter((s) => s.kind === 'math')) {
         const { container, unmount } = render(<>{step.node}</>);
         expect(container.querySelector('.katex-error'), `${locale} ${step.id}`).toBeNull();
         unmount();
@@ -184,6 +184,15 @@ describe('the playground step kind', () => {
       expect(text, file).not.toContain('\\lambda\\ge\\sqrt{2}');
     }
     expect((deriv as Record<string, string>).F3).toContain('\\lambda>\\sqrt{2}');
+  });
+
+  it('M3 carries E1 and E10, each directly after the step that teaches it', () => {
+    const meta = getMeta('m03', 'en')!;
+    const part = (n?: number) => (n === undefined ? '' : `.${n}`);
+    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}${part(s.part)}` : ''}`)).toEqual([
+      's1:prose', 's2:math', 's3:playground/E1', 's4:math', 's5:playground/E10', 's6:prose', 's7:prose',
+      's8:lab', 's9:checkpoint',
+    ]);
   });
 
   it('M2 carries F3, in two parts, directly after the step that teaches it', () => {
