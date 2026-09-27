@@ -76,8 +76,8 @@ def test_rank_does_not_mutate_its_input():
 
 
 # ---- The key is the ordered object pair (D99) -------------------------------------------------
-# Tang's sgg_eval.py (fca9860, line 66) keeps the arg-max predicate for each pair of predicted object
-# indices; M4's E4 writes pi(<s,p,o>) = (s,o). Two objects of one class are two pairs.
+# Tang's sgg_eval.py (fca9860, line 66) keeps the arg-max predicate for each pair of predicted
+# object indices; M4's E4 writes pi(<s,p,o>) = (s,o). Two objects of one class are two pairs.
 
 
 def test_graph_keeps_one_predicate_per_object_pair_not_per_class_pair():
@@ -99,8 +99,9 @@ def test_duplicate_detections_are_two_pairs():
 
 
 def test_semi_caps_per_object_pair():
+    names = ["holding", "assembling", "near", "holding", "assembling", "near"]
     preds = [t(i, i + 1, "hand", p, "assembly", 0.9 - i / 10, sid=1 + i // 3, oid=9)
-             for i, p in enumerate(["holding", "assembling", "near", "holding", "assembling", "near"])]
+             for i, p in enumerate(names)]
     assert [x.relationship_id for x in apply_constraint(rank(preds), "semi", 2)] == [1, 2, 4, 5]
     assert len(apply_constraint(rank(preds), "semi", 1)) == 2
     assert len(apply_constraint(rank(preds), "semi", 0)) == 2

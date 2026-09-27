@@ -409,7 +409,10 @@ def pairing_graph(rels: list[dict], kind: str) -> dict[str, Any]:
         "dataset": "psg",
         "width": 4,
         "height": 4,
-        "objects": [masked(1, "person", (0, 0, 2, 2), "04<"), masked(2, "table", (0, 2, 2, 2), "448")],
+        "objects": [
+            masked(1, "person", (0, 0, 2, 2), "04<"),
+            masked(2, "table", (0, 2, 2, 2), "448"),
+        ],
         "relationships": rels,
         "provenance": (
             {"kind": "ground_truth", "fidelity": "measured"}
@@ -430,14 +433,14 @@ cases.append({
     "why": (
         "The one-stage failure mode of E13, under the mode that permits it. Three predictions sit "
         "at one ordered pair of mask instances -- subject mask '04<', object mask '448', identical "
-        "in both graphs so every IoU is 1.0 -- and multi_mpo admits all three. Ranked by score they "
-        "are on 0.9, near 0.8, under 0.7. 'on' satisfies all five conjuncts against GT 1 and "
+        "in both graphs so every IoU is 1.0 -- and multi_mpo admits all three. Ranked by score "
+        "they are on 0.9, near 0.8, under 0.7. 'on' satisfies all five conjuncts against GT 1 and "
         "consumes it; 'near' does the same against GT 2; 'under' agrees with no GT triplet on "
         "classes, so it is spurious. R@20 = 2/2 = 1. Two predicate classes are present in the GT, "
         "'on' with 1 GT and 1 hit and 'near' with 1 and 1, so mR@20 = (1/1 + 1/1)/2 = 1. The "
         "constraint is already 'none', so ngR@20 = R@20 = 1. No training split is supplied, so zR "
-        "is null. Compare gv-013-mask-pairing-single-mpo, which differs in one parameter and halves "
-        "both figures."
+        "is null. Compare gv-013-mask-pairing-single-mpo, which differs in one parameter and "
+        "halves both figures."
     ),
     "hand_checked": True,
     "gt": PAIRING_GT,
