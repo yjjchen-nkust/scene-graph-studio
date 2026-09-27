@@ -1269,3 +1269,65 @@ date. No production code changed after commit `680dc35`.
 With `feat/sgs-kp-index` (D101) already on `main`, the merged result: `npm run ci` exit 0, 279
 pytest and 7 skipped, **893 vitest in 66 files**, parity 17 cases, i18n **331 keys**, content
 lint clean over 17 golden cases, 775 modules built; `npm run test:e2e` 75 passed.
+
+## 26. The open checks — measured, 2026-09-28
+
+D103. Every number below is from the run that produced it. `npm run check:perf` ran on `main` at
+`9b678af`, before the branch; the rest on branch `fix/sgs-d102-open`.
+
+| Step | Result |
+|---|---|
+| pytest | **280 passed**, 7 skipped (279 before) |
+| vitest | **899 passed in 67 files** (893 in 66 before) |
+| parity | 17 cases agree |
+| i18n parity | 331 keys, both locales complete; 13 keys carry a placeholder, all agreeing |
+| content lint | 17 golden cases, 42 playground cases, 25 release figures, clean |
+| `npm run check:perf`, `main` | 23 passed; F3 33.8 ms, E1 34.4 ms, E10 31.8 ms |
+
+`npm run test:e2e` was not run: the branch changes no frontend production code.
+
+### The golden vectors' warnings
+
+The warnings each case lists, before and after. The engine raises each on one condition in
+`engine.py`; P is `gt_boxes_not_pairs`, Z `zero_shot_unavailable`, G `empty_ground_truth`, E
+`empty_prediction`, T `ties_broken_by_index`.
+
+| Cases | Before | After |
+|---|---|---|
+| gv-001, gv-017 | P Z | P Z (unchanged) |
+| gv-002 | G | P G Z |
+| gv-003 | E | P E Z |
+| gv-004 | T | P T Z |
+| gv-005 to gv-010, gv-014 | none | P Z |
+| gv-011 | none | P |
+| gv-012, gv-013, gv-015, gv-016 | Z | Z (unchanged) |
+
+Before the vectors changed, with the exact comparison in place: pytest's golden file 12 failed, 9
+passed; vitest's engine file failed gv-002 to gv-011 and gv-014.
+
+A mutant of both engines raising `masks_ignored` whenever either graph carries masks, restored
+afterwards:
+
+| Harness and vectors | pytest golden | vitest engine |
+|---|---|---|
+| committed (`9b678af`) | 20 passed | 30 passed |
+| this branch | 5 failed, 16 passed | 5 failed, 25 passed |
+
+The five are gv-009, gv-012, gv-013, gv-015 and gv-016, the cases whose graphs both carry masks.
+
+### i18n parity by mutation
+
+Each rule of `i18n_parity.mjs` disabled alone, against `tools/test/i18n_parity.test.mjs`'s five
+tests:
+
+| Rule disabled | Result |
+|---|---|
+| a key in one locale only | 1 failed: the missing-key test |
+| an empty value | 1 failed: the empty-value test |
+| the placeholders | 2 failed: both placeholder tests |
+
+### The runner
+
+The commit statuses of `9b678af`, read through the Gitea API (1.21.2) on 2026-09-28 at 02:38:
+`CI / backend`, `CI / frontend` and `scene-graph-studio / ci`, each "Waiting to run" since 00:27.
+`/repos/CIL-Team/WekaExt/actions/runners` and `/admin/runners` both answer 404.

@@ -17,6 +17,13 @@ beforeEach(() => {
  */
 const source = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
+/**
+ * A count a record states is at least `floor`. A records test bounds the counts from below, so
+ * that the next record, which raises them, does not have to rewrite this one's test (D103).
+ */
+const atLeast = (text: string, pattern: RegExp, floor: number, name: string) =>
+  expect(Number(pattern.exec(text)?.[1]), name).toBeGreaterThanOrEqual(floor);
+
 describe('the module registry', () => {
   it('finds m00 in both locales without a hand-kept list', () => {
     expect(moduleIds()).toContain('m00');
@@ -349,24 +356,54 @@ describe('the playground step kind', () => {
     const readme = source('../../../../../README.md');
     expect(deviations).toContain('## D102 — ');
     expect(verification).toContain('## 25. ');
+    // At least D102's figures: a later record moves each upward, and pins nothing of D102's (D103).
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
-      expect(text, name).toContain('D1…D102');
+      atLeast(text, /D1…D(\d+)/, 102, name);
     }
-    expect(claude).toContain('§25 the deferred minors), and all 102 logged deviations');
-    expect(claude).toContain('resolutions, 75 tests,');
-    expect(index).toContain('the deferred minors (§25)**');
-    expect(readme).toContain('i18n 331 keys');
-    expect(readme).toContain('`npm run test:e2e` is 75');
+    expect(claude).toContain('§25 the deferred minors');
+    atLeast(claude, /all (\d+) logged deviations/, 102, 'CLAUDE.md deviations');
+    atLeast(claude, /resolutions, (\d+) tests,/, 75, 'CLAUDE.md e2e');
+    expect(index).toContain('the deferred minors (§25)');
+    atLeast(readme, /i18n (\d+) keys/, 331, 'README i18n');
+    atLeast(readme, /`npm run test:e2e` is (\d+)/, 75, 'README e2e');
     // The gate's counts, where README and INDEX state them (D102's review).
-    expect(readme).toContain('279 Python tests');
-    expect(readme).toContain('893 TypeScript tests across 66 files');
-    expect(index).toContain('**279 pytest**');
-    expect(index).toContain('**893 vitest** in 66 files');
+    atLeast(readme, /(\d+) Python tests/, 279, 'README pytest');
+    atLeast(readme, /(\d+) TypeScript tests across \d+ files/, 893, 'README vitest');
+    atLeast(readme, /TypeScript tests across (\d+) files/, 66, 'README vitest files');
+    atLeast(index, /\*\*(\d+) pytest\*\*/, 279, 'INDEX pytest');
+    atLeast(index, /\*\*(\d+) vitest\*\* in \d+ files/, 893, 'INDEX vitest');
+    atLeast(index, /\*\*\d+ vitest\*\* in (\d+) files/, 66, 'INDEX vitest files');
     expect(index).not.toContain('the ten newest');
     // The five items D100's review deferred, each named where it was settled.
     for (const item of ['dangling_reference', 'gv-017', 'idRun', 'E1_DEFECTS', '►']) {
       expect(deviations.slice(deviations.indexOf('## D102 — ')), item).toContain(item);
     }
+  });
+
+  it('the records carry D103 and the checks it closed', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    // Whitespace collapsed, since a phrase may wrap across a line of the record.
+    const d103 = deviations.slice(deviations.indexOf('## D103 — ')).replace(/\s+/g, ' ');
+    expect(deviations).toContain('## D103 — ');
+    expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 26. ');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 103, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 103, 'CLAUDE.md deviations');
+    expect(claude).toContain('§26 the open checks');
+    expect(index).toContain('the open checks (§26)');
+    expect(source('../../../../../data/golden/README.md')).toContain('compare that set exactly');
+    // What was closed, what was measured on main, and what is still queued.
+    for (const item of ['masks_ignored', 'gv-011', 'i18n_parity.test.mjs', '9b678af', 'Waiting to run']) {
+      expect(d103, item).toContain(item);
+    }
+    atLeast(readme, /(\d+) Python tests/, 280, 'README pytest');
+    atLeast(readme, /(\d+) TypeScript tests across \d+ files/, 899, 'README vitest');
+    atLeast(index, /\*\*(\d+) pytest\*\*/, 280, 'INDEX pytest');
+    atLeast(index, /\*\*(\d+) vitest\*\* in \d+ files/, 899, 'INDEX vitest');
   });
 
   it('the protocol ordering survives nowhere as a law', () => {
