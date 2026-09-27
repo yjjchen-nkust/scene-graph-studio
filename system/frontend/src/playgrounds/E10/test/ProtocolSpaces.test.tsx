@@ -63,6 +63,11 @@ describe('E10', () => {
     expect(screen.getByTestId('e10-inclusion')).toHaveTextContent('ℋ_PredCls ⊆ ℋ_SGCls ⊆ ℋ_SGDet');
   });
 
+  it('states when the inclusion holds', () => {
+    renderAt('/m/m03?E10.voc=vg150');
+    expect(screen.getByTestId('e10-inclusion-if')).toHaveTextContent('the given labels are in 𝒞');
+  });
+
   it('reads in 繁體中文', () => {
     setLocale('zh-TW');
     renderAt('/m/m03?E10.pr=sgdet');

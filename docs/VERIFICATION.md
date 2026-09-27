@@ -1015,11 +1015,11 @@ D98. Every number below is from the run that produced it, on branch `feat/playgr
 |---|---|
 | harvest | 26 formulas, 23 derivations, unchanged in number after E1's and E10's were corrected |
 | pytest | 266 passed, 7 skipped |
-| vitest | **842 passed in 64 files** (791 before) |
+| vitest | **845 passed in 64 files** (791 before) |
 | parity | 13 cases agree |
-| i18n parity | **321 keys**, both locales complete (292 before) |
+| i18n parity | **322 keys**, both locales complete (292 before) |
 | content lint | 13 golden cases, **42 playground cases**, 25 release figures, 44 symbols, clean; 109 steps a locale |
-| standalone | up to date, 250 equations |
+| standalone | up to date, 254 equations |
 | frontend build | 771 modules |
 | `npm run test:e2e` | **66 passed** (62 before) |
 | `npm run check:perf` | **23 passed** (21 before) |
@@ -1083,3 +1083,14 @@ photograph's to within 1 px at all three sizes.
 
 `npm run check:perf`, exit 0, 23 tests. E1, one defect toggled on its second part: 33.3 ms, within
 its 33.6 ms floor. E10, SGCls chosen on its first part: 32.9 ms, within its 33.6 ms floor.
+
+### After the branch review
+
+The three fixes of D98's review paragraph, each a test that failed first: the verdict table's
+condition, the ordering no longer stated as a law in the brief, the SRS or L2's comment, and the
+inclusion's definition and condition in s5 and on E10. The gates were run again: `npm run ci` exit
+0 with 845 vitest in 64 files, 322 i18n keys and the standalone at 254 equations; `npm run
+test:e2e` 66 passed, E10's second part fitting 1024 × 768 again after its spacing was tightened;
+`npm run check:perf` 23 passed twice. Timings moved with the machine's load between the two runs:
+E1 53.7 ms and then 33.3 ms, E10 32.3 ms and then 37.8 ms, while playgrounds this branch did not
+touch reached 64.9 to 78.5 ms (F1, F8, X1) in the second.

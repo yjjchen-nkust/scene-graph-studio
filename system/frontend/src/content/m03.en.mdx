@@ -133,15 +133,19 @@ $$
 \begin{gathered}\neg\Phi_{\text{cls}}\wedge\Phi_{\text{loc}} \equiv \text{right place, wrong name} \quad
 \neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}} \equiv \text{right name, wrong place}
 \\[4pt]
+\text{against a ground truth no earlier prediction has matched:}
+\\
 \begin{array}{c|cc} & \Phi_{\text{loc}} & \neg\Phi_{\text{loc}}\\ \hline \Phi_{\text{cls}} & \texttt{match} & \texttt{localization}\\ \neg\Phi_{\text{cls}} & \texttt{spurious} & \texttt{spurious}\end{array}\end{gathered}
 $$
 
 The four-colour diff you have been reading since L1 is this table on the prediction side, and one
 colour more on the ground truth's: `missed` marks an annotated triplet that no prediction matched.
-`localization` is the case $\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}}$, and it exists so that a
-right predicate on a badly placed box does not look the same as a wrong predicate. A wrong name is
-`spurious` wherever its box sits: the diff does not separate a wrong name in the right place from
-both halves wrong.
+Each ground truth is matched once, so the table is the verdict against one no earlier prediction
+has matched: a repeat of a triplet already matched meets all five conjuncts and is still
+`localization`. Otherwise `localization` is the case $\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}}$,
+and it exists so that a right predicate on a badly placed box does not look the same as a wrong
+predicate. A wrong name is `spurious` wherever its box sits: the diff does not separate a wrong
+name in the right place from both halves wrong.
 
 </Implications>
 
@@ -170,7 +174,10 @@ both halves wrong.
 The three protocols differ in how much they hand the model, and that difference is a fact about
 sets before it is a fact about any number: whatever PredCls lets a model output, SGCls lets it
 output too, and SGDet more again. The recall ordering that published tables show is a regularity
-observed across models, not a consequence of that inclusion.
+observed across models, not a consequence of that inclusion. Here $\mathcal{H}$ is the set of single-triplet hypotheses $\langle(b_s,c_s),p,(b_o,c_o)\rangle$ a
+protocol lets the model output. The inclusion holds when what a protocol hands over is itself a
+hypothesis of the next: the given boxes are distinct whole-pixel boxes inside the image, and
+the given labels are in $\mathcal{C}$.
 
 </Intuition>
 

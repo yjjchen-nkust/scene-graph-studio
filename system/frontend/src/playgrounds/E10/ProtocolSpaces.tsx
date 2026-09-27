@@ -98,7 +98,7 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
         {givenView && (
           <PhotoMarks frame={frame} marks={marks} maxVh={PICTURE_VH} alt={t('playground.e10.picture')} testid="e10-picture" />
         )}
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
           {givenView && (
             <p data-testid="e10-given" className="text-[1em] text-slate-900">
               {t('playground.e10.given')}
@@ -112,6 +112,11 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
           )}
           <p data-testid="e10-inclusion" className="font-mono text-[1em] text-slate-900">
             ℋ_PredCls ⊆ ℋ_SGCls ⊆ ℋ_SGDet
+          </p>
+          {/* The inclusion is a fact about hypotheses of one shape, and only when what a protocol hands
+              over is itself a hypothesis of the next (D98). */}
+          <p data-testid="e10-inclusion-if" className="text-[0.875em] text-slate-700">
+            {t('playground.e10.inclusion_if')}
           </p>
           {countView && <p className="text-[0.875em] text-slate-700">{t('playground.e10.to_l2')}</p>}
         </div>
@@ -128,9 +133,9 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
                   aria-current={p === protocol ? 'true' : undefined}
                   className={p === protocol ? 'bg-white font-semibold text-slate-900' : 'text-slate-700'}
                 >
-                  <th scope="row" className="py-1 pr-4 text-left font-sans">{NAMES[p]}</th>
-                  <td className="py-1 pr-4">{formula[p]}</td>
-                  <td className="py-1 text-right tabular-nums">
+                  <th scope="row" className="py-0.5 pr-4 text-left font-sans">{NAMES[p]}</th>
+                  <td className="py-0.5 pr-4">{formula[p]}</td>
+                  <td className="py-0.5 text-right tabular-nums">
                     {hypothesisSpace(p, objects, classes, predicates, boxes).toLocaleString('en-US')}
                   </td>
                 </tr>

@@ -11,6 +11,12 @@ beforeEach(() => {
   setLocale('en');
 });
 
+/**
+ * A repository file as text. Through a parameter, not a literal: Vite rewrites
+ * `new URL('literal', import.meta.url)` into an asset URL, which `readFileSync` refuses.
+ */
+const source = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+
 describe('the module registry', () => {
   it('finds m00 in both locales without a hand-kept list', () => {
     expect(moduleIds()).toContain('m00');
@@ -173,6 +179,34 @@ describe('the playground step kind', () => {
         unmount();
       }
     }
+  });
+
+  it('M3 qualifies its verdict table and defines the inclusion it states', () => {
+    // Branch review (D98): the table holds against a ground truth no earlier prediction has matched,
+    // since the engine calls a repeat of a matched triplet localization; and the inclusion holds
+    // only for hypotheses of that shape, with the given boxes and labels inside what the next
+    // protocol allows.
+    const en = source('../m03.en.mdx');
+    const zh = source('../m03.zh-TW.mdx');
+    for (const text of [en, zh]) expect(text).toContain('\\text{against a ground truth no earlier prediction has matched:}');
+    expect(en).toContain('a repeat of a triplet already matched');
+    expect(zh).toContain('重複預測一個已命中之三元組');
+    expect(en).toContain('single-triplet hypotheses');
+    expect(en).toContain('the given labels are in');
+    expect(zh).toContain('單一三元組假設');
+    expect(zh).toContain('所給之標籤屬於');
+    expect((deriv as Record<string, string>).E1).toContain('no earlier prediction has matched');
+  });
+
+  it('the protocol ordering survives nowhere as a law', () => {
+    // The brief, the SRS and an L2 comment repeated what M3 s3 no longer claims (D98).
+    const brief = source('../../../../web/brief/index.html');
+    expect(brief).not.toContain('asserts on every fixture');
+    expect(brief).toContain('\\mathcal{H}_{\\text{PredCls}}\\subseteq\\mathcal{H}_{\\text{SGCls}}\\subseteq\\mathcal{H}_{\\text{SGDet}}');
+    const srs = source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-SRS.md');
+    expect(srs).toContain('[**Superseded 2026-09-27 (D98):**');
+    const l2 = source('../../labs/L2/test/MetricExplorer.test.tsx');
+    expect(l2).not.toContain('for every model and every fixture');
   });
 
   it('M2 s2 states the √2 boundary strictly, since at λ = √2 the concentric box reaches ½', () => {

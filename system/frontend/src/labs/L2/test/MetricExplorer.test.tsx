@@ -76,7 +76,8 @@ describe('the invariants', () => {
   });
 
   it('the protocol ordering invariant holds on this fixture', () => {
-    // SRS §11.2: R_SGDet <= R_SGCls <= R_PredCls, for every model and every fixture
+    // R_SGDet <= R_SGCls <= R_PredCls on this fixture, which was built to lose something at each
+    // protocol. The ordering is observed, not implied, and no test asserts it for every model (D98).
     expect(metricFor(50, 'R', 'graph', 'sgdet')).toBeLessThanOrEqual(
       metricFor(50, 'R', 'graph', 'sgcls'),
     );

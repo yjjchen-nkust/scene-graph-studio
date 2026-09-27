@@ -3273,8 +3273,30 @@ in 繁體中文. English, which the suite does not hold to the panel, runs 43 px
 and 15 px on E10's second at 1024 × 768, and fits at the other two sizes. M3 went from 7 steps to 11, each part 90 s with its notes in both
 locales; the corpus holds 109 steps a locale and 218 presenter notes.
 
-**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **842 vitest in 64 files** (791
-before), parity 13, **i18n 321 keys** (292 before), content lint clean over 13 golden cases, **42
-playground cases** and 25 release figures with 44 symbols, standalone current at 250 equations,
+**The branch review** found three statements still wrong or unqualified, each fixed with a test
+that failed first.
+- *s2's verdict table left out a condition the engine keeps.* `classify` gives `localization` to a
+  prediction that meets all five conjuncts against a ground truth already matched (the engine's
+  own vector `gv-005-duplicate-predictions`). The table is now captioned "against a ground truth no
+  earlier prediction has matched", in both locales and the frozen derivation, and the prose says
+  that a repeat of a triplet already matched is still `localization`.
+- *The ordering survived as a law in three places.* The brief's §6 said each protocol "strictly
+  enlarges the search space, which yields an invariant the test suite asserts on every fixture";
+  it now states the inclusion with its condition and the ordering as observed, and the standalone
+  is rebuilt. SRS §11.2's "holds for any model and any fixture" is marked superseded in place.
+  L2's test comment, which quoted it, now says the ordering holds on that fixture.
+- *The inclusion was stated without its definition or assumptions.* ℋ is the set of single-triplet
+  hypotheses ⟨(b_s, c_s), p, (b_o, c_o)⟩, and the inclusion holds only when what a protocol hands
+  over is itself a hypothesis of the next: the given boxes distinct whole-pixel boxes inside the
+  image, the given labels in 𝒞. Three boxes of the committed `vg150-sgb` slice cross their image's
+  border, so the condition is not idle. s5 now says so in both locales, and E10 prints the
+  condition beside the inclusion; its second part then ran 17 px past 1024 × 768 and fits again
+  with tighter spacing.
+
+Nine minor findings are deferred to the author.
+
+**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **845 vitest in 64 files** (791
+before), parity 13, **i18n 322 keys** (292 before), content lint clean over 13 golden cases, **42
+playground cases** and 25 release figures with 44 symbols, standalone current at 254 equations,
 frontend builds 771 modules. `npm run test:e2e` **66** (62 before). `npm run check:perf` **23** (21
 before); E1 33.3 ms and E10 32.9 ms, each within its two-frame floor. See VERIFICATION §22.
