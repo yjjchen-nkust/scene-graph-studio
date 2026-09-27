@@ -4,8 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { setLocale } from '../../../i18n/useLocale';
 import { ProtocolSpaces } from '../ProtocolSpaces';
 
-/** How the mocked frame renumbers its objects; each test sets it before rendering. */
+/** How the mocked frame renumbers its objects, and which it keeps; each test sets them. */
 let renumber: (id: number) => number = (id) => id;
+let keep: (id: number) => boolean = () => true;
 
 // E10 draws one committed frame, whose ids happen to run 1 to 6. Renumbering them is the only way
 // to show what SGCls says about a frame whose ids do not (D101).
@@ -15,7 +16,10 @@ vi.mock('../../slice', async (importOriginal) => {
     ...actual,
     frameById: (id: string) => {
       const frame = actual.frameById(id);
-      return frame && { ...frame, objects: frame.objects.map((o) => ({ ...o, object_id: renumber(o.object_id) })) };
+      return frame && {
+        ...frame,
+        objects: frame.objects.filter((o) => keep(o.object_id)).map((o) => ({ ...o, object_id: renumber(o.object_id) })),
+      };
     },
   };
 });
@@ -27,7 +31,10 @@ const renderAt = (url: string) =>
     </MemoryRouter>,
   );
 
-beforeEach(() => setLocale('en'));
+beforeEach(() => {
+  setLocale('en');
+  keep = () => true;
+});
 
 describe('E10 names the boxes SGCls hands over by their ids, not by their count', () => {
   it('lists the ids where they do not run without a gap', () => {
@@ -40,6 +47,13 @@ describe('E10 names the boxes SGCls hands over by their ids, not by their count'
     renumber = (id) => id + 1;
     renderAt('/m/m03?E10.pr=sgcls');
     expect(screen.getByTestId('e10-given')).toHaveTextContent('boxes #2 to #7; no labels');
+  });
+
+  it('names a single box by its id, not as a run from it to itself', () => {
+    renumber = (id) => id;
+    keep = (id) => id === 5;
+    renderAt('/m/m03?E10.pr=sgcls');
+    expect(screen.getByTestId('e10-given')).toHaveTextContent('boxes #5; no labels');
   });
 
   it('lists them in 繁體中文 with its own separator', () => {

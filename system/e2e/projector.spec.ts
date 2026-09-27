@@ -585,6 +585,11 @@ for (const size of SIZES) {
           await page.evaluate(() => document.fonts.ready);
           edges[p] = await page.getByTestId('e10-row-predcls').evaluate((row) =>
             [...row.children].map((cell) => Math.round(cell.getBoundingClientRect().left * 10) / 10));
+          // Every row holds the sign's place; the chosen row alone shows it.
+          const shown = await page.getByTestId('e10-counts').evaluate((table) =>
+            [...table.querySelectorAll('tbody th > span')].map((s) => getComputedStyle(s).visibility));
+          expect(shown, `${voc}, ${p} chosen: the sign shows in its own row only`)
+            .toEqual(['predcls', 'sgcls', 'sgdet'].map((q) => (q === p ? 'visible' : 'hidden')));
         }
         expect(edges.sgcls, `${voc}: SGCls chosen against PredCls chosen`).toEqual(edges.predcls);
         expect(edges.sgdet, `${voc}: SGDet chosen against PredCls chosen`).toEqual(edges.predcls);

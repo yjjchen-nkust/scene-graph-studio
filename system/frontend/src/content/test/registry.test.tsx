@@ -333,6 +333,12 @@ describe('the playground step kind', () => {
     expect(index).toContain('the deferred minors (§25)**');
     expect(readme).toContain('i18n 323 keys');
     expect(readme).toContain('`npm run test:e2e` is 75');
+    // The gate's counts, where README and INDEX state them (D101's review).
+    expect(readme).toContain('279 Python tests');
+    expect(readme).toContain('883 TypeScript tests across 65 files');
+    expect(index).toContain('**279 pytest**');
+    expect(index).toContain('**883 vitest** in 65 files');
+    expect(index).not.toContain('the ten newest');
     // The five items D100's review deferred, each named where it was settled.
     for (const item of ['dangling_reference', 'gv-017', 'idRun', 'E1_DEFECTS', '►']) {
       expect(deviations.slice(deviations.indexOf('## D101 — ')), item).toContain(item);

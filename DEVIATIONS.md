@@ -3517,9 +3517,10 @@ deferred five minors. **Decisions:** the author's, on 2026-09-27: all five. Bran
   so the two the engine emits for it went unchecked; parity compares the engines with each other,
   not with a hand-computed value. It now lists `gt_boxes_not_pairs`, since PredCls hands over
   boxes, and `zero_shot_unavailable`, since no training split is supplied; its why derives both
-  and rules out the other four. The regenerated `vectors.json` differs from the committed one by
-  gv-017 alone. Eight vectors, gv-005 to gv-011 and gv-014, still list no warnings, and gv-002 to
-  gv-004 list one of three; D100's review named gv-017 only, and this branch leaves the others.
+  and rules out the other four, which no harness checks, since both test inclusion only. The
+  regenerated `vectors.json` differs from the committed one by gv-017 alone. Eight vectors,
+  gv-005 to gv-011 and gv-014, still list no warnings, and gv-002 to gv-004 list one of three;
+  D100's review named gv-017 only, and this branch leaves the others.
 
 **On the playgrounds** (commit `680dc35`).
 - *E10's box ids.* SGCls wrote "boxes #1 to #{n}" with n the count of objects, which is true only
@@ -3539,10 +3540,13 @@ deferred five minors. **Decisions:** the author's, on 2026-09-27: all five. Bran
   24.1 px as the protocol changed, over both vocabularies at the three projector sizes; the name
   column stayed at 67 px. Every row now carries the sign and the rule, invisible and transparent
   outside the chosen row, and a projector test holds the three column edges equal under all three
-  protocols. Each part was needed: with the sign alone reserved, the formula column still moved
-  2.0 px at 1024 × 768, half the rule's width, which is what a collapsed border adds to a cell
-  (Tailwind's preflight collapses a table's borders); with the rule alone, 19.9 px. The chosen row's weight moved nothing: a bold copy of each name, reserving its width in
-  every row, was tried, the test passed without it at all three sizes, and it was removed.
+  protocols. Each part was needed: with the sign alone reserved, SGCls chosen against PredCls
+  still moved the formula column 2.0, 2.6 and 4.2 px at the three sizes, which fits a collapsed
+  4 px border (Tailwind's preflight collapses a table's borders) widening the first column by
+  half its width and the table's layout spreading that over the wider panels; with the rule alone,
+  19.9 px at 1024 × 768. The chosen row's weight moved nothing: a bold copy of each name,
+  reserving its width in every row, was tried, the test passed without it at all three sizes, and
+  it was removed.
 
 **Watched failing first.** The Python schema test and the API test, before `_ids_resolve`. gv-017,
 under a mutant of both engines that drops `gt_boxes_not_pairs` under `semi`: both harnesses passed
@@ -3552,7 +3556,28 @@ on renumbered ids, which printed "boxes #1 to #6" whatever the ids were; the thr
 tests, on the literal frame id; and E1's label test, on 繁體中文's missing axis. The column test
 failed at all three sizes. This record's own test failed on the missing `## D101`.
 
-**Verification.** `npm run ci` exit 0: 279 pytest and 7 skipped (277 before), **881
+**The branch review** found no Critical issue, two Important ones and nine minors; both
+Important ones and seven minors were acted on.
+- *The sign's visibility had no test.* jsdom applies no Tailwind, and the column test measured
+  edges only, so no test said which rows show the sign. E10's unit test now requires `invisible` on the two unchosen rows' signs, and the projector test
+  the computed visibility under each protocol. Both failed on both mutants, the projector test at
+  all three sizes.
+- *§25's first table* was said to be the gate run after the records were written; `test:e2e` and
+  `check:perf` had run on commit `680dc35`'s code. §25 now says which run each row is from.
+- *Minors acted on.* E1's label test renders all five labels in 繁體中文, and the three picture
+  tests their 繁體中文 alt text. A single box reads "boxes #5", held by a test that fails when the
+  condition is `run` alone. A test pins each E1 shift to one axis, on which the label's English
+  join depends. This record says that no harness checks a warning's absence, and gives the 2.0 px
+  with the sizes it varies over. §25 counts tests where it said suites. INDEX's "ten newest"
+  requirement tests are twelve and not the newest; the phrase is gone.
+- *Commit messages.* `680dc35` gives 18.7 to 40.0 px for both columns; the count column moved
+  11.6 to 24.1 px. `f6e642c` says its records test holds the counts in INDEX and README; it held
+  two of README's and none of INDEX's, and now also holds their pytest and vitest counts.
+- *Set aside.* A rule in `i18n_parity.mjs` comparing placeholders between locales, since every
+  new placeholder is now rendered in both; and the column measurements' raw output, since this
+  repository keeps no run's log.
+
+**Verification.** `npm run ci` exit 0: 279 pytest and 7 skipped (277 before), **883
 vitest in 65 files** (870 in 64 before), parity 17, i18n **323 keys** (322 before), content lint
 clean over 17 golden cases. `npm run test:e2e` **75** (72 before; the column test runs at three
 sizes). `npm run check:perf` 23. See VERIFICATION §25.

@@ -362,9 +362,8 @@ over by their ids, and F3, E1 and E10 take their frame from their setup; E1's to
 axes in both locales, filled from `E1_DEFECTS`; and E10's table holds its columns still when the
 protocol changes, where they had moved by up to 40 px. See D101 and VERIFICATION §25.
 
-**Verification.** `npm run ci` green, 2026-09-27, after D101: **279 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 17 agree, i18n 323 keys both locales,
-**881 vitest** in 65 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**Verification.** `npm run ci` green, 2026-09-27, after D101: **279 pytest** and 7 skipped, parity 17 agree, i18n 323 keys both locales,
+**883 vitest** in 65 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 44 symbols, 42 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (254 equations), frontend builds. `npm run test:e2e`,

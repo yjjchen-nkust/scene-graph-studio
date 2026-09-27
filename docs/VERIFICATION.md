@@ -1199,13 +1199,15 @@ from §21's measured column and photograph; it was not measured directly.
 
 ## 25. The deferred minors — measured, 2026-09-27
 
-D101. Every number below is from the run that produced it, on branch `fix/sgs-d100-deferred`; the
-table is the gate run after the records were written.
+D101. Every number below is from the run that produced it, on branch `fix/sgs-d100-deferred`. In
+the table, `npm run ci` and `npm run test:e2e` ran after the branch review's fixes, and
+`npm run check:perf` on commit `680dc35`'s code, which no later commit changes outside tests and
+records.
 
 | Step | Result |
 |---|---|
 | pytest | **279 passed**, 7 skipped (277 before) |
-| vitest | **881 passed in 65 files** (870 in 64 before) |
+| vitest | **883 passed in 65 files** (870 in 64 before) |
 | parity | 17 cases agree |
 | i18n parity | **323 keys**, both locales complete (322 before) |
 | content lint | 17 golden cases, 42 playground cases, 25 release figures, clean |
@@ -1218,7 +1220,7 @@ table is the gate run after the records were written.
 
 Before `_ids_resolve`, the schema test found no dangling-reference message beside the repeated id,
 and the API test received `schema_invalid`. Before commit `680dc35`'s changes, nine unit tests
-failed and 263 of the playground suites passed: `idRun`'s three, E10's three on renumbered ids,
+failed and 263 playground tests passed: `idRun`'s three, E10's three on renumbered ids,
 each of which received "boxes #1 to #6; no labels" or 「框 #1 至 #6；無標籤」, and the picture-string
 tests of F3, E1 and E10. E1's label test, written after them, failed on 繁體中文's
 「主詞框位移 45 px」. The column test failed at all three sizes. The records test failed on the
@@ -1253,3 +1255,11 @@ moved the formula column 2.0, 2.6 and 4.2 px at the three sizes over this slice.
 reserved and the sign not, 19.9 px at 1024 × 768. With both, every edge agreed to 0.1 px in all
 twelve comparisons. A bold copy of each name, reserving the chosen weight's width in every row,
 was then removed, and the test still passed at all three sizes.
+
+### After the branch review
+
+With `invisible` dropped from the sign, and with it on every row, E10's unit test failed, 1 of 15,
+and the projector column test failed at all three sizes on "slice, predcls chosen: the sign shows
+in its own row only"; on the code both pass. With the condition `run` alone, the single-box test
+failed, 1 of 16. The records test failed on README's 881 before the counts were brought up to
+date. No production code changed after commit `680dc35`.

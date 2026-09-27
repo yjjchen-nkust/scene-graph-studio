@@ -31,7 +31,10 @@ describe('E1', () => {
     cleanup();
     setLocale('zh-TW');
     renderAt('/m/m03');
-    expect(labels().slice(3)).toEqual([`主詞框位移 Δx ${ss.dx} px`, `受詞框位移 Δy ${os.dy} px`]);
+    expect(labels()).toEqual([
+      `主詞類別：box → ${E1_DEFECTS.subject}`, `受詞類別：table → ${E1_DEFECTS.object}`,
+      `predicate：on → ${E1_DEFECTS.predicate}`, `主詞框位移 Δx ${ss.dx} px`, `受詞框位移 Δy ${os.dy} px`,
+    ]);
     // The strings carry neither the shifts nor the names; the component fills them in.
     for (const strings of [en, zh]) {
       for (const key of ['cs', 'co', 'p', 'bs', 'bo']) {
@@ -41,10 +44,25 @@ describe('E1', () => {
     }
   });
 
+  it('shifts each box along one axis by a positive whole number of pixels, so its label names one axis', () => {
+    // The label writes a shift as its nonzero axes, joined in English; that holds in both locales
+    // only while each defect moves its box along one axis (D101's review).
+    for (const { dx, dy } of [E1_DEFECTS.subjectShift, E1_DEFECTS.objectShift]) {
+      expect([dx, dy].filter((v) => v !== 0)).toHaveLength(1);
+      expect(Math.max(dx, dy)).toBeGreaterThan(0);
+      expect(Number.isInteger(dx) && Number.isInteger(dy)).toBe(true);
+    }
+  });
+
   it('names its frame and triplet from its setup, not from literals in the string (D101)', () => {
     renderAt('/m/m03');
     expect(screen.getByTestId('e1-picture').querySelector('img'))
       .toHaveAttribute('alt', `Frame ${E1_FRAME}: box on table, annotated and predicted`);
+    cleanup();
+    setLocale('zh-TW');
+    renderAt('/m/m03');
+    expect(screen.getByTestId('e1-picture').querySelector('img'))
+      .toHaveAttribute('alt', `影格 ${E1_FRAME}：box on table 之標註與預測`);
     for (const strings of [en, zh]) {
       expect(strings['playground.e1.picture']).not.toContain(E1_FRAME);
       expect(strings['playground.e1.picture']).not.toContain('box on table');

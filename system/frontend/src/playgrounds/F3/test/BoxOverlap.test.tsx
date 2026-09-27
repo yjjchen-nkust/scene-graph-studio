@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import en from '../../../i18n/en.json';
@@ -21,6 +21,10 @@ describe('F3', () => {
     renderAt('/m/m02');
     expect(screen.getByTestId('f3-picture').querySelector('img'))
       .toHaveAttribute('alt', `Frame ${F3_FRAME}: the annotated box and the prediction`);
+    cleanup();
+    setLocale('zh-TW');
+    renderAt('/m/m02');
+    expect(screen.getByTestId('f3-picture').querySelector('img')).toHaveAttribute('alt', `影格 ${F3_FRAME}：標註框與預測框`);
     for (const strings of [en, zh]) expect(strings['playground.f3.picture']).not.toContain(F3_FRAME);
   });
 

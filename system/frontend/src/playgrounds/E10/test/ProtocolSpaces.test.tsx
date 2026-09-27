@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import en from '../../../i18n/en.json';
@@ -26,6 +26,10 @@ describe('E10', () => {
     renderAt('/m/m03');
     expect(screen.getByTestId('e10-picture').querySelector('img'))
       .toHaveAttribute('alt', `Frame ${E10_FRAME}, as the chosen protocol hands it over`);
+    cleanup();
+    setLocale('zh-TW');
+    renderAt('/m/m03');
+    expect(screen.getByTestId('e10-picture').querySelector('img')).toHaveAttribute('alt', `影格 ${E10_FRAME}，依所選協定提供之內容`);
     for (const strings of [en, zh]) expect(strings['playground.e10.picture']).not.toContain(E10_FRAME);
   });
 
@@ -92,6 +96,10 @@ describe('E10', () => {
     // U+25BA has no emoji presentation; U+25B6 is drawn as a coloured emoji on Windows.
     expect(marks[0]).toHaveTextContent('►');
     expect(screen.getByTestId('e10-row-sgcls')).toContainElement(marks[0]!);
+    // Every row holds the sign's place, and only the chosen row shows it (D101).
+    const signs = ['predcls', 'sgcls', 'sgdet'].map((p) => screen.getByTestId(`e10-row-${p}`).querySelector('th > span'));
+    expect(signs.map((s) => s?.textContent)).toEqual(['► ', '► ', '► ']);
+    expect(signs.map((s) => s?.classList.contains('invisible'))).toEqual([true, false, true]);
   });
 
   it('builds the boxes note from its frame and prints B', () => {
