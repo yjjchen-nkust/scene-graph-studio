@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import deriv from '../../../../../data/content/deriv.json';
+import math from '../../../../../data/content/math.json';
 import { render, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -141,6 +142,36 @@ describe('the playground step kind', () => {
       expect(within(mounted.container).getByTestId('playground-frame')).toBeInTheDocument();
       expect(mounted.container.querySelector('[data-testid="playground-unknown"]')).toBeNull();
       mounted.unmount();
+    }
+  });
+
+  it('M3 states what is forced apart from what is observed, and the verdicts the engine gives', () => {
+    // s3 claimed the recall ordering for every model; what the protocols force is an inclusion of
+    // hypothesis spaces, and the ordering is observed (D98). s2 claimed two failure modes imply
+    // four colours; the engine gives the four combinations three verdicts.
+    for (const file of ['../m03.en.mdx', '../m03.zh-TW.mdx']) {
+      const text = readFileSync(new URL(file, import.meta.url), 'utf8');
+      expect(text, file).toContain(
+        '\\mathcal{H}_{\\text{PredCls}}\\subseteq\\mathcal{H}_{\\text{SGCls}}\\subseteq\\mathcal{H}_{\\text{SGDet}}',
+      );
+      expect(text, file).toContain('\\begin{array}{c|cc}');
+      expect(text, file).not.toContain('for every model');
+      expect(text, file).not.toContain('\\lvert V\\rvert^2');
+      expect(text, file).not.toContain('four diff colours');
+    }
+    const formulas = math as Record<string, string>;
+    const derivations = deriv as Record<string, string>;
+    expect(formulas.E10).toContain('\\subseteq');
+    for (const id of ['E1', 'E10']) {
+      expect(derivations[id], id).not.toContain('\\lvert V\\rvert^2');
+      expect(derivations[id], id).not.toContain('four diff colours');
+    }
+    for (const locale of ['en', 'zh-TW'] as const) {
+      for (const step of getModule('m03', locale)!.filter((s) => s.id === 's2' || s.id === 's3')) {
+        const { container, unmount } = render(<>{step.node}</>);
+        expect(container.querySelector('.katex-error'), `${locale} ${step.id}`).toBeNull();
+        unmount();
+      }
     }
   });
 

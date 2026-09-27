@@ -21,6 +21,9 @@ symbols:
   - sym: "\\mathcal{C}"
     gloss_en: "object class set"
     gloss_zh: "物件類別集合"
+  - sym: "B"
+    gloss_en: "the number of whole-pixel boxes in the image"
+    gloss_zh: "影像中整數像素框之個數"
 claims: []
 steps:
   - id: s1
@@ -33,7 +36,7 @@ steps:
   - id: s3
     kind: math
     seconds_budget: 300
-    presenter_notes_en: "Five minutes. The ordering between protocols is usually quoted as an empirical regularity and is in fact forced, in one line: whatever a model can do with less information it can do with more by ignoring the extra input. Ask the room for a counterexample first and then show why there is none — it lands better than the proof given straight."
+    presenter_notes_en: "Five minutes. Separate what is forced from what is observed. Forced: each protocol's hypothesis space contains the one before it, a set inclusion with nothing to measure. Observed: recall under SGDet is below SGCls and below PredCls in every row of the benchmark's own table, MOTIFS 32.78, 38.92, 65.18 at R@50. Ask the room whether the inclusion proves the ordering; it does not, because it says what a model may output, not what any model does."
   - id: s4
     kind: prose
     seconds_budget: 180
@@ -106,12 +109,15 @@ $$
 \begin{gathered}\neg\Phi_{\text{cls}}\wedge\Phi_{\text{loc}} \equiv \text{right place, wrong name} \quad
 \neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}} \equiv \text{right name, wrong place}
 \\[4pt]
-\text{Two independent failure modes} \Rightarrow \text{four diff colours, and three protocols to separate them.}\end{gathered}
+\begin{array}{c|cc} & \Phi_{\text{loc}} & \neg\Phi_{\text{loc}}\\ \hline \Phi_{\text{cls}} & \texttt{match} & \texttt{localization}\\ \neg\Phi_{\text{cls}} & \texttt{spurious} & \texttt{spurious}\end{array}\end{gathered}
 $$
 
-The four-colour diff you have been reading since L1 is this conjunction taken apart. `localization`
-is the case $\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}}$ and it exists precisely so that a right
-predicate on a badly placed box does not look the same as a wrong predicate.
+The four-colour diff you have been reading since L1 is this table on the prediction side, and one
+colour more on the ground truth's: `missed` marks an annotated triplet that no prediction matched.
+`localization` is the case $\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}}$, and it exists so that a
+right predicate on a badly placed box does not look the same as a wrong predicate. A wrong name is
+`spurious` wherever its box sits: the diff does not separate a wrong name in the right place from
+both halves wrong.
 
 </Implications>
 
@@ -121,16 +127,17 @@ predicate on a badly placed box does not look the same as a wrong predicate.
 
 <Intuition>
 
-The protocol ordering is often quoted as an empirical regularity. It is not: it is forced, and the
-argument is a single line. Anything a model could do with less information it could also do with
-more, by ignoring the extra.
+The three protocols differ in how much they hand the model, and that difference is a fact about
+sets before it is a fact about any number: whatever PredCls lets a model output, SGCls lets it
+output too, and SGDet more again. The recall ordering that published tables show is a regularity
+observed across models, not a consequence of that inclusion.
 
 </Intuition>
 
 <Formal>
 
 $$
-R_{\text{SGDet}}@k\ \le\ R_{\text{SGCls}}@k\ \le\ R_{\text{PredCls}}@k \qquad\text{for every model, every fixture}
+\mathcal{H}_{\text{PredCls}}\subseteq\mathcal{H}_{\text{SGCls}}\subseteq\mathcal{H}_{\text{SGDet}}
 $$
 
 </Formal>
@@ -139,9 +146,9 @@ $$
 
 $$
 \begin{aligned}
-\lvert\mathcal{H}_{\text{PredCls}}\rvert &= \lvert V\rvert^2\lvert\mathcal{P}\rvert\\
-\lvert\mathcal{H}_{\text{SGCls}}\rvert &= \lvert V\rvert^2\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert\\
-\lvert\mathcal{H}_{\text{SGDet}}\rvert &\supseteq \lvert\mathcal{H}_{\text{SGCls}}\rvert \quad\text{(boxes unknown too)}
+\lvert\mathcal{H}_{\text{PredCls}}\rvert &= \lvert V\rvert(\lvert V\rvert-1)\lvert\mathcal{P}\rvert\\
+\lvert\mathcal{H}_{\text{SGCls}}\rvert &= \lvert V\rvert(\lvert V\rvert-1)\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert\\
+\lvert\mathcal{H}_{\text{SGDet}}\rvert &= B(B-1)\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert
 \end{aligned}
 $$
 
@@ -150,16 +157,22 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{Any hypothesis reachable under a harder protocol is reachable under an easier one}
-\\ \text{by discarding the extra input} \;\Rightarrow\; R_{\text{SGDet}}\le R_{\text{SGCls}}\le R_{\text{PredCls}}.
+\begin{gathered}R_{\text{SGDet}}@k\le R_{\text{SGCls}}@k\le R_{\text{PredCls}}@k\ \text{is observed, not implied:}
+\\ \text{the inclusion shrinks the space a model searches and bounds no model's recall.}
 \\[4pt]
-\textbf{Note } \lvert V\rvert^2 \text{ survives in all three: boxes are given, pairs never are.}\end{gathered}
+\textbf{Note } \lvert V\rvert(\lvert V\rvert-1) \text{ survives under PredCls and SGCls: boxes are given, pairs never are.}\end{gathered}
 $$
 
+`Scene-Graph-Benchmark.pytorch` reports the ordering for all four of its reimplemented models at
+every K. MOTIFS, for example, reaches R@50 of 32.78 under SGGen, that repository's name for SGDet,
+38.92 under SGCls and 65.18 under PredCls (`METRICS.md`, "Recall@K"). Across those rows the
+ordering holds without exception, and it remains a measurement of those models: a model that did
+worse when handed the true labels would contradict no definition.
+
 The note at the end is the part students skip and professors care about. PredCls hands over the
-boxes; it never hands over which pairs are related. The $\lvert V\rvert^2$ factor is present under
-every protocol, which is why the warning `gt_boxes_not_pairs` is attached to every PredCls and
-SGCls response in this application without exception.
+boxes; it never hands over which pairs are related. The $\lvert V\rvert(\lvert V\rvert-1)$ factor
+is present under PredCls and SGCls, which is why the warning `gt_boxes_not_pairs` is attached to
+every PredCls and SGCls response in this application without exception.
 
 A PredCls number is therefore not "the easy case". It is the case where the relation reasoning is
 measured alone, which is a different claim and a more useful one.

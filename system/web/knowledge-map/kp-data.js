@@ -26,7 +26,7 @@ const CLUSTERS = [
     ['E7','ng-R@K and mNgR@K','ng-R@K 與 mNgR@K','slider: predicates admitted per pair, 1 to 10','live'],
     ['E8','zR@K, zero-shot recall','zR@K 零樣本 recall','slider: fraction of triplet types held out of training','spec'],
     ['E9','PR@K and the bound R ≤ PR','PR@K 與 R ≤ PR 的界','toggle: ignore predicate · both curves drawn together','spec'],
-    ['E10','PredCls / SGCls / SGDet','三種 protocol','3-way knob · monotonicity invariant asserted live','live'],
+    ['E10','PredCls / SGCls / SGDet','三種 protocol','3-way knob · the hypothesis space counted per protocol','live'],
     ['E11','The FREQ frequency prior','FREQ 頻率先驗','slider: blend λ between co-occurrence prior and visual model','live'],
     ['E12','Missing annotations count as errors','漏標會被算成錯誤','slider: annotation completeness · toggle: Haystack negatives','spec'],
     ['E13','MultiMPO vs SingleMPO','MultiMPO 與 SingleMPO','toggle: protocol · slider: duplicate masks per pair','live'],

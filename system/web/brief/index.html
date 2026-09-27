@@ -584,8 +584,8 @@ mjx-container{color:var(--ink)}
     <div class="mathblock">\[ R_{\text{SGDet}}@k \;\le\; R_{\text{SGCls}}@k \;\le\; R_{\text{PredCls}}@k \]</div>
     <p class="mathnote">
       <b><span lang="en">The misreading this catches.</span><span lang="zh">這條式子能擋下的誤解。</span></b>
-      <span lang="en">PredCls and SGCls hand the model ground-truth <em>boxes</em> — never ground-truth <em>pairs</em>. The model still has to decide which of the \(\lvert V\rvert^2\) ordered pairs are related at all. This is the most common misreading in the field, and it is a designed quiz item.</span>
-      <span lang="zh">PredCls 與 SGCls 給的是 ground-truth <em>box</em>，絕不是 ground-truth <em>配對</em>。模型仍必須自行判斷 \(\lvert V\rvert^2\) 個有序配對中哪些真的存在關係。這是這個領域最常見的誤讀，也是刻意設計的測驗題目。</span>
+      <span lang="en">PredCls and SGCls hand the model ground-truth <em>boxes</em> — never ground-truth <em>pairs</em>. The model still has to decide which of the \(\lvert V\rvert(\lvert V\rvert-1)\) ordered pairs are related at all. This is the most common misreading in the field, and it is a designed quiz item.</span>
+      <span lang="zh">PredCls 與 SGCls 給的是 ground-truth <em>box</em>，絕不是 ground-truth <em>配對</em>。模型仍必須自行判斷 \(\lvert V\rvert(\lvert V\rvert-1)\) 個有序配對中哪些真的存在關係。這是這個領域最常見的誤讀，也是刻意設計的測驗題目。</span>
     </p>
 
     <h3><span lang="en">7 · The anchor paper&rsquo;s own equations</span><span lang="zh">7 · 核心論文自己的方程式</span></h3>
