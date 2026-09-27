@@ -1,8 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
+import en from '../../../i18n/en.json';
 import { setLocale } from '../../../i18n/useLocale';
+import zh from '../../../i18n/zh-TW.json';
 import { MatchRelation } from '../MatchRelation';
+import { E1_DEFECTS, E1_FRAME } from '../setup';
 
 beforeEach(() => setLocale('en'));
 
@@ -17,6 +20,37 @@ const ROWS = ['e1-c-cs', 'e1-c-co', 'e1-c-p', 'e1-c-is', 'e1-c-io'];
 const holding = () => ROWS.filter((id) => screen.getByTestId(id).getAttribute('data-holds') === 'true');
 
 describe('E1', () => {
+  it('labels each toggle with the axis and the shift E1_DEFECTS carries, in both locales (D101)', () => {
+    const { subjectShift: ss, objectShift: os } = E1_DEFECTS;
+    const labels = () => ['E1.cs', 'E1.co', 'E1.p', 'E1.bs', 'E1.bo'].map((id) => (screen.getByTestId(id) as HTMLInputElement).labels![0]!.textContent);
+    renderAt('/m/m03');
+    expect(labels()).toEqual([
+      `Subject: box → ${E1_DEFECTS.subject}`, `Object: table → ${E1_DEFECTS.object}`,
+      `Predicate: on → ${E1_DEFECTS.predicate}`, `Subject box Δx ${ss.dx} px`, `Object box Δy ${os.dy} px`,
+    ]);
+    cleanup();
+    setLocale('zh-TW');
+    renderAt('/m/m03');
+    expect(labels().slice(3)).toEqual([`主詞框位移 Δx ${ss.dx} px`, `受詞框位移 Δy ${os.dy} px`]);
+    // The strings carry neither the shifts nor the names; the component fills them in.
+    for (const strings of [en, zh]) {
+      for (const key of ['cs', 'co', 'p', 'bs', 'bo']) {
+        const text = strings[`playground.e1.${key}` as keyof typeof en];
+        expect(text, key).not.toMatch(/\d|glove|panel|near/);
+      }
+    }
+  });
+
+  it('names its frame and triplet from its setup, not from literals in the string (D101)', () => {
+    renderAt('/m/m03');
+    expect(screen.getByTestId('e1-picture').querySelector('img'))
+      .toHaveAttribute('alt', `Frame ${E1_FRAME}: box on table, annotated and predicted`);
+    for (const strings of [en, zh]) {
+      expect(strings['playground.e1.picture']).not.toContain(E1_FRAME);
+      expect(strings['playground.e1.picture']).not.toContain('box on table');
+    }
+  });
+
   it('opens on the annotation itself: every conjunct holds and the diff says match', () => {
     renderAt('/m/m03');
     expect(holding()).toEqual(ROWS);

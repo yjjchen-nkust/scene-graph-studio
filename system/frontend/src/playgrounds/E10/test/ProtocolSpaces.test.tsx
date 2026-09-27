@@ -22,6 +22,13 @@ const chosen = () =>
   ['predcls', 'sgcls', 'sgdet'].filter((p) => screen.getByTestId(`e10-row-${p}`).getAttribute('aria-current') === 'true');
 
 describe('E10', () => {
+  it('names its frame from E10_FRAME, not from a literal in the string (D101)', () => {
+    renderAt('/m/m03');
+    expect(screen.getByTestId('e10-picture').querySelector('img'))
+      .toHaveAttribute('alt', `Frame ${E10_FRAME}, as the chosen protocol hands it over`);
+    for (const strings of [en, zh]) expect(strings['playground.e10.picture']).not.toContain(E10_FRAME);
+  });
+
   it('opens on PredCls over this slice: six boxes, six labels, 480', () => {
     renderAt('/m/m03');
     expect(boxes()).toHaveLength(6);

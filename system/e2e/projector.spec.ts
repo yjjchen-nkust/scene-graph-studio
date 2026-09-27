@@ -574,6 +574,23 @@ for (const size of SIZES) {
       }
     });
 
+    test("E10's columns stay where they are when the chosen protocol changes", async ({ page }) => {
+      // Only the chosen row carries ► and its weight, so the name column could take the width of
+      // whichever protocol is chosen and move the two columns after it (D100's review; D101).
+      for (const voc of ['slice', 'vg150']) {
+        const edges: Record<string, number[]> = {};
+        for (const p of ['predcls', 'sgcls', 'sgdet']) {
+          await page.goto(`/lecture/m/m03/6?E10.pr=${p}&E10.voc=${voc}`);
+          await expect(page.getByTestId('e10-counts')).toBeVisible();
+          await page.evaluate(() => document.fonts.ready);
+          edges[p] = await page.getByTestId('e10-row-predcls').evaluate((row) =>
+            [...row.children].map((cell) => Math.round(cell.getBoundingClientRect().left * 10) / 10));
+        }
+        expect(edges.sgcls, `${voc}: SGCls chosen against PredCls chosen`).toEqual(edges.predcls);
+        expect(edges.sgdet, `${voc}: SGDet chosen against PredCls chosen`).toEqual(edges.predcls);
+      }
+    });
+
     test('F3, E1 and E10 draw their marks on their photographs, not beside them', async ({ page }) => {
       // The overlay is laid over the photograph, and its viewBox is the frame's own 640 × 480, so
       // it lands on the objects only if it has the photograph's box exactly. It first took the

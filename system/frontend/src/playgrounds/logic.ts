@@ -498,3 +498,17 @@ export function hypothesisSpace(protocol: Protocol, objects: number, classes: nu
   if (protocol === 'sgcls') return pairs * C2 * P;
   return boxes * (boxes - 1n) * C2 * P;
 }
+
+/**
+ * The first and last of a set of ids when they run without a gap, else null. "#1 to #6" names six
+ * boxes only when the ids are 1 to 6; E10 wrote it from the count alone (D101). A repeated id breaks
+ * the run, since two objects cannot share one number.
+ */
+export function idRun(ids: readonly number[]): { first: number; last: number } | null {
+  if (ids.length === 0) return null;
+  const sorted = [...ids].sort((a, b) => a - b);
+  for (let i = 1; i < sorted.length; i += 1) {
+    if (sorted[i] !== sorted[i - 1]! + 1) return null;
+  }
+  return { first: sorted[0]!, last: sorted[sorted.length - 1]! };
+}

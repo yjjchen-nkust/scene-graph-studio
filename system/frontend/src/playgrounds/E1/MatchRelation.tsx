@@ -19,6 +19,11 @@ const COUNT = new Intl.NumberFormat('en-US');
 
 const DEFECTS = ['cs', 'co', 'p', 'bs', 'bo'] as const;
 
+/** A box shift as its nonzero axes, "Δx 45 px"; the axis is part of the defect (D101). */
+function shiftText({ dx, dy }: { dx: number; dy: number }): string {
+  return [dx !== 0 && `Δx ${dx} px`, dy !== 0 && `Δy ${dy} px`].filter(Boolean).join(', ');
+}
+
 /** The five conjuncts in M3 s2's order and notation, which both locales share. */
 const ROWS: { key: keyof Conjuncts; label: ReactNode }[] = [
   { key: 'cs', label: <>c<sub>ŝ</sub> = c<sub>s</sub></> },
@@ -80,6 +85,17 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
     is: iouCounts(pred.subject.box, gt.subject.box),
     io: iouCounts(pred.object.box, gt.object.box),
   };
+  // Each toggle names what it changes from the annotation and `E1_DEFECTS`, not from literals in
+  // the strings, which had repeated 45 and 55 in both locales (D101).
+  const fills: Record<(typeof DEFECTS)[number], Record<string, string>> = {
+    cs: { from: gt.subject.name, to: E1_DEFECTS.subject },
+    co: { from: gt.object.name, to: E1_DEFECTS.object },
+    p: { from: gt.predicate, to: E1_DEFECTS.predicate },
+    bs: { shift: shiftText(E1_DEFECTS.subjectShift) },
+    bo: { shift: shiftText(E1_DEFECTS.objectShift) },
+  };
+  const label = (d: (typeof DEFECTS)[number]) =>
+    Object.entries(fills[d]).reduce((text, [key, value]) => text.replace(`{${key}}`, value), t(`playground.e1.${d}`));
 
   const controls = (
     <>
@@ -87,7 +103,7 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
         <Toggle
           key={d}
           id={`E1.${d}`}
-          label={t(`playground.e1.${d}`)}
+          label={label(d)}
           checked={defects[d]}
           onChange={(on) => setParams({ [`E1.${d}`]: on ? 1 : 0 } as Partial<typeof params>)}
         />
@@ -109,7 +125,9 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
               { box: pred.object.box, line: 'dashed', stroke: MARK_PREDICTED, testid: 'e1-pred-o' },
             ]}
             maxVh={PICTURE_VH}
-            alt={t('playground.e1.picture')}
+            alt={t('playground.e1.picture')
+              .replace('{frame}', E1_FRAME)
+              .replace('{triplet}', `${gt.subject.name} ${gt.predicate} ${gt.object.name}`)}
             testid="e1-picture"
           />
         )}

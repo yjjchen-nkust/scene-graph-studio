@@ -1,7 +1,7 @@
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { Choice, PlaygroundFrame } from '../controls';
-import { hypothesisSpace, wholePixelBoxes, type Protocol } from '../logic';
+import { hypothesisSpace, idRun, wholePixelBoxes, type Protocol } from '../logic';
 import type { PlaygroundProps } from '../mounts';
 import { MARK_ANNOTATED, PhotoMarks, type Mark } from '../PhotoMarks';
 import { SLICE_CLASS_COUNT, SLICE_PREDICATE_COUNT, frameById } from '../slice';
@@ -18,11 +18,11 @@ type Vocabulary = (typeof VOCABULARIES)[number];
 /**
  * E10 — 三種 protocol.
  *
- * What each protocol hands the model, drawn on ph-001, and how many single-triplet hypotheses it
- * leaves to search: |V|(|V|-1)|P| under PredCls, |V|(|V|-1)|C|²|P| under SGCls, and
- * B(B-1)|C|²|P| under SGDet, B being every whole-pixel box in the photograph. Each set contains
- * the one before it, which is what M3's step before this one states; the recall ordering is
- * observed, not implied, and is L2's to score.
+ * What each protocol hands the model, drawn on the frame `E10_FRAME` names, and how many
+ * single-triplet hypotheses it leaves to search: |V|(|V|-1)|P| under PredCls, |V|(|V|-1)|C|²|P|
+ * under SGCls, and B(B-1)|C|²|P| under SGDet, B being every whole-pixel box in the photograph.
+ * Each set contains the one before it, which is what M3's step before this one states; the recall
+ * ordering is observed, not implied, and is L2's to score.
  *
  * Computes three counts, exactly: the last exceeds 2^53, so it is a `bigint` and is printed digit
  * for digit. No metric.
@@ -72,10 +72,16 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
       testid: `e10-badge-${o.object_id}`,
       place: E10_BADGE_PLACES[o.object_id],
     }));
+  // SGCls names the boxes by their ids: a run where they have no gap, else each one (D101).
+  const ids = frame.objects.map((o) => o.object_id).sort((a, b) => a - b);
+  const run = idRun(ids);
+  const boxIds = run && run.last > run.first
+    ? t('playground.e10.id_run').replace('{first}', String(run.first)).replace('{last}', String(run.last))
+    : ids.map((id) => `#${id}`).join(separator);
   const given = protocol === 'predcls'
     ? frame.objects.map((o) => `#${o.object_id} ${o.names[0]}`).join(separator)
     : protocol === 'sgcls'
-      ? t('playground.e10.boxes_only').replace('{n}', String(objects))
+      ? t('playground.e10.boxes_only').replace('{ids}', boxIds)
       : t('playground.e10.nothing');
 
   const controls = (
@@ -111,7 +117,7 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
             marks={marks}
             badges={badges}
             maxVh={PICTURE_VH}
-            alt={t('playground.e10.picture')}
+            alt={t('playground.e10.picture').replace('{frame}', E10_FRAME)}
             testid="e10-picture"
           />
         )}
@@ -149,15 +155,25 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
           <table data-testid="e10-counts" className="mt-4 w-full font-mono text-[0.875em]">
             <caption className="text-left font-sans text-[1em] text-slate-700">{t('playground.e10.count')}</caption>
             <tbody>
+              {/* Every row carries the sign and the 4 px rule, and only the chosen row shows them.
+                  Drawn in that row alone they widened the first column, the sign by its width and
+                  the rule by half of it under collapsed borders, and moved the two columns after
+                  it by up to 40 px when the protocol changed (D101). */}
               {PROTOCOLS.map((p) => (
                 <tr
                   key={p}
                   data-testid={`e10-row-${p}`}
                   aria-current={p === protocol ? 'true' : undefined}
-                  className={p === protocol ? 'border-l-4 border-slate-900 bg-white font-semibold text-slate-900' : 'text-slate-700'}
+                  className={p === protocol ? 'border-l-4 border-slate-900 bg-white font-semibold text-slate-900' : 'border-l-4 border-transparent text-slate-700'}
                 >
                   <th scope="row" className="py-0.5 pl-2 pr-4 text-left font-sans">
-                    {p === protocol && <span data-testid="e10-chosen" aria-hidden="true">► </span>}
+                    <span
+                      data-testid={p === protocol ? 'e10-chosen' : undefined}
+                      aria-hidden="true"
+                      className={p === protocol ? undefined : 'invisible'}
+                    >
+                      ►{' '}
+                    </span>
                     {NAMES[p]}
                   </th>
                   <td className="py-0.5 pr-4">{formula[p]}</td>
