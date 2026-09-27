@@ -1,10 +1,9 @@
-import { useId } from 'react';
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { PlaygroundFrame, Readout, Slider } from '../controls';
-import { placeholderImageUrl } from '../images';
 import { area, intersection, ratio, scaleBound, scaledBox, snap, truncatedRatio, unionArea } from '../logic';
 import type { PlaygroundProps } from '../mounts';
+import { MARK_ANNOTATED, MARK_PREDICTED, PhotoMarks } from '../PhotoMarks';
 import { frameById } from '../slice';
 import { F3_FRAME, F3_OBJECT, F3_RANGES, XU_TAU } from './setup';
 
@@ -12,18 +11,6 @@ import { F3_FRAME, F3_OBJECT, F3_RANGES, XU_TAU } from './setup';
 const PICTURE_VH = 34;
 
 const COUNT = new Intl.NumberFormat('en-US');
-
-const GT_STROKE = '#0f172a';
-const PRED_STROKE = '#b45309';
-/**
- * Drawn under each outline. The photograph is light in places and dark in others, and no one
- * colour clears 3:1 on both: the prediction's amber measured 1.22:1 on the table and 1.29:1 on the
- * person, which is where half its outline lies at λ = 1.4. On white it is 5:1 everywhere.
- */
-const HALO = '#ffffff';
-const STROKE_WIDTH = 4;
-const HALO_WIDTH = 10;
-const PRED_DASH = '12 7';
 
 /**
  * F3 — 以 box 定位；IoU.
@@ -46,7 +33,6 @@ const PRED_DASH = '12 7';
  */
 export function BoxOverlap({ part }: PlaygroundProps = {}) {
   const { t } = useLocale();
-  const hatch = `${useId().replace(/:/g, '')}-hatch`;
   const [params, setParams] = useLabParams({
     'F3.dx': 0,
     'F3.dy': 0,
@@ -136,93 +122,21 @@ export function BoxOverlap({ part }: PlaygroundProps = {}) {
     <PlaygroundFrame title="F3" controls={controls} clip={false}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {placement && (
-          <div
-            data-testid="f3-picture"
-            className="min-w-0 flex-1"
-            style={{ maxWidth: `calc(${PICTURE_VH}vh * ${frame.width} / ${frame.height})` }}
+          <PhotoMarks
+            frame={frame}
+            marks={[
+              { box: gt, line: 'solid', stroke: MARK_ANNOTATED, testid: 'f3-gt' },
+              { box: pred, line: 'dashed', stroke: MARK_PREDICTED, testid: 'f3-pred' },
+            ]}
+            hatch={shared ? { box: shared, testid: 'f3-inter' } : null}
+            maxVh={PICTURE_VH}
+            alt={t('playground.f3.picture')}
+            testid="f3-picture"
           >
-            {/* The overlay must have the photograph's box exactly, since its viewBox is the frame's
-                own 640 × 480. This wrapper is that box: the photograph is in flow and sets its height,
-                and nothing else is inside it. The overlay once filled the stretched column instead,
-                and `meet` scaling centred every mark 122 px below its object. An overlay of
-                absolutely positioned children alone would render 0×0, which is what hid F1's
-                photograph until D96. */}
-            <div className="relative">
-              <img
-                src={placeholderImageUrl(frame.image_id)}
-                alt={t('playground.f3.picture')}
-                className="block w-full"
-              />
-              <svg
-                viewBox={`0 0 ${frame.width} ${frame.height}`}
-                className="absolute inset-0 h-full w-full"
-                aria-hidden="true"
-              >
-                <defs>
-                  <pattern id={hatch} width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                    <line x1="0" y1="0" x2="0" y2="10" stroke={GT_STROKE} strokeWidth="4" />
-                  </pattern>
-                </defs>
-                {shared && (
-                  <rect
-                    data-testid="f3-inter"
-                    x={shared.x}
-                    y={shared.y}
-                    width={shared.w}
-                    height={shared.h}
-                    fill={`url(#${hatch})`}
-                    fillOpacity={0.55}
-                  />
-                )}
-                <rect
-                  data-testid="f3-gt-halo"
-                  x={gt.x}
-                  y={gt.y}
-                  width={gt.w}
-                  height={gt.h}
-                  fill="none"
-                  stroke={HALO}
-                  strokeWidth={HALO_WIDTH}
-                />
-                <rect
-                  data-testid="f3-gt"
-                  x={gt.x}
-                  y={gt.y}
-                  width={gt.w}
-                  height={gt.h}
-                  fill="none"
-                  stroke={GT_STROKE}
-                  strokeWidth={STROKE_WIDTH}
-                />
-                {/* Dashed like the line it carries, so solid and dashed still differ in shape. */}
-                <rect
-                  data-testid="f3-pred-halo"
-                  x={pred.x}
-                  y={pred.y}
-                  width={pred.w}
-                  height={pred.h}
-                  fill="none"
-                  stroke={HALO}
-                  strokeWidth={HALO_WIDTH}
-                  strokeDasharray={PRED_DASH}
-                />
-                <rect
-                  data-testid="f3-pred"
-                  x={pred.x}
-                  y={pred.y}
-                  width={pred.w}
-                  height={pred.h}
-                  fill="none"
-                  stroke={PRED_STROKE}
-                  strokeWidth={STROKE_WIDTH}
-                  strokeDasharray={PRED_DASH}
-                />
-              </svg>
-            </div>
             <p data-testid="f3-caption" className="mt-1 font-mono text-[0.875em] text-slate-700">
               {`${frame.image_id} · ${annotated.names[0]} #${annotated.object_id}`}
             </p>
-          </div>
+          </PhotoMarks>
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <div className="grid grid-cols-2 gap-4">
