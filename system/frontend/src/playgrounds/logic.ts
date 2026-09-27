@@ -1,5 +1,4 @@
 import type { BBox, SceneGraph, SGRelationship } from 'sgg-metrics';
-import { E1_DEFECTS } from './E1/setup';
 import type { Note, Release, Split } from './splits';
 
 /**
@@ -400,17 +399,26 @@ export function annotatedTriplet(frame: SceneGraph, relationshipId: number): Box
   };
 }
 
+/** What each defect puts in place of the annotated value; E1's is `E1_DEFECTS`. */
+export interface DefectTable {
+  subject: string;
+  object: string;
+  predicate: string;
+  subjectShift: { dx: number; dy: number };
+  objectShift: { dx: number; dy: number };
+}
+
 /** The annotated triplet with the chosen defects injected, each touching one conjunct only. */
-export function withDefects(t: BoxTriplet, d: E1Defects): BoxTriplet {
-  const { subjectShift: ss, objectShift: os } = E1_DEFECTS;
+export function withDefects(t: BoxTriplet, d: E1Defects, table: DefectTable): BoxTriplet {
+  const { subjectShift: ss, objectShift: os } = table;
   return {
     subject: {
-      name: d.cs ? E1_DEFECTS.subject : t.subject.name,
+      name: d.cs ? table.subject : t.subject.name,
       box: d.bs ? scaledBox(t.subject.box, ss.dx, ss.dy, 1) : t.subject.box,
     },
-    predicate: d.p ? E1_DEFECTS.predicate : t.predicate,
+    predicate: d.p ? table.predicate : t.predicate,
     object: {
-      name: d.co ? E1_DEFECTS.object : t.object.name,
+      name: d.co ? table.object : t.object.name,
       box: d.bo ? scaledBox(t.object.box, os.dx, os.dy, 1) : t.object.box,
     },
   };

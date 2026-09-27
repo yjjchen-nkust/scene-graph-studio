@@ -64,6 +64,44 @@ describe('PhotoMarks', () => {
     expect(screen.getByTestId('shared').getAttribute('fill')).toMatch(/^url\(#/);
   });
 
+  it('puts badges on the photograph as HTML, at each box\'s corner in percent of the frame', () => {
+    render(
+      <PhotoMarks
+        frame={frame}
+        marks={[]}
+        badges={[{ box, text: '#3', testid: 'badge-3' }]}
+        maxVh={34}
+        alt="ph-001"
+        testid="picture"
+      />,
+    );
+    const badge = screen.getByTestId('badge-3');
+    expect(badge).toHaveTextContent('#3');
+    expect(badge.closest('svg')).toBeNull();
+    expect(badge.style.left).toBe(`${(250 / 640) * 100}%`);
+    expect(badge.style.top).toBe(`${(240 / 480) * 100}%`);
+  });
+
+  it('sets a badge above its box, outside it, unless told to sit inside or above and to the left', () => {
+    render(
+      <PhotoMarks
+        frame={frame}
+        marks={[]}
+        badges={[
+          { box, text: '#1', testid: 'badge-above' },
+          { box, text: '#2', testid: 'badge-inside', place: 'inside' },
+          { box, text: '#3', testid: 'badge-left', place: 'above-left' },
+        ]}
+        maxVh={34}
+        alt="ph-001"
+        testid="picture"
+      />,
+    );
+    expect(screen.getByTestId('badge-above').style.transform).toBe('translateY(-100%)');
+    expect(screen.getByTestId('badge-inside').style.transform).toBe('');
+    expect(screen.getByTestId('badge-left').style.transform).toBe('translate(-100%, -100%)');
+  });
+
   it('renders what it is given beneath the picture, and no text inside it', () => {
     draw();
     expect(screen.getByTestId('caption')).toBeInTheDocument();

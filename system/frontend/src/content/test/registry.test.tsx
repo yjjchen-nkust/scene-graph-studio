@@ -251,6 +251,75 @@ describe('the playground step kind', () => {
       .toContain('[**Corrected 2026-09-27 (D99):**');
   });
 
+  it('the review minors of M2 and M3 are settled in the text', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const specM3 = source('../../../../../docs/superpowers/specs/2026-09-27-playgrounds-m3-design.md');
+    // M3-1: the near-identical-boxes argument proved nothing; D99's engine test is the counterexample.
+    for (const text of [deviations, specM3]) {
+      expect(text).toContain('[**Corrected 2026-09-27 (D99):** this argument does not prove its claim');
+    }
+    // M3-2: the frozen E10 no longer calls its toy ordering an invariant.
+    expect(source('../../../../web/knowledge-map/pg.js')).not.toContain("k:'invariant'");
+    expect(source('../../../../web/knowledge-map/FROZEN.md')).toContain('ordering on this toy');
+    // M2-1: the overlay's offset is named with the state it was measured in.
+    for (const file of ['../../../../../DEVIATIONS.md', '../../../../../CLAUDE.md', '../../../../../docs/INDEX.md']) {
+      expect(source(file), file).toContain('96.5 px');
+    }
+    // M2-2 and M2-5.
+    expect(source('../../playgrounds/F3/BoxOverlap.tsx')).not.toContain('and the study shell mount it');
+    expect(source('../../../../../docs/superpowers/specs/2026-09-27-playgrounds-m2-design.md'))
+      .toContain('[**As built (D97):** M2 has 8 steps');
+    // M3-9: the notes' wording.
+    expect(source('../m03.zh-TW.mdx')).not.toContain('兩者皆錯');
+    expect(source('../m03.en.mdx')).not.toContain('nothing at all');
+    expect(source('../m03.zh-TW.mdx')).not.toContain('不提供任何內容');
+    // D99-m5: M12 no longer asks L2 for a pair its fixture does not have.
+    expect(source('../m12.en.mdx')).not.toMatch(/genuinely carries (both )?an attention relation/);
+    expect(source('../m12.zh-TW.mdx')).not.toContain('確實同時具備 attention 關係與 contacting 關係');
+  });
+
+  it('the records carry D100 and the counts it measured', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const index = source('../../../../../docs/INDEX.md');
+    expect(deviations).toContain('## D100 — ');
+    // D98's 15 px predates the inclusion's condition (ca8b276); D100's branch found 71 px.
+    expect(deviations).toContain('[**Corrected 2026-09-27 (D100):** 15 px was measured before');
+    expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 24. ');
+    for (const [name, text] of [['CLAUDE.md', source('../../../../../CLAUDE.md')], ['INDEX', index]]) {
+      expect(text, name).toContain('D1…D100');
+    }
+    expect(index).toContain('The 17 golden vectors');
+    expect(source('../../../../../README.md')).toContain('parity 17/17');
+  });
+
+  it("the records say what D100's branch measured and moved (its review)", () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const verification = source('../../../../../docs/VERIFICATION.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    // Counts and section lists the branch moved.
+    expect(source('../../../../../README.md')).toContain('seventeen cases');
+    expect(claude).toContain('§24 the review minors), and all 100 logged deviations');
+    expect(claude).toContain('resolutions, 72 tests,');
+    expect(claude).toContain('three tests in `playgrounds/test/logic.test.ts`');
+    expect(index).toContain('the review minors (§24)**');
+    // The offset at Δx = 18 is derived, (454 − 261) / 2 = 96.5 px, and is not rounded.
+    for (const [name, text] of [['DEVIATIONS', deviations], ['CLAUDE.md', claude], ['INDEX', index]]) {
+      expect(text, name).toContain('96.5 px');
+      expect(text, name).not.toContain('97 px');
+    }
+    expect(source('../../playgrounds/PhotoMarks.tsx')).toContain("122 px below its object in F3's longest state");
+    // What was measured, and when.
+    for (const text of [deviations, verification]) expect(text).toContain('before its layout change');
+    expect(deviations).not.toContain("this branch's start");
+    expect(deviations).not.toMatch(/at the start of\s+D100's branch/);
+    expect(verification).not.toContain('six tests fail');
+    expect(deviations).toContain('"Subject box Δx 45 px"');
+    // M12's comparative names what the middle setting is closer to.
+    expect(source('../m12.en.mdx')).not.toContain('closer than either end');
+    expect(source('../m12.zh-TW.mdx')).not.toContain('更為接近，');
+  });
+
   it('the protocol ordering survives nowhere as a law', () => {
     // The brief, the SRS and an L2 comment repeated what M3 s3 no longer claims (D98).
     const brief = source('../../../../web/brief/index.html');

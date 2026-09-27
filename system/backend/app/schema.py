@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -71,6 +72,15 @@ class SceneGraph(Strict):
     objects: list[SGObject]
     relationships: list[SGRelationship]
     provenance: Provenance
+
+    @model_validator(mode="after")
+    def _one_object_per_id(self) -> SceneGraph:
+        """The constraint key is the ordered id pair (D99); a repeated id names two objects, which
+        the first-match lookup below and the TypeScript engine's map would resolve differently."""
+        repeated = sorted(i for i, n in Counter(o.object_id for o in self.objects).items() if n > 1)
+        if repeated:
+            raise ValueError(f"object_ids {repeated} appear more than once in this graph")
+        return self
 
     @model_validator(mode="after")
     def _no_dangling_references(self) -> SceneGraph:

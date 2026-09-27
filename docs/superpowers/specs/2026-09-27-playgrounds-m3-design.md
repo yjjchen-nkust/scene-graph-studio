@@ -68,7 +68,11 @@ SGGen is that repository's name for SGDet. Every row satisfies SGGen < SGCls < P
    does the weaker statement "for every model given less input some model given more does at least
    as well" hold without qualification: two ground truths with near-identical boxes and different
    labels leave an SGCls model unable to place a label it could place under SGDet within the same
-   K. What is forced is the inclusion of the hypothesis spaces (§3).
+   K. [**Corrected 2026-09-27 (D99):** this argument does not prove its claim: it shows only that
+   one SGCls model, the one copying an SGDet model's output, does worse. The counterexample both
+   engines now assert is D99's: two annotated triplets on one object pair, where a model handed the
+   boxes keeps one predicate for the pair under the graph constraint (R 0.5) and a model with two box
+   pairs of its own recalls both (R 1.0).] What is forced is the inclusion of the hypothesis spaces (§3).
 2. **The frozen E10's note says the engine asserts the ordering on every fixture.** It does not.
    The frozen E10 obtains its ordering from invented IoU scale factors, 0.88 for SGCls and 0.74
    for SGDet, passed to `pg.js evaluate()`.

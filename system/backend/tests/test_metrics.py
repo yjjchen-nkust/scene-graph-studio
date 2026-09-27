@@ -128,10 +128,10 @@ def test_recall_ordering_between_protocols_is_not_forced():
         {"relationship_id": 2, "subject_id": 3, "object_id": 4, "predicate": "near", "score": 0.8},
     ], "pred")
 
-    def recall(pred: dict) -> float:
+    def recall(pred: dict, protocol: str) -> float:
         body = evaluate(EvalRequest.model_validate(
-            {"gt": gt, "pred": pred, "protocol": "sgcls", "constraint": "graph", "k": [50]}))
+            {"gt": gt, "pred": pred, "protocol": protocol, "constraint": "graph", "k": [50]}))
         return next(m["value"] for m in body["metrics"] if m["metric"] == "R" and m["k"] == 50)
 
-    assert recall(given) == 0.5
-    assert recall(own) == 1.0
+    assert recall(given, "sgcls") == 0.5
+    assert recall(own, "sgdet") == 1.0

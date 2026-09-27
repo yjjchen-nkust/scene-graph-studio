@@ -180,6 +180,7 @@ def test_the_reference_set_cannot_score_one_against_itself_under_graph_constrain
         pairs = [(r.subject_id, r.object_id) for r in graph.relationships]
         assert any(pairs.count(p) > 1 for p in pairs), image_id
 
+
 def test_the_obvious_api_call_reaches_a_mini_isg_draft():
     """`POST /api/vlm/indvissgg {"image_id": "isg-001"}` and nothing else.
 

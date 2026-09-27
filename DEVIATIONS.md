@@ -3163,7 +3163,9 @@ photograph on the frame's own 640 × 480 viewBox, and it filled the column the f
 to 505 px rather than the 261 px photograph, so `meet` scaling centred every mark below its
 object at 1024 × 768 with every readout correct. No jsdom test could see it; a screenshot did. A
 projector test now asserts that the overlay and the photograph have the same box, at all three
-sizes; it failed at all three first.
+sizes; it failed at all three first. [**Clarified 2026-09-27 (D100):** 505 px and 122 px are F3's
+longest state, λ 2, τ 0.95, shifted (120, 100); at Δx = 18, the state the failing test used, the
+column was 454 px against the 261 px photograph, so the offset was (454 − 261)/2 = 96.5 px.]
 
 **F3 spans two parts** (D96). As one step, in its longest state, it ran 171 px past a 1024 × 768
 panel in 繁體中文 and 105 px past at 1280 × 800. Part 1 is the box moved and counted: Δx, Δy and λ,
@@ -3228,7 +3230,11 @@ triplet; F3's overlay to become a shared component. Branch `feat/playgrounds-m3`
    model can ignore the extra input, is about what the protocols allow. Even "for every model given
    less input some model given more does at least as well" fails without qualification: two ground
    truths with near-identical boxes and different labels leave an SGCls model unable, within the
-   same K, to place a label an SGDet model places. What is forced is the inclusion
+   same K, to place a label an SGDet model places. [**Corrected 2026-09-27 (D99):** this argument does not prove its claim: it shows only that
+   one SGCls model, the one copying an SGDet model's output, does worse. The counterexample both
+   engines now assert is D99's: two annotated triplets on one object pair, where a model handed the
+   boxes keeps one predicate for the pair under the graph constraint (R 0.5) and a model with two box
+   pairs of its own recalls both (R 1.0).] What is forced is the inclusion
    ℋ_PredCls ⊆ ℋ_SGCls ⊆ ℋ_SGDet. The ordering is observed: `Scene-Graph-Benchmark.pytorch`'s
    `METRICS.md` at commit `d05be9f9e52e9b2722dc6dc2f0b8b05b47da38f7`, table "Recall@K", shows it in
    every row at every K (MOTIFS at R@50: 32.78 SGGen, 38.92 SGCls, 65.18 PredCls). s3 now says so,
@@ -3277,7 +3283,10 @@ conjuncts, its second Φ_cls, Φ_loc, the relation, the failure mode and the ver
 five toggles, since both read them. E10's first part is what the protocol hands over, its second
 the vocabulary and the three counts, the chosen one marked. Every part now fits at all three sizes
 in 繁體中文. English, which the suite does not hold to the panel, runs 43 px past on E1's first part
-and 15 px on E10's second at 1024 × 768, and fits at the other two sizes. M3 went from 7 steps to 11, each part 90 s with its notes in both
+and 15 px on E10's second at 1024 × 768, and fits at the other two sizes.
+[**Corrected 2026-09-27 (D100):** 15 px was measured before `ca8b276` added the inclusion's
+condition; measured during D100's commit `19291d4`, before its layout change, the part ran 71 px
+past. Both parts now fit in English at all three sizes.] M3 went from 7 steps to 11, each part 90 s with its notes in both
 locales; the corpus holds 109 steps a locale and 218 presenter notes.
 
 **The branch review** found three statements still wrong or unqualified, each fixed with a test
@@ -3397,3 +3406,96 @@ a test that failed first.
 files** (845 before), parity **16** (13 before), i18n 322 keys, content lint clean over **16 golden
 cases**. `npm run test:e2e` 66. `npm run check:perf` 23, on the engine before the review's text
 changes, which touched no code path. See VERIFICATION §23.
+
+## D100 — the review minors of M2, M3 and D99, settled
+
+**Plan:** none; a bounded list of nineteen items. **Found by:** the branch reviews of M2's
+playground (D97) and M3's playgrounds (D98), which deferred fourteen minors between them, and of
+the graph-constraint key (D99), which deferred five. **Decisions:** the author's, on 2026-09-27:
+all nineteen, after the engine fix of D99. Branch `fix/sgs-review-minors`, from `main` at
+`cffed70`.
+
+**In the text** (commit `f3390f0`).
+- D98's argument that near-identical boxes leave an SGCls model unable to place a label did not
+  prove its claim. D98 and the M3 spec now point to D99's counterexample, which both engines
+  assert, and that test now evaluates its own-boxes case under SGDet, the protocol it stands for.
+- The frozen E10 printed "invariant: holds / VIOLATED" for an ordering computed from invented IoU
+  scale factors. It now reads "ordering on this toy: holds / reversed"; FROZEN.md records it.
+- D97's overlay offset is named with the state it belongs to: 122 px in F3's longest state,
+  96.5 px at Δx = 18, each half the difference between the measured column and the 261 px
+  photograph. D97, CLAUDE.md and INDEX say so.
+- F3's comment no longer says the study shell mounts it whole, and the M2 spec's scope row carries
+  an as-built note: 8 steps, F3 at s3 and s4, PSG at s6.
+- E1 and E10 write M3's notation with subscripts, as s2 and s5 write it, where they had used
+  underscores. M3's notes say that SGDet hands over neither boxes nor labels, and 兩部分皆錯.
+- M12 s4 asked L2 for a pair carrying an attention and a contacting relation, which L2's fixture
+  does not have. It now points to the man–table pair, to which the fixture's prediction gives two
+  predicates, `under` and `on`.
+- `test_mini_isg.py` gained the blank line its last function lacked.
+
+**On the photograph** (commit `19291d4`). `PhotoMarks` takes badges, HTML over the photograph at
+each box's corner in percent of the frame, so the lecture's 18 px floor measures them. E10 numbers
+its boxes #1 to #6; PredCls lists "#1 table, #2 person, …", SGCls "boxes #1 to #6; no labels", and
+SGDet no longer prints |V|, which it is not given. The chosen protocol's row carries ► (U+25BA) and
+a left rule besides its weight. U+25B6 was used first; Windows draws it as a coloured emoji, which
+defeats a marker meant not to rely on colour.
+
+**English within the panel.** D98 recorded English 43 px past a 1024 × 768 panel on E1's first part
+and 15 px on E10's second. The 15 px predates `ca8b276`, which added the inclusion's condition;
+measured during commit `19291d4`, before its layout change, E10's second part ran 71 px past. E1's
+legend now sits beside the conjuncts, and its English toggles read "Subject box Δx 45 px" and
+"Object box Δy 55 px" where they read "Subject box moved 45 px" and "Object box moved 55 px".
+E10's inclusion and its condition read as one sentence, and the L2 pointer shares the vocabulary
+line. Both parts fit in English at all three sizes, E10's second in its SGDet and SGCls states,
+which the projector suite now asserts; D98's figure is annotated in place.
+
+**In the code** (commit `1829206`).
+- E10's note is built from the frame and prints B: C(641, 2) · C(481, 2) = 205,120 × 115,440 =
+  23,679,052,800 whole-pixel boxes. The string had fixed the two binomials while B was computed.
+  E10 names its frame in `E10/setup.ts`.
+- `withDefects(t, d, table)` takes the defect table, so `logic.ts` imports no playground.
+- The projector suite also checks E1's second part with only the subject box shifted, its
+  wordiest state. F3's IoU is compared with `boxIou` at all 121 × 101 × 16 = 195,536 settings of
+  Δx, Δy and λ, not only at the eight golden cases, and F3's out-of-range test reads the bound,
+  0.250 at the clamped λ = 2.
+- A graph that repeats an `object_id` is refused by both engines. Python's lookup resolved the
+  first object with that id and TypeScript's map the last, and the constraint key is the id pair
+  (D99). Python raises in the schema, beside the dangling-reference check, and the API answers 422
+  `schema_invalid`, the code contracts §1.1 gives every validation failure other than a dangling
+  reference. TypeScript's `toTriplets` throws the same message.
+- `gv-017-semi-constraint-per-object-pair`: hand#1 on assembly#3 carries holding, assembling and
+  touching, hand#2 on assembly#3 carries holding. `semi`, a cap of 2 per ordered object pair, keeps
+  three, and R@20 is 3/4 = 0.75; a cap of 2 per class pair keeps two, as `graph` does, and R@20
+  would be 0.5. Its values were computed by hand before either engine ran it. Parity: 17 cases
+  agree.
+
+**Watched failing first.** The two records tests; E10's mapping,
+badges, SGCls wording, SGDet's |V| and its marker, against the code before commit `19291d4`; the
+English fit, at 71 px; the marker's glyph; E10's note and frame id; `withDefects`' table and
+`logic.ts`'s import; the repeated id in both engines. The full-grid sweep, the bound readout and
+`gv-017` pin behaviour that was already correct and passed when first run.
+
+**The branch review** found the badges hiding two boxes, a longest state no longer the longest,
+records stale or inexact, and a comparative without its complement. Each was fixed with a test
+that failed first, except the SGCls state, which fit when first measured.
+- *Badges.* At a box's top-left corner a badge covered 59 % to 100 % of the glove's box and 52 % to
+  73 % of the wrench's at the three sizes, and #5 overlapped #1. A badge now sits above its box's
+  corner by default; E10 sets the table's inside its box and the wrench's above and to the left. A
+  projector test requires, at all three sizes and under PredCls and SGCls, that no badge cover more
+  than half of any box, that no two badges overlap, and that each lie on the photograph.
+- *E10's second part with |V|.* SGCls prints |V| on the line the L2 pointer shares; the 繁體中文
+  fit test and the English one now also measure that state. It fits.
+- *Records.* README still gave sixteen golden cases; CLAUDE.md listed VERIFICATION to §23, 99
+  deviations, 66 e2e tests and two tests importing values from `sgg-metrics`, which the full-grid
+  sweep makes three; INDEX's VERIFICATION row ended at §23. The offset at Δx = 18 had been rounded
+  from (454 − 261)/2 = 96.5 px, and two comments still gave 122 px for the Δx = 18 state. The 71 px had been dated to
+  the branch's start. VERIFICATION §24 counted commit `1829206`'s boxes-note test among commit
+  `19291d4`'s, and its timings came from an earlier perf run than the rest of its table. E1's
+  label change was not recorded. Each now says what was measured, and when.
+- *M12.* The comparative this branch wrote in s4, "closer than either end", had lost what it is
+  closer to; both locales say the data again.
+
+**Verification.** `npm run ci` exit 0: 277 pytest and 7 skipped (275 before), **870 vitest in 64
+files** (857 before), parity **17** (16 before), i18n 322 keys, content lint clean over **17 golden
+cases**. `npm run test:e2e` 72 (66 before; the English fit test and the badge test each run at
+three sizes). `npm run check:perf` 23. See VERIFICATION §24.

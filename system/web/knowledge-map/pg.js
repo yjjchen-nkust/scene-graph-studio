@@ -174,7 +174,7 @@ var ZH={
   'idle slots':'閒置名額',
   'in ground truth':'在 ground truth 中',
   'inflation vs k=1':'相對 k=1 的膨脹',
-  'invariant':'不變量',
+  'ordering on this toy':'此玩具上之大小關係',
   'matched':'命中數',
   'nodes at this level':'此層級的節點數',
   'nothing':'無',
@@ -204,7 +204,7 @@ var ZH={
   'zero-shot triplets':'zero-shot 三元組數',
   /* readout values */
   'holds':'成立',
-  'VIOLATED':'已違反',
+  'reversed':'相反',
   'counts':'計入',
   'rejected':'不計入',
   'boxes + labels':'box ＋ 標籤',
@@ -715,7 +715,7 @@ pg({id:'E10',en:'PredCls, SGCls, SGDet',zh:'三種 protocol',
    var mono=all[0].v>=all[1].v&&all[1].v>=all[2].v;
    return {vis:bars(all,1,''),out:[
      {k:'R@20',v:fx(st.R)},{k:'given',v:{predcls:'boxes + labels',sgcls:'boxes',sgdet:'nothing'}[s.pr]},
-     {k:'invariant',v:mono?'holds':'VIOLATED',cls:mono?'up':'dn',s:'SGDet ≤ SGCls ≤ PredCls'}]};
+     {k:'ordering on this toy',v:mono?'holds':'reversed',cls:mono?'up':'dn',s:'SGDet ≤ SGCls ≤ PredCls'}]};
  }});
 
 /* E11 — the frequency prior */

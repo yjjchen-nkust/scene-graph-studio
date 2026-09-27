@@ -23,7 +23,7 @@ and s2 now says so.]
 
 | Question | Answer |
 |---|---|
-| Scope | **F3 only**, a `playground` step after s2. F4 and X3 stay `spec`: F4 needs mask data drawn over a picture, and PSG's photographs are not licensed for distribution (M2 s4). M2 goes from 6 steps to 7. |
+| Scope | **F3 only**, a `playground` step after s2. F4 and X3 stay `spec`: F4 needs mask data drawn over a picture, and PSG's photographs are not licensed for distribution (M2 s4). M2 goes from 6 steps to 7. [**As built (D97):** M2 has 8 steps, F3 in two parts at s3 and s4, and PSG is s6.] |
 | Picture | **The committed placeholder photograph** `ph-001`, and one of its annotated boxes as the ground truth, as F1 draws. |
 | Knobs | **Δx, Δy, λ and τ.** λ is one uniform linear scale, the λ of s2's bound, so the bound on screen is the bound in the module. |
 | Corrections | **In this cycle, before F3 is built** (§3), as M1 corrected X1's premise first. |

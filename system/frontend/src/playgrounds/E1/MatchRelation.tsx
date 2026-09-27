@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { PlaygroundFrame, Toggle } from '../controls';
@@ -9,7 +10,7 @@ import {
 import type { PlaygroundProps } from '../mounts';
 import { MARK_ANNOTATED, MARK_PREDICTED, PhotoMarks } from '../PhotoMarks';
 import { frameById } from '../slice';
-import { E1_FRAME, E1_RELATIONSHIP } from './setup';
+import { E1_DEFECTS, E1_FRAME, E1_RELATIONSHIP } from './setup';
 
 /** The photograph's height at most, in viewport heights. */
 const PICTURE_VH = 34;
@@ -18,13 +19,13 @@ const COUNT = new Intl.NumberFormat('en-US');
 
 const DEFECTS = ['cs', 'co', 'p', 'bs', 'bo'] as const;
 
-/** The five conjuncts in M3 s2's order, as notation both locales share. */
-const ROWS: { key: keyof Conjuncts; label: string }[] = [
-  { key: 'cs', label: 'c(ŝ) = c(s)' },
-  { key: 'co', label: 'c(ô) = c(o)' },
+/** The five conjuncts in M3 s2's order and notation, which both locales share. */
+const ROWS: { key: keyof Conjuncts; label: ReactNode }[] = [
+  { key: 'cs', label: <>c<sub>ŝ</sub> = c<sub>s</sub></> },
+  { key: 'co', label: <>c<sub>ô</sub> = c<sub>o</sub></> },
   { key: 'p', label: 'p̂ = p' },
-  { key: 'is', label: 'IoU(ŝ, s) ≥ τ' },
-  { key: 'io', label: 'IoU(ô, o) ≥ τ' },
+  { key: 'is', label: <>IoU<sub>s</sub> ≥ τ</> },
+  { key: 'io', label: <>IoU<sub>o</sub> ≥ τ</> },
 ];
 
 /**
@@ -67,7 +68,7 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
   // Committed data, pinned by `logic.test.ts`: relationship 1 of ph-001 is box#3 on table#1.
   const frame = frameById(E1_FRAME)!;
   const gt = annotatedTriplet(frame, E1_RELATIONSHIP);
-  const pred = withDefects(gt, defects);
+  const pred = withDefects(gt, defects, E1_DEFECTS);
   const holds = conjuncts(pred, gt, XU_TAU);
   const relation = Object.values(holds).every(Boolean);
   const mode = failureMode(holds);
@@ -110,9 +111,7 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
             maxVh={PICTURE_VH}
             alt={t('playground.e1.picture')}
             testid="e1-picture"
-          >
-            <p className="mt-1 text-[0.875em] text-slate-700">{t('playground.e1.legend')}</p>
-          </PhotoMarks>
+          />
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           {conjunctView && (
@@ -135,6 +134,11 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
               </tbody>
             </table>
           )}
+          {/* Beside the conjuncts rather than under the photograph: there it took two lines in
+              English, and the first part ran 43 px past a 1024×768 panel (D100). */}
+          {conjunctView && (
+            <p data-testid="e1-legend" className="text-[0.875em] text-slate-700">{t('playground.e1.legend')}</p>
+          )}
           {verdictView && (
             <>
               {(['cls', 'loc'] as const).map((h) => (
@@ -144,7 +148,7 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
                   data-holds={String(halves[h])}
                   className="font-mono text-[1em] text-slate-900"
                 >
-                  {`Φ_${h} `}
+                  Φ<sub>{h}</sub>{' '}
                   <span className={halves[h] ? 'text-emerald-900' : 'text-slate-700'}>
                     {t(halves[h] ? 'playground.e1.holds' : 'playground.e1.fails')}
                   </span>

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { applyConstraint, evaluate, rank } from '../src/index.js';
+import { applyConstraint, evaluate, rank, toTriplets } from '../src/index.js';
 import type { SceneGraph } from '../src/types.js';
 import { boxIou } from '../src/iou.js';
 import { encodeCounts, decodeCounts, maskIou } from '../src/rle.js';
@@ -111,6 +111,28 @@ describe('the constraint key is the ordered object pair (D99)', () => {
   });
 });
 
+describe('an object_id names one object (D100)', () => {
+  // Python resolved the first of two objects sharing an id and TypeScript the last, and the
+  // constraint key is the id pair (D99), so both engines refuse such a graph.
+  const repeated: SceneGraph = {
+    image_id: 'repeated',
+    dataset: 'placeholder',
+    width: 100,
+    height: 100,
+    objects: [
+      { object_id: 1, names: ['man'], bbox: { x: 0, y: 0, w: 10, h: 10 } },
+      { object_id: 2, names: ['table'], bbox: { x: 20, y: 0, w: 10, h: 10 } },
+      { object_id: 2, names: ['chair'], bbox: { x: 40, y: 0, w: 10, h: 10 } },
+    ],
+    relationships: [{ relationship_id: 1, subject_id: 1, object_id: 2, predicate: 'on' }],
+    provenance: { kind: 'ground_truth', fidelity: 'measured' },
+  };
+
+  it('refuses a graph that repeats an object_id', () => {
+    expect(() => toTriplets(repeated)).toThrow('object_ids [2] appear more than once in this graph');
+  });
+});
+
 describe('the protocol ordering is observed, not forced (D98, D99)', () => {
   // Two annotated triplets on one pair of objects. Under the graph constraint a prediction keeps
   // one predicate per predicted pair, so a model handed the boxes (SGCls) can match at most one;
@@ -133,8 +155,8 @@ describe('the protocol ordering is observed, not forced (D98, D99)', () => {
     ],
     provenance: { kind: 'ground_truth', fidelity: 'measured' },
   };
-  const recall = (pred: SceneGraph) =>
-    evaluate({ gt, pred, protocol: 'sgcls', constraint: 'graph', k: [50], iou_thresh: 0.5, mask_pairing: 'single_mpo' })
+  const recall = (pred: SceneGraph, protocol: 'sgcls' | 'sgdet') =>
+    evaluate({ gt, pred, protocol, constraint: 'graph', k: [50], iou_thresh: 0.5, mask_pairing: 'single_mpo' })
       .metrics.find((m) => m.metric === 'R' && m.k === 50)!.value;
 
   it('the given boxes allow one predicate for the pair, so at most half is recalled', () => {
@@ -146,7 +168,7 @@ describe('the protocol ordering is observed, not forced (D98, D99)', () => {
       ],
       provenance: { kind: 'model', fidelity: 'measured', model: 'ordering' },
     };
-    expect(recall(givenBoxes)).toBe(0.5);
+    expect(recall(givenBoxes, 'sgcls')).toBe(0.5);
   });
 
   it('boxes of its own let a model recall both', () => {
@@ -165,6 +187,6 @@ describe('the protocol ordering is observed, not forced (D98, D99)', () => {
       ],
       provenance: { kind: 'model', fidelity: 'measured', model: 'ordering' },
     };
-    expect(recall(ownBoxes)).toBe(1);
+    expect(recall(ownBoxes, 'sgdet')).toBe(1);
   });
 });

@@ -218,3 +218,12 @@ exist; the field now reads "3-way knob · the hypothesis space counted per proto
 `npm run harvest` carries the formulas into `data/content/`. No option, control or knowledge point
 was added. The frozen E10's toy bars, obtained from invented IoU scale factors passed to
 `pg.js evaluate()`, are unchanged: its note is corrected, its demonstration is the page's own.
+
+### 2026-09-27 — E10's toy readout no longer called an invariant
+
+Found by the review of the M3 playgrounds (D98) and settled in D100. Under a note that since D98
+calls the recall ordering observed rather than implied, the frozen E10 still printed
+"invariant: holds / VIOLATED" for its toy bars, which it computes from invented IoU scale factors.
+The readout is relabelled "ordering on this toy", its values "holds" and "reversed", and the `ZH`
+table carries the two new strings in place of the two it no longer uses. The bars are unchanged.
+No option, control or knowledge point was added.

@@ -1,11 +1,12 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { SceneGraph } from 'sgg-metrics';
 import { boxIou, classify, toTriplets } from 'sgg-metrics';
 import golden from '../../../../../data/content/playground_golden.json';
 import { FRAMES, SLICE_CLASS_COUNT, frameById } from '../slice';
 import { RELEASES, type Release, type Split } from '../splits';
-import { E1_FRAME, E1_RELATIONSHIP } from '../E1/setup';
-import { F3_FRAME, F3_OBJECT } from '../F3/setup';
+import { E1_DEFECTS, E1_FRAME, E1_RELATIONSHIP } from '../E1/setup';
+import { F3_FRAME, F3_OBJECT, F3_RANGES } from '../F3/setup';
 import {
   annotatedTriplet, area, candidateSpace, conjuncts, failureMode, frameVerdict, hypothesisSpace, iouCounts,
   canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
@@ -423,6 +424,28 @@ describe('F3 against the engine', () => {
       expect(ratio(shared ? area(shared) : 0, unionArea(gt, p))).toBeCloseTo(boxIou(gt, p), 12);
     }
   });
+
+  it("F3's IoU equals the engine's boxIou at every setting of the three placement knobs", () => {
+    // 121 values of dx, 101 of dy and 16 of λ: 195,536 placements, every disagreement reported once.
+    const gt = frameById(F3_FRAME)!.objects.find((o) => o.object_id === F3_OBJECT)!.bbox;
+    const values = ([min, max, step]: readonly [number, number, number]) =>
+      Array.from({ length: Math.round((max - min) / step) + 1 }, (_, i) => snap(min + i * step, min, max, step));
+    const disagreements: string[] = [];
+    let placements = 0;
+    for (const dx of values(F3_RANGES.dx)) {
+      for (const dy of values(F3_RANGES.dy)) {
+        for (const lambda of values(F3_RANGES.lambda)) {
+          const p = scaledBox(gt, dx, dy, lambda);
+          const shared = intersection(gt, p);
+          const ours = ratio(shared ? area(shared) : 0, unionArea(gt, p));
+          if (Math.abs(ours - boxIou(gt, p)) > 1e-12) disagreements.push(`dx ${dx}, dy ${dy}, λ ${lambda}`);
+          placements += 1;
+        }
+      }
+    }
+    expect(placements).toBe(195_536);
+    expect(disagreements).toEqual([]);
+  });
 });
 
 describe('truncatedRatio', () => {
@@ -482,28 +505,45 @@ describe('E1: one defect at a time', () => {
   it('each defect falsifies exactly its own conjunct', () => {
     const keys = [['cs', 'cs'], ['co', 'co'], ['p', 'p'], ['bs', 'is'], ['bo', 'io']] as const;
     for (const [defect, conj] of keys) {
-      const c = conjuncts(withDefects(t, { ...none, [defect]: true }), t, 0.5);
+      const c = conjuncts(withDefects(t, { ...none, [defect]: true }, E1_DEFECTS), t, 0.5);
       expect(Object.entries(c).filter(([, v]) => !v).map(([k]) => k), defect).toEqual([conj]);
     }
   });
 
+  it('injects what the table it is given names', () => {
+    const table = {
+      subject: 'cup', object: 'shelf', predicate: 'under',
+      subjectShift: { dx: 10, dy: 0 }, objectShift: { dx: 0, dy: -5 },
+    };
+    const p = withDefects(t, { cs: true, co: true, p: true, bs: true, bo: true }, table);
+    expect([p.subject.name, p.predicate, p.object.name]).toEqual(['cup', 'under', 'shelf']);
+    expect(p.subject.box).toEqual({ ...t.subject.box, x: t.subject.box.x + 10 });
+    expect(p.object.box).toEqual({ ...t.object.box, y: t.object.box.y - 5 });
+  });
+
+  it('the shared module imports no playground of its own', () => {
+    // A path given through a variable: Vite rewrites a literal in new URL(..., import.meta.url).
+    const source = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+    expect(source('../logic.ts')).not.toMatch(/from '\.\/[A-Z]\d+\//);
+  });
+
   it('the shifted boxes keep a third of their overlap', () => {
-    expect(iouCounts(t.subject.box, withDefects(t, { ...none, bs: true }).subject.box)).toEqual([3150, 9450]);
-    expect(iouCounts(t.object.box, withDefects(t, { ...none, bo: true }).object.box)).toEqual([23100, 69300]);
+    expect(iouCounts(t.subject.box, withDefects(t, { ...none, bs: true }, E1_DEFECTS).subject.box)).toEqual([3150, 9450]);
+    expect(iouCounts(t.object.box, withDefects(t, { ...none, bo: true }, E1_DEFECTS).object.box)).toEqual([23100, 69300]);
   });
 
   it('names the failure as s2 does', () => {
-    expect(failureMode(conjuncts(withDefects(t, none), t, 0.5))).toBe('none');
-    expect(failureMode(conjuncts(withDefects(t, { ...none, p: true }), t, 0.5))).toBe('name');
-    expect(failureMode(conjuncts(withDefects(t, { ...none, bs: true }), t, 0.5))).toBe('place');
-    expect(failureMode(conjuncts(withDefects(t, { ...none, p: true, bo: true }), t, 0.5))).toBe('both');
+    expect(failureMode(conjuncts(withDefects(t, none, E1_DEFECTS), t, 0.5))).toBe('none');
+    expect(failureMode(conjuncts(withDefects(t, { ...none, p: true }, E1_DEFECTS), t, 0.5))).toBe('name');
+    expect(failureMode(conjuncts(withDefects(t, { ...none, bs: true }, E1_DEFECTS), t, 0.5))).toBe('place');
+    expect(failureMode(conjuncts(withDefects(t, { ...none, p: true, bo: true }, E1_DEFECTS), t, 0.5))).toBe('both');
   });
 
   it('gives a wrong name spurious wherever its box sits', () => {
-    expect(frameVerdict(withDefects(t, { ...none, cs: true }), frame, 0.5)).toBe('spurious');
-    expect(frameVerdict(withDefects(t, { ...none, cs: true, bs: true }), frame, 0.5)).toBe('spurious');
-    expect(frameVerdict(withDefects(t, { ...none, bs: true, bo: true }), frame, 0.5)).toBe('localization');
-    expect(frameVerdict(withDefects(t, none), frame, 0.5)).toBe('match');
+    expect(frameVerdict(withDefects(t, { ...none, cs: true }, E1_DEFECTS), frame, 0.5)).toBe('spurious');
+    expect(frameVerdict(withDefects(t, { ...none, cs: true, bs: true }, E1_DEFECTS), frame, 0.5)).toBe('spurious');
+    expect(frameVerdict(withDefects(t, { ...none, bs: true, bo: true }, E1_DEFECTS), frame, 0.5)).toBe('localization');
+    expect(frameVerdict(withDefects(t, none, E1_DEFECTS), frame, 0.5)).toBe('match');
   });
 });
 
@@ -562,7 +602,7 @@ describe('E1 against the engine', () => {
     // one prediction, and this holds the restatement to the rule.
     const gts = toTriplets(frame);
     for (const s of states) {
-      const pred = withDefects(t, s);
+      const pred = withDefects(t, s, E1_DEFECTS);
       const engine = classify(asEngine(pred), gts, gts.map(() => false), 0.5, false)[0];
       expect(frameVerdict(pred, frame, 0.5), JSON.stringify(s)).toBe(engine);
     }
@@ -570,7 +610,7 @@ describe('E1 against the engine', () => {
 
   it('no toggle state names another annotated triplet of ph-001', () => {
     const annotated = new Set(toTriplets(frame).map((g) => `${g.subject_name}|${g.predicate}|${g.object_name}`));
-    const named = new Set(states.map((s) => withDefects(t, s)).map((p) => `${p.subject.name}|${p.predicate}|${p.object.name}`));
+    const named = new Set(states.map((s) => withDefects(t, s, E1_DEFECTS)).map((p) => `${p.subject.name}|${p.predicate}|${p.object.name}`));
     expect(named.size).toBe(8);
     expect([...named].filter((k) => annotated.has(k))).toEqual(['box|on|table']);
   });

@@ -73,6 +73,13 @@ describe('E1', () => {
     expect(screen.getByTestId('e1-pred-s').getAttribute('x')).toBe('295');
   });
 
+  it("writes the conjuncts and the halves in s2's notation, with subscripts", () => {
+    renderAt('/m/m03');
+    expect(screen.getByTestId('e1-c-cs').querySelector('sub')).not.toBeNull();
+    expect(screen.getByTestId('e1-phi-cls').querySelector('sub')?.textContent).toBe('cls');
+    expect(screen.getByTestId('e1-phi-cls').textContent).not.toContain('_');
+  });
+
   it('reads in 繁體中文', () => {
     setLocale('zh-TW');
     renderAt('/m/m03?E1.bs=1');

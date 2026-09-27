@@ -32,7 +32,7 @@ steps:
     kind: lab
     lab: L2
     seconds_budget: 300
-    presenter_notes_en: "Five minutes back in L2 rather than in a new lab. Switch the constraint mode to semi and, on a pair that genuinely carries both an attention relation and a contacting one, look at what graph throws away and what none lets in. Say the key sentence in the room: the middle setting is closer to this data than either end, and it is a cap of two per ordered object pair, not the Semi Constraint STTran proposed for Action Genome, which keeps one attention predicate and every spatial or contacting predicate above 0.9."
+    presenter_notes_en: "Five minutes back in L2 rather than in a new lab. Switch the constraint mode to semi and, on the man–table pair, which the fixture's prediction gives two predicates, look at what graph throws away and what none lets in; say that on Action Genome the pair would carry an attention and a contacting relation instead, since the fixture has none. Say the key sentence in the room: on that data the middle setting is closer to it than either end, and it is a cap of two per ordered object pair, not the Semi Constraint STTran proposed for Action Genome, which keeps one attention predicate and every spatial or contacting predicate above 0.9."
   - id: s5
     kind: checkpoint
     presenter_notes_en: "Checkpoint. A case where raising it helps: the downstream use is coarse event counting or activity segmentation, where flicker from noisy edges costs more than a miss. A case where it destroys the point of the recording: the video exists to capture a brief event — a momentary contact, a single handover — and the higher threshold filters out the only thing worth recording. If only the first comes back, ask for the second; the second is the question."
@@ -133,9 +133,12 @@ and notice that each removal makes the remaining failure modes easier to see rat
 
 ## In the lab
 
-Return to L2 and switch the constraint mode to `semi`. On a pair that genuinely carries an
-attention relation and a contacting relation at once, watch what `graph` throws away and what
-`none` lets in. The middle setting is closer to this data than either end, and it is still a cap of two per ordered object pair, not STTran's rule.
+Return to L2 and switch the constraint mode to `semi`. L2's fixture is not Action Genome data,
+and no pair in it carries an attention and a contacting relation; its man–table pair carries two
+predicted predicates, `under` and `on`. Watch what `graph` throws away and what `none` lets in:
+`semi` keeps both, as it would keep an attention and a contacting relation on one pair. On Action
+Genome data the middle setting is closer to the data than either end, and it is still a cap of two
+per ordered object pair, not STTran's rule.
 
 </Step>
 

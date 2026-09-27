@@ -1139,3 +1139,60 @@ key, `gv-014` and `gv-016` fail in both; restored, all sixteen pass and agree. T
 added with them failed on the course's "Action Genome's semi constraint" before the text changed.
 The gate was run again: `npm run ci` exit 0 with 275 pytest, 857 vitest and parity 16;
 `npm run test:e2e` 66 passed.
+
+## 24. The review minors — measured, 2026-09-27
+
+D100. Every number below is from the run that produced it, on branch `fix/sgs-review-minors`; the
+table is the gate run after the branch review's fixes.
+
+| Step | Result |
+|---|---|
+| pytest | **277 passed**, 7 skipped (275 before) |
+| vitest | **870 passed in 64 files** (857 before) |
+| parity | **17 cases agree** (16 before) |
+| i18n parity | 322 keys, both locales complete |
+| content lint | **17 golden cases**, 42 playground cases, 25 release figures, clean |
+| standalone | up to date, 254 equations |
+| frontend build | 771 modules |
+| `npm run test:e2e` | 72 passed (66 before) |
+| `npm run check:perf` | 23 passed; F3 34.1 ms, E1 33.7 ms, E10 34.0 ms |
+
+### Watched failing first
+
+With `ProtocolSpaces.tsx`, `PhotoMarks.tsx` and both locale files put back as they stood before
+commit `19291d4`, five of that commit's tests fail: the badge test of `PhotoMarks`, and E10's opening
+mapping, SGCls wording, SGDet's |V| and chosen-row marker. Commit `1829206`'s boxes-note test fails
+in the same run, since its test id came with that commit. Measured during commit `19291d4`,
+before its layout change, the English fit test failed at 71 px on E10's second part; the marker test failed on U+25B6 before U+25BA replaced it.
+Before commit `1829206`'s changes: E10's note and frame id, `withDefects` given a table of its
+own, `logic.ts`'s import of `E1/setup`, and the repeated `object_id` in Python (no error raised)
+and TypeScript (no error thrown). This record's own test failed on the missing `## D100`.
+
+### English at 1024 × 768
+
+E1's first part fits after its legend moved beside the conjuncts. E10's second part ran 71 px past
+the panel; with its inclusion and condition as one sentence and the L2 pointer beside the boxes
+note, it fit. Printing B's value then lengthened the note, and the
+pointer, pushed to its own line, took it 28 px past; beside the vocabulary line it fits again.
+
+### gv-017
+
+hand#1 → assembly#3 carries holding 0.9, assembling 0.8 and touching 0.7; hand#2 → assembly#3
+carries holding 0.6; all four are annotated on the same boxes. `semi` with a cap of 2 keeps three:
+R@20 = 3/4 = 0.75, mR@20 = (2/2 + 1/1 + 0/1)/3 = 2/3, ngR@20 = 4/4 = 1.0. The regenerated
+`vectors.json` differs from the committed one by this case alone (200 lines added, none removed).
+
+### F3 over its whole grid
+
+F3's pixel-count IoU equals the engine's `boxIou` within 10⁻¹² at all 195,536 settings of Δx
+(−120 to 120, step 2), Δy (−100 to 100, step 2) and λ (0.5 to 2, step 0.1).
+
+### After the branch review
+
+The badge test failed at all three sizes before the change: badge #4 covered 59 % to 100 % of the
+glove's box, #5 covered 52 % to 73 % of the wrench's, and #5 overlapped #1. At 1024 × 768 the badges
+measured 28 × 23 px, the glove's box 24 × 22 px and the wrench's 38 × 13 px. After it the projector
+suite passed, 45 tests. The SGCls state of E10's second part fit in both locales when first
+measured. The records test failed on README's sixteen cases, and the PhotoMarks unit test on the
+missing placement, before their changes. The overlay's offset at Δx = 18 is (454 − 261)/2 = 96.5 px,
+from §21's measured column and photograph; it was not measured directly.

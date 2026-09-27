@@ -42,6 +42,8 @@ describe('F3', () => {
     expect(screen.getByTestId('F3.tau')).toHaveValue('0.05');
     expect(screen.getByTestId('F3.dx')).toHaveValue('-120');
     expect(screen.getByTestId('readout-F3.iou-value').textContent).toMatch(/^[01]\.\d{3}$/);
+    // λ clamps to 2: 6,300 / (180 × 140) = 0.25, inside [0, 1] as a bound on IoU must be.
+    expect(screen.getByTestId('readout-F3.bound-value')).toHaveTextContent('0.250');
   });
 
   it('draws three marks that differ in shape, not only in colour', () => {

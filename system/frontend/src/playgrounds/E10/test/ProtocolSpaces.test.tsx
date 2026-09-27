@@ -1,8 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
+import en from '../../../i18n/en.json';
 import { setLocale } from '../../../i18n/useLocale';
+import zh from '../../../i18n/zh-TW.json';
+import { frameById } from '../../slice';
 import { ProtocolSpaces } from '../ProtocolSpaces';
+import { E10_FRAME } from '../setup';
 
 beforeEach(() => setLocale('en'));
 
@@ -21,7 +25,8 @@ describe('E10', () => {
   it('opens on PredCls over this slice: six boxes, six labels, 480', () => {
     renderAt('/m/m03');
     expect(boxes()).toHaveLength(6);
-    expect(screen.getByTestId('e10-given')).toHaveTextContent('table, person, box, glove, wrench, panel');
+    expect(screen.getByTestId('e10-given')).toHaveTextContent('#1 table, #2 person, #3 box, #4 glove, #5 wrench, #6 panel');
+    expect(screen.getByTestId('e10-badge-1')).toHaveTextContent('#1');
     expect(screen.getByTestId('e10-row-predcls')).toHaveTextContent('480');
     expect(chosen()).toEqual(['predcls']);
   });
@@ -29,15 +34,19 @@ describe('E10', () => {
   it('SGCls keeps the boxes and withholds the labels', () => {
     renderAt('/m/m03?E10.pr=sgcls');
     expect(boxes()).toHaveLength(6);
-    expect(screen.getByTestId('e10-given')).toHaveTextContent('no labels');
+    expect(screen.getByTestId('e10-given')).toHaveTextContent('boxes #1 to #6; no labels');
     expect(screen.getByTestId('e10-given')).not.toHaveTextContent('glove');
+    expect(screen.getByTestId('e10-badge-6')).toHaveTextContent('#6');
     expect(screen.getByTestId('e10-row-sgcls')).toHaveTextContent('48,000');
   });
 
   it('SGDet hands over nothing and still shows all three counts', () => {
     renderAt('/m/m03?E10.pr=sgdet');
     expect(boxes()).toHaveLength(0);
+    expect(screen.queryByTestId('e10-badge-1')).toBeNull();
     expect(screen.getByTestId('e10-given')).toHaveTextContent('no boxes, no labels');
+    // |V| is not handed over under SGDet, so it is not printed.
+    expect(screen.getByTestId('e10-vocabulary')).not.toHaveTextContent('|V|');
     expect(screen.getByTestId('e10-row-predcls')).toHaveTextContent('480');
     expect(screen.getByTestId('e10-row-sgcls')).toHaveTextContent('48,000');
     expect(screen.getByTestId('e10-row-sgdet')).toHaveTextContent('897,116,066,370,414,059,520,000');
@@ -60,12 +69,31 @@ describe('E10', () => {
 
   it('states the inclusion between the three', () => {
     renderAt('/m/m03');
-    expect(screen.getByTestId('e10-inclusion')).toHaveTextContent('ℋ_PredCls ⊆ ℋ_SGCls ⊆ ℋ_SGDet');
+    expect(screen.getByTestId('e10-inclusion')).toHaveTextContent('ℋPredCls ⊆ ℋSGCls ⊆ ℋSGDet');
+    expect(screen.getByTestId('e10-inclusion').querySelectorAll('sub')).toHaveLength(3);
   });
 
   it('states when the inclusion holds', () => {
     renderAt('/m/m03?E10.voc=vg150');
     expect(screen.getByTestId('e10-inclusion-if')).toHaveTextContent('the given labels are in 𝒞');
+  });
+
+  it('marks the chosen row with a sign, not colour alone', () => {
+    renderAt('/m/m03?E10.pr=sgcls');
+    const marks = screen.getAllByTestId('e10-chosen');
+    expect(marks).toHaveLength(1);
+    // U+25BA has no emoji presentation; U+25B6 is drawn as a coloured emoji on Windows.
+    expect(marks[0]).toHaveTextContent('►');
+    expect(screen.getByTestId('e10-row-sgcls')).toContainElement(marks[0]!);
+  });
+
+  it('builds the boxes note from its frame and prints B', () => {
+    renderAt('/m/m03?E10.pr=sgdet');
+    const f = frameById(E10_FRAME)!;
+    // C(641, 2) = 205,120 and C(481, 2) = 115,440, whose product is B.
+    expect(screen.getByTestId('e10-boxes-note')).toHaveTextContent(
+      `B = C(${f.width + 1}, 2) · C(${f.height + 1}, 2) = 23,679,052,800 whole-pixel boxes`);
+    for (const table of [en, zh]) expect(table['playground.e10.boxes_note']).not.toMatch(/\d{3}/);
   });
 
   it('reads in 繁體中文', () => {
