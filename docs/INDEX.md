@@ -324,8 +324,8 @@ sets the quotient against M2 s2's bound min(A, A′) / max(A, A′) and against 
 opened sources contradict were corrected first: the frozen F3's scale ceiling was min(λ, λ⁻¹)
 rather than min(λ², λ⁻²), its note said the reference implementation never states the threshold,
 which its configuration does, and M2 s2's presenter notes said L2 demonstrates the bound, which
-its same-size boxes cannot. A screenshot found F3's marks drawn 122 px below the objects with
-every readout correct; the projector suite now measures the overlay against the photograph. See
+its same-size boxes cannot. A screenshot found F3's marks drawn 122 px below the objects in its
+longest state, 97 px at Δx = 18, with every readout correct; the projector suite now measures the overlay against the photograph. See
 D97 and VERIFICATION §21.
 
 **M3's playgrounds, E1 and E10, 2026-09-27.** E1 injects one defect per toggle into box#3 on

@@ -111,7 +111,7 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
             </p>
           )}
           <p data-testid="e10-inclusion" className="font-mono text-[1em] text-slate-900">
-            ℋ_PredCls ⊆ ℋ_SGCls ⊆ ℋ_SGDet
+            ℋ<sub>PredCls</sub> ⊆ ℋ<sub>SGCls</sub> ⊆ ℋ<sub>SGDet</sub>
           </p>
           {/* The inclusion is a fact about hypotheses of one shape, and only when what a protocol hands
               over is itself a hypothesis of the next (D98). */}

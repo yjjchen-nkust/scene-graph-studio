@@ -3163,7 +3163,9 @@ photograph on the frame's own 640 × 480 viewBox, and it filled the column the f
 to 505 px rather than the 261 px photograph, so `meet` scaling centred every mark below its
 object at 1024 × 768 with every readout correct. No jsdom test could see it; a screenshot did. A
 projector test now asserts that the overlay and the photograph have the same box, at all three
-sizes; it failed at all three first.
+sizes; it failed at all three first. [**Clarified 2026-09-27 (D100):** 505 px and 122 px are F3's
+longest state, λ 2, τ 0.95, shifted (120, 100); at Δx = 18, the state the failing test used, the
+column was 454 px and the offset 97 px.]
 
 **F3 spans two parts** (D96). As one step, in its longest state, it ran 171 px past a 1024 × 768
 panel in 繁體中文 and 105 px past at 1280 × 800. Part 1 is the box moved and counted: Δx, Δy and λ,
@@ -3228,7 +3230,11 @@ triplet; F3's overlay to become a shared component. Branch `feat/playgrounds-m3`
    model can ignore the extra input, is about what the protocols allow. Even "for every model given
    less input some model given more does at least as well" fails without qualification: two ground
    truths with near-identical boxes and different labels leave an SGCls model unable, within the
-   same K, to place a label an SGDet model places. What is forced is the inclusion
+   same K, to place a label an SGDet model places. [**Corrected 2026-09-27 (D99):** this argument does not prove its claim: it shows only that
+   one SGCls model, the one copying an SGDet model's output, does worse. The counterexample both
+   engines now assert is D99's: two annotated triplets on one object pair, where a model handed the
+   boxes keeps one predicate for the pair under the graph constraint (R 0.5) and a model with two box
+   pairs of its own recalls both (R 1.0).] What is forced is the inclusion
    ℋ_PredCls ⊆ ℋ_SGCls ⊆ ℋ_SGDet. The ordering is observed: `Scene-Graph-Benchmark.pytorch`'s
    `METRICS.md` at commit `d05be9f9e52e9b2722dc6dc2f0b8b05b47da38f7`, table "Recall@K", shows it in
    every row at every K (MOTIFS at R@50: 32.78 SGGen, 38.92 SGCls, 65.18 PredCls). s3 now says so,

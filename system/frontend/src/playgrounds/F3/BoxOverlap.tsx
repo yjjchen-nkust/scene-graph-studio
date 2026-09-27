@@ -29,7 +29,8 @@ const COUNT = new Intl.NumberFormat('en-US');
  *
  * Two parts (D96): the box moved and counted, then the threshold and the membership, with the IoU
  * and the bound it is compared against. As one step it ran 171 px past a 1024×768 panel.
- * Mounted without a part, as its unit tests and the study shell mount it, it is both.
+ * Mounted without a part, as its unit tests mount it, it is both. The study shell mounts the
+ * parts, as the lecture does.
  */
 export function BoxOverlap({ part }: PlaygroundProps = {}) {
   const { t } = useLocale();

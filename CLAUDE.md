@@ -73,8 +73,8 @@ cd scene-graph-studio\system ; npm run ci
   that "fits" the panel. F1 did so on every projector until D96; `F1 shows its photograph` in
   `e2e/projector.spec.ts` now measures it. F3, E1 and E10 draw through
   `playgrounds/PhotoMarks.tsx`, an `<svg>` over the same kind of photograph that must have the
-  photograph's box exactly: in a stretched column it drew every mark 122 px below its object with
-  every readout correct (D97), and `F3, E1 and E10 draw their marks on their photographs` now
+  photograph's box exactly: in a stretched column it drew every mark 122 px below its object in F3's
+  longest state, 97 px at Δx = 18, with every readout correct (D97), and `F3, E1 and E10 draw their marks on their photographs` now
   measures that (D98).
 - **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
   in both locales (**D76**). All 109 steps carry theirs; 218 notes.

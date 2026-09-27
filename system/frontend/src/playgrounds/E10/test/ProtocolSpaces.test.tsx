@@ -60,7 +60,8 @@ describe('E10', () => {
 
   it('states the inclusion between the three', () => {
     renderAt('/m/m03');
-    expect(screen.getByTestId('e10-inclusion')).toHaveTextContent('ℋ_PredCls ⊆ ℋ_SGCls ⊆ ℋ_SGDet');
+    expect(screen.getByTestId('e10-inclusion')).toHaveTextContent('ℋPredCls ⊆ ℋSGCls ⊆ ℋSGDet');
+    expect(screen.getByTestId('e10-inclusion').querySelectorAll('sub')).toHaveLength(3);
   });
 
   it('states when the inclusion holds', () => {

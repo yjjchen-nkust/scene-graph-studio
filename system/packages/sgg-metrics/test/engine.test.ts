@@ -133,8 +133,8 @@ describe('the protocol ordering is observed, not forced (D98, D99)', () => {
     ],
     provenance: { kind: 'ground_truth', fidelity: 'measured' },
   };
-  const recall = (pred: SceneGraph) =>
-    evaluate({ gt, pred, protocol: 'sgcls', constraint: 'graph', k: [50], iou_thresh: 0.5, mask_pairing: 'single_mpo' })
+  const recall = (pred: SceneGraph, protocol: 'sgcls' | 'sgdet') =>
+    evaluate({ gt, pred, protocol, constraint: 'graph', k: [50], iou_thresh: 0.5, mask_pairing: 'single_mpo' })
       .metrics.find((m) => m.metric === 'R' && m.k === 50)!.value;
 
   it('the given boxes allow one predicate for the pair, so at most half is recalled', () => {
@@ -146,7 +146,7 @@ describe('the protocol ordering is observed, not forced (D98, D99)', () => {
       ],
       provenance: { kind: 'model', fidelity: 'measured', model: 'ordering' },
     };
-    expect(recall(givenBoxes)).toBe(0.5);
+    expect(recall(givenBoxes, 'sgcls')).toBe(0.5);
   });
 
   it('boxes of its own let a model recall both', () => {
@@ -165,6 +165,6 @@ describe('the protocol ordering is observed, not forced (D98, D99)', () => {
       ],
       provenance: { kind: 'model', fidelity: 'measured', model: 'ordering' },
     };
-    expect(recall(ownBoxes)).toBe(1);
+    expect(recall(ownBoxes, 'sgdet')).toBe(1);
   });
 });

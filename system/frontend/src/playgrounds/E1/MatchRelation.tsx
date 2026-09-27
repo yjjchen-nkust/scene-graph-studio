@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { PlaygroundFrame, Toggle } from '../controls';
@@ -18,13 +19,13 @@ const COUNT = new Intl.NumberFormat('en-US');
 
 const DEFECTS = ['cs', 'co', 'p', 'bs', 'bo'] as const;
 
-/** The five conjuncts in M3 s2's order, as notation both locales share. */
-const ROWS: { key: keyof Conjuncts; label: string }[] = [
-  { key: 'cs', label: 'c(ŝ) = c(s)' },
-  { key: 'co', label: 'c(ô) = c(o)' },
+/** The five conjuncts in M3 s2's order and notation, which both locales share. */
+const ROWS: { key: keyof Conjuncts; label: ReactNode }[] = [
+  { key: 'cs', label: <>c<sub>ŝ</sub> = c<sub>s</sub></> },
+  { key: 'co', label: <>c<sub>ô</sub> = c<sub>o</sub></> },
   { key: 'p', label: 'p̂ = p' },
-  { key: 'is', label: 'IoU(ŝ, s) ≥ τ' },
-  { key: 'io', label: 'IoU(ô, o) ≥ τ' },
+  { key: 'is', label: <>IoU<sub>s</sub> ≥ τ</> },
+  { key: 'io', label: <>IoU<sub>o</sub> ≥ τ</> },
 ];
 
 /**
@@ -144,7 +145,7 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
                   data-holds={String(halves[h])}
                   className="font-mono text-[1em] text-slate-900"
                 >
-                  {`Φ_${h} `}
+                  Φ<sub>{h}</sub>{' '}
                   <span className={halves[h] ? 'text-emerald-900' : 'text-slate-700'}>
                     {t(halves[h] ? 'playground.e1.holds' : 'playground.e1.fails')}
                   </span>

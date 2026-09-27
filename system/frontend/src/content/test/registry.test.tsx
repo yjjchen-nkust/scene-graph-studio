@@ -251,6 +251,33 @@ describe('the playground step kind', () => {
       .toContain('[**Corrected 2026-09-27 (D99):**');
   });
 
+  it('the review minors of M2 and M3 are settled in the text', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const specM3 = source('../../../../../docs/superpowers/specs/2026-09-27-playgrounds-m3-design.md');
+    // M3-1: the near-identical-boxes argument proved nothing; D99's engine test is the counterexample.
+    for (const text of [deviations, specM3]) {
+      expect(text).toContain('[**Corrected 2026-09-27 (D99):** this argument does not prove its claim');
+    }
+    // M3-2: the frozen E10 no longer calls its toy ordering an invariant.
+    expect(source('../../../../web/knowledge-map/pg.js')).not.toContain("k:'invariant'");
+    expect(source('../../../../web/knowledge-map/FROZEN.md')).toContain('ordering on this toy');
+    // M2-1: the overlay's offset is named with the state it was measured in.
+    for (const file of ['../../../../../DEVIATIONS.md', '../../../../../CLAUDE.md', '../../../../../docs/INDEX.md']) {
+      expect(source(file), file).toContain('97 px');
+    }
+    // M2-2 and M2-5.
+    expect(source('../../playgrounds/F3/BoxOverlap.tsx')).not.toContain('and the study shell mount it');
+    expect(source('../../../../../docs/superpowers/specs/2026-09-27-playgrounds-m2-design.md'))
+      .toContain('[**As built (D97):** M2 has 8 steps');
+    // M3-9: the notes' wording.
+    expect(source('../m03.zh-TW.mdx')).not.toContain('兩者皆錯');
+    expect(source('../m03.en.mdx')).not.toContain('nothing at all');
+    expect(source('../m03.zh-TW.mdx')).not.toContain('不提供任何內容');
+    // D99-m5: M12 no longer asks L2 for a pair its fixture does not have.
+    expect(source('../m12.en.mdx')).not.toMatch(/genuinely carries (both )?an attention relation/);
+    expect(source('../m12.zh-TW.mdx')).not.toContain('確實同時具備 attention 關係與 contacting 關係');
+  });
+
   it('the protocol ordering survives nowhere as a law', () => {
     // The brief, the SRS and an L2 comment repeated what M3 s3 no longer claims (D98).
     const brief = source('../../../../web/brief/index.html');
