@@ -76,6 +76,20 @@ def test_dangling_reference_is_422_and_names_the_id():
     assert "77" in str(r.json())
 
 
+def test_a_dangling_reference_beside_a_repeated_id_is_still_dangling_reference():
+    # Contracts §1.1 gives a dangling reference its own code; a repeated id in the same graph
+    # does not take it away, and the detail names both (D101).
+    bad = graph("model", [
+        {"relationship_id": 1, "subject_id": 77, "object_id": 2, "predicate": "on", "score": 1.0}])
+    bad["objects"].append(
+        {"object_id": 2, "names": ["chair"], "bbox": {"x": 50, "y": 50, "w": 10, "h": 10}})
+    r = client.post("/api/eval", json={**BASE, "pred": bad})
+    assert r.status_code == 422
+    assert r.json()["error"]["code"] == "dangling_reference"
+    detail = str(r.json()["error"]["detail"])
+    assert "77" in detail and "object_ids [2] appear more than once" in detail
+
+
 def test_an_unknown_k_is_rejected_rather_than_silently_accepted():
     r = client.post("/api/eval", json={**BASE, "k": [37]})
     assert r.status_code == 422

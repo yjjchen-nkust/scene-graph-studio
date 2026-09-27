@@ -602,7 +602,10 @@ cases.append({
         "assembling 1/1, touching 0/1, so mR@20 = (1 + 1 + 0)/3 = 2/3. ngR@20 reads the "
         "unconstrained pool: 4/4 = 1.0. zR is null. A cap of 2 per class pair (hand, assembly) "
         "would keep only the first two, R 2/4 = 0.5, and graph, a cap of 1 per object pair, keeps "
-        "holding on each pair, R 2/4 = 0.5; 0.75 is neither."
+        "holding on each pair, R 2/4 = 0.5; 0.75 is neither. Warnings: PredCls hands over boxes, "
+        "not pairs, and no training split is supplied, so gt_boxes_not_pairs and "
+        "zero_shot_unavailable; the four scores are distinct, neither graph carries masks, and "
+        "neither is empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph(
@@ -632,6 +635,7 @@ cases.append({
             {"pred_index": 3, "verdict": "match"},
             {"pred_index": -1, "verdict": "missed"},
         ],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
     },
 })
 

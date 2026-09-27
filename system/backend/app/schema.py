@@ -74,16 +74,15 @@ class SceneGraph(Strict):
     provenance: Provenance
 
     @model_validator(mode="after")
-    def _one_object_per_id(self) -> SceneGraph:
-        """The constraint key is the ordered id pair (D99); a repeated id names two objects, which
-        the first-match lookup below and the TypeScript engine's map would resolve differently."""
+    def _ids_resolve(self) -> SceneGraph:
+        """Each id names one object (D99's key is the ordered id pair; the first-match lookup below
+        and the TypeScript engine's map would resolve a repeated id differently), and each
+        relationship names objects present. One validator reports both: a second would not run
+        after the first raised, and the dangling reference carries its own code (D101)."""
+        problems: list[str] = []
         repeated = sorted(i for i, n in Counter(o.object_id for o in self.objects).items() if n > 1)
         if repeated:
-            raise ValueError(f"object_ids {repeated} appear more than once in this graph")
-        return self
-
-    @model_validator(mode="after")
-    def _no_dangling_references(self) -> SceneGraph:
+            problems.append(f"object_ids {repeated} appear more than once in this graph")
         known = {o.object_id for o in self.objects}
         dangling = [
             r.relationship_id
@@ -95,10 +94,12 @@ class SceneGraph(Strict):
                 {r.subject_id for r in self.relationships if r.subject_id not in known}
                 | {r.object_id for r in self.relationships if r.object_id not in known}
             )
-            raise ValueError(
+            problems.append(
                 f"relationships {dangling} reference object_ids not present in this graph: "
                 f"{missing}"
             )
+        if problems:
+            raise ValueError("; ".join(problems))
         return self
 
     def object_by_id(self, object_id: int) -> SGObject:
