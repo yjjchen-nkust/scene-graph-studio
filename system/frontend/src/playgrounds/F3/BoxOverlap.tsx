@@ -131,7 +131,7 @@ export function BoxOverlap({ part }: PlaygroundProps = {}) {
             ]}
             hatch={shared ? { box: shared, testid: 'f3-inter' } : null}
             maxVh={PICTURE_VH}
-            alt={t('playground.f3.picture')}
+            alt={t('playground.f3.picture').replace('{frame}', F3_FRAME)}
             testid="f3-picture"
           >
             <p data-testid="f3-caption" className="mt-1 font-mono text-[0.875em] text-slate-700">

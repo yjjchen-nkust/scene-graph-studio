@@ -300,10 +300,9 @@ describe('the playground step kind', () => {
     const index = source('../../../../../docs/INDEX.md');
     // Counts and section lists the branch moved.
     expect(source('../../../../../README.md')).toContain('seventeen cases');
-    expect(claude).toMatch(/§24 the review minors\), and all 1\d\d logged deviations/);
-    expect(claude).toContain('resolutions, 72 tests,');
+    expect(claude).toContain('§24 the review minors');
     expect(claude).toContain('three tests in `playgrounds/test/logic.test.ts`');
-    expect(index).toContain('the review minors (§24)**');
+    expect(index).toContain('the review minors (§24)');
     // The offset at Δx = 18 is derived, (454 − 261) / 2 = 96.5 px, and is not rounded.
     for (const [name, text] of [['DEVIATIONS', deviations], ['CLAUDE.md', claude], ['INDEX', index]]) {
       expect(text, name).toContain('96.5 px');
@@ -331,14 +330,43 @@ describe('the playground step kind', () => {
     expect(source('../../../../web/knowledge-map/FROZEN.md')).toContain('**Released 2026-09-27 by decision D-23.**');
     expect(source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-contracts.md'))
       .toContain('`?view=kp` is the knowledge-point index (amended 2026-09-27, D101)');
+    // At least D101: a later deviation moves the upper bound, and D102 pins its own below.
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
-      expect(text, name).toContain('D1…D101');
+      expect(Number(/D1…D(\d+)/.exec(text)?.[1]), name).toBeGreaterThanOrEqual(101);
     }
     expect(claude).toContain('D-01…D-23');
-    expect(claude).toContain('all 101 logged deviations');
+    expect(claude).toMatch(/all 1\d\d logged deviations/);
     expect(claude).not.toContain('as the seed corpus. Do not extend it.');
     expect(index).toContain('## 2. Decisions — D-01 … D-23');
     expect(source('../../../../../README.md')).not.toContain('Do not extend it;');
+  });
+
+  it('the records carry D102 and the counts it measured', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const verification = source('../../../../../docs/VERIFICATION.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    expect(deviations).toContain('## D102 — ');
+    expect(verification).toContain('## 25. ');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      expect(text, name).toContain('D1…D102');
+    }
+    expect(claude).toContain('§25 the deferred minors), and all 102 logged deviations');
+    expect(claude).toContain('resolutions, 75 tests,');
+    expect(index).toContain('the deferred minors (§25)**');
+    expect(readme).toContain('i18n 331 keys');
+    expect(readme).toContain('`npm run test:e2e` is 75');
+    // The gate's counts, where README and INDEX state them (D102's review).
+    expect(readme).toContain('279 Python tests');
+    expect(readme).toContain('893 TypeScript tests across 66 files');
+    expect(index).toContain('**279 pytest**');
+    expect(index).toContain('**893 vitest** in 66 files');
+    expect(index).not.toContain('the ten newest');
+    // The five items D100's review deferred, each named where it was settled.
+    for (const item of ['dangling_reference', 'gv-017', 'idRun', 'E1_DEFECTS', '►']) {
+      expect(deviations.slice(deviations.indexOf('## D102 — ')), item).toContain(item);
+    }
   });
 
   it('the protocol ordering survives nowhere as a law', () => {

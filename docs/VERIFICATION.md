@@ -1196,3 +1196,76 @@ suite passed, 45 tests. The SGCls state of E10's second part fit in both locales
 measured. The records test failed on README's sixteen cases, and the PhotoMarks unit test on the
 missing placement, before their changes. The overlay's offset at Δx = 18 is (454 − 261)/2 = 96.5 px,
 from §21's measured column and photograph; it was not measured directly.
+
+## 25. The deferred minors — measured, 2026-09-27
+
+D102. Every number below is from the run that produced it, on branch `fix/sgs-d100-deferred`. In
+the table, `npm run ci` and `npm run test:e2e` ran after the branch review's fixes, and
+`npm run check:perf` on commit `680dc35`'s code, which no later commit changes outside tests and
+records.
+
+| Step | Result |
+|---|---|
+| pytest | **279 passed**, 7 skipped (277 before) |
+| vitest | **883 passed in 65 files** (870 in 64 before) |
+| parity | 17 cases agree |
+| i18n parity | **323 keys**, both locales complete (322 before) |
+| content lint | 17 golden cases, 42 playground cases, 25 release figures, clean |
+| standalone | up to date, 254 equations |
+| frontend build | 771 modules |
+| `npm run test:e2e` | **75 passed** (72 before) |
+| `npm run check:perf` | 23 passed; F3 33.9 ms, E1 33.9 ms, E10 33.4 ms |
+
+### Watched failing first
+
+Before `_ids_resolve`, the schema test found no dangling-reference message beside the repeated id,
+and the API test received `schema_invalid`. Before commit `680dc35`'s changes, nine unit tests
+failed and 263 playground tests passed: `idRun`'s three, E10's three on renumbered ids,
+each of which received "boxes #1 to #6; no labels" or 「框 #1 至 #6；無標籤」, and the picture-string
+tests of F3, E1 and E10. E1's label test, written after them, failed on 繁體中文's
+「主詞框位移 45 px」. The column test failed at all three sizes. The records test failed on the
+missing heading of its deviation, then numbered D101.
+
+### gv-017 under a mutant
+
+Both engines were changed to omit `gt_boxes_not_pairs` under `semi`, and restored afterwards.
+Parity compares the engines with each other, so it passes the mutant on either set of vectors.
+
+| Vectors | pytest golden | vitest engine | parity |
+|---|---|---|---|
+| committed (`2783ab6`) | 20 passed | 30 passed | 17 cases agree |
+| this branch | gv-017 failed, 19 passed | gv-017 failed, 29 passed | 17 cases agree |
+
+### E10's columns
+
+Left edge of each column in px, in the PredCls row, with PredCls, SGCls and SGDet chosen in turn,
+on the code before commit `680dc35`. The name column began at 67 px in every state.
+
+| Size | Vocabulary | Formula column | Count column |
+|---|---|---|---|
+| 1024 × 768 | this slice | 220.9 / 201.0 / 208.2 | 513.7 / 501.7 / 506.0 |
+| 1280 × 800 | this slice | 265.1 / 239.5 / 248.8 | 641.9 / 626.5 / 632.1 |
+| 1920 × 1080 | this slice | 375.6 / 335.6 / 350.1 | 962.5 / 938.4 / 947.1 |
+| 1024 × 768 | VG-150 | 209.5 / 190.8 / 197.5 | 493.7 / 482.1 / 486.3 |
+| 1280 × 800 | VG-150 | 250.4 / 226.3 / 235.0 | 616.2 / 601.3 / 606.7 |
+| 1920 × 1080 | VG-150 | 352.6 / 315.1 / 328.7 | 922.4 / 899.2 / 907.5 |
+
+With the sign reserved in every row and the rule not, SGCls chosen against PredCls chosen still
+moved the formula column 2.0, 2.6 and 4.2 px at the three sizes over this slice. With the rule
+reserved and the sign not, 19.9 px at 1024 × 768. With both, every edge agreed to 0.1 px in all
+twelve comparisons. A bold copy of each name, reserving the chosen weight's width in every row,
+was then removed, and the test still passed at all three sizes.
+
+### After the branch review
+
+With `invisible` dropped from the sign, and with it on every row, E10's unit test failed, 1 of 15,
+and the projector column test failed at all three sizes on "slice, predcls chosen: the sign shows
+in its own row only"; on the code both pass. With the condition `run` alone, the single-box test
+failed, 1 of 16. The records test failed on README's 881 before the counts were brought up to
+date. No production code changed after commit `680dc35`.
+
+### At the merge
+
+With `feat/sgs-kp-index` (D101) already on `main`, the merged result: `npm run ci` exit 0, 279
+pytest and 7 skipped, **893 vitest in 66 files**, parity 17 cases, i18n **331 keys**, content
+lint clean over 17 golden cases, 775 modules built; `npm run test:e2e` 75 passed.

@@ -2923,7 +2923,7 @@
     },
     {
       "id": "gv-017-semi-constraint-per-object-pair",
-      "why": "Hand#1 on assembly#3 carries three annotated predicates, holding, assembling and touching, and hand#2 on assembly#3 carries holding; the prediction scores the four 0.9, 0.8, 0.7 and 0.6 on the same boxes. semi with a cap of 2 per ordered object pair keeps holding and assembling on 1->3, drops touching, and keeps holding on 2->3, so three survive and all three match: R@20 = 3/4 = 0.75. Per predicate class: holding 2/2, assembling 1/1, touching 0/1, so mR@20 = (1 + 1 + 0)/3 = 2/3. ngR@20 reads the unconstrained pool: 4/4 = 1.0. zR is null. A cap of 2 per class pair (hand, assembly) would keep only the first two, R 2/4 = 0.5, and graph, a cap of 1 per object pair, keeps holding on each pair, R 2/4 = 0.5; 0.75 is neither.",
+      "why": "Hand#1 on assembly#3 carries three annotated predicates, holding, assembling and touching, and hand#2 on assembly#3 carries holding; the prediction scores the four 0.9, 0.8, 0.7 and 0.6 on the same boxes. semi with a cap of 2 per ordered object pair keeps holding and assembling on 1->3, drops touching, and keeps holding on 2->3, so three survive and all three match: R@20 = 3/4 = 0.75. Per predicate class: holding 2/2, assembling 1/1, touching 0/1, so mR@20 = (1 + 1 + 0)/3 = 2/3. ngR@20 reads the unconstrained pool: 4/4 = 1.0. zR is null. A cap of 2 per class pair (hand, assembly) would keep only the first two, R 2/4 = 0.5, and graph, a cap of 1 per object pair, keeps holding on each pair, R 2/4 = 0.5; 0.75 is neither. Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; the four scores are distinct, neither graph carries masks, and neither is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv17",
@@ -3118,6 +3118,10 @@
             "pred_index": -1,
             "verdict": "missed"
           }
+        ],
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
         ]
       }
     }

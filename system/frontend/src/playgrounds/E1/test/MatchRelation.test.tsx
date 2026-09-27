@@ -1,8 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
+import en from '../../../i18n/en.json';
 import { setLocale } from '../../../i18n/useLocale';
+import zh from '../../../i18n/zh-TW.json';
 import { MatchRelation } from '../MatchRelation';
+import { E1_DEFECTS, E1_FRAME } from '../setup';
 
 beforeEach(() => setLocale('en'));
 
@@ -17,6 +20,55 @@ const ROWS = ['e1-c-cs', 'e1-c-co', 'e1-c-p', 'e1-c-is', 'e1-c-io'];
 const holding = () => ROWS.filter((id) => screen.getByTestId(id).getAttribute('data-holds') === 'true');
 
 describe('E1', () => {
+  it('labels each toggle with the axis and the shift E1_DEFECTS carries, in both locales (D102)', () => {
+    const { subjectShift: ss, objectShift: os } = E1_DEFECTS;
+    const labels = () => ['E1.cs', 'E1.co', 'E1.p', 'E1.bs', 'E1.bo'].map((id) => (screen.getByTestId(id) as HTMLInputElement).labels![0]!.textContent);
+    renderAt('/m/m03');
+    expect(labels()).toEqual([
+      `Subject: box → ${E1_DEFECTS.subject}`, `Object: table → ${E1_DEFECTS.object}`,
+      `Predicate: on → ${E1_DEFECTS.predicate}`, `Subject box Δx ${ss.dx} px`, `Object box Δy ${os.dy} px`,
+    ]);
+    cleanup();
+    setLocale('zh-TW');
+    renderAt('/m/m03');
+    expect(labels()).toEqual([
+      `主詞類別：box → ${E1_DEFECTS.subject}`, `受詞類別：table → ${E1_DEFECTS.object}`,
+      `predicate：on → ${E1_DEFECTS.predicate}`, `主詞框位移 Δx ${ss.dx} px`, `受詞框位移 Δy ${os.dy} px`,
+    ]);
+    // The strings carry neither the shifts nor the names; the component fills them in.
+    for (const strings of [en, zh]) {
+      for (const key of ['cs', 'co', 'p', 'bs', 'bo']) {
+        const text = strings[`playground.e1.${key}` as keyof typeof en];
+        expect(text, key).not.toMatch(/\d|glove|panel|near/);
+      }
+    }
+  });
+
+  it('shifts each box along one axis by a positive whole number of pixels, so its label names one axis', () => {
+    // The label writes a shift as its nonzero axes, joined in English; that holds in both locales
+    // only while each defect moves its box along one axis (D102's review).
+    for (const { dx, dy } of [E1_DEFECTS.subjectShift, E1_DEFECTS.objectShift]) {
+      expect([dx, dy].filter((v) => v !== 0)).toHaveLength(1);
+      expect(Math.max(dx, dy)).toBeGreaterThan(0);
+      expect(Number.isInteger(dx) && Number.isInteger(dy)).toBe(true);
+    }
+  });
+
+  it('names its frame and triplet from its setup, not from literals in the string (D102)', () => {
+    renderAt('/m/m03');
+    expect(screen.getByTestId('e1-picture').querySelector('img'))
+      .toHaveAttribute('alt', `Frame ${E1_FRAME}: box on table, annotated and predicted`);
+    cleanup();
+    setLocale('zh-TW');
+    renderAt('/m/m03');
+    expect(screen.getByTestId('e1-picture').querySelector('img'))
+      .toHaveAttribute('alt', `影格 ${E1_FRAME}：box on table 之標註與預測`);
+    for (const strings of [en, zh]) {
+      expect(strings['playground.e1.picture']).not.toContain(E1_FRAME);
+      expect(strings['playground.e1.picture']).not.toContain('box on table');
+    }
+  });
+
   it('opens on the annotation itself: every conjunct holds and the diff says match', () => {
     renderAt('/m/m03');
     expect(holding()).toEqual(ROWS);

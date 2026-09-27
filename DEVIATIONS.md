@@ -3539,3 +3539,92 @@ before: nine in `pages/test/KnowledgeIndex.test.tsx` and the new records test); 
 frontend builds. `npm run test:e2e` 72 passed, the view unchanged at every earlier route.
 **Watched failing first:** the owner test, against the frontmatter version, sent
 F5 to `/m/m00`.
+## D102 — the five minors D100's review deferred, settled
+
+**Plan:** none; a bounded list of five items. **Found by:** the branch review of D100, which
+deferred five minors. **Decisions:** the author's, on 2026-09-27: all five. Branch
+`fix/sgs-d100-deferred`, from `main` at `2783ab6`.
+
+**In the engine** (commit `f7b6102`).
+- *A dangling reference beside a repeated id.* D100's repeated-id validator ran before the
+  dangling-reference check, and on a graph with both its error was the only one raised, so the API
+  answered 422 `schema_invalid`, where contracts §1.1 gives `dangling_reference`. One validator, `_ids_resolve`, now reports both problems in one message;
+  the API answers `dangling_reference`, and its detail names the relationship and the repeated id.
+  The TypeScript engine is unchanged: `toTriplets` refuses a repeated id and, as before, does not
+  check references.
+- *gv-017's warnings.* It listed none, and both harnesses check only the warnings a vector lists,
+  so the two the engine emits for it went unchecked; parity compares the engines with each other,
+  not with a hand-computed value. It now lists `gt_boxes_not_pairs`, since PredCls hands over
+  boxes, and `zero_shot_unavailable`, since no training split is supplied; its why derives both
+  and rules out the other four, which no harness checks, since both test inclusion only. The
+  regenerated `vectors.json` differs from the committed one by gv-017 alone. Eight vectors,
+  gv-005 to gv-011 and gv-014, still list no warnings, and gv-002 to gv-004 list one of three;
+  D100's review named gv-017 only, and this branch leaves the others.
+
+**On the playgrounds** (commit `680dc35`).
+- *E10's box ids.* SGCls wrote "boxes #1 to #{n}" with n the count of objects, which is true only
+  when the ids run 1 to n. `idRun` in `logic.ts` gives the first and last id when the ids run
+  without a gap, and E10 lists the ids where they do not; ph-001 still reads "boxes #1 to #6; no
+  labels".
+- *The frame in the strings.* `playground.e10.picture` named ph-001, and so did F3's and E1's
+  picture strings, which the review did not list; each now takes `{frame}` from its playground's
+  setup, and E1's also takes `{triplet}` from the annotated relationship. E10's doc comment names
+  `E10_FRAME`.
+- *E1's toggles.* 繁體中文 read 「主詞框位移 45 px」 and 「受詞框位移 55 px」, without the axis
+  English gives, and both locales wrote 45, 55 and the three defect names as literals. The five
+  labels are filled from `E1_DEFECTS` and the annotated triplet, a shift written as its nonzero
+  axes, so 繁體中文 reads 「主詞框位移 Δx 45 px」. English reads as it did.
+- *E10's columns.* The ► sign and the 4 px rule were drawn in the chosen row alone. Measured,
+  that moved the formula column's left edge by 18.7 to 40.0 px and the count column's by 11.6 to
+  24.1 px as the protocol changed, over both vocabularies at the three projector sizes; the name
+  column stayed at 67 px. Every row now carries the sign and the rule, invisible and transparent
+  outside the chosen row, and a projector test holds the three column edges equal under all three
+  protocols. Each part was needed: with the sign alone reserved, SGCls chosen against PredCls
+  still moved the formula column 2.0, 2.6 and 4.2 px at the three sizes, which fits a collapsed
+  4 px border (Tailwind's preflight collapses a table's borders) widening the first column by
+  half its width and the table's layout spreading that over the wider panels; with the rule alone,
+  19.9 px at 1024 × 768. The chosen row's weight moved nothing: a bold copy of each name,
+  reserving its width in every row, was tried, the test passed without it at all three sizes, and
+  it was removed.
+
+**Watched failing first.** The Python schema test and the API test, before `_ids_resolve`. gv-017,
+under a mutant of both engines that drops `gt_boxes_not_pairs` under `semi`: both harnesses passed
+it on the committed vectors and fail it on the new ones; parity passes the mutant, since the
+engines agree. Ten unit tests of commit `680dc35`: `idRun`'s three, before it existed; E10's three
+on renumbered ids, which printed "boxes #1 to #6" whatever the ids were; the three picture-string
+tests, on the literal frame id; and E1's label test, on 繁體中文's missing axis. The column test
+failed at all three sizes. This record's own test failed on its missing heading.
+
+**The branch review** found no Critical issue, two Important ones and nine minors; both
+Important ones and seven minors were acted on.
+- *The sign's visibility had no test.* jsdom applies no Tailwind, and the column test measured
+  edges only, so no test said which rows show the sign. E10's unit test now requires `invisible` on the two unchosen rows' signs, and the projector test
+  the computed visibility under each protocol. Both failed on both mutants, the projector test at
+  all three sizes.
+- *§25's first table* was said to be the gate run after the records were written; `test:e2e` and
+  `check:perf` had run on commit `680dc35`'s code. §25 now says which run each row is from.
+- *Minors acted on.* E1's label test renders all five labels in 繁體中文, and the three picture
+  tests their 繁體中文 alt text. A single box reads "boxes #5", held by a test that fails when the
+  condition is `run` alone. A test pins each E1 shift to one axis, on which the label's English
+  join depends. This record says that no harness checks a warning's absence, and gives the 2.0 px
+  with the sizes it varies over. §25 counts tests where it said suites. INDEX's "ten newest"
+  requirement tests are twelve and not the newest; the phrase is gone.
+- *Commit messages.* `680dc35` gives 18.7 to 40.0 px for both columns; the count column moved
+  11.6 to 24.1 px. `f6e642c` says its records test holds the counts in INDEX and README; it held
+  two of README's and none of INDEX's, and now also holds their pytest and vitest counts.
+- *Set aside.* A rule in `i18n_parity.mjs` comparing placeholders between locales, since every
+  new placeholder is now rendered in both; and the column measurements' raw output, since this
+  repository keeps no run's log.
+
+**Verification.** `npm run ci` exit 0: 279 pytest and 7 skipped (277 before), **883
+vitest in 65 files** (870 in 64 before), parity 17, i18n **323 keys** (322 before), content lint
+clean over 17 golden cases. `npm run test:e2e` **75** (72 before; the column test runs at three
+sizes). `npm run check:perf` 23. See VERIFICATION §25.
+
+**At the merge.** `feat/sgs-kp-index` reached `main` first (commit `7754926`) and took D101, so
+this record, written as D101 on its branch, is D102, and every reference to it in the code and the
+tests was renumbered. The two records tests were joined: D101's now requires at least 101
+deviations, as it had made D100's require at least 100, and this record's pins 102. The records
+files conflicted and nothing else did. On the merged result `npm run ci` exited 0 with 279 pytest
+and 7 skipped, **893 vitest in 66 files**, parity 17 and i18n **331 keys**; `npm run test:e2e`
+75 passed.

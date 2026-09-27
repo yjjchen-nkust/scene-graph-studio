@@ -49,6 +49,19 @@ def test_repeated_object_id_is_rejected():
     assert "object_ids [2] appear more than once in this graph" in str(e.value)
 
 
+def test_a_dangling_reference_is_reported_beside_a_repeated_id():
+    # The repeated-id check ran first and raised alone, so the dangling reference went unreported
+    # and the API answered schema_invalid where contracts §1.1 gives dangling_reference (D102).
+    g = _graph([{"relationship_id": 7, "subject_id": 99, "object_id": 2, "predicate": "on"}])
+    g["objects"].append(
+        {"object_id": 2, "names": ["chair"], "bbox": {"x": 50, "y": 5, "w": 20, "h": 20}}
+    )
+    with pytest.raises(ValidationError) as e:
+        SceneGraph.model_validate(g)
+    assert "object_ids [2] appear more than once in this graph" in str(e.value)
+    assert "relationships [7] reference object_ids not present in this graph: [99]" in str(e.value)
+
+
 def test_reconstructed_fidelity_requires_a_note():
     bad = _graph([])
     bad["provenance"] = {"kind": "model", "fidelity": "reconstructed", "model": "motifs"}

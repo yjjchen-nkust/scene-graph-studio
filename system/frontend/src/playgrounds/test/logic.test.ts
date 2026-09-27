@@ -10,7 +10,7 @@ import { F3_FRAME, F3_OBJECT, F3_RANGES } from '../F3/setup';
 import {
   annotatedTriplet, area, candidateSpace, conjuncts, failureMode, frameVerdict, hypothesisSpace, iouCounts,
   canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
-  headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
+  headShare, idRun, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
   ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, tripletKey, truncatedRatio, unionArea,
   valPool, wholePixelBoxes, withDefects, type BoxTriplet,
 } from '../logic';
@@ -613,5 +613,21 @@ describe('E1 against the engine', () => {
     const named = new Set(states.map((s) => withDefects(t, s, E1_DEFECTS)).map((p) => `${p.subject.name}|${p.predicate}|${p.object.name}`));
     expect(named.size).toBe(8);
     expect([...named].filter((k) => annotated.has(k))).toEqual(['box|on|table']);
+  });
+});
+
+describe('idRun', () => {
+  // E10 wrote "boxes #1 to #n" on the assumption that a frame's ids run 1 to n (D102).
+  it('gives the first and last id when the ids run without a gap, in any order', () => {
+    expect(idRun([1, 2, 3, 4, 5, 6])).toEqual({ first: 1, last: 6 });
+    expect(idRun([4, 2, 3])).toEqual({ first: 2, last: 4 });
+  });
+  it('gives null where a gap or a repeat breaks the run, or there is nothing to run', () => {
+    expect(idRun([1, 2, 4])).toBeNull();
+    expect(idRun([1, 1, 2])).toBeNull();
+    expect(idRun([])).toBeNull();
+  });
+  it("runs over ph-001's six objects from 1 to 6", () => {
+    expect(idRun(ph001.objects.map((o) => o.object_id))).toEqual({ first: 1, last: 6 });
   });
 });
