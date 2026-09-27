@@ -85,7 +85,10 @@ cases.append({
         "predicate agree, so the match relation holds on all five conjuncts. "
         "R = 1/1 = 1. One predicate class 'on' with 1 GT and 1 hit, so mR = 1/1 = 1. "
         "No constraint filtering applies to a single pair, so ngR = R. "
-        "No training split supplied, so zR is null."
+        "No training split supplied, so zR is null. Warnings: PredCls hands over boxes, not "
+        "pairs, and no training split is supplied, so gt_boxes_not_pairs and "
+        "zero_shot_unavailable; one score cannot tie, neither graph carries masks, and neither is "
+        "empty, so no other."
     ),
     "hand_checked": True,
     "gt": graph("gv1", [obj(1, "person", PERSON), obj(2, "table", TABLE)],
@@ -477,7 +480,11 @@ cases.append({
         "'on' with 1 GT and 1 hit and 'near' with 1 and 1, so mR@20 = (1/1 + 1/1)/2 = 1. The "
         "constraint is already 'none', so ngR@20 = R@20 = 1. No training split is supplied, so zR "
         "is null. Compare gv-013-mask-pairing-single-mpo, which differs in one parameter and "
-        "halves both figures."
+        "halves both figures. "
+        "Warnings: SGDet hands over neither boxes nor pairs, so not gt_boxes_not_pairs; no "
+        "training split is supplied, so zero_shot_unavailable; masks_ignored is raised when one "
+        "graph carries masks and the other does not, and here both do; 0.9, 0.8 and 0.7 differ, "
+        "and neither graph is empty, so no other."
     ),
     "hand_checked": True,
     "gt": PAIRING_GT,
@@ -504,7 +511,11 @@ cases.append({
         "'near' 0/1, so mR@20 = (1 + 0)/2 = 0.5. The constraint is 'none', so ngR@20 = R@20 = 0.5. "
         "zR is null. Against gv-012-mask-pairing-multi-mpo this is the direction the ECCV 2024 "
         "correction measured on PSG: PSGTR 20.8 -> 11.62, HiLo 30.3 -> 18.33, while VCTree, which "
-        "emits one mask per instance, was approximately unchanged."
+        "emits one mask per instance, was approximately unchanged. "
+        "Warnings: SGDet hands over neither boxes nor pairs, so not gt_boxes_not_pairs; no "
+        "training split is supplied, so zero_shot_unavailable; masks_ignored is raised when one "
+        "graph carries masks and the other does not, and here both do; 0.9, 0.8 and 0.7 differ, "
+        "and neither graph is empty, so no other."
     ),
     "hand_checked": True,
     "gt": PAIRING_GT,
@@ -586,7 +597,11 @@ cases.append({
         "before the graph constraint or any matching. 'on' matches GT 1 (every mask IoU 1.0); GT 2 "
         "is missed. R@20 = 1/2 = 0.5; mR@20 = (1/1 + 0/1)/2 = 0.5; the unconstrained pool is cut "
         "by the same pairing, so ngR@20 = 0.5. zR is null. Compare gv-016, the same scene under "
-        "multi_mpo."
+        "multi_mpo. "
+        "Warnings: SGDet hands over neither boxes nor pairs, so not gt_boxes_not_pairs; no "
+        "training split is supplied, so zero_shot_unavailable; masks_ignored is raised when one "
+        "graph carries masks and the other does not, and here both do; 0.9 and 0.8 differ, and "
+        "neither graph is empty, so no other."
     ),
     "hand_checked": True,
     "gt": DUP_GT,
@@ -610,7 +625,11 @@ cases.append({
         "both survive it: 'on' matches GT 1 and 'near' matches GT 2, every mask IoU 1.0. R@20 = "
         "2/2 = 1.0; mR@20 = (1/1 + 1/1)/2 = 1.0; ngR@20 = 1.0. Keyed on class pairs, the graph "
         "constraint put both on (person, table) and kept one, R 0.5, so under graph the two modes "
-        "could not differ; now they do (D99)."
+        "could not differ; now they do (D99). "
+        "Warnings: SGDet hands over neither boxes nor pairs, so not gt_boxes_not_pairs; no "
+        "training split is supplied, so zero_shot_unavailable; masks_ignored is raised when one "
+        "graph carries masks and the other does not, and here both do; 0.9 and 0.8 differ, and "
+        "neither graph is empty, so no other."
     ),
     "hand_checked": True,
     "gt": DUP_GT,

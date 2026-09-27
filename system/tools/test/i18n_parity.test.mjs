@@ -76,4 +76,23 @@ describe('i18n parity', () => {
     expect(run.ok).toBe(false);
     expect(run.out).toContain('a.range: placeholders differ, en {n}, zh-TW {n} {n}');
   });
+
+  it('refuses a placeholder repeated in one value, even when both locales repeat it', () => {
+    // Both locales agree, and both would print the second {n} as written (D103's review).
+    const run = parity(tables(
+      { 'a.range': '{n} to {n} boxes' },
+      { 'a.range': '{n} 至 {n} 個框' },
+    ));
+    expect(run.ok).toBe(false);
+    expect(run.out).toContain('a.range: {n} occurs more than once in en');
+    expect(run.out).toContain('a.range: {n} occurs more than once in zh-TW');
+  });
+
+  it('counts the keys that carry a placeholder', () => {
+    const run = parity(tables(
+      { 'a.picture': 'Frame {frame}', 'a.plain': 'Plain' },
+      { 'a.picture': '影格 {frame}', 'a.plain': '純文字' },
+    ));
+    expect(run.out).toContain('1 carry a placeholder, all agreeing');
+  });
 });

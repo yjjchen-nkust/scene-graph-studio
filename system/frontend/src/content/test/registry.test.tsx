@@ -400,10 +400,10 @@ describe('the playground step kind', () => {
     for (const item of ['masks_ignored', 'gv-011', 'i18n_parity.test.mjs', '9b678af', 'Waiting to run']) {
       expect(d103, item).toContain(item);
     }
-    atLeast(readme, /(\d+) Python tests/, 280, 'README pytest');
-    atLeast(readme, /(\d+) TypeScript tests across \d+ files/, 899, 'README vitest');
-    atLeast(index, /\*\*(\d+) pytest\*\*/, 280, 'INDEX pytest');
-    atLeast(index, /\*\*(\d+) vitest\*\* in \d+ files/, 899, 'INDEX vitest');
+    atLeast(readme, /(\d+) Python tests/, 281, 'README pytest');
+    atLeast(readme, /(\d+) TypeScript tests across \d+ files/, 901, 'README vitest');
+    atLeast(index, /\*\*(\d+) pytest\*\*/, 281, 'INDEX pytest');
+    atLeast(index, /\*\*(\d+) vitest\*\* in \d+ files/, 901, 'INDEX vitest');
   });
 
   it('the protocol ordering survives nowhere as a law', () => {

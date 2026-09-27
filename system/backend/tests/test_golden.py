@@ -43,6 +43,16 @@ def test_every_case_lists_its_warnings():
     assert [c["id"] for c in CASES if "warnings" not in c["expect"]] == []
 
 
+def test_every_case_derives_its_warnings_in_why():
+    # The list is computed on paper like every other expectation, so its derivation is written
+    # out, naming each warning it lists (D103's review).
+    assert [
+        c["id"]
+        for c in CASES
+        if "Warnings:" not in c["why"] or any(w not in c["why"] for w in c["expect"]["warnings"])
+    ] == []
+
+
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c["id"])
 def test_engine_matches_the_hand_computed_expectation(case):
     body = evaluate(

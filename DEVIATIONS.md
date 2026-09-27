@@ -3665,10 +3665,12 @@ fix problems". Branch `fix/sgs-d102-open`, from `main` at `9b678af`.
   passed `i18n_parity.mjs` and printed wrong in that locale alone. D102 set the rule aside because
   every placeholder it added was rendered in both locales; that covers those strings, and not the
   next translation. The check now compares each key's placeholders between en and zh-TW as a
-  sorted list, so each must appear in both, and as often. All 13 keys agree; no string changed.
+  sorted list, so each must appear in both, and as often, and refuses a placeholder that one value
+  repeats. All 13 keys agree and none repeats one; no string changed. The script now prints how
+  many keys carry a placeholder.
 - *The script had no test.* `tools/test/i18n_parity.test.mjs` runs it over two-locale fixtures, as
-  `content_lint.test.mjs` runs its lint: five tests, one accepting and four refusing. The two
-  placeholder tests failed before the rule existed, and each of the three rules, disabled alone,
+  `content_lint.test.mjs` runs its lint: seven tests, two accepting and five refusing. The
+  placeholder tests failed before their rules existed, and each of the four rules, disabled alone,
   fails its own tests and no other.
 
 **Performance on the merge.** D102's `npm run check:perf` ran on its branch only. On `main` at
@@ -3685,6 +3687,22 @@ literals, so the next record had to rewrite it. It now requires each count to be
 through `atLeast` in `registry.test.tsx`, and this record's test bounds its own counts the same
 way. The new test failed on its missing heading before this record was written.
 
-**Verification.** `npm run ci` exit 0: **280 pytest** and 7 skipped (279 before), **899 vitest in
+**The branch review** found no Critical issue, one Important one and three minors; all four were
+acted on.
+- *Five cases derived no warnings in their `why`.* gv-001, gv-012, gv-013, gv-015 and gv-016
+  listed the right warnings, and `data/golden/README.md` and INDEX said every case derives its
+  set in its `why`, but these five wrote no derivation, and nothing said why the four SGDet cases
+  raise neither `gt_boxes_not_pairs` nor `masks_ignored`. Each now does, and
+  `test_every_case_derives_its_warnings_in_why` requires a "Warnings:" sentence naming every
+  warning a case lists; it failed on those five first. The regenerated `vectors.json` differs from
+  commit `6679f21`'s in their `why` alone.
+- *A placeholder both locales repeat.* The comparison passed `{n}` written twice in en and twice
+  in zh-TW, and both would print the second as written. The rule refusing a repeated placeholder
+  is above; its test failed before it.
+- *13 keys* was counted by a script of the session, not by the run §26 files it under; the check
+  now prints the figure, and its test failed before it did.
+- README's line for `lint:i18n` named one of its rules; it now names the four.
+
+**Verification.** `npm run ci` exit 0: **281 pytest** and 7 skipped (279 before), **901 vitest in
 67 files** (893 in 66 before), parity 17, i18n 331 keys, content lint clean over 17 golden cases.
 No frontend production code changed, so `npm run test:e2e` was not run on the branch. See VERIFICATION §26.

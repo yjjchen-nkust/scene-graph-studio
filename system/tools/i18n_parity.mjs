@@ -25,15 +25,23 @@ for (const [locale, table] of Object.entries(tables)) {
   }
 }
 
-// A placeholder is filled by String.replace, so each locale must carry the same ones, each the
-// same number of times; a translation that drops or repeats one prints wrong in that locale only.
+// A placeholder is filled by String.replace, which fills its first occurrence only, so each locale
+// must carry the same ones, each the same number of times, and no value may repeat one; a
+// translation that drops or repeats one prints wrong in that locale only.
 const placeholders = (value) => [...value.matchAll(/\{(\w+)\}/g)].map((m) => `{${m[1]}}`).sort();
+let placeheld = 0;
 for (const [key, en] of Object.entries(tables['en'])) {
   const zh = tables['zh-TW'][key];
   if (typeof en !== 'string' || typeof zh !== 'string') continue;
   const [a, b] = [placeholders(en), placeholders(zh)];
+  if (a.length || b.length) placeheld += 1;
   if (a.join(' ') !== b.join(' ')) {
     problems.push(`${key}: placeholders differ, en ${a.join(' ') || 'none'}, zh-TW ${b.join(' ') || 'none'}`);
+  }
+  for (const [locale, list] of [['en', a], ['zh-TW', b]]) {
+    for (const p of new Set(list.filter((p, i) => list.indexOf(p) !== i))) {
+      problems.push(`${key}: ${p} occurs more than once in ${locale}`);
+    }
   }
 }
 
@@ -41,4 +49,7 @@ if (problems.length) {
   console.error(`i18n parity: ${problems.length} problem(s)\n  ` + problems.join('\n  '));
   process.exit(1);
 }
-console.log(`i18n parity: ${Object.keys(tables['en']).length} keys, both locales complete`);
+console.log(
+  `i18n parity: ${Object.keys(tables['en']).length} keys, both locales complete; ` +
+  `${placeheld} carry a placeholder, all agreeing`,
+);

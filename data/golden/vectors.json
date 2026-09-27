@@ -3,7 +3,7 @@
   "cases": [
     {
       "id": "gv-001-trivial-exact-match",
-      "why": "One GT, one identical prediction. Subject IoU 1.0, object IoU 1.0, classes and predicate agree, so the match relation holds on all five conjuncts. R = 1/1 = 1. One predicate class 'on' with 1 GT and 1 hit, so mR = 1/1 = 1. No constraint filtering applies to a single pair, so ngR = R. No training split supplied, so zR is null.",
+      "why": "One GT, one identical prediction. Subject IoU 1.0, object IoU 1.0, classes and predicate agree, so the match relation holds on all five conjuncts. R = 1/1 = 1. One predicate class 'on' with 1 GT and 1 hit, so mR = 1/1 = 1. No constraint filtering applies to a single pair, so ngR = R. No training split supplied, so zR is null. Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; one score cannot tie, neither graph carries masks, and neither is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv1",
@@ -2009,7 +2009,7 @@
     },
     {
       "id": "gv-012-mask-pairing-multi-mpo",
-      "why": "The one-stage failure mode of E13, under the mode that permits it. Three predictions sit at one ordered pair of mask instances -- subject mask '04<', object mask '448', identical in both graphs so every IoU is 1.0 -- and multi_mpo admits all three. Ranked by score they are on 0.9, near 0.8, under 0.7. 'on' satisfies all five conjuncts against GT 1 and consumes it; 'near' does the same against GT 2; 'under' agrees with no GT triplet on classes, so it is spurious. R@20 = 2/2 = 1. Two predicate classes are present in the GT, 'on' with 1 GT and 1 hit and 'near' with 1 and 1, so mR@20 = (1/1 + 1/1)/2 = 1. The constraint is already 'none', so ngR@20 = R@20 = 1. No training split is supplied, so zR is null. Compare gv-013-mask-pairing-single-mpo, which differs in one parameter and halves both figures.",
+      "why": "The one-stage failure mode of E13, under the mode that permits it. Three predictions sit at one ordered pair of mask instances -- subject mask '04<', object mask '448', identical in both graphs so every IoU is 1.0 -- and multi_mpo admits all three. Ranked by score they are on 0.9, near 0.8, under 0.7. 'on' satisfies all five conjuncts against GT 1 and consumes it; 'near' does the same against GT 2; 'under' agrees with no GT triplet on classes, so it is spurious. R@20 = 2/2 = 1. Two predicate classes are present in the GT, 'on' with 1 GT and 1 hit and 'near' with 1 and 1, so mR@20 = (1/1 + 1/1)/2 = 1. The constraint is already 'none', so ngR@20 = R@20 = 1. No training split is supplied, so zR is null. Compare gv-013-mask-pairing-single-mpo, which differs in one parameter and halves both figures. Warnings: SGDet hands over neither boxes nor pairs, so not gt_boxes_not_pairs; no training split is supplied, so zero_shot_unavailable; masks_ignored is raised when one graph carries masks and the other does not, and here both do; 0.9, 0.8 and 0.7 differ, and neither graph is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv-pairing",
@@ -2192,7 +2192,7 @@
     },
     {
       "id": "gv-013-mask-pairing-single-mpo",
-      "why": "The same scene under the correction. single_mpo caps the ordered mask pair ('04<', '448') at one prediction, and pairing runs after ranking, so the survivor is 'on' at 0.9 and 'near' and 'under' are dropped before any matching happens. 'on' matches GT 1; GT 2 is never reachable. R@20 = 1/2 = 0.5. Of the two GT predicate classes, 'on' scores 1/1 and 'near' 0/1, so mR@20 = (1 + 0)/2 = 0.5. The constraint is 'none', so ngR@20 = R@20 = 0.5. zR is null. Against gv-012-mask-pairing-multi-mpo this is the direction the ECCV 2024 correction measured on PSG: PSGTR 20.8 -> 11.62, HiLo 30.3 -> 18.33, while VCTree, which emits one mask per instance, was approximately unchanged.",
+      "why": "The same scene under the correction. single_mpo caps the ordered mask pair ('04<', '448') at one prediction, and pairing runs after ranking, so the survivor is 'on' at 0.9 and 'near' and 'under' are dropped before any matching happens. 'on' matches GT 1; GT 2 is never reachable. R@20 = 1/2 = 0.5. Of the two GT predicate classes, 'on' scores 1/1 and 'near' 0/1, so mR@20 = (1 + 0)/2 = 0.5. The constraint is 'none', so ngR@20 = R@20 = 0.5. zR is null. Against gv-012-mask-pairing-multi-mpo this is the direction the ECCV 2024 correction measured on PSG: PSGTR 20.8 -> 11.62, HiLo 30.3 -> 18.33, while VCTree, which emits one mask per instance, was approximately unchanged. Warnings: SGDet hands over neither boxes nor pairs, so not gt_boxes_not_pairs; no training split is supplied, so zero_shot_unavailable; masks_ignored is raised when one graph carries masks and the other does not, and here both do; 0.9, 0.8 and 0.7 differ, and neither graph is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv-pairing",
@@ -2540,7 +2540,7 @@
     },
     {
       "id": "gv-015-duplicate-masks-single-mpo-under-graph",
-      "why": "Objects 3 and 4 repeat the masks of 1 and 2 ('04<', '448'), so the prediction puts 'on' 0.9 on 1->2 and 'near' 0.8 on 3->4 over one ordered pair of masks. single_mpo keeps one prediction per mask pair and runs after ranking, so 'on' survives and 'near' is dropped before the graph constraint or any matching. 'on' matches GT 1 (every mask IoU 1.0); GT 2 is missed. R@20 = 1/2 = 0.5; mR@20 = (1/1 + 0/1)/2 = 0.5; the unconstrained pool is cut by the same pairing, so ngR@20 = 0.5. zR is null. Compare gv-016, the same scene under multi_mpo.",
+      "why": "Objects 3 and 4 repeat the masks of 1 and 2 ('04<', '448'), so the prediction puts 'on' 0.9 on 1->2 and 'near' 0.8 on 3->4 over one ordered pair of masks. single_mpo keeps one prediction per mask pair and runs after ranking, so 'on' survives and 'near' is dropped before the graph constraint or any matching. 'on' matches GT 1 (every mask IoU 1.0); GT 2 is missed. R@20 = 1/2 = 0.5; mR@20 = (1/1 + 0/1)/2 = 0.5; the unconstrained pool is cut by the same pairing, so ngR@20 = 0.5. zR is null. Compare gv-016, the same scene under multi_mpo. Warnings: SGDet hands over neither boxes nor pairs, so not gt_boxes_not_pairs; no training split is supplied, so zero_shot_unavailable; masks_ignored is raised when one graph carries masks and the other does not, and here both do; 0.9 and 0.8 differ, and neither graph is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv-pairing",
@@ -2750,7 +2750,7 @@
     },
     {
       "id": "gv-016-duplicate-masks-multi-mpo-under-graph",
-      "why": "The scene of gv-015 under multi_mpo, which admits both predictions at the one mask pair. The graph constraint keys on the ordered object pair, and 1->2 and 3->4 are two pairs, so both survive it: 'on' matches GT 1 and 'near' matches GT 2, every mask IoU 1.0. R@20 = 2/2 = 1.0; mR@20 = (1/1 + 1/1)/2 = 1.0; ngR@20 = 1.0. Keyed on class pairs, the graph constraint put both on (person, table) and kept one, R 0.5, so under graph the two modes could not differ; now they do (D99).",
+      "why": "The scene of gv-015 under multi_mpo, which admits both predictions at the one mask pair. The graph constraint keys on the ordered object pair, and 1->2 and 3->4 are two pairs, so both survive it: 'on' matches GT 1 and 'near' matches GT 2, every mask IoU 1.0. R@20 = 2/2 = 1.0; mR@20 = (1/1 + 1/1)/2 = 1.0; ngR@20 = 1.0. Keyed on class pairs, the graph constraint put both on (person, table) and kept one, R 0.5, so under graph the two modes could not differ; now they do (D99). Warnings: SGDet hands over neither boxes nor pairs, so not gt_boxes_not_pairs; no training split is supplied, so zero_shot_unavailable; masks_ignored is raised when one graph carries masks and the other does not, and here both do; 0.9 and 0.8 differ, and neither graph is empty, so no other.",
       "hand_checked": true,
       "gt": {
         "image_id": "gv-pairing",

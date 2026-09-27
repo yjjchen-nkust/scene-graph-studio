@@ -1277,10 +1277,10 @@ D103. Every number below is from the run that produced it. `npm run check:perf` 
 
 | Step | Result |
 |---|---|
-| pytest | **280 passed**, 7 skipped (279 before) |
-| vitest | **899 passed in 67 files** (893 in 66 before) |
+| pytest | **281 passed**, 7 skipped (279 before) |
+| vitest | **901 passed in 67 files** (893 in 66 before) |
 | parity | 17 cases agree |
-| i18n parity | 331 keys, both locales complete; 13 keys carry a placeholder, all agreeing |
+| i18n parity | 331 keys, both locales complete; 13 carry a placeholder, all agreeing |
 | content lint | 17 golden cases, 42 playground cases, 25 release figures, clean |
 | `npm run check:perf`, `main` | 23 passed; F3 33.8 ms, E1 34.4 ms, E10 31.8 ms |
 
@@ -1317,14 +1317,23 @@ The five are gv-009, gv-012, gv-013, gv-015 and gv-016, the cases whose graphs b
 
 ### i18n parity by mutation
 
-Each rule of `i18n_parity.mjs` disabled alone, against `tools/test/i18n_parity.test.mjs`'s five
-tests:
+Each rule of `i18n_parity.mjs` disabled alone, against `tools/test/i18n_parity.test.mjs`'s seven
+tests, after the branch review:
 
 | Rule disabled | Result |
 |---|---|
 | a key in one locale only | 1 failed: the missing-key test |
 | an empty value | 1 failed: the empty-value test |
-| the placeholders | 2 failed: both placeholder tests |
+| the placeholders compared between locales | 2 failed: a placeholder dropped, and one repeated in one locale |
+| a placeholder repeated in one value | 1 failed: the repeat in both locales |
+
+### After the branch review
+
+`test_every_case_derives_its_warnings_in_why` failed on gv-001, gv-012, gv-013, gv-015 and gv-016
+before their `why` sentences were written, and passed after; pytest's golden file then passed 22.
+The regenerated `vectors.json` differs from commit `6679f21`'s in those five cases' `why` alone.
+The repeat test and the count test of `i18n_parity.test.mjs` failed, 2 of 7, before the rule and
+the count were added.
 
 ### The runner
 

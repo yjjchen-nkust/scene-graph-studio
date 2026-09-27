@@ -373,12 +373,12 @@ protocol changes, where they had moved by up to 40 px. See D102 and VERIFICATION
 **The open checks, 2026-09-28.** Every golden vector lists the complete set of warnings the
 engine raises for it, derived in its `why`, and both harnesses compare that set exactly, so a
 warning raised in error fails; eleven vectors had listed fewer. `i18n_parity.mjs` requires each
-key to carry the same placeholders in both locales, each as often, and a suite holds its three
-rules. `npm run check:perf` passed 23 on the merged `main`. CI for `9b678af` is still waiting
+key to carry the same placeholders in both locales, each as often, and no value to repeat one,
+and a suite holds its four rules. `npm run check:perf` passed 23 on the merged `main`. CI for `9b678af` is still waiting
 for a runner. See D103 and VERIFICATION §26.
 
-**Verification.** `npm run ci` green, 2026-09-28, after D103: **280 pytest** and 7 skipped, parity 17 agree, i18n 331 keys both locales,
-**899 vitest** in 67 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**Verification.** `npm run ci` green, 2026-09-28, after D103: **281 pytest** and 7 skipped, parity 17 agree, i18n 331 keys both locales,
+**901 vitest** in 67 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 44 symbols, 42 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (254 equations), frontend builds. `npm run test:e2e`,
