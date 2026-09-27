@@ -317,8 +317,8 @@
   "playground.e10.boxes_only": "boxes #1 to #{n}; no labels",
   "playground.e10.nothing": "no boxes, no labels",
   "playground.e10.count": "Hypotheses per triplet",
-  "playground.e10.boxes_note": "B = C(641, 2) · C(481, 2) whole-pixel boxes",
-  "playground.e10.to_l2": "Recall per protocol is scored in L2.",
+  "playground.e10.boxes_note": "B = C({w}, 2) · C({h}, 2) = {b} whole-pixel boxes",
+  "playground.e10.to_l2": "Recall under each protocol is scored in L2.",
   "playground.e10.picture": "Frame ph-001, as the chosen protocol hands it over",
   "playground.e10.inclusion_if": "when the given boxes are distinct whole-pixel boxes inside the photograph and the given labels are in 𝒞"
 }

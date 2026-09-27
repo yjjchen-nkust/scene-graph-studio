@@ -27,7 +27,20 @@ export function classKey(t: Triplet): string {
   return JSON.stringify(classes(t));
 }
 
+/** Ids that name more than one object, ascending. */
+function repeatedIds(graph: SceneGraph): number[] {
+  const counts = new Map<number, number>();
+  for (const o of graph.objects) counts.set(o.object_id, (counts.get(o.object_id) ?? 0) + 1);
+  return [...counts].filter(([, n]) => n > 1).map(([id]) => id).sort((a, b) => a - b);
+}
+
 export function toTriplets(graph: SceneGraph): Triplet[] {
+  // The constraint key is the ordered id pair (D99). backend/app/schema.py refuses a repeated id,
+  // which the map below would otherwise resolve to the last object where Python took the first.
+  const repeated = repeatedIds(graph);
+  if (repeated.length > 0) {
+    throw new Error(`object_ids [${repeated.join(', ')}] appear more than once in this graph`);
+  }
   const byId = new Map(graph.objects.map((o) => [o.object_id, o]));
   return graph.relationships.map((r, index) => {
     const s = byId.get(r.subject_id)!;

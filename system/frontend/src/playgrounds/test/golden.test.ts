@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import golden from '../../../../../data/content/playground_golden.json';
 import { VG150_CLASSES, VG150_PREDICATES } from '../E10/setup';
-import { E1_RELATIONSHIP } from '../E1/setup';
+import { E1_DEFECTS, E1_RELATIONSHIP } from '../E1/setup';
 import { F3_FRAME, F3_OBJECT } from '../F3/setup';
 import { OBJECT_GROUP, PREDICATE_GROUP } from '../F6/groups';
 import {
@@ -161,7 +161,7 @@ describe('playground golden cases', () => {
     const pred = withDefects(t, {
       cs: c.knobs.cs as boolean, co: c.knobs.co as boolean, p: c.knobs.p as boolean,
       bs: c.knobs.bs as boolean, bo: c.knobs.bo as boolean,
-    });
+    }, E1_DEFECTS);
     const [isShared, isUnion] = iouCounts(pred.subject.box, t.subject.box);
     const [ioShared, ioUnion] = iouCounts(pred.object.box, t.object.box);
     const holds = conjuncts(pred, t, 0.5);

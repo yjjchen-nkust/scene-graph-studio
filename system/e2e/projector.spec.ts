@@ -34,7 +34,7 @@ const PARTS_LONGEST = [
   'm01/8?X1.r=xu-2017&X1.vs=sgb-v1', 'm01/9?X1.r=sgb-v1&X1.vs=sgb-v2', 'm01/10?X1.r=xu-2017&X1.vs=sgb-v2',
   'm02/2?F3.lambda=2&F3.dx=120&F3.dy=100', 'm02/3?F3.lambda=2&F3.tau=0.95&F3.dx=120&F3.dy=100',
   'm03/2?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1', 'm03/3?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1',
-  'm03/5?E10.pr=predcls', 'm03/6?E10.pr=sgdet&E10.voc=vg150',
+  'm03/3?E1.bs=1',  'm03/5?E10.pr=predcls', 'm03/6?E10.pr=sgdet&E10.voc=vg150',
 ];
 
 const SIZES = [

@@ -587,6 +587,55 @@ cases.append({
 })
 
 
+# ---------------------------------------------------------------- gv-017
+# The semi constraint, re-keyed on the ordered object pair in D99, had no vector (D100).
+GV17_OBJECTS = [obj(1, "hand", HAND_1), obj(2, "hand", HAND_2), obj(3, "assembly", ASSEMBLY)]
+
+cases.append({
+    "id": "gv-017-semi-constraint-per-object-pair",
+    "why": (
+        "Hand#1 on assembly#3 carries three annotated predicates, holding, assembling and "
+        "touching, and hand#2 on assembly#3 carries holding; the prediction scores the four 0.9, "
+        "0.8, 0.7 and 0.6 on the same boxes. semi with a cap of 2 per ordered object pair keeps "
+        "holding and assembling on 1->3, drops touching, and keeps holding on 2->3, so three "
+        "survive and all three match: R@20 = 3/4 = 0.75. Per predicate class: holding 2/2, "
+        "assembling 1/1, touching 0/1, so mR@20 = (1 + 1 + 0)/3 = 2/3. ngR@20 reads the "
+        "unconstrained pool: 4/4 = 1.0. zR is null. A cap of 2 per class pair (hand, assembly) "
+        "would keep only the first two, R 2/4 = 0.5, and graph, a cap of 1 per object pair, keeps "
+        "holding on each pair, R 2/4 = 0.5; 0.75 is neither."
+    ),
+    "hand_checked": True,
+    "gt": graph(
+        "gv17",
+        GV17_OBJECTS,
+        [
+            rel(1, 1, "holding", 3), rel(2, 1, "assembling", 3), rel(3, 1, "touching", 3),
+            rel(4, 2, "holding", 3),
+        ],
+        "gt",
+    ),
+    "pred": graph(
+        "gv17",
+        GV17_OBJECTS,
+        [
+            rel(1, 1, "holding", 3, 0.9), rel(2, 1, "assembling", 3, 0.8),
+            rel(3, 1, "touching", 3, 0.7), rel(4, 2, "holding", 3, 0.6),
+        ],
+        "pred",
+    ),
+    "params": {**P_NONE, "constraint": "semi", "semi_constraint_max_per_pair": 2},
+    "expect": {
+        "R": {"20": 0.75}, "mR": {"20": 2 / 3}, "ngR": {"20": 1.0}, "zR": {"20": None},
+        "verdicts": [
+            {"pred_index": 0, "verdict": "match"},
+            {"pred_index": 1, "verdict": "match"},
+            {"pred_index": 3, "verdict": "match"},
+            {"pred_index": -1, "verdict": "missed"},
+        ],
+    },
+})
+
+
 out = DATA_DIR / "golden" / "vectors.json"
 out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text(

@@ -10,7 +10,7 @@ import {
 import type { PlaygroundProps } from '../mounts';
 import { MARK_ANNOTATED, MARK_PREDICTED, PhotoMarks } from '../PhotoMarks';
 import { frameById } from '../slice';
-import { E1_FRAME, E1_RELATIONSHIP } from './setup';
+import { E1_DEFECTS, E1_FRAME, E1_RELATIONSHIP } from './setup';
 
 /** The photograph's height at most, in viewport heights. */
 const PICTURE_VH = 34;
@@ -68,7 +68,7 @@ export function MatchRelation({ part }: PlaygroundProps = {}) {
   // Committed data, pinned by `logic.test.ts`: relationship 1 of ph-001 is box#3 on table#1.
   const frame = frameById(E1_FRAME)!;
   const gt = annotatedTriplet(frame, E1_RELATIONSHIP);
-  const pred = withDefects(gt, defects);
+  const pred = withDefects(gt, defects, E1_DEFECTS);
   const holds = conjuncts(pred, gt, XU_TAU);
   const relation = Object.values(holds).every(Boolean);
   const mode = failureMode(holds);

@@ -1,8 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
+import en from '../../../i18n/en.json';
 import { setLocale } from '../../../i18n/useLocale';
+import zh from '../../../i18n/zh-TW.json';
+import { frameById } from '../../slice';
 import { ProtocolSpaces } from '../ProtocolSpaces';
+import { E10_FRAME } from '../setup';
 
 beforeEach(() => setLocale('en'));
 
@@ -81,6 +85,15 @@ describe('E10', () => {
     // U+25BA has no emoji presentation; U+25B6 is drawn as a coloured emoji on Windows.
     expect(marks[0]).toHaveTextContent('►');
     expect(screen.getByTestId('e10-row-sgcls')).toContainElement(marks[0]!);
+  });
+
+  it('builds the boxes note from its frame and prints B', () => {
+    renderAt('/m/m03?E10.pr=sgdet');
+    const f = frameById(E10_FRAME)!;
+    // C(641, 2) = 205,120 and C(481, 2) = 115,440, whose product is B.
+    expect(screen.getByTestId('e10-boxes-note')).toHaveTextContent(
+      `B = C(${f.width + 1}, 2) · C(${f.height + 1}, 2) = 23,679,052,800 whole-pixel boxes`);
+    for (const table of [en, zh]) expect(table['playground.e10.boxes_note']).not.toMatch(/\d{3}/);
   });
 
   it('reads in 繁體中文', () => {

@@ -317,7 +317,7 @@
   "playground.e10.boxes_only": "框 #1 至 #{n}；無標籤",
   "playground.e10.nothing": "無框、無標籤",
   "playground.e10.count": "每個三元組之假設數",
-  "playground.e10.boxes_note": "B = C(641, 2) · C(481, 2) 個整數像素框",
+  "playground.e10.boxes_note": "B = C({w}, 2) · C({h}, 2) = {b} 個整數像素框",
   "playground.e10.to_l2": "各協定下之 recall 由 L2 評分。",
   "playground.e10.picture": "影格 ph-001，依所選協定提供之內容",
   "playground.e10.inclusion_if": "前提為所給之框為相片內互異之整數像素框，且所給之標籤屬於 𝒞"

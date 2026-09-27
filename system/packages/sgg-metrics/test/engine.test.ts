@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { applyConstraint, evaluate, rank } from '../src/index.js';
+import { applyConstraint, evaluate, rank, toTriplets } from '../src/index.js';
 import type { SceneGraph } from '../src/types.js';
 import { boxIou } from '../src/iou.js';
 import { encodeCounts, decodeCounts, maskIou } from '../src/rle.js';
@@ -108,6 +108,28 @@ describe('the constraint key is the ordered object pair (D99)', () => {
   it('a self-pair is a pair', () => {
     const same = [t(1, 'arm', 'near', 'arm', 0.9, 4, 4), t(2, 'arm', 'on', 'arm', 0.8, 4, 4)];
     expect(applyConstraint(rank(same), 'graph', 1)).toHaveLength(1);
+  });
+});
+
+describe('an object_id names one object (D100)', () => {
+  // Python resolved the first of two objects sharing an id and TypeScript the last, and the
+  // constraint key is the id pair (D99), so both engines refuse such a graph.
+  const repeated: SceneGraph = {
+    image_id: 'repeated',
+    dataset: 'placeholder',
+    width: 100,
+    height: 100,
+    objects: [
+      { object_id: 1, names: ['man'], bbox: { x: 0, y: 0, w: 10, h: 10 } },
+      { object_id: 2, names: ['table'], bbox: { x: 20, y: 0, w: 10, h: 10 } },
+      { object_id: 2, names: ['chair'], bbox: { x: 40, y: 0, w: 10, h: 10 } },
+    ],
+    relationships: [{ relationship_id: 1, subject_id: 1, object_id: 2, predicate: 'on' }],
+    provenance: { kind: 'ground_truth', fidelity: 'measured' },
+  };
+
+  it('refuses a graph that repeats an object_id', () => {
+    expect(() => toTriplets(repeated)).toThrow('object_ids [2] appear more than once in this graph');
   });
 });
 

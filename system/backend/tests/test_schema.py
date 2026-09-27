@@ -37,6 +37,18 @@ def test_dangling_subject_is_rejected():
     assert "99" in str(e.value)
 
 
+def test_repeated_object_id_is_rejected():
+    # Python resolved the first of two objects sharing an id and TypeScript the last, and the
+    # constraint key is the id pair (D99), so both engines refuse such a graph (D100).
+    g = _graph([{"relationship_id": 1, "subject_id": 1, "object_id": 2, "predicate": "on"}])
+    g["objects"].append(
+        {"object_id": 2, "names": ["chair"], "bbox": {"x": 50, "y": 5, "w": 20, "h": 20}}
+    )
+    with pytest.raises(ValidationError) as e:
+        SceneGraph.model_validate(g)
+    assert "object_ids [2] appear more than once in this graph" in str(e.value)
+
+
 def test_reconstructed_fidelity_requires_a_note():
     bad = _graph([])
     bad["provenance"] = {"kind": "model", "fidelity": "reconstructed", "model": "motifs"}

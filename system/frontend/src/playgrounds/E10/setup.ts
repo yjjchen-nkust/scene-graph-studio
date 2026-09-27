@@ -1,3 +1,6 @@
+/** The photograph E10 hands over under each protocol; B is counted from its size. */
+export const E10_FRAME = 'ph-001';
+
 /**
  * VG-150's vocabulary. Xu et al. 2017, arXiv 1701.02426v2, §4 (p. 5): "we use the most frequent
  * 150 object categories and 50 predicates for evaluation." The two literals E10 carries, each
