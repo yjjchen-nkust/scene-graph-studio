@@ -240,6 +240,102 @@
       "knobs": { "dx": 0, "dy": 0, "lambda": 2, "tau": 0.25 },
       "expect": { "intersection": 6300, "union": 25200, "iou": 0.25, "bound": 0.25, "member": true, "unreachable": false },
       "why": "At lambda 2 the prediction is 180 x 140 = 25200 at (205, 205) and contains the annotation: IoU = 6300 / 25200 = 0.25, and the bound 6300 / 25200 = 0.25. With tau = 0.25 the concentric box meets tau exactly, so it counts, and the bound is not below tau."
+    },
+    {
+      "id": "pg-E1-none",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": false, "co": false, "p": false, "bs": false, "bo": false },
+      "expect": { "is_shared": 6300, "is_union": 6300, "io_shared": 46200, "io_union": 46200, "relation": true, "mode": "none", "verdict": "match" },
+      "why": "No defect: box#3 on table#1 against itself. Subject box 90 x 70 unchanged: 6300 / 6300; object box 420 x 110 unchanged: 46200 / 46200. Both IoUs are 1 >= 0.5 and all three names agree, so t-hat ~ t holds and the diff says match."
+    },
+    {
+      "id": "pg-E1-subject-class",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": true, "co": false, "p": false, "bs": false, "bo": false },
+      "expect": { "is_shared": 6300, "is_union": 6300, "io_shared": 46200, "io_union": 46200, "relation": false, "mode": "name", "verdict": "spurious" },
+      "why": "Subject class box -> glove. Subject box 90 x 70 unchanged: 6300 / 6300; object box 420 x 110 unchanged: 46200 / 46200. Both IoUs are 1, but c(s-hat) = glove != box, so the classification half fails; (glove, on, table) is annotated nowhere in ph-001, so the diff says spurious."
+    },
+    {
+      "id": "pg-E1-predicate",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": false, "co": false, "p": true, "bs": false, "bo": false },
+      "expect": { "is_shared": 6300, "is_union": 6300, "io_shared": 46200, "io_union": 46200, "relation": false, "mode": "name", "verdict": "spurious" },
+      "why": "Predicate on -> near. Subject box 90 x 70 unchanged: 6300 / 6300; object box 420 x 110 unchanged: 46200 / 46200. Right place, wrong name: (box, near, table) is annotated nowhere in ph-001, so the diff says spurious, not localization."
+    },
+    {
+      "id": "pg-E1-subject-box",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": false, "co": false, "p": false, "bs": true, "bo": false },
+      "expect": { "is_shared": 3150, "is_union": 9450, "io_shared": 46200, "io_union": 46200, "relation": false, "mode": "place", "verdict": "localization" },
+      "why": "Subject box moved 45 px right: it spans x 295 to 385 against 250 to 340, so the overlap is (340 - 295) x 70 = 3150 and the union 6300 + 6300 - 3150 = 9450; IoU = 3150 / 9450 = 0.333 < 0.5. The names agree, so the diff says localization."
+    },
+    {
+      "id": "pg-E1-both-boxes",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": false, "co": false, "p": false, "bs": true, "bo": true },
+      "expect": { "is_shared": 3150, "is_union": 9450, "io_shared": 23100, "io_union": 69300, "relation": false, "mode": "place", "verdict": "localization" },
+      "why": "Both boxes moved. Subject: 3150 / 9450 = 0.333. Object moved 55 px down: it spans y 355 to 465 against 300 to 410, overlap 420 x (410 - 355) = 23100, union 46200 + 46200 - 23100 = 69300, IoU = 0.333. Names agree: localization."
+    },
+    {
+      "id": "pg-E1-name-and-place",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": false, "co": false, "p": true, "bs": true, "bo": false },
+      "expect": { "is_shared": 3150, "is_union": 9450, "io_shared": 46200, "io_union": 46200, "relation": false, "mode": "both", "verdict": "spurious" },
+      "why": "Predicate on -> near and subject box moved: 3150 / 9450 = 0.333 < 0.5 and a name wrong, so both halves fail. A wrong name is spurious wherever its box sits, so the diff says spurious, as it does for the name alone."
+    },
+    {
+      "id": "pg-E10-predcls-slice",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "predcls", "vocabulary": "slice" },
+      "expect": { "count": "480" },
+      "why": "6 objects, 6 x 5 = 30 ordered pairs of distinct objects; the slice has 16 predicates: 30 x 16 = 480, F1's candidate count."
+    },
+    {
+      "id": "pg-E10-sgcls-slice",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "sgcls", "vocabulary": "slice" },
+      "expect": { "count": "48000" },
+      "why": "30 ordered pairs, 10 classes for each end, 16 predicates: 30 x 10^2 x 16 = 30 x 100 x 16 = 48,000."
+    },
+    {
+      "id": "pg-E10-sgdet-slice",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "sgdet", "vocabulary": "slice" },
+      "expect": { "count": "897116066370414059520000" },
+      "why": "B = 23,679,052,800 = C(641,2) x C(481,2) = 205,120 x 115,440 whole-pixel boxes in 640 x 480; B(B - 1) = 560,697,541,481,508,787,200 ordered pairs of distinct boxes; x 10^2 x 16 = 897,116,066,370,414,059,520,000."
+    },
+    {
+      "id": "pg-E10-predcls-vg150",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "predcls", "vocabulary": "vg150" },
+      "expect": { "count": "1500" },
+      "why": "30 ordered pairs and VG-150's 50 predicates (Xu et al. 2017, section 4): 30 x 50 = 1,500, F1's VG-150 count."
+    },
+    {
+      "id": "pg-E10-sgcls-vg150",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "sgcls", "vocabulary": "vg150" },
+      "expect": { "count": "33750000" },
+      "why": "30 ordered pairs, VG-150's 150 classes for each end and 50 predicates: 30 x 150^2 x 50 = 30 x 22,500 x 50 = 33,750,000."
+    },
+    {
+      "id": "pg-E10-sgdet-vg150",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "sgdet", "vocabulary": "vg150" },
+      "expect": { "count": "630784734166697385600000000" },
+      "why": "B = 23,679,052,800 = C(641,2) x C(481,2) = 205,120 x 115,440 whole-pixel boxes in 640 x 480; B(B - 1) = 560,697,541,481,508,787,200; x 150^2 x 50 = x 1,125,000 = 630,784,734,166,697,385,600,000,000."
     }
   ]
 }
