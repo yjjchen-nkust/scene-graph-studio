@@ -32,35 +32,49 @@ steps:
   - id: s2
     kind: math
     seconds_budget: 300
-    presenter_notes_en: "Five minutes. The match relation is two independent conjuncts — did it name the right thing, did it put it in the right place — and most of the confusing results in this field come from reporting the two as one number. Write the two conjuncts separately on the board and leave them up; s4 uses them."
+    presenter_notes_en: "Five minutes. The match relation is two independent conjuncts — did it name the right thing, did it put it in the right place — and most of the confusing results in this field come from reporting the two as one number. Write the two conjuncts separately on the board and leave them up; s5 uses them."
   - id: s3
     kind: playground
     kp: E1
-    seconds_budget: 180
-    presenter_notes_en: "Three minutes. Open with every toggle off: all five conjuncts hold and the prediction is the annotation. Turn on the subject box shift: IoU 3,150 / 9,450 = 0.333 fails τ = 0.5, the names still agree, and the diff says localization. Turn it off and turn on the predicate swap: the boxes are right, a name is wrong, and the diff says spurious. Turn the box shift back on: both halves fail and the diff still says spurious; it does not separate a wrong name in the right place from both wrong."
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Open with every toggle off: all five conjuncts hold and the prediction is the annotation. Turn on the subject box shift: IoU 3,150 / 9,450 = 0.333 fails τ = 0.5 while the names agree. Then turn it off and turn on the predicate swap: the boxes are right and a name is wrong. Leave the swap on for the next step."
   - id: s4
+    kind: playground
+    kp: E1
+    part: 2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. The toggles carry over from the previous step: with the predicate swapped, Φ_cls fails, Φ_loc holds, and the diff says spurious. Turn on the subject box shift as well: both halves fail and the diff still says spurious; it does not separate a wrong name in the right place from both wrong. Turn the swap off: the name is right, the place is wrong, and the diff says localization."
+  - id: s5
     kind: math
     seconds_budget: 300
     presenter_notes_en: "Five minutes. Separate what is forced from what is observed. Forced: each protocol's hypothesis space contains the one before it, a set inclusion with nothing to measure. Observed: recall under SGDet is below SGCls and below PredCls in every row of the benchmark's own table, MOTIFS 32.78, 38.92, 65.18 at R@50. Ask the room whether the inclusion proves the ordering; it does not, because it says what a model may output, not what any model does."
-  - id: s5
+  - id: s6
     kind: playground
     kp: E10
-    seconds_budget: 180
-    presenter_notes_en: "Three minutes. Step through the three protocols on this slice's vocabulary: 480 hypotheses per triplet under PredCls, 48,000 under SGCls, and a 24-digit count under SGDet, where the boxes themselves are unknown. Each set contains the one before it; that inclusion is what s4 states. Switch to VG-150's vocabulary: 1,500 and 33,750,000. No recall is shown here; how recall moves under the three protocols is L2's, at s8."
-  - id: s6
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Step through the three protocols: PredCls hands over the six boxes and their labels, SGCls the boxes alone, SGDet nothing at all. Each protocol's hypothesis space contains the one before it, the inclusion s5 states. Leave SGDet chosen for the next step."
+  - id: s7
+    kind: playground
+    kp: E10
+    part: 2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. The protocol carries over. On this slice's vocabulary the counts per triplet are 480 under PredCls, 48,000 under SGCls, and a 24-digit number under SGDet, where the boxes themselves are unknown. Switch to VG-150's vocabulary: 1,500 and 33,750,000. No recall is shown here; how recall moves under the three protocols is L2's, at s10."
+  - id: s8
     kind: prose
     seconds_budget: 180
     presenter_notes_en: "Three minutes, and the point is the status of the claim rather than the algorithm. Greedy matching does not guarantee a maximum matching; published numbers are computed greedily, so this project computes them greedily and says so. Mention that data/golden/vectors.json holds a case built to separate the greedy answer from the maximum one — the assumption is tested adversarially rather than asserted."
-  - id: s7
+  - id: s9
     kind: prose
     seconds_budget: 180
     presenter_notes_en: "Three minutes. The match relation has no category for true but unrecorded, so a prediction that is plainly true of the image and absent from the annotation is scored spurious. That follows from two premises and is not an implementation choice anyone can fix. Give all three consequences: the ceiling on measurable precision, the reward to head-heavy models, and what the spurious colour in the diff means from here on."
-  - id: s8
+  - id: s10
     kind: lab
     lab: L2
     seconds_budget: 420
     presenter_notes_en: "Seven minutes on L2. One fixed prediction scored under all three protocols: 0.25, 0.50, 0.75 on this fixture. After the knob has been moved, make the room read the fixture's own description and say which defect in the prediction each step repairs. That is the point of the step; watching the number rise is not."
-  - id: s9
+  - id: s11
     kind: checkpoint
     presenter_notes_en: "Checkpoint. The inference fails because the gap between PredCls and SGDet contains detection quality and relation quality together and cannot be attributed to either. The measurement that settles it is SGCls, which supplies boxes without labels and so separates detection from classification. If the room only says the two are not comparable, ask what they would measure instead."
 ---
@@ -137,11 +151,19 @@ both halves wrong.
 
 ## One triplet, one defect at a time
 
-<Playground kp="E1" />
+<Playground kp="E1" part="1" />
 
 </Step>
 
 <Step id="s4">
+
+## Two halves, and what the diff says
+
+<Playground kp="E1" part="2" />
+
+</Step>
+
+<Step id="s5">
 
 <Intuition>
 
@@ -199,15 +221,23 @@ measured alone, which is a different claim and a more useful one.
 
 </Step>
 
-<Step id="s5">
+<Step id="s6">
 
 ## What each protocol hands over
 
-<Playground kp="E10" />
+<Playground kp="E10" part="1" />
 
 </Step>
 
-<Step id="s6">
+<Step id="s7">
+
+## The space each protocol leaves
+
+<Playground kp="E10" part="2" />
+
+</Step>
+
+<Step id="s8">
 
 ## Greedy assignment is an assumption, not a theorem
 
@@ -226,7 +256,7 @@ distinction is why the engine's documentation calls it an assumption.
 
 </Step>
 
-<Step id="s7">
+<Step id="s9">
 
 ## A missing annotation counts as a mistake
 
@@ -242,7 +272,7 @@ student should always look at twice.
 
 </Step>
 
-<Step id="s8">
+<Step id="s10">
 
 ## In the lab
 
@@ -252,7 +282,7 @@ which single defect in the prediction each step recovers.
 
 </Step>
 
-<Step id="s9">
+<Step id="s11">
 
 ## Checkpoint
 

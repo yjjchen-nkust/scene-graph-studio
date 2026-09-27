@@ -186,12 +186,12 @@ describe('the playground step kind', () => {
     expect((deriv as Record<string, string>).F3).toContain('\\lambda>\\sqrt{2}');
   });
 
-  it('M3 carries E1 and E10, each directly after the step that teaches it', () => {
+  it('M3 carries E1 and E10, in two parts each, directly after the steps that teach them', () => {
     const meta = getMeta('m03', 'en')!;
     const part = (n?: number) => (n === undefined ? '' : `.${n}`);
     expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}${part(s.part)}` : ''}`)).toEqual([
-      's1:prose', 's2:math', 's3:playground/E1', 's4:math', 's5:playground/E10', 's6:prose', 's7:prose',
-      's8:lab', 's9:checkpoint',
+      's1:prose', 's2:math', 's3:playground/E1.1', 's4:playground/E1.2', 's5:math',
+      's6:playground/E10.1', 's7:playground/E10.2', 's8:prose', 's9:prose', 's10:lab', 's11:checkpoint',
     ]);
   });
 

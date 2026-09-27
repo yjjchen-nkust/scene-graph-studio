@@ -173,7 +173,7 @@ test('the node buttons of F2 take Space without advancing the slide', async ({ p
   await expect(position).toHaveText(before ?? '');
 });
 
-test('the study shell renders every playground of M0, M1 and M2 in one column', async ({ page }) => {
+test('the study shell renders every playground of M0 to M3 in one column', async ({ page }) => {
   // Spec §4.1 says the study shell needs no special provision, which is a claim about the
   // product rather than an absence of work: it is true only if a playground renders outside the
   // lecture shell at all. M0 has three, and the student reading alone sees every one of them.
@@ -185,6 +185,8 @@ test('the study shell renders every playground of M0, M1 and M2 in one column', 
   await expect(page.getByTestId('playground-frame')).toHaveCount(7);
   await page.goto('/m/m02');
   await expect(page.getByTestId('playground-frame')).toHaveCount(2);
+  await page.goto('/m/m03');
+  await expect(page.getByTestId('playground-frame')).toHaveCount(4);
 });
 
 test('turning a knob writes it into the address bar, so the setting is a link', async ({ page }) => {
@@ -221,7 +223,7 @@ test('no playground takes focus when its step opens', async ({ page }) => {
   for (const [module, index] of [
     ['m00', 1], ['m00', 2], ['m00', 4], ['m00', 5],
     ['m01', 2], ['m01', 3], ['m01', 5], ['m01', 6], ['m01', 8], ['m01', 9], ['m01', 10],
-    ['m02', 2], ['m02', 3],
+    ['m02', 2], ['m02', 3], ['m03', 2], ['m03', 3], ['m03', 5], ['m03', 6],
   ] as const) {
     await page.goto(`/lecture/m/${module}/${index}`);
     await expect(page.getByTestId('playground-frame')).toBeVisible();
@@ -328,6 +330,55 @@ test('M2\'s knobs write the address bar', async ({ page }) => {
   await page.goto(shared);
   // 99 x 77: λ = 1.1 on the 90 x 70 annotation, which the prediction contains.
   await expect(page.getByTestId('readout-F3.union-value')).toContainText('7,623');
+});
+
+test('M3\'s playgrounds compute with no backend running', async ({ page }) => {
+  await page.goto('/lecture/m/m03/3');
+  await expect(page.getByTestId('e1-verdict')).toHaveText(/match/);
+  await page.goto('/lecture/m/m03/6');
+  await expect(page.getByTestId('e10-row-predcls')).toContainText('480');
+});
+
+test('M3\'s knobs cross from each first part to its second', async ({ page }) => {
+  // D96 carries the query string between the parts of one playground: the verdict on E1's second
+  // part is the one the defects set on its first, and E10's counts mark the protocol chosen there.
+  await page.goto('/lecture/m/m03/2?E1.p=1');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('e1-verdict')).toHaveText(/spurious/);
+  await page.goto('/lecture/m/m03/5?E10.pr=sgdet');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('e10-row-sgdet')).toHaveAttribute('aria-current', 'true');
+});
+
+test('M3\'s knobs work from the keyboard and never advance the deck', async ({ page }) => {
+  const cases = [
+    { step: 3, knob: 'E1.bs', key: 'Space', watch: 'e1-verdict' },
+    { step: 5, knob: 'E10.pr', key: 'ArrowDown', watch: 'e10-given' },
+  ];
+  for (const c of cases) {
+    await page.goto(`/lecture/m/m03/${c.step}`);
+    const position = page.getByTestId('position');
+    const before = await position.textContent();
+    const watched = page.getByTestId(c.watch);
+    const was = await watched.textContent();
+    await page.getByTestId(c.knob).focus();
+    await page.keyboard.press(c.key);
+    await expect(watched, `${c.knob} moved nothing`).not.toHaveText(was ?? '');
+    await expect(position, `${c.knob} advanced the deck`).toHaveText(before ?? '');
+  }
+});
+
+test('M3\'s knobs write the address bar', async ({ page }) => {
+  await page.goto('/lecture/m/m03/2');
+  await page.getByTestId('E1.p').click();
+  await expect(page).toHaveURL(/E1\.p=1/);
+  await page.goto('/lecture/m/m03/5');
+  await page.getByTestId('E10.pr').selectOption('sgdet');
+  await expect(page).toHaveURL(/E10\.pr=sgdet/);
+  const shared = page.url();
+  await page.goto('about:blank');
+  await page.goto(shared);
+  await expect(page.getByTestId('e10-given')).toHaveText(/無框、無標籤|no boxes, no labels/);
 });
 
 test('the knobs cross from one part of a playground to the next, and stop at its end', async ({ page }) => {

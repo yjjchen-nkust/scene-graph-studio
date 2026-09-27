@@ -40,8 +40,13 @@ const ROWS: { key: keyof Conjuncts; label: string }[] = [
  * separate a wrong name in the right place from both halves wrong.
  *
  * Computes five memberships and one relation. No metric.
+ *
+ * Two parts (D96): the defects on the photograph and the five conjuncts, then the two halves, the
+ * relation and what the diff says. As one step it ran 229 px past a 1024×768 panel with every
+ * toggle on. Both parts read all five toggles, so both show them. Mounted without a part, as its
+ * unit tests mount it, it is both.
  */
-export function MatchRelation(_props: PlaygroundProps = {}) {
+export function MatchRelation({ part }: PlaygroundProps = {}) {
   const { t } = useLocale();
   const [params, setParams] = useLabParams({
     'E1.cs': 0,
@@ -66,6 +71,9 @@ export function MatchRelation(_props: PlaygroundProps = {}) {
   const holds = conjuncts(pred, gt, XU_TAU);
   const relation = Object.values(holds).every(Boolean);
   const mode = failureMode(holds);
+  const halves = { cls: holds.cs && holds.co && holds.p, loc: holds.is && holds.io };
+  const conjunctView = part !== 2;
+  const verdictView = part !== 1;
   const verdict = frameVerdict(pred, frame, XU_TAU);
   const counts = {
     is: iouCounts(pred.subject.box, gt.subject.box),
@@ -90,52 +98,73 @@ export function MatchRelation(_props: PlaygroundProps = {}) {
   return (
     <PlaygroundFrame title="E1" controls={controls} clip={false}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        <PhotoMarks
-          frame={frame}
-          marks={[
-            { box: gt.subject.box, line: 'solid', stroke: MARK_ANNOTATED, testid: 'e1-gt-s' },
-            { box: gt.object.box, line: 'solid', stroke: MARK_ANNOTATED, testid: 'e1-gt-o' },
-            { box: pred.subject.box, line: 'dashed', stroke: MARK_PREDICTED, testid: 'e1-pred-s' },
-            { box: pred.object.box, line: 'dashed', stroke: MARK_PREDICTED, testid: 'e1-pred-o' },
-          ]}
-          maxVh={PICTURE_VH}
-          alt={t('playground.e1.picture')}
-          testid="e1-picture"
-        >
-          <p className="mt-1 text-[0.875em] text-slate-700">{t('playground.e1.legend')}</p>
-        </PhotoMarks>
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <table data-testid="e1-conjuncts" className="font-mono text-[1em]">
-            <tbody>
-              {ROWS.map(({ key, label }) => {
-                const pair = key === 'is' || key === 'io' ? counts[key] : null;
-                return (
-                  <tr key={key} data-testid={`e1-c-${key}`} data-holds={String(holds[key])}>
-                    <td className="pr-4 text-slate-900">{label}</td>
-                    <td className={holds[key] ? 'pr-4 text-emerald-900' : 'pr-4 text-slate-700'}>
-                      {t(holds[key] ? 'playground.e1.holds' : 'playground.e1.fails')}
-                    </td>
-                    <td className="text-slate-700">
-                      {pair && `${truncatedRatio(pair[0], pair[1])} = ${COUNT.format(pair[0])} / ${COUNT.format(pair[1])}`}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <p
-            data-testid="e1-relation"
-            className={relation ? 'text-[1.5em] text-emerald-900' : 'text-[1.5em] text-slate-700'}
+        {conjunctView && (
+          <PhotoMarks
+            frame={frame}
+            marks={[
+              { box: gt.subject.box, line: 'solid', stroke: MARK_ANNOTATED, testid: 'e1-gt-s' },
+              { box: gt.object.box, line: 'solid', stroke: MARK_ANNOTATED, testid: 'e1-gt-o' },
+              { box: pred.subject.box, line: 'dashed', stroke: MARK_PREDICTED, testid: 'e1-pred-s' },
+              { box: pred.object.box, line: 'dashed', stroke: MARK_PREDICTED, testid: 'e1-pred-o' },
+            ]}
+            maxVh={PICTURE_VH}
+            alt={t('playground.e1.picture')}
+            testid="e1-picture"
           >
-            {t('playground.e1.relation')}
-            {t(relation ? 'playground.e1.holds' : 'playground.e1.fails')}
-          </p>
-          <p data-testid="e1-mode" className="text-[1em] text-slate-900">
-            {t(`playground.e1.mode_${mode}`)}
-          </p>
-          <p data-testid="e1-verdict" className="font-mono text-[1em] text-slate-900">
-            {t(`playground.e1.verdict_${verdict}`)}
-          </p>
+            <p className="mt-1 text-[0.875em] text-slate-700">{t('playground.e1.legend')}</p>
+          </PhotoMarks>
+        )}
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          {conjunctView && (
+            <table data-testid="e1-conjuncts" className="font-mono text-[1em]">
+              <tbody>
+                {ROWS.map(({ key, label }) => {
+                  const pair = key === 'is' || key === 'io' ? counts[key] : null;
+                  return (
+                    <tr key={key} data-testid={`e1-c-${key}`} data-holds={String(holds[key])}>
+                      <td className="whitespace-nowrap pr-4 text-slate-900">{label}</td>
+                      <td className={holds[key] ? 'whitespace-nowrap pr-4 text-emerald-900' : 'whitespace-nowrap pr-4 text-slate-700'}>
+                        {t(holds[key] ? 'playground.e1.holds' : 'playground.e1.fails')}
+                      </td>
+                      <td className="whitespace-nowrap text-[0.875em] text-slate-700">
+                        {pair && `${truncatedRatio(pair[0], pair[1])} = ${COUNT.format(pair[0])} / ${COUNT.format(pair[1])}`}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+          {verdictView && (
+            <>
+              {(['cls', 'loc'] as const).map((h) => (
+                <p
+                  key={h}
+                  data-testid={`e1-phi-${h}`}
+                  data-holds={String(halves[h])}
+                  className="font-mono text-[1em] text-slate-900"
+                >
+                  {`Φ_${h} `}
+                  <span className={halves[h] ? 'text-emerald-900' : 'text-slate-700'}>
+                    {t(halves[h] ? 'playground.e1.holds' : 'playground.e1.fails')}
+                  </span>
+                </p>
+              ))}
+              <p
+                data-testid="e1-relation"
+                className={relation ? 'text-[1.5em] text-emerald-900' : 'text-[1.5em] text-slate-700'}
+              >
+                {t('playground.e1.relation')}
+                {t(relation ? 'playground.e1.holds' : 'playground.e1.fails')}
+              </p>
+              <p data-testid="e1-mode" className="text-[1em] text-slate-900">
+                {t(`playground.e1.mode_${mode}`)}
+              </p>
+              <p data-testid="e1-verdict" className="font-mono text-[1em] text-slate-900">
+                {t(`playground.e1.verdict_${verdict}`)}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </PlaygroundFrame>
