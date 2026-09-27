@@ -278,6 +278,20 @@ describe('the playground step kind', () => {
     expect(source('../m12.zh-TW.mdx')).not.toContain('確實同時具備 attention 關係與 contacting 關係');
   });
 
+  it('the records carry D100 and the counts it measured', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const index = source('../../../../../docs/INDEX.md');
+    expect(deviations).toContain('## D100 — ');
+    // D98's 15 px predates the inclusion's condition (ca8b276); D100's branch found 71 px.
+    expect(deviations).toContain('[**Corrected 2026-09-27 (D100):** 15 px was measured before');
+    expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 24. ');
+    for (const [name, text] of [['CLAUDE.md', source('../../../../../CLAUDE.md')], ['INDEX', index]]) {
+      expect(text, name).toContain('D1…D100');
+    }
+    expect(index).toContain('The 17 golden vectors');
+    expect(source('../../../../../README.md')).toContain('parity 17/17');
+  });
+
   it('the protocol ordering survives nowhere as a law', () => {
     // The brief, the SRS and an L2 comment repeated what M3 s3 no longer claims (D98).
     const brief = source('../../../../web/brief/index.html');

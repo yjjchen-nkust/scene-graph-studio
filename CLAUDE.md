@@ -50,7 +50,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-22` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D99` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D100` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` is frozen** (2026-09-15) and was harvested into `data/content/`
   as the seed corpus. Do not extend it. Its `pg.js evaluate()` is a teaching toy over fifteen
