@@ -1,5 +1,6 @@
 // NFR-6: a key must exist in both locales, or neither. There is no fallback locale, so a
-// missing key is a visible defect in one language and an invisible one in the other.
+// missing key is a visible defect in one language and an invisible one in the other. The same
+// holds for a placeholder (D103). tools/test/i18n_parity.test.mjs shows each rule failing.
 import { readFileSync } from 'node:fs';
 
 const LOCALES = ['zh-TW', 'en'];
@@ -21,6 +22,18 @@ for (const [locale, table] of Object.entries(tables)) {
     if (typeof value !== 'string' || value.trim() === '') {
       problems.push(`${key}: empty or non-string value in ${locale}`);
     }
+  }
+}
+
+// A placeholder is filled by String.replace, so each locale must carry the same ones, each the
+// same number of times; a translation that drops or repeats one prints wrong in that locale only.
+const placeholders = (value) => [...value.matchAll(/\{(\w+)\}/g)].map((m) => `{${m[1]}}`).sort();
+for (const [key, en] of Object.entries(tables['en'])) {
+  const zh = tables['zh-TW'][key];
+  if (typeof en !== 'string' || typeof zh !== 'string') continue;
+  const [a, b] = [placeholders(en), placeholders(zh)];
+  if (a.join(' ') !== b.join(' ')) {
+    problems.push(`${key}: placeholders differ, en ${a.join(' ') || 'none'}, zh-TW ${b.join(' ') || 'none'}`);
   }
 }
 
