@@ -26,6 +26,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/specs/2026-09-26-split-and-distinct-design.md` | A playground split across steps as parts; triplets counted as a set | **executed** |
 | `superpowers/specs/2026-09-27-playgrounds-m2-design.md` | F3, and three statements about IoU the opened sources contradict | **executed** |
 | `superpowers/specs/2026-09-27-playgrounds-m3-design.md` | E1, E10, and four statements about matching and protocols the engine and sources contradict | **executed** |
+| `superpowers/specs/2026-09-27-graph-constraint-key-design.md` | The graph and semi constraints keyed on object pairs, as the reference keys them | **executed** |
 | `superpowers/plans/…-00-master.md` | Index, dependency graph, global constraints | live |
 | `superpowers/plans/…-01-skeleton-and-eval-engine.md` | Phases 1–2 | **executed** |
 | `superpowers/plans/…-02-graph-labs-and-content.md` | Phases 3–4: graph, L1, L2, harvest, corpus | **executed** |
@@ -35,9 +36,10 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-26-playgrounds-m1.md` | X1's cited figures, rules 9 and 12, the corrections, F6, F7, X1 | **executed** |
 | `superpowers/plans/2026-09-27-playgrounds-m2.md` | The IoU corrections, F3's arithmetic and golden cases, the component, M2 s3 and s4 | **executed** |
 | `superpowers/plans/2026-09-27-playgrounds-m3.md` | M3's corrections, `PhotoMarks`, E1 and E10, their golden cases, M3 s3 to s7 | **executed** |
+| `superpowers/plans/2026-09-27-graph-constraint-key.md` | Both engines re-keyed, gv-014, `semi` described, D51 corrected | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D98. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21) and the M3 playgrounds (§22)** | live |
+| `../DEVIATIONS.md` | **D1…D99. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22) and the graph constraint's key (§23)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
 
@@ -338,9 +340,17 @@ derived four diff colours from two failure modes, where the engine gives the fou
 three verdicts. F3's overlay became `PhotoMarks`, shared by all three. See D98 and VERIFICATION
 §22.
 
-**Verification.** `npm run ci` green, 2026-09-27, after D98: **266 pytest** and 7 skipped (the ten newest
-compare the requirement files to the interpreter), parity 13 agree, i18n 322 keys both locales,
-**845 vitest** in 64 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**The graph constraint keyed on object pairs, 2026-09-27.** Both engines had keyed the graph
+and semi constraints on the ordered pair of class names, where Tang's evaluator, M4's E4 and the
+SRS key on objects; two hands on one assembly kept one predicate between them. `Triplet` now
+carries its object ids and both engines key on them; a fourteenth golden vector pins the
+difference, and the golden builder now reproduces the two vectors it had been missing. D51's
+thirteen imperfect mini-ISG frames are four, and `semi` is described in M4 and M12 as the cap it
+is. See D99 and VERIFICATION §23.
+
+**Verification.** `npm run ci` green, 2026-09-27, after D99: **273 pytest** and 7 skipped (the ten newest
+compare the requirement files to the interpreter), parity 14 agree, i18n 322 keys both locales,
+**853 vitest** in 64 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 44 symbols, 42 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (250 equations), frontend builds. `npm run test:e2e`,

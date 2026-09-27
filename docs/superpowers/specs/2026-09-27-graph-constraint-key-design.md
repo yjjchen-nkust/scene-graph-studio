@@ -44,7 +44,7 @@ implementation whose configuration sets the IoU threshold (M2 design §2).
 **The course's formula**, kp E4 (M4): $\pi(\langle s,p,o\rangle)=(s,o)$; graph constraint
 $\iff \forall\, t\ne t'\in X_k:\ \pi(t)\ne\pi(t')$, with $s$ and $o$ the objects.
 
-**SRS §4.1:** "`graph` — at most one predicate per ordered subject-object pair."
+**SRS §4.5** [cited as §4.1 when this was written; corrected 2026-09-27]**:** "`graph` — at most one predicate per ordered subject-object pair."
 
 **STTran, `lib/evaluation_recall.py`, commit `bcc72cf691015fc5a435ceb95975418b1becdeb4`,
 `evaluate_from_dict`:** with `method == 'semi'`, for each pair in `pred_rel_inds` it keeps the top

@@ -1094,3 +1094,38 @@ test:e2e` 66 passed, E10's second part fitting 1024 × 768 again after its spaci
 `npm run check:perf` 23 passed twice. Timings moved with the machine's load between the two runs:
 E1 53.7 ms and then 33.3 ms, E10 32.3 ms and then 37.8 ms, while playgrounds this branch did not
 touch reached 64.9 to 78.5 ms (F1, F8, X1) in the second.
+
+## 23. The graph constraint's key — measured, 2026-09-27
+
+D99. Every number below is from the run that produced it, on branch `fix/sgs-graph-constraint-key`.
+
+| Step | Result |
+|---|---|
+| pytest | **273 passed**, 7 skipped (266 before) |
+| vitest | **853 passed in 64 files** (845 before) |
+| parity | **14 cases agree** (13 before) |
+| i18n parity | 322 keys, both locales complete |
+| content lint | **14 golden cases**, 42 playground cases, 25 release figures, clean |
+| standalone | up to date, 254 equations |
+| frontend build | 771 modules |
+| `npm run test:e2e` | 66 passed |
+| `npm run check:perf` | 23 passed |
+
+### Watched failing first
+
+Before the re-keying, the new tests failed in both engines: Python at collection, since `Triplet`
+had no `subject_id`; TypeScript on five tests, among them `gv-014` at R 0.5 where 1.0 was expected
+and the ordering counterexample at 0.5 where 1.0 was expected. After it, all pass.
+
+### gv-014
+
+Two hands, one assembly: (hand#1, holding, assembly#3) and (hand#2, assembling, assembly#3). Keyed
+on object pairs both survive the graph constraint and match: R = 2/2 = 1.0, mR = (1/1 + 1/1)/2 = 1.0,
+ngR = 1.0. Keyed on class pairs, R would be 1/2 = 0.5. The regenerated `vectors.json` differs from
+the committed one by this case alone (165 lines added, none removed).
+
+### The mini-ISG reference set against itself
+
+Under the graph constraint at K = 100, four of forty frames score below 1.0: isg-011 (9 of 10),
+isg-013 (8 of 9), isg-025 (8 of 9) and isg-035 (9 of 10), each with one hand holding and assembling
+one object. D51 recorded thirteen under the class-pair key. Under `none`, all forty score 1.0.
