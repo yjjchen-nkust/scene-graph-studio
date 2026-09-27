@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { MatchRelation } from './E1/MatchRelation';
+import { ProtocolSpaces } from './E10/ProtocolSpaces';
 import { LabelsToStructure } from './F1/LabelsToStructure';
 import { TripletCombinatorics } from './F2/TripletCombinatorics';
 import { BoxOverlap } from './F3/BoxOverlap';
@@ -22,6 +23,7 @@ export type PlaygroundProps = { part?: number };
 
 export const PLAYGROUND_MOUNTS: Record<string, ComponentType<PlaygroundProps>> = {
   E1: MatchRelation,
+  E10: ProtocolSpaces,
   F1: LabelsToStructure,
   F2: TripletCombinatorics,
   F3: BoxOverlap,

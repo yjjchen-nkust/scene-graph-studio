@@ -308,5 +308,16 @@
   "playground.e1.verdict_spurious": "The diff: spurious; t missed",
   "playground.e1.tau": "τ = 0.5: Xu et al. 2017, §4",
   "playground.e1.picture": "Frame ph-001: box on table, annotated and predicted",
-  "playground.e1.legend": "Solid: the annotation. Dashed: the prediction."
+  "playground.e1.legend": "Solid: the annotation. Dashed: the prediction.",
+  "playground.e10.protocol": "Protocol",
+  "playground.e10.vocabulary": "Vocabulary",
+  "playground.e10.voc_slice": "This slice",
+  "playground.e10.voc_vg150": "VG-150 (Xu et al. 2017, §4)",
+  "playground.e10.given": "Given to the model: ",
+  "playground.e10.no_labels": "no labels",
+  "playground.e10.nothing": "no boxes, no labels",
+  "playground.e10.count": "Hypotheses per triplet",
+  "playground.e10.boxes_note": "B = C(641, 2) · C(481, 2) whole-pixel boxes",
+  "playground.e10.to_l2": "Recall under each protocol is scored in L2.",
+  "playground.e10.picture": "Frame ph-001, as the chosen protocol hands it over"
 }

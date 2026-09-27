@@ -308,5 +308,16 @@
   "playground.e1.verdict_spurious": "差異圖：spurious；t 為 missed",
   "playground.e1.tau": "τ = 0.5：Xu 等人 2017，§4",
   "playground.e1.picture": "影格 ph-001：box on table 之標註與預測",
-  "playground.e1.legend": "實線：標註；虛線：預測。"
+  "playground.e1.legend": "實線：標註；虛線：預測。",
+  "playground.e10.protocol": "協定",
+  "playground.e10.vocabulary": "詞彙",
+  "playground.e10.voc_slice": "本切片",
+  "playground.e10.voc_vg150": "VG-150（Xu 等人 2017，§4）",
+  "playground.e10.given": "提供予模型：",
+  "playground.e10.no_labels": "無標籤",
+  "playground.e10.nothing": "無框、無標籤",
+  "playground.e10.count": "每個三元組之假設數",
+  "playground.e10.boxes_note": "B = C(641, 2) · C(481, 2) 個整數像素框",
+  "playground.e10.to_l2": "各協定下之 recall 由 L2 評分。",
+  "playground.e10.picture": "影格 ph-001，依所選協定提供之內容"
 }
