@@ -143,17 +143,16 @@ def test_every_annotated_object_takes_part_in_a_relationship():
 
 
 def test_the_reference_set_cannot_score_one_against_itself_under_graph_constraint():
-    """Thirteen frames carry two relations on one *class* pair, and graph constraint keeps one
-    predicate per pair. Scoring the reference against itself therefore gives R = 0.875 on those
-    frames and 1.0 under `none`.
+    """Four frames carry two predicates on one *object* pair, and graph constraint keeps one
+    predicate per ordered object pair. Scoring the reference against itself therefore gives
+    R < 1.0 on exactly those frames, isg-011, isg-013, isg-025 and isg-035, and 1.0 under `none`.
 
-    This is the engine behaving correctly and the data saying something true: in a frame where one
-    hand steadies the assembly while the other works on it, `<hand, holding, assembly>` and
-    `<hand, assembling, assembly>` are both the case, and graph constraint can express one of
-    them. It is the cleanest demonstration in this project of what that constraint costs, so it is
-    pinned here rather than annotated away — and pinned in both directions, because a reference set
-    that quietly started scoring 1.0 would mean somebody had deleted a true relation to make a
-    number look better.
+    D51 pinned thirteen, because the engine keyed the constraint on class pairs: nine of them are
+    two hands on one assembly, `<hand#a, holding, assembly>` and `<hand#b, assembling, assembly>`,
+    two object pairs that Tang's evaluator keeps and that the engine now keeps (D99). The four that
+    remain are two relations the annotator put on one pair of objects, which graph constraint can
+    express one of. Pinned in both directions: a count that rose would mean the key had drifted back
+    toward class names, one that fell would mean a true relation had been deleted.
     """
     from fastapi.testclient import TestClient
 
@@ -174,13 +173,11 @@ def test_the_reference_set_cannot_score_one_against_itself_under_graph_constrain
             elif recall < 1.0:
                 imperfect.append(g.image_id)
 
-    assert len(imperfect) == 13, imperfect
+    assert imperfect == ["isg-011", "isg-013", "isg-025", "isg-035"], imperfect
     for image_id in imperfect:
         graph = load_slice("mini-isg")[int(image_id.split("-")[1]) - 1]
-        names = {o.object_id: o.name for o in graph.objects}
-        pairs = [(names[r.subject_id], names[r.object_id]) for r in graph.relationships]
+        pairs = [(r.subject_id, r.object_id) for r in graph.relationships]
         assert any(pairs.count(p) > 1 for p in pairs), image_id
-
 
 def test_the_obvious_api_call_reaches_a_mini_isg_draft():
     """`POST /api/vlm/indvissgg {"image_id": "isg-001"}` and nothing else.

@@ -391,6 +391,136 @@ cases.append({
 })
 
 
+# ---------------------------------------------------------------- gv-012 and gv-013
+# D36's two vectors, entered into vectors.json by hand when they were written and transcribed here
+# on 2026-09-27 (D99), so that re-running this script is the no-op the docstring promises; before,
+# it wrote eleven cases and deleted these two. Every value is the committed one.
+def pairing_graph(rels: list[dict], kind: str) -> dict[str, Any]:
+    def masked(oid: int, name: str, box: Box, counts: str) -> dict[str, Any]:
+        return {
+            "object_id": oid,
+            "names": [name],
+            "bbox": {"x": box[0], "y": box[1], "w": box[2], "h": box[3]},
+            "mask": {"counts": counts, "size": [4, 4]},
+        }
+
+    return {
+        "image_id": "gv-pairing",
+        "dataset": "psg",
+        "width": 4,
+        "height": 4,
+        "objects": [masked(1, "person", (0, 0, 2, 2), "04<"), masked(2, "table", (0, 2, 2, 2), "448")],
+        "relationships": rels,
+        "provenance": (
+            {"kind": "ground_truth", "fidelity": "measured"}
+            if kind == "gt"
+            else {"kind": "model", "fidelity": "measured", "model": "fixture"}
+        ),
+    }
+
+
+PAIRING_GT = pairing_graph([rel(1, 1, "on", 2), rel(2, 1, "near", 2)], "gt")
+PAIRING_PRED = pairing_graph(
+    [rel(1, 1, "on", 2, 0.9), rel(2, 1, "near", 2, 0.8), rel(3, 1, "under", 2, 0.7)], "pred"
+)
+P_PAIRING = {"protocol": "sgdet", "constraint": "none", "k": [20], "iou_thresh": 0.5}
+
+cases.append({
+    "id": "gv-012-mask-pairing-multi-mpo",
+    "why": (
+        "The one-stage failure mode of E13, under the mode that permits it. Three predictions sit "
+        "at one ordered pair of mask instances -- subject mask '04<', object mask '448', identical "
+        "in both graphs so every IoU is 1.0 -- and multi_mpo admits all three. Ranked by score they "
+        "are on 0.9, near 0.8, under 0.7. 'on' satisfies all five conjuncts against GT 1 and "
+        "consumes it; 'near' does the same against GT 2; 'under' agrees with no GT triplet on "
+        "classes, so it is spurious. R@20 = 2/2 = 1. Two predicate classes are present in the GT, "
+        "'on' with 1 GT and 1 hit and 'near' with 1 and 1, so mR@20 = (1/1 + 1/1)/2 = 1. The "
+        "constraint is already 'none', so ngR@20 = R@20 = 1. No training split is supplied, so zR "
+        "is null. Compare gv-013-mask-pairing-single-mpo, which differs in one parameter and halves "
+        "both figures."
+    ),
+    "hand_checked": True,
+    "gt": PAIRING_GT,
+    "pred": PAIRING_PRED,
+    "params": {**P_PAIRING, "mask_pairing": "multi_mpo"},
+    "expect": {
+        "R": {"20": 1}, "mR": {"20": 1}, "ngR": {"20": 1}, "zR": {"20": None},
+        "verdicts": [
+            {"pred_index": 0, "verdict": "match"},
+            {"pred_index": 1, "verdict": "match"},
+            {"pred_index": 2, "verdict": "spurious"},
+        ],
+        "warnings": ["zero_shot_unavailable"],
+    },
+})
+
+cases.append({
+    "id": "gv-013-mask-pairing-single-mpo",
+    "why": (
+        "The same scene under the correction. single_mpo caps the ordered mask pair ('04<', '448') "
+        "at one prediction, and pairing runs after ranking, so the survivor is 'on' at 0.9 and "
+        "'near' and 'under' are dropped before any matching happens. 'on' matches GT 1; GT 2 is "
+        "never reachable. R@20 = 1/2 = 0.5. Of the two GT predicate classes, 'on' scores 1/1 and "
+        "'near' 0/1, so mR@20 = (1 + 0)/2 = 0.5. The constraint is 'none', so ngR@20 = R@20 = 0.5. "
+        "zR is null. Against gv-012-mask-pairing-multi-mpo this is the direction the ECCV 2024 "
+        "correction measured on PSG: PSGTR 20.8 -> 11.62, HiLo 30.3 -> 18.33, while VCTree, which "
+        "emits one mask per instance, was approximately unchanged."
+    ),
+    "hand_checked": True,
+    "gt": PAIRING_GT,
+    "pred": PAIRING_PRED,
+    "params": {**P_PAIRING, "mask_pairing": "single_mpo"},
+    "expect": {
+        "R": {"20": 0.5}, "mR": {"20": 0.5}, "ngR": {"20": 0.5}, "zR": {"20": None},
+        "verdicts": [
+            {"pred_index": 0, "verdict": "match"},
+            {"pred_index": -1, "verdict": "missed"},
+        ],
+        "warnings": ["zero_shot_unavailable"],
+    },
+})
+
+
+# ---------------------------------------------------------------- gv-014
+HAND_1 = (0.0, 0.0, 10.0, 10.0)
+HAND_2 = (40.0, 0.0, 10.0, 10.0)
+ASSEMBLY = (20.0, 20.0, 10.0, 10.0)
+
+cases.append({
+    "id": "gv-014-graph-constraint-per-object-pair",
+    "why": (
+        "Two hands, one assembly: (hand#1, holding, assembly#3) and (hand#2, assembling, "
+        "assembly#3) share the class pair (hand, assembly) but are two object pairs. The graph "
+        "constraint keeps one predicate per ordered object pair, as Tang's evaluator keys it on "
+        "predicted object indices, so both survive and both match: R = 2/2 = 1.0. Two predicate "
+        "classes, each 1 GT and 1 hit: mR = (1/1 + 1/1)/2 = 1.0. ngR reads the unconstrained pool: "
+        "1.0. Keyed on class pairs, one would be dropped and R would be 1/2 = 0.5, which is what "
+        "this vector exists to refuse (D99)."
+    ),
+    "hand_checked": True,
+    "gt": graph(
+        "gv14",
+        [obj(1, "hand", HAND_1), obj(2, "hand", HAND_2), obj(3, "assembly", ASSEMBLY)],
+        [rel(1, 1, "holding", 3), rel(2, 2, "assembling", 3)],
+        "gt",
+    ),
+    "pred": graph(
+        "gv14",
+        [obj(1, "hand", HAND_1), obj(2, "hand", HAND_2), obj(3, "assembly", ASSEMBLY)],
+        [rel(1, 1, "holding", 3, 0.9), rel(2, 2, "assembling", 3, 0.8)],
+        "pred",
+    ),
+    "params": dict(P_GRAPH),
+    "expect": {
+        "R": {"20": 1.0}, "mR": {"20": 1.0}, "ngR": {"20": 1.0}, "zR": {"20": None},
+        "verdicts": [
+            {"pred_index": 0, "verdict": "match"},
+            {"pred_index": 1, "verdict": "match"},
+        ],
+    },
+})
+
+
 out = DATA_DIR / "golden" / "vectors.json"
 out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text(

@@ -545,6 +545,8 @@ describe('E1 against the engine', () => {
   const asEngine = (b: BoxTriplet): Triplet => ({
     index: 0,
     relationship_id: 0,
+    subject_id: 3,
+    object_id: 1,
     subject_name: b.subject.name,
     predicate: b.predicate,
     object_name: b.object.name,

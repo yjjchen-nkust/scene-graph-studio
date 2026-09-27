@@ -46,6 +46,8 @@ def t(
     return Triplet(
         index=rid,
         relationship_id=rid,
+        subject_id=1,
+        object_id=2,
         subject_name=subject,
         predicate=predicate,
         object_name=obj,

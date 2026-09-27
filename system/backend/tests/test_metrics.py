@@ -8,8 +8,16 @@ from app.schema import BBox
 B = BBox(x=0, y=0, w=10, h=10)
 
 
+_IDS: dict[str, int] = {}
+
+
+def _id(name: str) -> int:
+    return _IDS.setdefault(name, len(_IDS) + 1)
+
+
 def t(i: int, s: str, p: str, o: str, score: float | None = None) -> Triplet:
-    return Triplet(index=i, relationship_id=i, subject_name=s, predicate=p, object_name=o,
+    return Triplet(index=i, relationship_id=i, subject_id=_id(s), object_id=_id(o),
+                   subject_name=s, predicate=p, object_name=o,
                    subject_bbox=B, object_bbox=B, subject_mask=None, object_mask=None, score=score)
 
 
@@ -85,3 +93,45 @@ def test_recall_is_monotone_in_k():
     ranked = rank(preds)
     values = [recall_at_k(assign(ranked, GT, k, 0.5, False), k) for k in (1, 2, 3, 4)]
     assert values == sorted(values)
+
+
+def test_recall_ordering_between_protocols_is_not_forced():
+    """Two annotated triplets on one object pair (D98, D99). Under the graph constraint a model
+    handed the boxes keeps one predicate for the pair and recalls half; a model proposing its own
+    boxes can put the two predicates on two box pairs, each at IoU 9604 / 10396 = 0.924 with the
+    annotation, and recall both. Less input, more recall: no ordering holds for every model."""
+    from app.eval.engine import EvalRequest, evaluate
+
+    def box(x: float, y: float) -> dict:
+        return {"x": x, "y": y, "w": 100, "h": 100}
+
+    def graph(objects: list, rels: list, kind: str) -> dict:
+        prov = {"kind": "ground_truth", "fidelity": "measured"} if kind == "gt" else \
+            {"kind": "model", "fidelity": "measured", "model": "ordering"}
+        return {"image_id": "ordering", "dataset": "placeholder", "width": 400, "height": 200,
+                "objects": objects, "relationships": rels, "provenance": prov}
+
+    man, table = {"object_id": 1, "names": ["man"], "bbox": box(0, 0)}, \
+        {"object_id": 2, "names": ["table"], "bbox": box(200, 0)}
+    gt = graph([man, table], [
+        {"relationship_id": 1, "subject_id": 1, "object_id": 2, "predicate": "on"},
+        {"relationship_id": 2, "subject_id": 1, "object_id": 2, "predicate": "near"},
+    ], "gt")
+    given = graph([man, table], [
+        {"relationship_id": 1, "subject_id": 1, "object_id": 2, "predicate": "on", "score": 0.9},
+        {"relationship_id": 2, "subject_id": 1, "object_id": 2, "predicate": "near", "score": 0.8},
+    ], "pred")
+    own = graph([man, table,
+                 {"object_id": 3, "names": ["man"], "bbox": box(2, 2)},
+                 {"object_id": 4, "names": ["table"], "bbox": box(202, 2)}], [
+        {"relationship_id": 1, "subject_id": 1, "object_id": 2, "predicate": "on", "score": 0.9},
+        {"relationship_id": 2, "subject_id": 3, "object_id": 4, "predicate": "near", "score": 0.8},
+    ], "pred")
+
+    def recall(pred: dict) -> float:
+        body = evaluate(EvalRequest.model_validate(
+            {"gt": gt, "pred": pred, "protocol": "sgcls", "constraint": "graph", "k": [50]}))
+        return next(m["value"] for m in body["metrics"] if m["metric"] == "R" and m["k"] == 50)
+
+    assert recall(given) == 0.5
+    assert recall(own) == 1.0

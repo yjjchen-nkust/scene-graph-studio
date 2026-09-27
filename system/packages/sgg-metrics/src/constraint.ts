@@ -25,7 +25,18 @@ export function hasTies(preds: Triplet[]): boolean {
   return false;
 }
 
-/** Filter a ranked list. The pair key is the ORDERED (subject, object) class pair. */
+/**
+ * Filter a ranked list. The pair key is the ORDERED OBJECT pair (subject_id, object_id).
+ *
+ * Tang's `sgg_eval.py` (commit fca9860, line 66) keeps the arg-max predicate for each pair of
+ * predicted object indices, and M4's E4 writes pi(<s,p,o>) = (s,o) with s and o the objects. The key
+ * was the ordered class pair until D99, which kept one predicate between two hands holding one
+ * assembly where the reference keeps one each.
+ *
+ * `semi` caps predicates per ordered object pair at `maxPerPair`. It is not Action Genome's semi
+ * constraint, which STTran (`lib/evaluation_recall.py`, commit bcc72cf) evaluates as the top
+ * attention predicate plus every spatial or contacting predicate above 0.9 per pair (D99).
+ */
 export function applyConstraint(
   ranked: Triplet[],
   mode: Constraint,
@@ -36,7 +47,7 @@ export function applyConstraint(
   const counts = new Map<string, number>();
   const out: Triplet[] = [];
   for (const p of ranked) {
-    const key = JSON.stringify([p.subject_name, p.object_name]);
+    const key = JSON.stringify([p.subject_id, p.object_id]);
     if ((counts.get(key) ?? 0) >= cap) continue;
     counts.set(key, (counts.get(key) ?? 0) + 1);
     out.push(p);

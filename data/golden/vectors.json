@@ -2335,6 +2335,171 @@
           "zero_shot_unavailable"
         ]
       }
+    },
+    {
+      "id": "gv-014-graph-constraint-per-object-pair",
+      "why": "Two hands, one assembly: (hand#1, holding, assembly#3) and (hand#2, assembling, assembly#3) share the class pair (hand, assembly) but are two object pairs. The graph constraint keeps one predicate per ordered object pair, as Tang's evaluator keys it on predicted object indices, so both survive and both match: R = 2/2 = 1.0. Two predicate classes, each 1 GT and 1 hit: mR = (1/1 + 1/1)/2 = 1.0. ngR reads the unconstrained pool: 1.0. Keyed on class pairs, one would be dropped and R would be 1/2 = 0.5, which is what this vector exists to refuse (D99).",
+      "hand_checked": true,
+      "gt": {
+        "image_id": "gv14",
+        "dataset": "vg150-sgb",
+        "width": 200,
+        "height": 200,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "hand"
+            ],
+            "bbox": {
+              "x": 0.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "hand"
+            ],
+            "bbox": {
+              "x": 40.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 3,
+            "names": [
+              "assembly"
+            ],
+            "bbox": {
+              "x": 20.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 3,
+            "predicate": "holding"
+          },
+          {
+            "relationship_id": 2,
+            "subject_id": 2,
+            "object_id": 3,
+            "predicate": "assembling"
+          }
+        ],
+        "provenance": {
+          "kind": "ground_truth",
+          "fidelity": "measured"
+        }
+      },
+      "pred": {
+        "image_id": "gv14",
+        "dataset": "vg150-sgb",
+        "width": 200,
+        "height": 200,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "hand"
+            ],
+            "bbox": {
+              "x": 0.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "hand"
+            ],
+            "bbox": {
+              "x": 40.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 3,
+            "names": [
+              "assembly"
+            ],
+            "bbox": {
+              "x": 20.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 3,
+            "predicate": "holding",
+            "score": 0.9
+          },
+          {
+            "relationship_id": 2,
+            "subject_id": 2,
+            "object_id": 3,
+            "predicate": "assembling",
+            "score": 0.8
+          }
+        ],
+        "provenance": {
+          "kind": "model",
+          "fidelity": "measured",
+          "model": "fixture"
+        }
+      },
+      "params": {
+        "protocol": "predcls",
+        "constraint": "graph",
+        "k": [
+          20
+        ],
+        "iou_thresh": 0.5,
+        "mask_pairing": "single_mpo"
+      },
+      "expect": {
+        "R": {
+          "20": 1.0
+        },
+        "mR": {
+          "20": 1.0
+        },
+        "ngR": {
+          "20": 1.0
+        },
+        "zR": {
+          "20": null
+        },
+        "verdicts": [
+          {
+            "pred_index": 0,
+            "verdict": "match"
+          },
+          {
+            "pred_index": 1,
+            "verdict": "match"
+          }
+        ]
+      }
     }
   ]
 }

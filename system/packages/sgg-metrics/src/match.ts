@@ -6,6 +6,8 @@ import type { BBox, RLEMask, SceneGraph, VerdictKind } from './types.js';
 export interface Triplet {
   index: number;
   relationship_id: number;
+  subject_id: number;
+  object_id: number;
   subject_name: string;
   predicate: string;
   object_name: string;
@@ -33,6 +35,8 @@ export function toTriplets(graph: SceneGraph): Triplet[] {
     return {
       index,
       relationship_id: r.relationship_id,
+      subject_id: r.subject_id,
+      object_id: r.object_id,
       subject_name: s.names[0]!,
       predicate: r.predicate,
       object_name: o.names[0]!,
