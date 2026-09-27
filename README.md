@@ -112,8 +112,8 @@ backend/          FastAPI + Pydantic v2. app/eval/ is the authoritative evaluati
 packages/         sgg-metrics — the same engine in TypeScript, for in-browser latency
 frontend/         Vite 8 + React 19 + TypeScript + Tailwind 4
 data/             golden vectors, slices, licence findings
-tools/            parity harness, linters, the startup script, the frozen page's validators
-system/web/knowledge-map/  a frozen static page: 93 knowledge points, 27 playgrounds, no build step
+tools/            parity harness, linters, the startup script, the knowledge map's validators
+system/web/knowledge-map/  a static page, frozen then released (D-23): 93 knowledge points, 27 playgrounds, no build step
 docs/superpowers/   PRD, SRS, design, decisions, contracts, three later designs, the master
                     plan and seven executable plans, and the anchor paper read from the PDF
                     (M11's source)
@@ -249,15 +249,17 @@ Edit `system/web/brief/index.html`, never the standalone; the check will catch y
 rebuild. For a link rather than an attachment, the file is static and drops into any web space —
 your own server, or a drag-and-drop host.
 
-## The frozen page
+## The knowledge-map page
 
 `system/web/knowledge-map/` is a self-contained bilingual page — 93 knowledge points across 12 clusters,
 27 playgrounds, no build step, no dependency to install. Open `index.html` in a browser.
 
 It was **frozen on 2026-09-15** and harvested into `data/content/` as the seed corpus for the MDX
-modules. Do not extend it; content changes belong in `data/content/` and the module corpus. It is
-kept because it is the only artefact here that runs with no toolchain at all, which makes it the
-last-resort offline fallback, and `npm run ci` still validates it so it cannot rot silently.
+modules. **The freeze was released on 2026-09-27 (D-23)**, so the page may be extended again. It is
+still the harvest's source: change the page, run `npm run harvest`, and commit both. It is kept
+because it is the only artefact here that runs with no toolchain at all, which makes it the
+last-resort offline fallback, so it must still open from disk with no build step. `npm run ci`
+still validates it so it cannot rot silently.
 
 Its playground data is **synthetic**, chosen to expose each effect cleanly. The arithmetic is
 exact and matches the stated definitions, but the values measure no model. Figures quoted from

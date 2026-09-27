@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useLocale } from '../i18n/useLocale';
 import { useLabParams } from '../labs/useLabParams';
+import { KnowledgeIndex } from './KnowledgeIndex';
 import { PaperCard } from './PaperCard';
 import {
   ALL_DATASETS,
@@ -25,7 +26,7 @@ import {
  *
  * Filter state lives in the URL, like a lab's (contracts §2.2), so a filtered map is a link.
  */
-export function FieldMap() {
+function PaperColumns() {
   const { locale, t } = useLocale();
   const en = locale === 'en';
   const [params, setParams] = useLabParams({
@@ -184,6 +185,47 @@ export function FieldMap() {
           <PaperCard paper={opened} />
         </section>
       ) : null}
+    </div>
+  );
+}
+
+const VIEWS = [
+  ['papers', 'map.view_papers'],
+  ['kp', 'map.view_kp'],
+] as const;
+
+/**
+ * Two indexes over one course: the papers by branch, and the knowledge points by cluster (D101).
+ *
+ * The view is a URL parameter like every filter, so `/map?view=kp` is a link to the second. The
+ * papers stay the default, so every link to the map written before D101 still lands where it did.
+ */
+export function FieldMap() {
+  const { t } = useLocale();
+  const [params, setParams] = useLabParams({ view: 'papers' as string });
+  const view = params.view === 'kp' ? 'kp' : 'papers';
+
+  return (
+    <div className="space-y-6">
+      <div role="group" aria-label={t('map.view')} className="flex gap-2 text-sm">
+        {VIEWS.map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            data-testid={`view-${id}`}
+            aria-pressed={view === id}
+            onClick={() => setParams({ view: id })}
+            className={
+              view === id
+                ? 'rounded border border-slate-800 bg-slate-800 px-3 py-1 text-white'
+                : 'rounded border border-slate-300 px-3 py-1 text-slate-700 hover:bg-slate-100'
+            }
+          >
+            {t(label)}
+          </button>
+        ))}
+      </div>
+      {view === 'kp' ? <KnowledgeIndex /> : <PaperColumns />}
     </div>
   );
 }

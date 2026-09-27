@@ -285,8 +285,9 @@ describe('the playground step kind', () => {
     // D98's 15 px predates the inclusion's condition (ca8b276); D100's branch found 71 px.
     expect(deviations).toContain('[**Corrected 2026-09-27 (D100):** 15 px was measured before');
     expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 24. ');
+    // At least D100: a later deviation moves the upper bound, and D101 pins its own below.
     for (const [name, text] of [['CLAUDE.md', source('../../../../../CLAUDE.md')], ['INDEX', index]]) {
-      expect(text, name).toContain('D1…D100');
+      expect(Number(/D1…D(\d+)/.exec(text)?.[1]), name).toBeGreaterThanOrEqual(100);
     }
     expect(index).toContain('The 17 golden vectors');
     expect(source('../../../../../README.md')).toContain('parity 17/17');
@@ -299,7 +300,7 @@ describe('the playground step kind', () => {
     const index = source('../../../../../docs/INDEX.md');
     // Counts and section lists the branch moved.
     expect(source('../../../../../README.md')).toContain('seventeen cases');
-    expect(claude).toContain('§24 the review minors), and all 100 logged deviations');
+    expect(claude).toMatch(/§24 the review minors\), and all 1\d\d logged deviations/);
     expect(claude).toContain('resolutions, 72 tests,');
     expect(claude).toContain('three tests in `playgrounds/test/logic.test.ts`');
     expect(index).toContain('the review minors (§24)**');
@@ -318,6 +319,26 @@ describe('the playground step kind', () => {
     // M12's comparative names what the middle setting is closer to.
     expect(source('../m12.en.mdx')).not.toContain('closer than either end');
     expect(source('../m12.zh-TW.mdx')).not.toContain('更為接近，');
+  });
+
+  it('the records carry D101 and the release of the freeze (D-23)', () => {
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const decisions = source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-decisions.md');
+    expect(source('../../../../../DEVIATIONS.md')).toContain('## D101 — ');
+    expect(decisions).toContain('## D-23 The knowledge-map freeze is released');
+    expect(decisions).toContain('> **Freeze released 2026-09-27 by D-23.**');
+    expect(source('../../../../web/knowledge-map/FROZEN.md')).toContain('**Released 2026-09-27 by decision D-23.**');
+    expect(source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-contracts.md'))
+      .toContain('`?view=kp` is the knowledge-point index (amended 2026-09-27, D101)');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      expect(text, name).toContain('D1…D101');
+    }
+    expect(claude).toContain('D-01…D-23');
+    expect(claude).toContain('all 101 logged deviations');
+    expect(claude).not.toContain('as the seed corpus. Do not extend it.');
+    expect(index).toContain('## 2. Decisions — D-01 … D-23');
+    expect(source('../../../../../README.md')).not.toContain('Do not extend it;');
   });
 
   it('the protocol ordering survives nowhere as a law', () => {
