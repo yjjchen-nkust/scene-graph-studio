@@ -39,7 +39,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-27-graph-constraint-key.md` | Both engines re-keyed, gv-014, `semi` described, D51 corrected | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
 | `../DEVIATIONS.md` | **D1…D100. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22) and the graph constraint's key (§23)** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23) and the review minors (§24)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
 
@@ -325,7 +325,7 @@ opened sources contradict were corrected first: the frozen F3's scale ceiling wa
 rather than min(λ², λ⁻²), its note said the reference implementation never states the threshold,
 which its configuration does, and M2 s2's presenter notes said L2 demonstrates the bound, which
 its same-size boxes cannot. A screenshot found F3's marks drawn 122 px below the objects in its
-longest state, 97 px at Δx = 18, with every readout correct; the projector suite now measures the overlay against the photograph. See
+longest state, 96.5 px at Δx = 18, with every readout correct; the projector suite now measures the overlay against the photograph. See
 D97 and VERIFICATION §21.
 
 **M3's playgrounds, E1 and E10, 2026-09-27.** E1 injects one defect per toggle into box#3 on
@@ -357,12 +357,12 @@ VERIFICATION §24.
 
 **Verification.** `npm run ci` green, 2026-09-27, after D100: **277 pytest** and 7 skipped (the ten newest
 compare the requirement files to the interpreter), parity 17 agree, i18n 322 keys both locales,
-**868 vitest** in 64 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**870 vitest** in 64 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 44 symbols, 42 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (254 equations), frontend builds. `npm run test:e2e`,
 2026-09-27:
-69 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
+72 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
 check:perf`, 2026-09-27: 23 passed, NFR-8 measured over five labs and nine playgrounds, plus the D75 selection guard.
 

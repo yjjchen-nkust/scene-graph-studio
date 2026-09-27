@@ -3165,7 +3165,7 @@ object at 1024 × 768 with every readout correct. No jsdom test could see it; a 
 projector test now asserts that the overlay and the photograph have the same box, at all three
 sizes; it failed at all three first. [**Clarified 2026-09-27 (D100):** 505 px and 122 px are F3's
 longest state, λ 2, τ 0.95, shifted (120, 100); at Δx = 18, the state the failing test used, the
-column was 454 px and the offset 97 px.]
+column was 454 px against the 261 px photograph, so the offset was (454 − 261)/2 = 96.5 px.]
 
 **F3 spans two parts** (D96). As one step, in its longest state, it ran 171 px past a 1024 × 768
 panel in 繁體中文 and 105 px past at 1280 × 800. Part 1 is the box moved and counted: Δx, Δy and λ,
@@ -3285,8 +3285,8 @@ the vocabulary and the three counts, the chosen one marked. Every part now fits 
 in 繁體中文. English, which the suite does not hold to the panel, runs 43 px past on E1's first part
 and 15 px on E10's second at 1024 × 768, and fits at the other two sizes.
 [**Corrected 2026-09-27 (D100):** 15 px was measured before `ca8b276` added the inclusion's
-condition; at the start of D100's branch the part ran 71 px past. Both parts now fit in English at
-all three sizes.] M3 went from 7 steps to 11, each part 90 s with its notes in both
+condition; measured during D100's commit `19291d4`, before its layout change, the part ran 71 px
+past. Both parts now fit in English at all three sizes.] M3 went from 7 steps to 11, each part 90 s with its notes in both
 locales; the corpus holds 109 steps a locale and 218 presenter notes.
 
 **The branch review** found three statements still wrong or unqualified, each fixed with a test
@@ -3421,8 +3421,9 @@ all nineteen, after the engine fix of D99. Branch `fix/sgs-review-minors`, from 
   assert, and that test now evaluates its own-boxes case under SGDet, the protocol it stands for.
 - The frozen E10 printed "invariant: holds / VIOLATED" for an ordering computed from invented IoU
   scale factors. It now reads "ordering on this toy: holds / reversed"; FROZEN.md records it.
-- D97's overlay offset is named with the state it was measured in: 122 px in F3's longest state,
-  97 px at Δx = 18. D97, CLAUDE.md and INDEX say so.
+- D97's overlay offset is named with the state it belongs to: 122 px in F3's longest state,
+  96.5 px at Δx = 18, each half the difference between the measured column and the 261 px
+  photograph. D97, CLAUDE.md and INDEX say so.
 - F3's comment no longer says the study shell mounts it whole, and the M2 spec's scope row carries
   an as-built note: 8 steps, F3 at s3 and s4, PSG at s6.
 - E1 and E10 write M3's notation with subscripts, as s2 and s5 write it, where they had used
@@ -3440,11 +3441,13 @@ a left rule besides its weight. U+25B6 was used first; Windows draws it as a col
 defeats a marker meant not to rely on colour.
 
 **English within the panel.** D98 recorded English 43 px past a 1024 × 768 panel on E1's first part
-and 15 px on E10's second. The 15 px predates `ca8b276`, which added the inclusion's condition; at
-this branch's start E10's second part ran 71 px past. E1's legend now sits beside the conjuncts,
+and 15 px on E10's second. The 15 px predates `ca8b276`, which added the inclusion's condition;
+measured during commit `19291d4`, before its layout change, E10's second part ran 71 px past. E1's
+legend now sits beside the conjuncts, and its English toggles read "Subject box Δx 45 px" and
+"Object box Δy 55 px" where they read "Subject box moved 45 px" and "Object box moved 55 px".
 E10's inclusion and its condition read as one sentence, and the L2 pointer shares the vocabulary
-line. Both parts fit in English at all three sizes, which a projector test now asserts; D98's
-figure is annotated in place.
+line. Both parts fit in English at all three sizes, E10's second in its SGDet and SGCls states,
+which the projector suite now asserts; D98's figure is annotated in place.
 
 **In the code** (commit `1829206`).
 - E10's note is built from the frame and prints B: C(641, 2) · C(481, 2) = 205,120 × 115,440 =
@@ -3472,7 +3475,27 @@ English fit, at 71 px; the marker's glyph; E10's note and frame id; `withDefects
 `logic.ts`'s import; the repeated id in both engines. The full-grid sweep, the bound readout and
 `gv-017` pin behaviour that was already correct and passed when first run.
 
-**Verification.** `npm run ci` exit 0: 277 pytest and 7 skipped (275 before), **868 vitest in 64
+**The branch review** found the badges hiding two boxes, a longest state no longer the longest,
+records stale or inexact, and a comparative without its complement. Each was fixed with a test
+that failed first, except the SGCls state, which fit when first measured.
+- *Badges.* At a box's top-left corner a badge covered 59 % to 100 % of the glove's box and 52 % to
+  73 % of the wrench's at the three sizes, and #5 overlapped #1. A badge now sits above its box's
+  corner by default; E10 sets the table's inside its box and the wrench's above and to the left. A
+  projector test requires, at all three sizes and under PredCls and SGCls, that no badge cover more
+  than half of any box, that no two badges overlap, and that each lie on the photograph.
+- *E10's second part with |V|.* SGCls prints |V| on the line the L2 pointer shares; the 繁體中文
+  fit test and the English one now also measure that state. It fits.
+- *Records.* README still gave sixteen golden cases; CLAUDE.md listed VERIFICATION to §23, 99
+  deviations, 66 e2e tests and two tests importing values from `sgg-metrics`, which the full-grid
+  sweep makes three; INDEX's VERIFICATION row ended at §23. The offset at Δx = 18 had been rounded
+  from (454 − 261)/2 = 96.5 px, and two comments still gave 122 px for the Δx = 18 state. The 71 px had been dated to
+  the branch's start. VERIFICATION §24 counted commit `1829206`'s boxes-note test among commit
+  `19291d4`'s, and its timings came from an earlier perf run than the rest of its table. E1's
+  label change was not recorded. Each now says what was measured, and when.
+- *M12.* The comparative this branch wrote in s4, "closer than either end", had lost what it is
+  closer to; both locales say the data again.
+
+**Verification.** `npm run ci` exit 0: 277 pytest and 7 skipped (275 before), **870 vitest in 64
 files** (857 before), parity **17** (16 before), i18n 322 keys, content lint clean over **17 golden
-cases**. `npm run test:e2e` 69 (66 before; the English fit test runs at three sizes). `npm run
-check:perf` 23. See VERIFICATION §24.
+cases**. `npm run test:e2e` 72 (66 before; the English fit test and the badge test each run at
+three sizes). `npm run check:perf` 23. See VERIFICATION §24.

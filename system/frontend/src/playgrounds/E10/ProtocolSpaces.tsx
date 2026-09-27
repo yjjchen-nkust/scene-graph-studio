@@ -5,7 +5,7 @@ import { hypothesisSpace, wholePixelBoxes, type Protocol } from '../logic';
 import type { PlaygroundProps } from '../mounts';
 import { MARK_ANNOTATED, PhotoMarks, type Mark } from '../PhotoMarks';
 import { SLICE_CLASS_COUNT, SLICE_PREDICATE_COUNT, frameById } from '../slice';
-import { E10_FRAME, VG150_CLASSES, VG150_PREDICATES } from './setup';
+import { E10_BADGE_PLACES, E10_FRAME, VG150_CLASSES, VG150_PREDICATES } from './setup';
 
 /** The photograph's height at most, in viewport heights. */
 const PICTURE_VH = 34;
@@ -66,7 +66,12 @@ export function ProtocolSpaces({ part }: PlaygroundProps = {}) {
   // The boxes are numbered on the photograph, so PredCls's labels say which box each belongs to.
   const badges = protocol === 'sgdet'
     ? []
-    : frame.objects.map((o) => ({ box: o.bbox, text: `#${o.object_id}`, testid: `e10-badge-${o.object_id}` }));
+    : frame.objects.map((o) => ({
+      box: o.bbox,
+      text: `#${o.object_id}`,
+      testid: `e10-badge-${o.object_id}`,
+      place: E10_BADGE_PLACES[o.object_id],
+    }));
   const given = protocol === 'predcls'
     ? frame.objects.map((o) => `#${o.object_id} ${o.names[0]}`).join(separator)
     : protocol === 'sgcls'

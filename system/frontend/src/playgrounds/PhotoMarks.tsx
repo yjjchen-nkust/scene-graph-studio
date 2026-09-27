@@ -17,6 +17,16 @@ const STROKE_WIDTH = 4;
 const HALO_WIDTH = 10;
 const DASH = '12 7';
 
+/** Where a badge sits against its box's top-left corner. */
+export type BadgePlace = 'above' | 'above-left' | 'inside';
+
+/** Above the corner and above-left of it keep the badge off its own box; inside is over it. */
+const BADGE_SHIFT: Record<BadgePlace, string | undefined> = {
+  above: 'translateY(-100%)',
+  'above-left': 'translate(-100%, -100%)',
+  inside: undefined,
+};
+
 export interface Mark {
   box: BBox;
   line: 'solid' | 'dashed';
@@ -30,14 +40,16 @@ export interface Mark {
  * The overlay is an `<svg>` on the frame's own viewBox, so it lands on the objects only if it has
  * the photograph's box exactly. The photograph is in flow inside a box nothing else sizes, and it
  * states its width and height, so that box has the photograph's proportions before it loads. In a
- * column the flex row stretched, the overlay once drew every mark 122 px below its object with
- * every readout correct (D97); an overlay of absolutely positioned children alone renders 0×0,
- * which hid F1's photograph until D96.
+ * column the flex row stretched, the overlay once drew every mark
+ * 122 px below its object in F3's longest state, 96.5 px at Δx = 18, with every readout correct
+ * (D97); an overlay of absolutely positioned children alone renders 0×0, which hid F1's photograph
+ * until D96.
  *
  * Marks differ in shape as well as colour (NFR-5): solid, dashed, and a hatch for a shared
  * region. They carry no text: SVG text is scaled by the viewBox below the lecture's 18 px floor
  * while its computed size reads unscaled. A label goes in `children`, and a badge naming a box is
  * an HTML element over the photograph, placed in percent of the frame, so the floor measures it.
+ * A badge sits above its box by default: at a box's corner it hid the smallest boxes (D100).
  */
 export function PhotoMarks({
   frame, marks, hatch = null, badges = [], maxVh, alt, testid, children,
@@ -46,7 +58,7 @@ export function PhotoMarks({
   marks: Mark[];
   hatch?: { box: BBox; testid: string } | null;
   /** Short HTML labels at each box's top-left corner, such as `#3`. */
-  badges?: { box: BBox; text: string; testid: string }[];
+  badges?: { box: BBox; text: string; testid: string; place?: BadgePlace }[];
   maxVh: number;
   alt: string;
   testid: string;
@@ -104,7 +116,11 @@ export function PhotoMarks({
             key={b.testid}
             data-testid={b.testid}
             className="absolute bg-white px-1 font-mono text-[0.75em] leading-tight text-slate-900 ring-1 ring-slate-900"
-            style={{ left: `${(b.box.x / frame.width) * 100}%`, top: `${(b.box.y / frame.height) * 100}%` }}
+            style={{
+              left: `${(b.box.x / frame.width) * 100}%`,
+              top: `${(b.box.y / frame.height) * 100}%`,
+              transform: BADGE_SHIFT[b.place ?? 'above'],
+            }}
           >
             {b.text}
           </span>

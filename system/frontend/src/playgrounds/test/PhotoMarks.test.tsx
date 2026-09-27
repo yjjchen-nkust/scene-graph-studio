@@ -82,6 +82,26 @@ describe('PhotoMarks', () => {
     expect(badge.style.top).toBe(`${(240 / 480) * 100}%`);
   });
 
+  it('sets a badge above its box, outside it, unless told to sit inside or above and to the left', () => {
+    render(
+      <PhotoMarks
+        frame={frame}
+        marks={[]}
+        badges={[
+          { box, text: '#1', testid: 'badge-above' },
+          { box, text: '#2', testid: 'badge-inside', place: 'inside' },
+          { box, text: '#3', testid: 'badge-left', place: 'above-left' },
+        ]}
+        maxVh={34}
+        alt="ph-001"
+        testid="picture"
+      />,
+    );
+    expect(screen.getByTestId('badge-above').style.transform).toBe('translateY(-100%)');
+    expect(screen.getByTestId('badge-inside').style.transform).toBe('');
+    expect(screen.getByTestId('badge-left').style.transform).toBe('translate(-100%, -100%)');
+  });
+
   it('renders what it is given beneath the picture, and no text inside it', () => {
     draw();
     expect(screen.getByTestId('caption')).toBeInTheDocument();

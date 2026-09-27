@@ -34,7 +34,7 @@ const PARTS_LONGEST = [
   'm01/8?X1.r=xu-2017&X1.vs=sgb-v1', 'm01/9?X1.r=sgb-v1&X1.vs=sgb-v2', 'm01/10?X1.r=xu-2017&X1.vs=sgb-v2',
   'm02/2?F3.lambda=2&F3.dx=120&F3.dy=100', 'm02/3?F3.lambda=2&F3.tau=0.95&F3.dx=120&F3.dy=100',
   'm03/2?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1', 'm03/3?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1',
-  'm03/3?E1.bs=1',  'm03/5?E10.pr=predcls', 'm03/6?E10.pr=sgdet&E10.voc=vg150',
+  'm03/3?E1.bs=1',  'm03/5?E10.pr=predcls', 'm03/6?E10.pr=sgdet&E10.voc=vg150', 'm03/6?E10.pr=sgcls&E10.voc=vg150',
 ];
 
 const SIZES = [
@@ -531,11 +531,55 @@ for (const size of SIZES) {
       }
     });
 
+    test('E10 names its boxes without hiding them', async ({ page }) => {
+      // Badges at each box's top-left corner covered the glove's whole box and three quarters of
+      // the wrench's at 1024 × 768 (D100's review). No badge may cover more than half of any box,
+      // no two badges may overlap, and each lies on the photograph.
+      type Rect = { x: number; y: number; w: number; h: number };
+      const shared = (a: Rect, b: Rect) =>
+        Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x))
+        * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+      for (const where of ['m03/5?E10.pr=predcls', 'm03/5?E10.pr=sgcls']) {
+        await page.goto(`/lecture/m/${where}`);
+        await expect(page.getByTestId('e10-badge-1')).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const { picture, boxes, badges } = await page.evaluate(() => {
+          const rect = (e: Element) => {
+            const r = e.getBoundingClientRect();
+            return { id: e.getAttribute('data-testid'), x: r.x, y: r.y, w: r.width, h: r.height };
+          };
+          const root = document.querySelector('[data-testid="e10-picture"]')!;
+          return {
+            picture: rect(root.querySelector('img')!),
+            boxes: [...root.querySelectorAll('rect[data-testid^="e10-box-"]:not([data-testid$="-halo"])')].map(rect),
+            badges: [...root.querySelectorAll('[data-testid^="e10-badge-"]')].map(rect),
+          };
+        });
+        expect(boxes, where).toHaveLength(6);
+        expect(badges, where).toHaveLength(6);
+        const faults: string[] = [];
+        for (const g of badges) {
+          for (const b of boxes) {
+            const part = shared(g, b) / (b.w * b.h);
+            if (part > 0.5) faults.push(`${g.id} covers ${Math.round(part * 100)}% of ${b.id}`);
+          }
+          for (const h of badges) {
+            if (h.id! < g.id! && shared(g, h) > 0) faults.push(`${g.id} overlaps ${h.id}`);
+          }
+          const inside = g.x >= picture.x - 0.5 && g.y >= picture.y - 0.5
+            && g.x + g.w <= picture.x + picture.w + 0.5 && g.y + g.h <= picture.y + picture.h + 0.5;
+          if (!inside) faults.push(`${g.id} leaves the photograph`);
+        }
+        expect(faults, where).toEqual([]);
+      }
+    });
+
     test('F3, E1 and E10 draw their marks on their photographs, not beside them', async ({ page }) => {
       // The overlay is laid over the photograph, and its viewBox is the frame's own 640 × 480, so
       // it lands on the objects only if it has the photograph's box exactly. It first took the
-      // box of its stretched column instead, and `meet` scaling centred the marks 122 px below
-      // the objects they outline at 1024 × 768, with every readout still correct.
+      // box of its stretched column instead, and `meet` scaling centred the marks 96.5 px below
+      // the objects they outline at 1024 × 768 in F3's Δx = 18 state, 122 px in its longest, with
+      // every readout still correct.
       for (const [where, picture] of [
         ['m02/2?F3.dx=18', 'f3-picture'], ['m03/2?E1.bs=1', 'e1-picture'], ['m03/5', 'e10-picture'],
       ] as const) {
@@ -556,7 +600,10 @@ for (const size of SIZES) {
       // it (D98) and E10's second 71 px, 15 px before its inclusion's condition was added; both were
       // brought inside it (D100), so a regression is caught here.
       await page.addInitScript(() => localStorage.setItem('sgs:v1:lang', '"en"'));
-      for (const where of ['m03/2?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1', 'm03/6?E10.pr=sgdet&E10.voc=vg150']) {
+      for (const where of [
+        'm03/2?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1', 'm03/6?E10.pr=sgdet&E10.voc=vg150',
+        'm03/6?E10.pr=sgcls&E10.voc=vg150',
+      ]) {
         await page.goto(`/lecture/m/${where}`);
         await expect(page.getByTestId('playground-frame')).toBeVisible();
         await page.evaluate(() => document.fonts.ready);

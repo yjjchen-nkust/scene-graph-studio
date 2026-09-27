@@ -263,7 +263,7 @@ describe('the playground step kind', () => {
     expect(source('../../../../web/knowledge-map/FROZEN.md')).toContain('ordering on this toy');
     // M2-1: the overlay's offset is named with the state it was measured in.
     for (const file of ['../../../../../DEVIATIONS.md', '../../../../../CLAUDE.md', '../../../../../docs/INDEX.md']) {
-      expect(source(file), file).toContain('97 px');
+      expect(source(file), file).toContain('96.5 px');
     }
     // M2-2 and M2-5.
     expect(source('../../playgrounds/F3/BoxOverlap.tsx')).not.toContain('and the study shell mount it');
@@ -290,6 +290,34 @@ describe('the playground step kind', () => {
     }
     expect(index).toContain('The 17 golden vectors');
     expect(source('../../../../../README.md')).toContain('parity 17/17');
+  });
+
+  it("the records say what D100's branch measured and moved (its review)", () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const verification = source('../../../../../docs/VERIFICATION.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    // Counts and section lists the branch moved.
+    expect(source('../../../../../README.md')).toContain('seventeen cases');
+    expect(claude).toContain('§24 the review minors), and all 100 logged deviations');
+    expect(claude).toContain('resolutions, 72 tests,');
+    expect(claude).toContain('three tests in `playgrounds/test/logic.test.ts`');
+    expect(index).toContain('the review minors (§24)**');
+    // The offset at Δx = 18 is derived, (454 − 261) / 2 = 96.5 px, and is not rounded.
+    for (const [name, text] of [['DEVIATIONS', deviations], ['CLAUDE.md', claude], ['INDEX', index]]) {
+      expect(text, name).toContain('96.5 px');
+      expect(text, name).not.toContain('97 px');
+    }
+    expect(source('../../playgrounds/PhotoMarks.tsx')).toContain("122 px below its object in F3's longest state");
+    // What was measured, and when.
+    for (const text of [deviations, verification]) expect(text).toContain('before its layout change');
+    expect(deviations).not.toContain("this branch's start");
+    expect(deviations).not.toMatch(/at the start of\s+D100's branch/);
+    expect(verification).not.toContain('six tests fail');
+    expect(deviations).toContain('"Subject box Δx 45 px"');
+    // M12's comparative names what the middle setting is closer to.
+    expect(source('../m12.en.mdx')).not.toContain('closer than either end');
+    expect(source('../m12.zh-TW.mdx')).not.toContain('更為接近，');
   });
 
   it('the protocol ordering survives nowhere as a law', () => {
