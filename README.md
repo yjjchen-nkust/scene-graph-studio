@@ -304,10 +304,10 @@ was run and its outcome. All nine have been run and passed; check 6 was first re
 **not run** (D69) and passed on 2026-09-18.
 
 `npm run ci` is green on py12: 266 Python tests (7 skipped for a corpus this machine may not
-have), 791 TypeScript tests across 61 files, parity 13/13, i18n 292 keys in both locales,
-content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 62
-passed and `npm run check:perf` is 21. All measured 2026-09-27; `docs/VERIFICATION.md` §21
-records that run, §15 to §20 the six before it, and §14 the earlier run that reconciled
+have), 845 TypeScript tests across 64 files, parity 13/13, i18n 322 keys in both locales,
+content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 66
+passed and `npm run check:perf` is 23. All measured 2026-09-27; `docs/VERIFICATION.md` §22
+records that run, §15 to §21 the seven before it, and §14 the earlier run that reconciled
 three documents carrying three different counts.
 
 Two further checks are scripts rather than prose:
@@ -331,9 +331,9 @@ M11, so authoring that module was transcription rather than a fresh reading.
 
 * The measured prediction tier, blocked on licences (`data/predictions/PROVENANCE.md`).
 * Slides that run past the bottom of a 1024×768 projector. 25 of the then 92 were reviewed and
-  accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). The five
-  playgrounds too tall for one panel are split across steps (D96, D97), and every part fits 1024×768
-  in 繁體中文 in every state measured (§20, §21). In English some parts still run past it, by up to
+  accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). The seven
+  playgrounds too tall for one panel are split across steps (D96 to D98), and every part fits
+  1024×768 in 繁體中文 in every state measured (§20 to §22). In English some parts still run past it, by up to
   163 px, and F2 and F8, one step each, by 24 and 27 px in 繁體中文. The step region scrolls inside
   a fixed shell, so the position and the section clock stay on screen, and no playground hides a
   word where that scroll cannot reach it (D93, D95).

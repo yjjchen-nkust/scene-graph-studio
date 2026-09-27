@@ -21,6 +21,9 @@ symbols:
   - sym: "\\mathcal{C}"
     gloss_en: "object class set"
     gloss_zh: "物件類別集合"
+  - sym: "B"
+    gloss_en: "the number of whole-pixel boxes in the image"
+    gloss_zh: "影像中整數像素框之個數"
 claims: []
 steps:
   - id: s1
@@ -29,25 +32,49 @@ steps:
   - id: s2
     kind: math
     seconds_budget: 300
-    presenter_notes_en: "Five minutes. The match relation is two independent conjuncts — did it name the right thing, did it put it in the right place — and most of the confusing results in this field come from reporting the two as one number. Write the two conjuncts separately on the board and leave them up; s3 uses them."
+    presenter_notes_en: "Five minutes. The match relation is two independent conjuncts — did it name the right thing, did it put it in the right place — and most of the confusing results in this field come from reporting the two as one number. Write the two conjuncts separately on the board and leave them up; s5 uses them."
   - id: s3
+    kind: playground
+    kp: E1
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Open with every toggle off: all five conjuncts hold and the prediction is the annotation. Turn on the subject box shift: IoU 3,150 / 9,450 = 0.333 fails τ = 0.5 while the names agree. Then turn it off and turn on the predicate swap: the boxes are right and a name is wrong. Leave the swap on for the next step."
+  - id: s4
+    kind: playground
+    kp: E1
+    part: 2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. The toggles carry over from the previous step: with the predicate swapped, Φ_cls fails, Φ_loc holds, and the diff says spurious. Turn on the subject box shift as well: both halves fail and the diff still says spurious; it does not separate a wrong name in the right place from both wrong. Turn the swap off: the name is right, the place is wrong, and the diff says localization."
+  - id: s5
     kind: math
     seconds_budget: 300
-    presenter_notes_en: "Five minutes. The ordering between protocols is usually quoted as an empirical regularity and is in fact forced, in one line: whatever a model can do with less information it can do with more by ignoring the extra input. Ask the room for a counterexample first and then show why there is none — it lands better than the proof given straight."
-  - id: s4
+    presenter_notes_en: "Five minutes. Separate what is forced from what is observed. Forced: each protocol's hypothesis space contains the one before it, a set inclusion with nothing to measure. Observed: recall under SGDet is below SGCls and below PredCls in every row of the benchmark's own table, MOTIFS 32.78, 38.92, 65.18 at R@50. Ask the room whether the inclusion proves the ordering; it does not, because it says what a model may output, not what any model does."
+  - id: s6
+    kind: playground
+    kp: E10
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Step through the three protocols: PredCls hands over the six boxes and their labels, SGCls the boxes alone, SGDet nothing at all. Each protocol's hypothesis space contains the one before it, the inclusion s5 states. Leave SGDet chosen for the next step."
+  - id: s7
+    kind: playground
+    kp: E10
+    part: 2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. The protocol carries over. On this slice's vocabulary the counts per triplet are 480 under PredCls, 48,000 under SGCls, and a 24-digit number under SGDet, where the boxes themselves are unknown. Switch to VG-150's vocabulary: 1,500 and 33,750,000. No recall is shown here; how recall moves under the three protocols is L2's, at s10."
+  - id: s8
     kind: prose
     seconds_budget: 180
     presenter_notes_en: "Three minutes, and the point is the status of the claim rather than the algorithm. Greedy matching does not guarantee a maximum matching; published numbers are computed greedily, so this project computes them greedily and says so. Mention that data/golden/vectors.json holds a case built to separate the greedy answer from the maximum one — the assumption is tested adversarially rather than asserted."
-  - id: s5
+  - id: s9
     kind: prose
     seconds_budget: 180
     presenter_notes_en: "Three minutes. The match relation has no category for true but unrecorded, so a prediction that is plainly true of the image and absent from the annotation is scored spurious. That follows from two premises and is not an implementation choice anyone can fix. Give all three consequences: the ceiling on measurable precision, the reward to head-heavy models, and what the spurious colour in the diff means from here on."
-  - id: s6
+  - id: s10
     kind: lab
     lab: L2
     seconds_budget: 420
     presenter_notes_en: "Seven minutes on L2. One fixed prediction scored under all three protocols: 0.25, 0.50, 0.75 on this fixture. After the knob has been moved, make the room read the fixture's own description and say which defect in the prediction each step repairs. That is the point of the step; watching the number rise is not."
-  - id: s7
+  - id: s11
     kind: checkpoint
     presenter_notes_en: "Checkpoint. The inference fails because the gap between PredCls and SGDet contains detection quality and relation quality together and cannot be attributed to either. The measurement that settles it is SGCls, which supplies boxes without labels and so separates detection from classification. If the room only says the two are not comparable, ask what they would measure instead."
 ---
@@ -106,12 +133,19 @@ $$
 \begin{gathered}\neg\Phi_{\text{cls}}\wedge\Phi_{\text{loc}} \equiv \text{right place, wrong name} \quad
 \neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}} \equiv \text{right name, wrong place}
 \\[4pt]
-\text{Two independent failure modes} \Rightarrow \text{four diff colours, and three protocols to separate them.}\end{gathered}
+\text{against a ground truth no earlier prediction has matched:}
+\\
+\begin{array}{c|cc} & \Phi_{\text{loc}} & \neg\Phi_{\text{loc}}\\ \hline \Phi_{\text{cls}} & \texttt{match} & \texttt{localization}\\ \neg\Phi_{\text{cls}} & \texttt{spurious} & \texttt{spurious}\end{array}\end{gathered}
 $$
 
-The four-colour diff you have been reading since L1 is this conjunction taken apart. `localization`
-is the case $\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}}$ and it exists precisely so that a right
-predicate on a badly placed box does not look the same as a wrong predicate.
+The four-colour diff you have been reading since L1 is this table on the prediction side, and one
+colour more on the ground truth's: `missed` marks an annotated triplet that no prediction matched.
+Each ground truth is matched once, so the table is the verdict against one no earlier prediction
+has matched: a repeat of a triplet already matched meets all five conjuncts and is still
+`localization`. Otherwise `localization` is the case $\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}}$,
+and it exists so that a right predicate on a badly placed box does not look the same as a wrong
+predicate. A wrong name is `spurious` wherever its box sits: the diff does not separate a wrong
+name in the right place from both halves wrong.
 
 </Implications>
 
@@ -119,18 +153,38 @@ predicate on a badly placed box does not look the same as a wrong predicate.
 
 <Step id="s3">
 
+## One triplet, one defect at a time
+
+<Playground kp="E1" part="1" />
+
+</Step>
+
+<Step id="s4">
+
+## Two halves, and what the diff says
+
+<Playground kp="E1" part="2" />
+
+</Step>
+
+<Step id="s5">
+
 <Intuition>
 
-The protocol ordering is often quoted as an empirical regularity. It is not: it is forced, and the
-argument is a single line. Anything a model could do with less information it could also do with
-more, by ignoring the extra.
+The three protocols differ in how much they hand the model, and that difference is a fact about
+sets before it is a fact about any number: whatever PredCls lets a model output, SGCls lets it
+output too, and SGDet more again. The recall ordering that published tables show is a regularity
+observed across models, not a consequence of that inclusion. Here $\mathcal{H}$ is the set of single-triplet hypotheses $\langle(b_s,c_s),p,(b_o,c_o)\rangle$ a
+protocol lets the model output. The inclusion holds when what a protocol hands over is itself a
+hypothesis of the next: the given boxes are distinct whole-pixel boxes inside the image, and
+the given labels are in $\mathcal{C}$.
 
 </Intuition>
 
 <Formal>
 
 $$
-R_{\text{SGDet}}@k\ \le\ R_{\text{SGCls}}@k\ \le\ R_{\text{PredCls}}@k \qquad\text{for every model, every fixture}
+\mathcal{H}_{\text{PredCls}}\subseteq\mathcal{H}_{\text{SGCls}}\subseteq\mathcal{H}_{\text{SGDet}}
 $$
 
 </Formal>
@@ -139,9 +193,9 @@ $$
 
 $$
 \begin{aligned}
-\lvert\mathcal{H}_{\text{PredCls}}\rvert &= \lvert V\rvert^2\lvert\mathcal{P}\rvert\\
-\lvert\mathcal{H}_{\text{SGCls}}\rvert &= \lvert V\rvert^2\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert\\
-\lvert\mathcal{H}_{\text{SGDet}}\rvert &\supseteq \lvert\mathcal{H}_{\text{SGCls}}\rvert \quad\text{(boxes unknown too)}
+\lvert\mathcal{H}_{\text{PredCls}}\rvert &= \lvert V\rvert(\lvert V\rvert-1)\lvert\mathcal{P}\rvert\\
+\lvert\mathcal{H}_{\text{SGCls}}\rvert &= \lvert V\rvert(\lvert V\rvert-1)\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert\\
+\lvert\mathcal{H}_{\text{SGDet}}\rvert &= B(B-1)\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert
 \end{aligned}
 $$
 
@@ -150,16 +204,22 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{Any hypothesis reachable under a harder protocol is reachable under an easier one}
-\\ \text{by discarding the extra input} \;\Rightarrow\; R_{\text{SGDet}}\le R_{\text{SGCls}}\le R_{\text{PredCls}}.
+\begin{gathered}R_{\text{SGDet}}@k\le R_{\text{SGCls}}@k\le R_{\text{PredCls}}@k\ \text{is observed, not implied:}
+\\ \text{the inclusion shrinks the space a model searches and bounds no model's recall.}
 \\[4pt]
-\textbf{Note } \lvert V\rvert^2 \text{ survives in all three: boxes are given, pairs never are.}\end{gathered}
+\textbf{Note } \lvert V\rvert(\lvert V\rvert-1) \text{ survives under PredCls and SGCls: boxes are given, pairs never are.}\end{gathered}
 $$
 
+`Scene-Graph-Benchmark.pytorch` reports the ordering for all four of its reimplemented models at
+every K. MOTIFS, for example, reaches R@50 of 32.78 under SGGen, that repository's name for SGDet,
+38.92 under SGCls and 65.18 under PredCls (`METRICS.md`, "Recall@K"). Across those rows the
+ordering holds without exception, and it remains a measurement of those models: a model that did
+worse when handed the true labels would contradict no definition.
+
 The note at the end is the part students skip and professors care about. PredCls hands over the
-boxes; it never hands over which pairs are related. The $\lvert V\rvert^2$ factor is present under
-every protocol, which is why the warning `gt_boxes_not_pairs` is attached to every PredCls and
-SGCls response in this application without exception.
+boxes; it never hands over which pairs are related. The $\lvert V\rvert(\lvert V\rvert-1)$ factor
+is present under PredCls and SGCls, which is why the warning `gt_boxes_not_pairs` is attached to
+every PredCls and SGCls response in this application without exception.
 
 A PredCls number is therefore not "the easy case". It is the case where the relation reasoning is
 measured alone, which is a different claim and a more useful one.
@@ -168,7 +228,23 @@ measured alone, which is a different claim and a more useful one.
 
 </Step>
 
-<Step id="s4">
+<Step id="s6">
+
+## What each protocol hands over
+
+<Playground kp="E10" part="1" />
+
+</Step>
+
+<Step id="s7">
+
+## The space each protocol leaves
+
+<Playground kp="E10" part="2" />
+
+</Step>
+
+<Step id="s8">
 
 ## Greedy assignment is an assumption, not a theorem
 
@@ -187,7 +263,7 @@ distinction is why the engine's documentation calls it an assumption.
 
 </Step>
 
-<Step id="s5">
+<Step id="s9">
 
 ## A missing annotation counts as a mistake
 
@@ -203,7 +279,7 @@ student should always look at twice.
 
 </Step>
 
-<Step id="s6">
+<Step id="s10">
 
 ## In the lab
 
@@ -213,7 +289,7 @@ which single defect in the prediction each step recovers.
 
 </Step>
 
-<Step id="s7">
+<Step id="s11">
 
 ## Checkpoint
 

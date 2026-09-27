@@ -35,6 +35,11 @@ export const PREDICATES: string[] = [
 
 export const SLICE_PREDICATE_COUNT = PREDICATES.length;
 
+/** The object classes, counted from the slice for the same reason: E10's "this slice" vocabulary. */
+export const SLICE_CLASS_COUNT = new Set(
+  FRAMES.flatMap((frame) => frame.objects.map((o) => o.names[0])),
+).size;
+
 const vgParsed = vgRaw as unknown as { dataset: string; graphs: SceneGraph[] };
 
 /**

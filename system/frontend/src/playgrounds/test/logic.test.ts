@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import type { SceneGraph } from 'sgg-metrics';
-import { boxIou } from 'sgg-metrics';
+import { boxIou, classify, toTriplets } from 'sgg-metrics';
 import golden from '../../../../../data/content/playground_golden.json';
-import { FRAMES, frameById } from '../slice';
+import { FRAMES, SLICE_CLASS_COUNT, frameById } from '../slice';
 import { RELEASES, type Release, type Split } from '../splits';
+import { E1_FRAME, E1_RELATIONSHIP } from '../E1/setup';
 import { F3_FRAME, F3_OBJECT } from '../F3/setup';
 import {
-  area, candidateSpace, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
+  annotatedTriplet, area, candidateSpace, conjuncts, failureMode, frameVerdict, hypothesisSpace, iouCounts,
+  canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
   headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
   ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, tripletKey, truncatedRatio, unionArea,
-  valPool,
+  valPool, wholePixelBoxes, withDefects, type BoxTriplet,
 } from '../logic';
+
+/** The engine's triplet, which `sgg-metrics` does not export by name. */
+type Triplet = Parameters<typeof classify>[0];
 
 const ph001 = frameById('ph-001')!;
 
@@ -458,5 +463,113 @@ describe('truncatedRatio', () => {
     // One assertion over the walk rather than 767,676 of them, which ran past vitest's five
     // seconds under the full suite.
     expect(disagree).toEqual([]);
+  });
+});
+
+describe('E1: one defect at a time', () => {
+  const frame = frameById(E1_FRAME)!;
+  const t = annotatedTriplet(frame, E1_RELATIONSHIP);
+  const none = { cs: false, co: false, p: false, bs: false, bo: false };
+
+  it('reads box#3 on table#1', () => {
+    expect(t).toEqual({
+      subject: { name: 'box', box: { x: 250, y: 240, w: 90, h: 70 } },
+      predicate: 'on',
+      object: { name: 'table', box: { x: 60, y: 300, w: 420, h: 110 } },
+    });
+  });
+
+  it('each defect falsifies exactly its own conjunct', () => {
+    const keys = [['cs', 'cs'], ['co', 'co'], ['p', 'p'], ['bs', 'is'], ['bo', 'io']] as const;
+    for (const [defect, conj] of keys) {
+      const c = conjuncts(withDefects(t, { ...none, [defect]: true }), t, 0.5);
+      expect(Object.entries(c).filter(([, v]) => !v).map(([k]) => k), defect).toEqual([conj]);
+    }
+  });
+
+  it('the shifted boxes keep a third of their overlap', () => {
+    expect(iouCounts(t.subject.box, withDefects(t, { ...none, bs: true }).subject.box)).toEqual([3150, 9450]);
+    expect(iouCounts(t.object.box, withDefects(t, { ...none, bo: true }).object.box)).toEqual([23100, 69300]);
+  });
+
+  it('names the failure as s2 does', () => {
+    expect(failureMode(conjuncts(withDefects(t, none), t, 0.5))).toBe('none');
+    expect(failureMode(conjuncts(withDefects(t, { ...none, p: true }), t, 0.5))).toBe('name');
+    expect(failureMode(conjuncts(withDefects(t, { ...none, bs: true }), t, 0.5))).toBe('place');
+    expect(failureMode(conjuncts(withDefects(t, { ...none, p: true, bo: true }), t, 0.5))).toBe('both');
+  });
+
+  it('gives a wrong name spurious wherever its box sits', () => {
+    expect(frameVerdict(withDefects(t, { ...none, cs: true }), frame, 0.5)).toBe('spurious');
+    expect(frameVerdict(withDefects(t, { ...none, cs: true, bs: true }), frame, 0.5)).toBe('spurious');
+    expect(frameVerdict(withDefects(t, { ...none, bs: true, bo: true }), frame, 0.5)).toBe('localization');
+    expect(frameVerdict(withDefects(t, none), frame, 0.5)).toBe('match');
+  });
+});
+
+describe('E10: what each protocol leaves to search', () => {
+  const B = wholePixelBoxes(640, 480);
+
+  it('counts whole-pixel boxes in 640 x 480', () => {
+    expect(B).toBe(205120n * 115440n);
+    expect(B).toBe(23679052800n);
+  });
+
+  it("counts one triplet's hypotheses per protocol, exactly", () => {
+    expect(hypothesisSpace('predcls', 6, 10, 16, B)).toBe(480n);
+    expect(hypothesisSpace('sgcls', 6, 10, 16, B)).toBe(48000n);
+    expect(hypothesisSpace('sgdet', 6, 10, 16, B).toLocaleString('en-US')).toBe('897,116,066,370,414,059,520,000');
+    expect(hypothesisSpace('predcls', 6, 150, 50, B)).toBe(1500n);
+    expect(hypothesisSpace('sgcls', 6, 150, 50, B)).toBe(33750000n);
+    expect(hypothesisSpace('sgdet', 6, 150, 50, B).toLocaleString('en-US')).toBe('630,784,734,166,697,385,600,000,000');
+  });
+
+  it('orders the three by inclusion, on either vocabulary', () => {
+    for (const [c, p] of [[10, 16], [150, 50]] as const) {
+      const [a, b, d] = (['predcls', 'sgcls', 'sgdet'] as const).map((pr) => hypothesisSpace(pr, 6, c, p, B));
+      expect(a! < b! && b! < d!).toBe(true);
+    }
+  });
+
+  it("counts the slice's own classes", () => {
+    expect(SLICE_CLASS_COUNT).toBe(10);
+  });
+});
+
+describe('E1 against the engine', () => {
+  const frame = frameById(E1_FRAME)!;
+  const t = annotatedTriplet(frame, E1_RELATIONSHIP);
+  const states = Array.from({ length: 32 }, (_, n) => ({
+    cs: Boolean(n & 1), co: Boolean(n & 2), p: Boolean(n & 4), bs: Boolean(n & 8), bo: Boolean(n & 16),
+  }));
+  const asEngine = (b: BoxTriplet): Triplet => ({
+    index: 0,
+    relationship_id: 0,
+    subject_name: b.subject.name,
+    predicate: b.predicate,
+    object_name: b.object.name,
+    subject_bbox: b.subject.box,
+    object_bbox: b.object.box,
+    subject_mask: null,
+    object_mask: null,
+    score: null,
+  });
+
+  it("E1's verdict equals the engine's classify in all 32 toggle states", () => {
+    // The one value import from sgg-metrics beside F3's boxIou: E1 restates the engine's rule for
+    // one prediction, and this holds the restatement to the rule.
+    const gts = toTriplets(frame);
+    for (const s of states) {
+      const pred = withDefects(t, s);
+      const engine = classify(asEngine(pred), gts, gts.map(() => false), 0.5, false)[0];
+      expect(frameVerdict(pred, frame, 0.5), JSON.stringify(s)).toBe(engine);
+    }
+  });
+
+  it('no toggle state names another annotated triplet of ph-001', () => {
+    const annotated = new Set(toTriplets(frame).map((g) => `${g.subject_name}|${g.predicate}|${g.object_name}`));
+    const named = new Set(states.map((s) => withDefects(t, s)).map((p) => `${p.subject.name}|${p.predicate}|${p.object.name}`));
+    expect(named.size).toBe(8);
+    expect([...named].filter((k) => annotated.has(k))).toEqual(['box|on|table']);
   });
 });

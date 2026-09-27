@@ -3205,3 +3205,98 @@ cases, **30 playground cases** and 25 release figures, ruff clean, standalone cu
 equations, frontend builds 766 modules. `npm run test:e2e` **62** (55 before). `npm run
 check:perf` **21** (20 before); F3 33.4 ms, within its 33.6 ms two-frame floor. See
 VERIFICATION §21.
+
+## D98 — M3's playgrounds, E1 and E10, and four statements about matching and protocols
+
+**Plan:** `specs/2026-09-27-playgrounds-m3-design.md`, `plans/2026-09-27-playgrounds-m3.md`.
+**Decisions:** the author's, on 2026-09-27: E1 and E10, each after the math step that teaches it;
+M3 s3 to say what is forced apart from what is observed; E10 to count the hypothesis spaces and
+show what each protocol hands over, with no recall; E1 to inject one defect per toggle into a real
+triplet; F3's overlay to become a shared component. Branch `feat/playgrounds-m3`, from `main` at
+`9a3b644`.
+
+**Four findings, read on 2026-09-27.**
+1. *M3 s3 claimed more than its argument proves.* Its Formal line stated
+   R_SGDet@k ≤ R_SGCls@k ≤ R_PredCls@k "for every model, every fixture"; the argument, that a
+   model can ignore the extra input, is about what the protocols allow. Even "for every model given
+   less input some model given more does at least as well" fails without qualification: two ground
+   truths with near-identical boxes and different labels leave an SGCls model unable, within the
+   same K, to place a label an SGDet model places. What is forced is the inclusion
+   ℋ_PredCls ⊆ ℋ_SGCls ⊆ ℋ_SGDet. The ordering is observed: `Scene-Graph-Benchmark.pytorch`'s
+   `METRICS.md` at commit `d05be9f9e52e9b2722dc6dc2f0b8b05b47da38f7`, table "Recall@K", shows it in
+   every row at every K (MOTIFS at R@50: 32.78 SGGen, 38.92 SGCls, 65.18 PredCls). s3 now says so,
+   in all four parts and both locales.
+2. *The frozen E10's note said the engine asserts the ordering on every fixture.* The only
+   monotonicity test in the engine is `test_recall_is_monotone_in_k`, about K. The frozen E10
+   obtains its ordering from invented IoU scale factors, 0.88 and 0.74, passed to `pg.js
+   evaluate()`; its note is corrected and its bars stay, as the frozen page's own.
+3. *s3 counted |V|² pairs and wrote "|H_SGDet| ⊇ |H_SGCls|".* The first counts an object paired
+   with itself, where M0 and F1 count |V|(|V| − 1); the second relates two numbers with a set
+   symbol. The brief repeated |V|². All three places now read |V|(|V| − 1), and the brief is
+   rebuilt.
+4. *M3 s2 wrote "two independent failure modes ⇒ four diff colours".* The engine's `classify` gives
+   the four combinations of Φ_cls and Φ_loc three verdicts, `match`, `localization`, and `spurious`
+   for both combinations with a wrong name; `missed` belongs to the ground truth. s2 now carries
+   that table.
+
+The frozen page's E1 and E10 formulas are rebuilt from the corrected MDX, so the two cannot differ,
+and re-harvested: still 26 formulas and 23 derivations. kp E10's `knobs`, "monotonicity invariant
+asserted live", now reads "3-way knob · the hypothesis space counted per protocol". `FROZEN.md`
+records all of it.
+
+**`PhotoMarks`.** F3's overlay became `playgrounds/PhotoMarks.tsx`, used by F3, E1 and E10: the
+photograph in flow inside a box only it sizes, stating its width and height so the box has its
+proportions before it loads (M2's deferred minor), an SVG on the frame's viewBox, and marks drawn
+solid or dashed over white under-strokes. F3's tests and its projector checks passed unchanged.
+
+**E1.** `ph-001` relationship 1, box#3 on table#1, and five toggles: subject class box → glove,
+object class table → panel, predicate on → near, subject box moved 45 px (IoU 3,150 / 9,450), object
+box moved 55 px (IoU 23,100 / 69,300). Each falsifies exactly one conjunct. `logic.ts` restates the
+engine's rule for one prediction; one test holds it to `classify` over all 32 toggle states, and
+another shows that of the eight name triples the toggles produce only (box, on, table) is
+annotated in ph-001. It is the second value import from `sgg-metrics` under `playgrounds/`, beside
+F3's `boxIou`.
+
+**E10.** A protocol and a vocabulary, this slice's 10 classes and 16 predicates, counted from the
+slice, or VG-150's 150 and 50 (Xu et al. 2017 §4). Per triplet: 480, 48,000 and
+897,116,066,370,414,059,520,000 on the slice; 1,500, 33,750,000 and
+630,784,734,166,697,385,600,000,000 on VG-150; SGDet with B = C(641, 2) · C(481, 2) =
+23,679,052,800 whole-pixel boxes, computed as `bigint`. The labels carry no count, so regenerating
+the slice cannot make them lie.
+
+**Both span two parts** (D96). As one step, longest state, 1024 × 768, 繁體中文: E1 229 px past the
+panel (2 px at 1280 × 800), E10 96 px. E1's first part is the defects on the photograph and the five
+conjuncts, its second Φ_cls, Φ_loc, the relation, the failure mode and the verdict; both show the
+five toggles, since both read them. E10's first part is what the protocol hands over, its second
+the vocabulary and the three counts, the chosen one marked. Every part now fits at all three sizes
+in 繁體中文. English, which the suite does not hold to the panel, runs 43 px past on E1's first part
+and 15 px on E10's second at 1024 × 768, and fits at the other two sizes. M3 went from 7 steps to 11, each part 90 s with its notes in both
+locales; the corpus holds 109 steps a locale and 218 presenter notes.
+
+**The branch review** found three statements still wrong or unqualified, each fixed with a test
+that failed first.
+- *s2's verdict table left out a condition the engine keeps.* `classify` gives `localization` to a
+  prediction that meets all five conjuncts against a ground truth already matched (the engine's
+  own vector `gv-005-duplicate-predictions`). The table is now captioned "against a ground truth no
+  earlier prediction has matched", in both locales and the frozen derivation, and the prose says
+  that a repeat of a triplet already matched is still `localization`.
+- *The ordering survived as a law in three places.* The brief's §6 said each protocol "strictly
+  enlarges the search space, which yields an invariant the test suite asserts on every fixture";
+  it now states the inclusion with its condition and the ordering as observed, and the standalone
+  is rebuilt. SRS §11.2's "holds for any model and any fixture" is marked superseded in place.
+  L2's test comment, which quoted it, now says the ordering holds on that fixture.
+- *The inclusion was stated without its definition or assumptions.* ℋ is the set of single-triplet
+  hypotheses ⟨(b_s, c_s), p, (b_o, c_o)⟩, and the inclusion holds only when what a protocol hands
+  over is itself a hypothesis of the next: the given boxes distinct whole-pixel boxes inside the
+  image, the given labels in 𝒞. Three boxes of the committed `vg150-sgb` slice cross their image's
+  border, so the condition is not idle. s5 now says so in both locales, and E10 prints the
+  condition beside the inclusion; its second part then ran 17 px past 1024 × 768 and fits again
+  with tighter spacing.
+
+Nine minor findings are deferred to the author.
+
+**Verification.** `npm run ci` exit 0: 266 pytest and 7 skipped, **845 vitest in 64 files** (791
+before), parity 13, **i18n 322 keys** (292 before), content lint clean over 13 golden cases, **42
+playground cases** and 25 release figures with 44 symbols, standalone current at 254 equations,
+frontend builds 771 modules. `npm run test:e2e` **66** (62 before). `npm run check:perf` **23** (21
+before); E1 33.3 ms and E10 32.9 ms, each within its two-frame floor. See VERIFICATION §22.

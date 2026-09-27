@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import deriv from '../../../../../data/content/deriv.json';
+import math from '../../../../../data/content/math.json';
 import { render, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -9,6 +10,12 @@ import { getMeta, getModule, moduleIds } from '../registry';
 beforeEach(() => {
   setLocale('en');
 });
+
+/**
+ * A repository file as text. Through a parameter, not a literal: Vite rewrites
+ * `new URL('literal', import.meta.url)` into an asset URL, which `readFileSync` refuses.
+ */
+const source = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
 describe('the module registry', () => {
   it('finds m00 in both locales without a hand-kept list', () => {
@@ -144,6 +151,64 @@ describe('the playground step kind', () => {
     }
   });
 
+  it('M3 states what is forced apart from what is observed, and the verdicts the engine gives', () => {
+    // s3 claimed the recall ordering for every model; what the protocols force is an inclusion of
+    // hypothesis spaces, and the ordering is observed (D98). s2 claimed two failure modes imply
+    // four colours; the engine gives the four combinations three verdicts.
+    for (const file of ['../m03.en.mdx', '../m03.zh-TW.mdx']) {
+      const text = readFileSync(new URL(file, import.meta.url), 'utf8');
+      expect(text, file).toContain(
+        '\\mathcal{H}_{\\text{PredCls}}\\subseteq\\mathcal{H}_{\\text{SGCls}}\\subseteq\\mathcal{H}_{\\text{SGDet}}',
+      );
+      expect(text, file).toContain('\\begin{array}{c|cc}');
+      expect(text, file).not.toContain('for every model');
+      expect(text, file).not.toContain('\\lvert V\\rvert^2');
+      expect(text, file).not.toContain('four diff colours');
+    }
+    const formulas = math as Record<string, string>;
+    const derivations = deriv as Record<string, string>;
+    expect(formulas.E10).toContain('\\subseteq');
+    for (const id of ['E1', 'E10']) {
+      expect(derivations[id], id).not.toContain('\\lvert V\\rvert^2');
+      expect(derivations[id], id).not.toContain('four diff colours');
+    }
+    for (const locale of ['en', 'zh-TW'] as const) {
+      for (const step of getModule('m03', locale)!.filter((s) => s.kind === 'math')) {
+        const { container, unmount } = render(<>{step.node}</>);
+        expect(container.querySelector('.katex-error'), `${locale} ${step.id}`).toBeNull();
+        unmount();
+      }
+    }
+  });
+
+  it('M3 qualifies its verdict table and defines the inclusion it states', () => {
+    // Branch review (D98): the table holds against a ground truth no earlier prediction has matched,
+    // since the engine calls a repeat of a matched triplet localization; and the inclusion holds
+    // only for hypotheses of that shape, with the given boxes and labels inside what the next
+    // protocol allows.
+    const en = source('../m03.en.mdx');
+    const zh = source('../m03.zh-TW.mdx');
+    for (const text of [en, zh]) expect(text).toContain('\\text{against a ground truth no earlier prediction has matched:}');
+    expect(en).toContain('a repeat of a triplet already matched');
+    expect(zh).toContain('重複預測一個已命中之三元組');
+    expect(en).toContain('single-triplet hypotheses');
+    expect(en).toContain('the given labels are in');
+    expect(zh).toContain('單一三元組假設');
+    expect(zh).toContain('所給之標籤屬於');
+    expect((deriv as Record<string, string>).E1).toContain('no earlier prediction has matched');
+  });
+
+  it('the protocol ordering survives nowhere as a law', () => {
+    // The brief, the SRS and an L2 comment repeated what M3 s3 no longer claims (D98).
+    const brief = source('../../../../web/brief/index.html');
+    expect(brief).not.toContain('asserts on every fixture');
+    expect(brief).toContain('\\mathcal{H}_{\\text{PredCls}}\\subseteq\\mathcal{H}_{\\text{SGCls}}\\subseteq\\mathcal{H}_{\\text{SGDet}}');
+    const srs = source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-SRS.md');
+    expect(srs).toContain('[**Superseded 2026-09-27 (D98):**');
+    const l2 = source('../../labs/L2/test/MetricExplorer.test.tsx');
+    expect(l2).not.toContain('for every model and every fixture');
+  });
+
   it('M2 s2 states the √2 boundary strictly, since at λ = √2 the concentric box reaches ½', () => {
     // IoU ≤ λ⁻² is an equality for the concentric box, and s2's own rule accepts IoU ≥ τ, so
     // "λ ≥ √2 ⇒ IoU < ½" is false at λ = √2. F3's case pg-F3-bound-equals-tau reaches its bound.
@@ -153,6 +218,15 @@ describe('the playground step kind', () => {
       expect(text, file).not.toContain('\\lambda\\ge\\sqrt{2}');
     }
     expect((deriv as Record<string, string>).F3).toContain('\\lambda>\\sqrt{2}');
+  });
+
+  it('M3 carries E1 and E10, in two parts each, directly after the steps that teach them', () => {
+    const meta = getMeta('m03', 'en')!;
+    const part = (n?: number) => (n === undefined ? '' : `.${n}`);
+    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}${part(s.part)}` : ''}`)).toEqual([
+      's1:prose', 's2:math', 's3:playground/E1.1', 's4:playground/E1.2', 's5:math',
+      's6:playground/E10.1', 's7:playground/E10.2', 's8:prose', 's9:prose', 's10:lab', 's11:checkpoint',
+    ]);
   });
 
   it('M2 carries F3, in two parts, directly after the step that teaches it', () => {

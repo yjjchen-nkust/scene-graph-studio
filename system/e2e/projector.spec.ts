@@ -33,6 +33,8 @@ const PARTS_LONGEST = [
   'm01/5?F7.C=50&F7.k=50', 'm01/6?F7.C=50&F7.k=50',
   'm01/8?X1.r=xu-2017&X1.vs=sgb-v1', 'm01/9?X1.r=sgb-v1&X1.vs=sgb-v2', 'm01/10?X1.r=xu-2017&X1.vs=sgb-v2',
   'm02/2?F3.lambda=2&F3.dx=120&F3.dy=100', 'm02/3?F3.lambda=2&F3.tau=0.95&F3.dx=120&F3.dy=100',
+  'm03/2?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1', 'm03/3?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1',
+  'm03/5?E10.pr=predcls', 'm03/6?E10.pr=sgdet&E10.voc=vg150',
 ];
 
 const SIZES = [
@@ -369,7 +371,7 @@ for (const size of SIZES) {
       // A floor per step, measured rather than guessed: the walk reads 203 rows on the
       // mathematics step, 17 and 23 on F1's parts, 24 on F2 and 17 on F8, 18 and 15 on F6's, 27
       // and 20 on F7's, and 34, 18 and 19 on X1's, at every panel size (2026-09-26, D96); and 26 and 16 on
-      // F3's (2026-09-27, D97).
+      // F3's (2026-09-27, D97); 25 and 19 on E1's and 10 and 22 on E10's (2026-09-27, D98).
       // `toBeGreaterThan(3)` was kept here after the oklch finding with a comment explaining why it had failed to catch it,
       // which is a floor known to be inadequate left in place. These are set below the
       // measured counts so ordinary content edits do not trip them, and far enough above zero
@@ -389,6 +391,10 @@ for (const size of SIZES) {
         { module: 'm01', step: 10, floor: 14 },
         { module: 'm02', step: 2, floor: 19 },
         { module: 'm02', step: 3, floor: 12 },
+        { module: 'm03', step: 2, floor: 19 },
+        { module: 'm03', step: 3, floor: 14 },
+        { module: 'm03', step: 5, floor: 7 },
+        { module: 'm03', step: 6, floor: 16 },
       ];
       for (const { module, step, floor } of pages) {
         await page.goto(`/lecture/m/${module}/${step}`);
@@ -436,6 +442,7 @@ for (const size of SIZES) {
         ...[0, 1, 2, 3, 4, 5, 6].map((s) => ['m00', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((s) => ['m01', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7].map((s) => ['m02', s] as const),
+        ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => ['m03', s] as const),
       ]) {
         await page.goto(`/lecture/m/${module}/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
@@ -477,7 +484,7 @@ for (const size of SIZES) {
       for (const where of [
         'm00/1', 'm00/2', 'm00/4', 'm00/5',
         'm01/2', 'm01/3', 'm01/5', 'm01/6', 'm01/8', 'm01/9', 'm01/10',
-        'm02/2', 'm02/3',
+        'm02/2', 'm02/3', 'm03/2', 'm03/3', 'm03/5', 'm03/6',
       ]) {
         await page.goto(`/lecture/m/${where}`);
         const controls = page.getByTestId('playground-controls');
@@ -510,7 +517,7 @@ for (const size of SIZES) {
       // on rendered 0×0 on every projector from the day it landed. Its step "fit" because the
       // picture was missing (D96). F3 draws its own overlay over the same kind of photograph,
       // so it is held to the same measure.
-      for (const where of ['m00/1', 'm02/2']) {
+      for (const where of ['m00/1', 'm02/2', 'm03/2', 'm03/5']) {
         await page.goto(`/lecture/m/${where}`);
         const image = page.getByTestId('playground-frame').locator('img');
         await expect(image, where).toBeVisible();
@@ -524,19 +531,23 @@ for (const size of SIZES) {
       }
     });
 
-    test('F3 draws its marks on its photograph, not beside it', async ({ page }) => {
+    test('F3, E1 and E10 draw their marks on their photographs, not beside them', async ({ page }) => {
       // The overlay is laid over the photograph, and its viewBox is the frame's own 640 × 480, so
       // it lands on the objects only if it has the photograph's box exactly. It first took the
       // box of its stretched column instead, and `meet` scaling centred the marks 122 px below
       // the objects they outline at 1024 × 768, with every readout still correct.
-      await page.goto('/lecture/m/m02/2?F3.dx=18');
-      const image = page.getByTestId('f3-picture').locator('img');
-      const overlay = page.getByTestId('f3-picture').locator('svg');
-      await expect(image).toBeVisible();
-      const [a, b] = [await image.boundingBox(), await overlay.boundingBox()];
-      expect(a && b, 'the photograph or its overlay has no box').toBeTruthy();
-      for (const k of ['x', 'y', 'width', 'height'] as const) {
-        expect(Math.abs(a![k] - b![k]), `overlay ${k} is ${b![k]}, photograph ${a![k]}`).toBeLessThanOrEqual(1);
+      for (const [where, picture] of [
+        ['m02/2?F3.dx=18', 'f3-picture'], ['m03/2?E1.bs=1', 'e1-picture'], ['m03/5', 'e10-picture'],
+      ] as const) {
+        await page.goto(`/lecture/m/${where}`);
+        const image = page.getByTestId(picture).locator('img');
+        const overlay = page.getByTestId(picture).locator('svg');
+        await expect(image, where).toBeVisible();
+        const [a, b] = [await image.boundingBox(), await overlay.boundingBox()];
+        expect(a && b, `${where}: the photograph or its overlay has no box`).toBeTruthy();
+        for (const k of ['x', 'y', 'width', 'height'] as const) {
+          expect(Math.abs(a![k] - b![k]), `${where}: overlay ${k} is ${b![k]}, photograph ${a![k]}`).toBeLessThanOrEqual(1);
+        }
       }
     });
 

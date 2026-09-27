@@ -1,4 +1,6 @@
 import type { ComponentType } from 'react';
+import { MatchRelation } from './E1/MatchRelation';
+import { ProtocolSpaces } from './E10/ProtocolSpaces';
 import { LabelsToStructure } from './F1/LabelsToStructure';
 import { TripletCombinatorics } from './F2/TripletCombinatorics';
 import { BoxOverlap } from './F3/BoxOverlap';
@@ -20,6 +22,8 @@ import { SplitReleases } from './X1/SplitReleases';
 export type PlaygroundProps = { part?: number };
 
 export const PLAYGROUND_MOUNTS: Record<string, ComponentType<PlaygroundProps>> = {
+  E1: MatchRelation,
+  E10: ProtocolSpaces,
   F1: LabelsToStructure,
   F2: TripletCombinatorics,
   F3: BoxOverlap,
@@ -34,11 +38,13 @@ export const PLAYGROUND_IDS: string[] = Object.keys(PLAYGROUND_MOUNTS).sort();
 /**
  * The playgrounds too long for one panel, and how many consecutive steps each spans.
  *
- * At 1024×768 a step shows 561 px, and each of these five is taller than that by its frame alone
+ * At 1024×768 a step shows 561 px, and each of these seven is taller than that by its frame alone
  * (D96). A point absent here is one step. `content_lint.mjs` reads this table as it reads the one
  * above, and refuses a step naming a part the table does not give.
  */
 export const PLAYGROUND_PARTS: Record<string, number> = {
+  E1: 2,
+  E10: 2,
   F1: 2,
   F3: 2,
   F6: 2,

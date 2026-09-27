@@ -425,6 +425,22 @@ const PLAYGROUND_CASES: {
     readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
     why: 'scaling the prediction re-counts its intersection and union',
   },
+  {
+    module: 'm03',
+    kp: 'E1',
+    step: 3,
+    act: { kind: 'click', testid: 'E1.bs' },
+    readout: '[data-testid="e1-verdict"]',
+    why: 'one defect re-evaluates five conjuncts and the verdict',
+  },
+  {
+    module: 'm03',
+    kp: 'E10',
+    step: 5,
+    act: { kind: 'set', testid: 'E10.pr', value: 'sgcls' },
+    readout: '[data-testid="e10-given"]',
+    why: 'another protocol redraws what is given and re-marks its count',
+  },
 ];
 
 test.describe('playground interaction', () => {
@@ -456,12 +472,12 @@ test.describe('playground interaction', () => {
     });
   }
 
-  test('all seven playgrounds were actually measured', () => {
+  test('all nine playgrounds were actually measured', () => {
     const timed = measured.filter((l) => l.startsWith('playground'));
     expect(
       timed.length,
-      `only ${timed.length} playgrounds were timed; M0, M1 and M2 carry seven`,
-    ).toBe(7);
+      `only ${timed.length} playgrounds were timed; M0 to M3 carry nine`,
+    ).toBe(9);
   });
 });
 

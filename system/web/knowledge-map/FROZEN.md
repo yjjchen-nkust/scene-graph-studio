@@ -188,3 +188,33 @@ concentric box, so at λ = √2 that box has IoU = ½ exactly, which the formula
 (accept ⇔ IoU ≥ τ). It now reads "λ > √2 ⇒ IoU < ½". `npm run harvest` carries the change into
 `data/content/deriv.json` and `kp.json`; M2 s2 carries the same line in both locales and is
 corrected with it. No option, control or knowledge point was added.
+
+### 2026-09-27 — E1's and E10's statements about matching and protocols
+
+Opened for the M3 playgrounds (`docs/superpowers/specs/2026-09-27-playgrounds-m3-design.md` §2).
+
+**1 · E10's ordering.** The formula said $R_{\text{SGDet}}@k \le R_{\text{SGCls}}@k \le R_{\text{PredCls}}@k$
+"for every model, every fixture", and the note that the engine asserts it on every fixture. The
+engine asserts no such thing: its only monotonicity test is `test_recall_is_monotone_in_k`, about
+K. What the protocols force is an inclusion of hypothesis spaces,
+$\mathcal{H}_{\text{PredCls}} \subseteq \mathcal{H}_{\text{SGCls}} \subseteq \mathcal{H}_{\text{SGDet}}$; the
+recall ordering is observed, for example in every row of `Scene-Graph-Benchmark.pytorch`'s
+`METRICS.md` "Recall@K" table (commit `d05be9f9e52e9b2722dc6dc2f0b8b05b47da38f7`). The formula and
+the derivation now say so, and the note states the ordering as observed.
+
+**2 · E10's counts.** The derivation counted $|V|^2$ ordered pairs, an object paired with itself
+included, where M0 counts $|V|(|V|-1)$, and wrote $|\mathcal{H}_{\text{SGDet}}| \supseteq
+|\mathcal{H}_{\text{SGCls}}|$, a set symbol between two numbers. Both are corrected.
+
+**3 · E1's colours.** The derivation and the note said that two independent failure modes imply
+four diff colours. The engine's `classify` gives the four combinations of the two halves three
+verdicts, `match`, `localization`, and `spurious` for both combinations with a wrong name; the
+fourth colour, `missed`, belongs to the ground truth. The derivation now carries the verdict table,
+and the note says which failure gets which colour.
+
+**4 · E10's knobs.** "monotonicity invariant asserted live" described an assertion that does not
+exist; the field now reads "3-way knob · the hypothesis space counted per protocol".
+
+`npm run harvest` carries the formulas into `data/content/`. No option, control or knowledge point
+was added. The frozen E10's toy bars, obtained from invented IoU scale factors passed to
+`pg.js evaluate()`, are unchanged: its note is corrected, its demonstration is the page's own.

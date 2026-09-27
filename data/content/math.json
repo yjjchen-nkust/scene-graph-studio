@@ -9,7 +9,7 @@
   "E4": "\\[ \\pi(\\langle s,p,o\\rangle)=(s,o);\\qquad \\text{graph constraint}\\iff\\forall\\,t\\ne t^{\\prime}\\in X_k:\\ \\pi(t)\\ne\\pi(t^{\\prime}) \\]",
   "E6": "\\[ w_p\\propto n_p^{\\alpha};\\qquad \\underbrace{R@k=\\sum_p\\frac{n_p}{\\lvert G\\rvert}R_p@k}_{\\alpha=1}\\qquad \\underbrace{mR@k=\\sum_p\\frac{1}{\\lvert\\mathcal{P}^{\\prime}\\rvert}R_p@k}_{\\alpha=0} \\]",
   "E7": "\\[ \\mathrm{ngR}@k:\\ \\pi \\text{ need not be injective};\\qquad \\lvert\\{t\\in X_k:\\pi(t)=(s,o)\\}\\rvert\\le n_{\\text{pair}} \\]",
-  "E10": "\\[ R_{\\text{SGDet}}@k\\ \\le\\ R_{\\text{SGCls}}@k\\ \\le\\ R_{\\text{PredCls}}@k \\qquad\\text{for every model, every fixture} \\]",
+  "E10": "\\[ \\mathcal{H}_{\\text{PredCls}}\\subseteq\\mathcal{H}_{\\text{SGCls}}\\subseteq\\mathcal{H}_{\\text{SGDet}} \\]",
   "E11": "\\[ R_p(\\lambda)=(1-\\lambda)\\underbrace{\\Pr[p\\mid c_s,c_o]}_{\\text{no pixels consulted}}+\\lambda\\underbrace{f_\\theta(V,s,o)}_{\\text{visual model}} \\]",
   "E13": "\\[ \\text{MultiMPO permits }\\lvert\\{m:\\pi(m)=(s,o)\\}\\rvert>1 \\;\\Longrightarrow\\; \\widehat{mR}=\\rho\\cdot mR,\\quad\\rho>1 \\]",
   "T1": "\\[ \\text{cost}=N(N-1)\\lvert\\mathcal{P}\\rvert=O\\!\\left(N^{2}\\lvert\\mathcal{P}\\rvert\\right),\\qquad \\text{true relations}=O(N) \\]",

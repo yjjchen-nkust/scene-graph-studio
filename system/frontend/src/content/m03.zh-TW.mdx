@@ -21,6 +21,9 @@ symbols:
   - sym: "\\mathcal{C}"
     gloss_en: "object class set"
     gloss_zh: "物件類別集合"
+  - sym: "B"
+    gloss_en: "the number of whole-pixel boxes in the image"
+    gloss_zh: "影像中整數像素框之個數"
 claims: []
 steps:
   - id: s1
@@ -29,25 +32,49 @@ steps:
   - id: s2
     kind: math
     seconds_budget: 300
-    presenter_notes_zh: "五分鐘。配對規則由兩個彼此獨立的部分構成：指認是否正確、位置是否正確。本領域多數令人困惑的結果，均源自二者被合併為單一數值報告。宜於板書將兩個合取項分開書寫，並保留至 s3 一併使用。"
+    presenter_notes_zh: "五分鐘。配對規則由兩個彼此獨立的部分構成：指認是否正確、位置是否正確。本領域多數令人困惑的結果，均源自二者被合併為單一數值報告。宜於板書將兩個合取項分開書寫，並保留至 s5 一併使用。"
   - id: s3
+    kind: playground
+    kp: E1
+    part: 1
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。所有切換皆關閉時，五個合取項均成立，預測即為標註。開啟主詞框位移：IoU 為 3,150 / 9,450 = 0.333，未達 τ = 0.5，名稱仍一致。其後關閉之，改開啟 predicate 替換：框位置正確而名稱錯誤。保持此設定進入下一步驟。"
+  - id: s4
+    kind: playground
+    kp: E1
+    part: 2
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。切換沿用前一步驟之設定：predicate 替換時，Φ_cls 不成立、Φ_loc 成立，差異圖判為 spurious。再開啟主詞框位移：兩部分皆不成立，差異圖仍判為 spurious；差異圖並不區分「位置正確、名稱錯誤」與「兩者皆錯」。關閉 predicate 替換：名稱正確而位置錯誤，差異圖判為 localization。"
+  - id: s5
     kind: math
     seconds_budget: 300
-    presenter_notes_zh: "五分鐘。協定間的大小關係常被引述為經驗規律，實為必然，論證僅需一行：資訊較少時所能做到者，在資訊較多時忽略多出的輸入即可達成。宜請現場先行提出反例，再說明反例不存在的理由；此較直接給出證明更能留下印象。"
-  - id: s4
+    presenter_notes_zh: "五分鐘。須區分必然者與觀察所得者。必然者：各協定之假設空間均包含前一協定之假設空間，此為集合包含關係，無須量測。觀察所得者：該基準自身表格之每一列中，SGDet 之 recall 均低於 SGCls，亦低於 PredCls；以 MOTIFS 之 R@50 為例，依序為 32.78、38.92、65.18。宜請現場判斷此包含關係是否足以證明該大小關係；答案為否，因其僅規範模型可輸出之內容，而非任何模型實際之表現。"
+  - id: s6
+    kind: playground
+    kp: E10
+    part: 1
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。依序切換三種協定：PredCls 提供六個框及其標籤，SGCls 僅提供框，SGDet 不提供任何內容。各協定之假設空間均包含前一者，此即 s5 所陳述之包含關係。保持 SGDet 進入下一步驟。"
+  - id: s7
+    kind: playground
+    kp: E10
+    part: 2
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。協定沿用前一步驟之設定。以本切片之詞彙，每個三元組之假設數於 PredCls 為 480，於 SGCls 為 48,000，於 SGDet 因框亦屬未知而為 24 位數。切換為 VG-150 詞彙：1,500 與 33,750,000。本步驟不顯示 recall；三種協定下 recall 之變化屬 L2，見 s10。"
+  - id: s8
     kind: prose
     seconds_budget: 180
     presenter_notes_zh: "三分鐘。此處的重點是主張的性質而非演算法。貪婪配對不保證最大配對，但已發表數值即以貪婪法計算，故本專案亦然並明白載明。宜指出 `data/golden/vectors.json` 收有專為區分貪婪解與最大配對而建構的案例，即以對抗性測資檢驗此一假設而非逕行宣稱。"
-  - id: s5
+  - id: s9
     kind: prose
     seconds_budget: 180
     presenter_notes_zh: "三分鐘。配對規則中不存在「為真但未被記錄」此一類別，符合影像事實而未見於標註者一律判為 spurious。此為兩項前提所導出的後果而非可修正的實作選擇。三項推論須完整說明：可量測精確率的上限、對頭部模型的獎勵，以及差異圖中 spurious 一色的意義。"
-  - id: s6
+  - id: s10
     kind: lab
     lab: L2
     seconds_budget: 420
     presenter_notes_zh: "L2 七分鐘。同一組固定預測於三種協定下評分，本實作測資上依序為 0.25、0.50、0.75。移動旋鈕之後請要求現場閱讀測資說明，指出每一階段所修復者為預測中的哪一項缺陷——此為本步驟的重點，僅觀察數值上升則未達成目的。"
-  - id: s7
+  - id: s11
     kind: checkpoint
     presenter_notes_zh: "檢核點。該推論的問題在於 PredCls 與 SGDet 之差同時包含偵測品質與關係推理品質，無法歸因於其一。可解決爭議的量測為 SGCls：其提供框而不提供標籤，故可將偵測與分類分離。若現場逕答「兩者不可比較」，請追問應當量測何者。"
 ---
@@ -98,10 +125,12 @@ $$
 \begin{gathered}\neg\Phi_{\text{cls}}\wedge\Phi_{\text{loc}} \equiv \text{right place, wrong name} \quad
 \neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}} \equiv \text{right name, wrong place}
 \\[4pt]
-\text{Two independent failure modes} \Rightarrow \text{four diff colours, and three protocols to separate them.}\end{gathered}
+\text{against a ground truth no earlier prediction has matched:}
+\\
+\begin{array}{c|cc} & \Phi_{\text{loc}} & \neg\Phi_{\text{loc}}\\ \hline \Phi_{\text{cls}} & \texttt{match} & \texttt{localization}\\ \neg\Phi_{\text{cls}} & \texttt{spurious} & \texttt{spurious}\end{array}\end{gathered}
 $$
 
-自 L1 起所閱讀的四色差異圖，即為上述連言的拆解。`localization` 一色對應 $\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}}$ 之情形，其設置目的正在於：使「predicate 正確但框位置不佳」不致與「predicate 錯誤」呈現為同一結果。
+自 L1 起所閱讀之四色差異圖，於預測一側即為上表，於標準答案一側另有一色：`missed` 標示未被任何預測命中之標註三元組。每一標準答案僅能被命中一次，故上表係針對尚未被先前預測命中之標準答案所作之判定：重複預測一個已命中之三元組，即使五個合取項皆成立，仍判為 `localization`。除此之外，`localization` 一色對應 $\neg\Phi_{\text{loc}}\wedge\Phi_{\text{cls}}$ 之情形，其設置目的正在於：使「predicate 正確但框位置不佳」不致與「predicate 錯誤」呈現為同一結果。名稱錯誤者，無論其框位於何處，均判為 `spurious`：差異圖並不區分「位置正確、名稱錯誤」與「兩部分皆錯」。
 
 </Implications>
 
@@ -109,16 +138,32 @@ $$
 
 <Step id="s3">
 
+## 單一三元組之逐項缺陷
+
+<Playground kp="E1" part="1" />
+
+</Step>
+
+<Step id="s4">
+
+## 兩部分與差異圖之判定
+
+<Playground kp="E1" part="2" />
+
+</Step>
+
+<Step id="s5">
+
 <Intuition>
 
-協定之間的大小關係常被引述為經驗性規律。實則不然：此一關係為必然，且論證僅需一行。凡模型在資訊較少時所能做到者，在資訊較多時亦必能做到——忽略多出的輸入即可。
+三種協定之差異在於提供模型之資訊多寡；此差異首先是集合之間的關係，其次才涉及任何數值：凡 PredCls 允許模型輸出者，SGCls 亦允許，SGDet 所允許者更多。已發表表格所呈現之 recall 大小關係，為跨模型觀察所得之規律，並非此一包含關係之推論結果。此處 $\mathcal{H}$ 為某一協定允許模型輸出之單一三元組假設 $\langle(b_s,c_s),p,(b_o,c_o)\rangle$ 之集合。此包含關係成立之前提，為各協定所提供者本身即屬下一協定之假設：所給之框為影像內互異之整數像素框，且所給之標籤屬於 $\mathcal{C}$。
 
 </Intuition>
 
 <Formal>
 
 $$
-R_{\text{SGDet}}@k\ \le\ R_{\text{SGCls}}@k\ \le\ R_{\text{PredCls}}@k \qquad\text{for every model, every fixture}
+\mathcal{H}_{\text{PredCls}}\subseteq\mathcal{H}_{\text{SGCls}}\subseteq\mathcal{H}_{\text{SGDet}}
 $$
 
 </Formal>
@@ -127,9 +172,9 @@ $$
 
 $$
 \begin{aligned}
-\lvert\mathcal{H}_{\text{PredCls}}\rvert &= \lvert V\rvert^2\lvert\mathcal{P}\rvert\\
-\lvert\mathcal{H}_{\text{SGCls}}\rvert &= \lvert V\rvert^2\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert\\
-\lvert\mathcal{H}_{\text{SGDet}}\rvert &\supseteq \lvert\mathcal{H}_{\text{SGCls}}\rvert \quad\text{(boxes unknown too)}
+\lvert\mathcal{H}_{\text{PredCls}}\rvert &= \lvert V\rvert(\lvert V\rvert-1)\lvert\mathcal{P}\rvert\\
+\lvert\mathcal{H}_{\text{SGCls}}\rvert &= \lvert V\rvert(\lvert V\rvert-1)\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert\\
+\lvert\mathcal{H}_{\text{SGDet}}\rvert &= B(B-1)\lvert\mathcal{C}\rvert^2\lvert\mathcal{P}\rvert
 \end{aligned}
 $$
 
@@ -138,13 +183,15 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{Any hypothesis reachable under a harder protocol is reachable under an easier one}
-\\ \text{by discarding the extra input} \;\Rightarrow\; R_{\text{SGDet}}\le R_{\text{SGCls}}\le R_{\text{PredCls}}.
+\begin{gathered}R_{\text{SGDet}}@k\le R_{\text{SGCls}}@k\le R_{\text{PredCls}}@k\ \text{is observed, not implied:}
+\\ \text{the inclusion shrinks the space a model searches and bounds no model's recall.}
 \\[4pt]
-\textbf{Note } \lvert V\rvert^2 \text{ survives in all three: boxes are given, pairs never are.}\end{gathered}
+\textbf{Note } \lvert V\rvert(\lvert V\rvert-1) \text{ survives under PredCls and SGCls: boxes are given, pairs never are.}\end{gathered}
 $$
 
-末段的註記正是學員常忽略、而授課者最為在意之處。PredCls 提供框，但從未提供「哪些配對之間存在關係」。$\lvert V\rvert^2$ 此一因子於三種協定下均存在；此即本應用於每一筆 PredCls 與 SGCls 回應中無例外附加 `gt_boxes_not_pairs` 警示的理由。
+`Scene-Graph-Benchmark.pytorch` 對其重新實作之四個模型，於每一 K 值均呈現此一大小關係；例如 MOTIFS 之 R@50，於 SGGen（該程式庫對 SGDet 之稱呼）為 32.78，於 SGCls 為 38.92，於 PredCls 為 65.18（`METRICS.md`，「Recall@K」表）。上述各列無一例外，然此仍為對該等模型之量測：若某一模型於取得真實標籤後表現反而較差，亦不違反任何定義。
+
+末段的註記正是學員常忽略、而授課者最為在意之處。PredCls 提供框，但從未提供「哪些配對之間存在關係」。$\lvert V\rvert(\lvert V\rvert-1)$ 此一因子於 PredCls 與 SGCls 下均存在；此即本應用於每一筆 PredCls 與 SGCls 回應中無例外附加 `gt_boxes_not_pairs` 警示的理由。
 
 因此，PredCls 的數值並非「簡單情境」的數值，而是「關係推理被單獨量測」的數值；此為另一種陳述，且更具實用價值。
 
@@ -152,7 +199,23 @@ $$
 
 </Step>
 
-<Step id="s4">
+<Step id="s6">
+
+## 各協定提供之內容
+
+<Playground kp="E10" part="1" />
+
+</Step>
+
+<Step id="s7">
+
+## 各協定留下之假設空間
+
+<Playground kp="E10" part="2" />
+
+</Step>
+
+<Step id="s8">
 
 ## 貪婪配對為假設，而非定理
 
@@ -164,7 +227,7 @@ $$
 
 </Step>
 
-<Step id="s5">
+<Step id="s9">
 
 ## 未被標註者，於評分中等同錯誤
 
@@ -174,7 +237,7 @@ $$
 
 </Step>
 
-<Step id="s6">
+<Step id="s10">
 
 ## 實作單元的內容
 
@@ -182,7 +245,7 @@ L2 以同一組固定預測，分別於三種協定下評分。移動旋鈕並�
 
 </Step>
 
-<Step id="s7">
+<Step id="s11">
 
 ## 檢核點
 

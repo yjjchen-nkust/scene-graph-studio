@@ -19,8 +19,8 @@ function part(kp: string, n?: string, search = '') {
 const shown = (...ids: string[]) => ids.filter((id) => screen.queryByTestId(id) !== null);
 
 describe('a playground split across steps', () => {
-  it('registers the five playgrounds too long for one panel, X1 in three parts and the rest in two', () => {
-    expect(PLAYGROUND_PARTS).toEqual({ F1: 2, F3: 2, F6: 2, F7: 2, X1: 3 });
+  it('registers the seven playgrounds too long for one panel, X1 in three parts and the rest in two', () => {
+    expect(PLAYGROUND_PARTS).toEqual({ E1: 2, E10: 2, F1: 2, F3: 2, F6: 2, F7: 2, X1: 3 });
   });
 
   it('F1: the picture and its layers, then the density, the vocabulary and the readouts', () => {
@@ -39,6 +39,37 @@ describe('a playground split across steps', () => {
   it('F1 part 1 draws every annotated edge, since its density slider is on the other part', () => {
     const cut = part('F1', '1', '?F1.density=0');
     expect(cut.container.querySelectorAll('[data-testid^="edge-"]').length).toBeGreaterThan(0);
+  });
+
+  it('E1: the defects and the five conjuncts, then the two halves and what the diff says', () => {
+    const all = [
+      'E1.cs', 'E1.co', 'E1.p', 'E1.bs', 'E1.bo', 'e1-picture', 'e1-conjuncts',
+      'e1-phi-cls', 'e1-phi-loc', 'e1-relation', 'e1-mode', 'e1-verdict',
+    ];
+    const one = part('E1', '1', '?E1.bs=1');
+    expect(shown(...all)).toEqual(['E1.cs', 'E1.co', 'E1.p', 'E1.bs', 'E1.bo', 'e1-picture', 'e1-conjuncts']);
+    one.unmount();
+
+    // The second part reads every toggle, so it shows them all again, as F6's second part does.
+    part('E1', '2', '?E1.bs=1');
+    expect(shown(...all)).toEqual([
+      'E1.cs', 'E1.co', 'E1.p', 'E1.bs', 'E1.bo', 'e1-phi-cls', 'e1-phi-loc', 'e1-relation', 'e1-mode', 'e1-verdict',
+    ]);
+    expect(screen.getByTestId('e1-phi-cls')).toHaveAttribute('data-holds', 'true');
+    expect(screen.getByTestId('e1-phi-loc')).toHaveAttribute('data-holds', 'false');
+    expect(screen.getByTestId('e1-verdict')).toHaveTextContent('localization');
+  });
+
+  it('E10: what the protocol hands over, then the vocabulary and the three counts', () => {
+    const all = ['E10.pr', 'E10.voc', 'e10-picture', 'e10-given', 'e10-inclusion', 'e10-counts', 'e10-vocabulary'];
+    const one = part('E10', '1', '?E10.pr=sgcls');
+    expect(shown(...all)).toEqual(['E10.pr', 'e10-picture', 'e10-given', 'e10-inclusion']);
+    one.unmount();
+
+    // The counts mark the protocol chosen on the first part, so the second part shows that knob too.
+    part('E10', '2', '?E10.pr=sgcls');
+    expect(shown(...all)).toEqual(['E10.pr', 'E10.voc', 'e10-inclusion', 'e10-counts', 'e10-vocabulary']);
+    expect(screen.getByTestId('e10-row-sgcls')).toHaveAttribute('aria-current', 'true');
   });
 
   it('F3: the box moved and counted, then the threshold and the membership', () => {

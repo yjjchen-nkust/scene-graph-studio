@@ -1,4 +1,5 @@
 import type { BBox, SceneGraph, SGRelationship } from 'sgg-metrics';
+import { E1_DEFECTS } from './E1/setup';
 import type { Note, Release, Split } from './splits';
 
 /**
@@ -372,4 +373,120 @@ export function truncatedRatio(numerator: number, denominator: number): string {
   const thousandths = Math.floor((numerator * 1000) / denominator);
   if (thousandths === 0) return '< 0.001';
   return (thousandths / 1000).toFixed(3);
+}
+
+// ---- E1: the match relation, one defect at a time -----------------------------------------
+
+export interface BoxTriplet {
+  subject: { name: string; box: BBox };
+  predicate: string;
+  object: { name: string; box: BBox };
+}
+
+export interface E1Defects { cs: boolean; co: boolean; p: boolean; bs: boolean; bo: boolean }
+
+/** The five conjuncts of t̂ ≃ t, named as M3 s2 names them: c_ŝ, c_ô, p̂, IoU_s, IoU_o. */
+export interface Conjuncts { cs: boolean; co: boolean; p: boolean; is: boolean; io: boolean }
+
+export function annotatedTriplet(frame: SceneGraph, relationshipId: number): BoxTriplet {
+  const r = frame.relationships.find((x) => x.relationship_id === relationshipId)!;
+  const byId = new Map(frame.objects.map((o) => [o.object_id, o]));
+  const s = byId.get(r.subject_id)!;
+  const o = byId.get(r.object_id)!;
+  return {
+    subject: { name: s.names[0]!, box: s.bbox },
+    predicate: r.predicate,
+    object: { name: o.names[0]!, box: o.bbox },
+  };
+}
+
+/** The annotated triplet with the chosen defects injected, each touching one conjunct only. */
+export function withDefects(t: BoxTriplet, d: E1Defects): BoxTriplet {
+  const { subjectShift: ss, objectShift: os } = E1_DEFECTS;
+  return {
+    subject: {
+      name: d.cs ? E1_DEFECTS.subject : t.subject.name,
+      box: d.bs ? scaledBox(t.subject.box, ss.dx, ss.dy, 1) : t.subject.box,
+    },
+    predicate: d.p ? E1_DEFECTS.predicate : t.predicate,
+    object: {
+      name: d.co ? E1_DEFECTS.object : t.object.name,
+      box: d.bo ? scaledBox(t.object.box, os.dx, os.dy, 1) : t.object.box,
+    },
+  };
+}
+
+/** The pixels two boxes share and the pixels in either: IoU as the two counts it divides. */
+export function iouCounts(a: BBox, b: BBox): [number, number] {
+  const shared = intersection(a, b);
+  return [shared ? area(shared) : 0, unionArea(a, b)];
+}
+
+function meets(a: BBox, b: BBox, tau: number): boolean {
+  const [shared, union] = iouCounts(a, b);
+  return ratio(shared, union) >= tau;
+}
+
+export function conjuncts(pred: BoxTriplet, gt: BoxTriplet, tau: number): Conjuncts {
+  return {
+    cs: pred.subject.name === gt.subject.name,
+    co: pred.object.name === gt.object.name,
+    p: pred.predicate === gt.predicate,
+    is: meets(pred.subject.box, gt.subject.box, tau),
+    io: meets(pred.object.box, gt.object.box, tau),
+  };
+}
+
+/** Which half fails, in M3 s2's words: a wrong name, a wrong place, or both. */
+export function failureMode(c: Conjuncts): 'none' | 'name' | 'place' | 'both' {
+  const name = c.cs && c.co && c.p;
+  const place = c.is && c.io;
+  if (name && place) return 'none';
+  if (!name && !place) return 'both';
+  return name ? 'place' : 'name';
+}
+
+/**
+ * The verdict the engine's diff gives one prediction against a frame with nothing yet consumed.
+ *
+ * `sgg-metrics`' `classify`, restated for this case: a match is an annotated triplet with the
+ * same three names and both IoUs at least τ; failing that, any with the same three names makes it
+ * `localization`; anything else is `spurious`. `logic.test.ts` holds this to `classify` over
+ * every setting of E1's toggles.
+ */
+export function frameVerdict(pred: BoxTriplet, frame: SceneGraph, tau: number): 'match' | 'localization' | 'spurious' {
+  const named = frame.relationships
+    .map((r) => annotatedTriplet(frame, r.relationship_id))
+    .filter((t) => t.subject.name === pred.subject.name && t.predicate === pred.predicate
+      && t.object.name === pred.object.name);
+  if (named.some((t) => meets(pred.subject.box, t.subject.box, tau) && meets(pred.object.box, t.object.box, tau))) {
+    return 'match';
+  }
+  return named.length > 0 ? 'localization' : 'spurious';
+}
+
+// ---- E10: what each protocol leaves the model to search -----------------------------------
+
+export type Protocol = 'predcls' | 'sgcls' | 'sgdet';
+
+/** Axis-aligned boxes with whole-pixel corners and positive area: C(width+1, 2) · C(height+1, 2). */
+export function wholePixelBoxes(width: number, height: number): bigint {
+  const pairs = (n: bigint) => (n * (n - 1n)) / 2n;
+  return pairs(BigInt(width) + 1n) * pairs(BigInt(height) + 1n);
+}
+
+/**
+ * The single-triplet hypotheses a protocol lets the model output, ⟨(b_s, c_s), p, (b_o, c_o)⟩.
+ *
+ * PredCls fixes boxes and classes, so an ordered pair of distinct objects and a predicate:
+ * |V|(|V|-1)|P|. SGCls frees the two classes: |V|(|V|-1)|C|²|P|. SGDet frees the boxes too, any
+ * two distinct whole-pixel boxes: B(B-1)|C|²|P|. `bigint` because the last exceeds 2^53.
+ */
+export function hypothesisSpace(protocol: Protocol, objects: number, classes: number, predicates: number, boxes: bigint): bigint {
+  const P = BigInt(predicates);
+  const C2 = BigInt(classes) ** 2n;
+  const pairs = BigInt(objects) * BigInt(objects - 1);
+  if (protocol === 'predcls') return pairs * P;
+  if (protocol === 'sgcls') return pairs * C2 * P;
+  return boxes * (boxes - 1n) * C2 * P;
 }

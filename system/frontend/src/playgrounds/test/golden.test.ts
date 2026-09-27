@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import golden from '../../../../../data/content/playground_golden.json';
+import { VG150_CLASSES, VG150_PREDICATES } from '../E10/setup';
+import { E1_RELATIONSHIP } from '../E1/setup';
 import { F3_FRAME, F3_OBJECT } from '../F3/setup';
 import { OBJECT_GROUP, PREDICATE_GROUP } from '../F6/groups';
 import {
-  area, candidateSpace, classCounts, densityCut, explain, headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap,
+  annotatedTriplet, area, candidateSpace, classCounts, conjuncts, failureMode, frameVerdict, hypothesisSpace, iouCounts,
+  densityCut, explain, headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap,
   objectLabels, predicateLabels, ranked, ratio, scaleBound, scaledBox, splitDifference, tailToHead, unionArea,
+  wholePixelBoxes, withDefects, type Protocol,
 } from '../logic';
-import { VG_FRAMES, frameById, vgFrameById } from '../slice';
+import { SLICE_CLASS_COUNT, SLICE_PREDICATE_COUNT, VG_FRAMES, frameById, vgFrameById } from '../slice';
 import { releaseById, type Split } from '../splits';
 
 interface Case {
@@ -27,6 +31,8 @@ const cases = (golden as unknown as { cases: Case[] }).cases;
  */
 const RUNS: Record<string, (c: Case) => boolean> = {
   F1: (c) => c.kp === 'F1',
+  E1: (c) => c.kp === 'E1',
+  E10: (c) => c.kp === 'E10',
   F2: (c) => c.kp === 'F2',
   F3: (c) => c.kp === 'F3',
   F8: (c) => c.kp === 'F8',
@@ -142,6 +148,43 @@ describe('playground golden cases', () => {
   it.each(run('F7 slice'))('$id', (c) => {
     const rank = ranked(predicateLabels(VG_FRAMES));
     expect(measuredHeadShare(rank, c.knobs.k as number)).toBeCloseTo(c.expect.head_share as number, 6);
+  });
+
+  it('pins all six of E1\'s cases and all six of E10\'s, so neither block passes by running none', () => {
+    expect(run('E1')).toHaveLength(6);
+    expect(run('E10')).toHaveLength(6);
+  });
+
+  it.each(run('E1'))('$id', (c) => {
+    const frame = frameById(c.image_id!)!;
+    const t = annotatedTriplet(frame, E1_RELATIONSHIP);
+    const pred = withDefects(t, {
+      cs: c.knobs.cs as boolean, co: c.knobs.co as boolean, p: c.knobs.p as boolean,
+      bs: c.knobs.bs as boolean, bo: c.knobs.bo as boolean,
+    });
+    const [isShared, isUnion] = iouCounts(pred.subject.box, t.subject.box);
+    const [ioShared, ioUnion] = iouCounts(pred.object.box, t.object.box);
+    const holds = conjuncts(pred, t, 0.5);
+    expect([isShared, isUnion, ioShared, ioUnion]).toEqual([
+      c.expect.is_shared, c.expect.is_union, c.expect.io_shared, c.expect.io_union,
+    ]);
+    expect(Object.values(holds).every(Boolean)).toBe(c.expect.relation);
+    expect(failureMode(holds)).toBe(c.expect.mode);
+    expect(frameVerdict(pred, frame, 0.5)).toBe(c.expect.verdict);
+  });
+
+  it.each(run('E10'))('$id', (c) => {
+    const frame = frameById(c.image_id!)!;
+    const vg = c.knobs.vocabulary === 'vg150';
+    const count = hypothesisSpace(
+      c.knobs.protocol as Protocol,
+      frame.objects.length,
+      vg ? VG150_CLASSES : SLICE_CLASS_COUNT,
+      vg ? VG150_PREDICATES : SLICE_PREDICATE_COUNT,
+      wholePixelBoxes(frame.width, frame.height),
+    );
+    // A decimal string, since the SGDet counts exceed 2^53 and JSON has no bigint.
+    expect(count.toString()).toBe(c.expect.count);
   });
 
   it.each(run('X1'))('$id', (c) => {

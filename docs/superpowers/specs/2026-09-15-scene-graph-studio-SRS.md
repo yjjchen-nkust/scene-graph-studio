@@ -241,7 +241,7 @@ Each mathematical object in the content corpus follows a fixed four-part shape, 
 
 Complexity, invariants, and proof obligations are stated wherever they exist. Two carry through the whole application and are asserted in the test suite:
 
-- The protocol ordering invariant, which holds for any model and any fixture.
+- The protocol ordering invariant, which holds for any model and any fixture. [**Superseded 2026-09-27 (D98):** what the protocols force is the inclusion of their hypothesis spaces, given boxes and labels inside what the next protocol allows; the recall ordering is observed in published tables, not implied, and the suite asserts it on L2's fixture only.]
 - The greedy-assignment assumption — that score-ordered greedy matching attains the maximum bipartite matching — which is an assumption rather than a theorem, and is discharged on adversarial fixtures rather than asserted.
 
 ### 11.3 Rendering

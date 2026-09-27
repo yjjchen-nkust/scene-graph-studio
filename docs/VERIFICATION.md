@@ -1006,3 +1006,91 @@ fails when the cut is changed back to rounding; M2 s2's implication made strict 
 both locales and in the frozen derivation. The gates were run again after the fixes, and every
 figure in the table above and in this section is from that run: `npm run ci` exit 0 with 791
 vitest, `npm run test:e2e` 62 passed, `npm run check:perf` 21 passed.
+
+## 22. The M3 playgrounds — measured, 2026-09-27
+
+D98. Every number below is from the run that produced it, on branch `feat/playgrounds-m3`.
+
+| Step | Result |
+|---|---|
+| harvest | 26 formulas, 23 derivations, unchanged in number after E1's and E10's were corrected |
+| pytest | 266 passed, 7 skipped |
+| vitest | **845 passed in 64 files** (791 before) |
+| parity | 13 cases agree |
+| i18n parity | **322 keys**, both locales complete (292 before) |
+| content lint | 13 golden cases, **42 playground cases**, 25 release figures, 44 symbols, clean; 109 steps a locale |
+| standalone | up to date, 254 equations |
+| frontend build | 771 modules |
+| `npm run test:e2e` | **66 passed** (62 before) |
+| `npm run check:perf` | **23 passed** (21 before) |
+
+### The corrections
+
+A test reads both M3 locale files and the harvested `math.json` and `deriv.json`: each carries the
+inclusion ℋ_PredCls ⊆ ℋ_SGCls ⊆ ℋ_SGDet and the verdict table, and none carries "for every model",
+|V|² or "four diff colours". It failed before the change and passes after. The same test renders
+every M3 math step in both locales and finds no KaTeX error.
+
+### The engine
+
+E1's verdict equals `classify` on all 32 settings of its toggles; the test fails when E1's rule is
+made to answer `spurious` throughout. Of the eight name triples the toggles produce, only
+(box, on, table) is annotated in `ph-001`.
+
+### The arithmetic
+
+Twelve golden cases on `ph-001`.
+
+| Case | Defects | Subject IoU | Object IoU | t̂ ≃ t | Mode | Verdict |
+|---|---|---|---|---|---|---|
+| none | | 6,300 / 6,300 | 46,200 / 46,200 | holds | none | match |
+| subject class | box → glove | 6,300 / 6,300 | 46,200 / 46,200 | fails | name | spurious |
+| predicate | on → near | 6,300 / 6,300 | 46,200 / 46,200 | fails | name | spurious |
+| subject box | 45 px | 3,150 / 9,450 | 46,200 / 46,200 | fails | place | localization |
+| both boxes | 45 px, 55 px | 3,150 / 9,450 | 23,100 / 69,300 | fails | place | localization |
+| name and place | on → near, 45 px | 3,150 / 9,450 | 46,200 / 46,200 | fails | both | spurious |
+
+| Protocol | This slice (10, 16) | VG-150 (150, 50) |
+|---|---|---|
+| PredCls | 480 | 1,500 |
+| SGCls | 48,000 | 33,750,000 |
+| SGDet | 897,116,066,370,414,059,520,000 | 630,784,734,166,697,385,600,000,000 |
+
+B = C(641, 2) · C(481, 2) = 205,120 × 115,440 = 23,679,052,800.
+
+### Fit
+
+Pixels past the panel over the production build, the largest over each part's states, 繁體中文 /
+English. E1's parts were measured with no defect, with every defect, and with a single one; E10's
+at PredCls, SGCls and SGDet, and on both vocabularies.
+
+| Step | 1024×768 | 1280×800 | 1920×1080 |
+|---|---|---|---|
+| E1 as one step, before the split | 229 / — | 2 / — | 0 / — |
+| E10 as one step, before the split | 96 / — | — | — |
+| M3 s3, E1 part 1 | 0 / 43 | 0 / 0 | 0 / 0 |
+| M3 s4, E1 part 2 | 0 / 0 | 0 / 0 | 0 / 0 |
+| M3 s6, E10 part 1 | 0 / 0 | 0 / 0 | 0 / 0 |
+| M3 s7, E10 part 2 | 0 / 15 | 0 / 0 | 0 / 0 |
+
+The one-step figures are the projector suite's, in the longest state it measures; English was not
+measured before the split, and E10 at the larger sizes not at all. The contrast walk reads 25 and 19
+rows on E1's parts and 10 and 22 on E10's, at every size, with none skipped and none below 7:1; the
+floors are 19, 14, 7 and 16. On E1's and E10's first parts the overlay's box equals the
+photograph's to within 1 px at all three sizes.
+
+### NFR-8
+
+`npm run check:perf`, exit 0, 23 tests. E1, one defect toggled on its second part: 33.3 ms, within
+its 33.6 ms floor. E10, SGCls chosen on its first part: 32.9 ms, within its 33.6 ms floor.
+
+### After the branch review
+
+The three fixes of D98's review paragraph, each a test that failed first: the verdict table's
+condition, the ordering no longer stated as a law in the brief, the SRS or L2's comment, and the
+inclusion's definition and condition in s5 and on E10. The gates were run again: `npm run ci` exit
+0 with 845 vitest in 64 files, 322 i18n keys and the standalone at 254 equations; `npm run
+test:e2e` 66 passed, E10's second part fitting 1024 × 768 again after its spacing was tightened;
+`npm run check:perf` 23 passed twice. Timings moved with the machine's load between the two runs:
+E1 53.7 ms and then 33.3 ms, E10 32.3 ms and then 37.8 ms, while playgrounds this branch did not
+touch reached 64.9 to 78.5 ms (F1, F8, X1) in the second.
