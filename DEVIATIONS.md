@@ -3499,3 +3499,60 @@ that failed first, except the SGCls state, which fit when first measured.
 files** (857 before), parity **17** (16 before), i18n 322 keys, content lint clean over **17 golden
 cases**. `npm run test:e2e` 72 (66 before; the English fit test and the badge test each run at
 three sizes). `npm run check:perf` 23. See VERIFICATION §24.
+
+## D101 — the five minors D100's review deferred, settled
+
+**Plan:** none; a bounded list of five items. **Found by:** the branch review of D100, which
+deferred five minors. **Decisions:** the author's, on 2026-09-27: all five. Branch
+`fix/sgs-d100-deferred`, from `main` at `2783ab6`.
+
+**In the engine** (commit `f7b6102`).
+- *A dangling reference beside a repeated id.* D100's repeated-id validator ran before the
+  dangling-reference check, and on a graph with both its error was the only one raised, so the API
+  answered 422 `schema_invalid`, where contracts §1.1 gives `dangling_reference`. One validator, `_ids_resolve`, now reports both problems in one message;
+  the API answers `dangling_reference`, and its detail names the relationship and the repeated id.
+  The TypeScript engine is unchanged: `toTriplets` refuses a repeated id and, as before, does not
+  check references.
+- *gv-017's warnings.* It listed none, and both harnesses check only the warnings a vector lists,
+  so the two the engine emits for it went unchecked; parity compares the engines with each other,
+  not with a hand-computed value. It now lists `gt_boxes_not_pairs`, since PredCls hands over
+  boxes, and `zero_shot_unavailable`, since no training split is supplied; its why derives both
+  and rules out the other four. The regenerated `vectors.json` differs from the committed one by
+  gv-017 alone. Eight vectors, gv-005 to gv-011 and gv-014, still list no warnings, and gv-002 to
+  gv-004 list one of three; D100's review named gv-017 only, and this branch leaves the others.
+
+**On the playgrounds** (commit `680dc35`).
+- *E10's box ids.* SGCls wrote "boxes #1 to #{n}" with n the count of objects, which is true only
+  when the ids run 1 to n. `idRun` in `logic.ts` gives the first and last id when the ids run
+  without a gap, and E10 lists the ids where they do not; ph-001 still reads "boxes #1 to #6; no
+  labels".
+- *The frame in the strings.* `playground.e10.picture` named ph-001, and so did F3's and E1's
+  picture strings, which the review did not list; each now takes `{frame}` from its playground's
+  setup, and E1's also takes `{triplet}` from the annotated relationship. E10's doc comment names
+  `E10_FRAME`.
+- *E1's toggles.* 繁體中文 read 「主詞框位移 45 px」 and 「受詞框位移 55 px」, without the axis
+  English gives, and both locales wrote 45, 55 and the three defect names as literals. The five
+  labels are filled from `E1_DEFECTS` and the annotated triplet, a shift written as its nonzero
+  axes, so 繁體中文 reads 「主詞框位移 Δx 45 px」. English reads as it did.
+- *E10's columns.* The ► sign and the 4 px rule were drawn in the chosen row alone. Measured,
+  that moved the formula column's left edge by 18.7 to 40.0 px and the count column's by 11.6 to
+  24.1 px as the protocol changed, over both vocabularies at the three projector sizes; the name
+  column stayed at 67 px. Every row now carries the sign and the rule, invisible and transparent
+  outside the chosen row, and a projector test holds the three column edges equal under all three
+  protocols. Each part was needed: with the sign alone reserved, the formula column still moved
+  2.0 px at 1024 × 768, half the rule's width, which is what a collapsed border adds to a cell
+  (Tailwind's preflight collapses a table's borders); with the rule alone, 19.9 px. The chosen row's weight moved nothing: a bold copy of each name, reserving its width in
+  every row, was tried, the test passed without it at all three sizes, and it was removed.
+
+**Watched failing first.** The Python schema test and the API test, before `_ids_resolve`. gv-017,
+under a mutant of both engines that drops `gt_boxes_not_pairs` under `semi`: both harnesses passed
+it on the committed vectors and fail it on the new ones; parity passes the mutant, since the
+engines agree. Ten unit tests of commit `680dc35`: `idRun`'s three, before it existed; E10's three
+on renumbered ids, which printed "boxes #1 to #6" whatever the ids were; the three picture-string
+tests, on the literal frame id; and E1's label test, on 繁體中文's missing axis. The column test
+failed at all three sizes. This record's own test failed on the missing `## D101`.
+
+**Verification.** `npm run ci` exit 0: 279 pytest and 7 skipped (277 before), **881
+vitest in 65 files** (870 in 64 before), parity 17, i18n **323 keys** (322 before), content lint
+clean over 17 golden cases. `npm run test:e2e` **75** (72 before; the column test runs at three
+sizes). `npm run check:perf` 23. See VERIFICATION §25.

@@ -285,9 +285,7 @@ describe('the playground step kind', () => {
     // D98's 15 px predates the inclusion's condition (ca8b276); D100's branch found 71 px.
     expect(deviations).toContain('[**Corrected 2026-09-27 (D100):** 15 px was measured before');
     expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 24. ');
-    for (const [name, text] of [['CLAUDE.md', source('../../../../../CLAUDE.md')], ['INDEX', index]]) {
-      expect(text, name).toContain('D1…D100');
-    }
+    // The range and the section list are the current state's; D101's test holds them now.
     expect(index).toContain('The 17 golden vectors');
     expect(source('../../../../../README.md')).toContain('parity 17/17');
   });
@@ -299,10 +297,9 @@ describe('the playground step kind', () => {
     const index = source('../../../../../docs/INDEX.md');
     // Counts and section lists the branch moved.
     expect(source('../../../../../README.md')).toContain('seventeen cases');
-    expect(claude).toContain('§24 the review minors), and all 100 logged deviations');
-    expect(claude).toContain('resolutions, 72 tests,');
+    expect(claude).toContain('§24 the review minors');
     expect(claude).toContain('three tests in `playgrounds/test/logic.test.ts`');
-    expect(index).toContain('the review minors (§24)**');
+    expect(index).toContain('the review minors (§24)');
     // The offset at Δx = 18 is derived, (454 − 261) / 2 = 96.5 px, and is not rounded.
     for (const [name, text] of [['DEVIATIONS', deviations], ['CLAUDE.md', claude], ['INDEX', index]]) {
       expect(text, name).toContain('96.5 px');
@@ -318,6 +315,28 @@ describe('the playground step kind', () => {
     // M12's comparative names what the middle setting is closer to.
     expect(source('../m12.en.mdx')).not.toContain('closer than either end');
     expect(source('../m12.zh-TW.mdx')).not.toContain('更為接近，');
+  });
+
+  it('the records carry D101 and the counts it measured', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const verification = source('../../../../../docs/VERIFICATION.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    expect(deviations).toContain('## D101 — ');
+    expect(verification).toContain('## 25. ');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      expect(text, name).toContain('D1…D101');
+    }
+    expect(claude).toContain('§25 the deferred minors), and all 101 logged deviations');
+    expect(claude).toContain('resolutions, 75 tests,');
+    expect(index).toContain('the deferred minors (§25)**');
+    expect(readme).toContain('i18n 323 keys');
+    expect(readme).toContain('`npm run test:e2e` is 75');
+    // The five items D100's review deferred, each named where it was settled.
+    for (const item of ['dangling_reference', 'gv-017', 'idRun', 'E1_DEFECTS', '►']) {
+      expect(deviations.slice(deviations.indexOf('## D101 — ')), item).toContain(item);
+    }
   });
 
   it('the protocol ordering survives nowhere as a law', () => {
