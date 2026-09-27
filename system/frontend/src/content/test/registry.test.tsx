@@ -198,6 +198,28 @@ describe('the playground step kind', () => {
     expect((deriv as Record<string, string>).E1).toContain('no earlier prediction has matched');
   });
 
+  it("semi is described as the cap it is, and Action Genome's rule as not computed", () => {
+    // D99: the application's semi caps predicates per ordered object pair; Action Genome's semi
+    // constraint, as STTran evaluates it, keeps one attention predicate and every spatial or
+    // contacting predicate above 0.9, and the course must not present the one as the other.
+    const en = [source('../m04.en.mdx'), source('../m12.en.mdx')];
+    const zh = [source('../m04.zh-TW.mdx'), source('../m12.zh-TW.mdx')];
+    for (const text of en) {
+      expect(text).toContain('per ordered object pair');
+      expect(text).toContain('0.9');
+      expect(text).not.toContain('the mode that matches the data');
+      expect(text).not.toContain('for this kind of data it is the correct one');
+    }
+    for (const text of zh) {
+      expect(text).toContain('有序物件配對');
+      expect(text).toContain('0.9');
+      expect(text).not.toContain('方為與資料相符的模式');
+      expect(text).not.toContain('它才是正確的設定');
+    }
+    const srs = source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-SRS.md');
+    expect(srs).toContain('[**Corrected 2026-09-27 (D99):**');
+  });
+
   it('the protocol ordering survives nowhere as a law', () => {
     // The brief, the SRS and an L2 comment repeated what M3 s3 no longer claims (D98).
     const brief = source('../../../../web/brief/index.html');

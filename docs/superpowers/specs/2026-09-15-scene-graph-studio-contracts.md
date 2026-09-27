@@ -149,7 +149,7 @@ interface EvalRequest {
   zero_shot_train_triplets?: Array<[string, string, string]>;
                                         // ⟨subject class, predicate, object class⟩ seen in training.
                                         // Omitted → every zR MetricValue has value null.
-  semi_constraint_max_per_pair?: number;      // required when constraint === 'semi'; default 2
+  semi_constraint_max_per_pair?: number;      // per ordered object pair; required when constraint === 'semi'; default 2
 }
 
 interface EvalResponse {

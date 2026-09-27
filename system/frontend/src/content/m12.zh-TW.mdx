@@ -32,7 +32,7 @@ steps:
     kind: lab
     lab: L2
     seconds_budget: 300
-    presenter_notes_zh: "L2 五分鐘，回到既有實作而非新開一個。任務為將約束模式切換至 semi，於確實同時具備 attention 關係與 contacting 關係的配對上，觀察 graph 所捨棄者與 none 所納入者。關鍵句須當場說明：中間設定並非折衷，就此類資料而言它才是正確的設定。"
+    presenter_notes_zh: "L2 五分鐘，回到既有實作而非新開一個。任務為將約束模式切換至 semi，於確實同時具備 attention 關係與 contacting 關係的配對上，觀察 graph 所捨棄者與 none 所納入者。關鍵句須當場說明：中間設定較兩端更接近此類資料，但其為每一有序物件配對至多兩個之上限，而非 Action Genome 之 semi constraint；後者保留一個 attention predicate，以及分數高於 0.9 之全部 spatial 與 contacting predicate。"
   - id: s5
     kind: checkpoint
     presenter_notes_zh: "檢核點。可提升效用的情境：下游為粗粒度的事件計數或活動分段，雜訊邊造成的閃爍損害大於漏失。將摧毀錄製目的的情境：影片所欲捕捉者本身即為短暫事件——瞬間接觸、一次交遞——提高門檻恰好濾去唯一值得記錄者。若現場僅答出前者，請追問後者，因後者方為本題的重點。"
@@ -85,7 +85,7 @@ $$
 
 **Action Genome**——該領域所使用的資料集——將其 predicate 分為三組：attention、spatial 與 contacting。同一配對可同時承載三組各一個 predicate，而此為關於世界的事實而非標註產物：一個人可以同時*注視*且*握持*同一個杯子。
 
-M4 所述的第三種約束模式於此取得其存在理由。graph constraint 將強制每一配對僅一個 predicate，從而捨棄合法標註的三分之二；完全不設約束則納入全部次順位項目。將 $m$ 固定為較小值的 `semi`，方為與資料相符的模式。
+M4 所述的第三種約束模式於此取得其存在理由。graph constraint 將強制每一配對僅一個 predicate，從而捨棄合法標註的三分之二；完全不設約束則納入全部次順位項目。Action Genome 之 semi constraint，依 STTran 之評估實作，對每一物件配對保留分數最高之 attention predicate，以及分數高於 0.9 之全部 spatial 與 contacting predicate。本應用之 `semi` 為一上限，每一有序物件配對至多保留兩個 predicate，僅近似該規則而未實際計算之。
 
 </Implications>
 
@@ -111,7 +111,7 @@ M4 所述的第三種約束模式於此取得其存在理由。graph constraint 
 
 ## 實作單元的內容
 
-請回到 L2 並將約束模式切換為 `semi`。於一組確實同時具備 attention 關係與 contacting 關係的配對上，觀察 `graph` 所捨棄者與 `none` 所納入者。中間設定並非折衷；就此類資料而言，它才是正確的設定。
+請回到 L2 並將約束模式切換為 `semi`。於一組確實同時具備 attention 關係與 contacting 關係的配對上，觀察 `graph` 所捨棄者與 `none` 所納入者。中間設定較兩端更接近此類資料，但仍為每一有序物件配對至多兩個之上限，而非 Action Genome 之規則。
 
 </Step>
 
