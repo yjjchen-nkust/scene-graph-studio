@@ -315,7 +315,7 @@ scene-graph-studio/system/
 | `/lecture/m/:moduleId/:stepIndex` | The same module in the lecture shell, one step per URL |
 | `/lecture/notes` | The presenter window; opened by the lecture shell, driven by `BroadcastChannel` |
 | `/lab/:labId` | L1 … L8 standalone |
-| `/map` | Field map and paper cards |
+| `/map` | Field map and paper cards; `?view=kp` is the knowledge-point index (amended 2026-09-27, D101) |
 | `/leaderboards` | Frozen per-paper tables |
 
 **Lab state lives in the URL query string, not in a store.** `/lab/L2?ds=vg150-sgb&img=2317469&k=50&protocol=sgdet&constraint=none&tau=0.5` fully determines what L2 shows. The professor can bookmark a configuration mid-lecture, and a student can paste one into a question. This is also how the Playwright lecture smoke test navigates deterministically.

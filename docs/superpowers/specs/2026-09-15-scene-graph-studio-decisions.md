@@ -35,6 +35,7 @@ Each decision carries the evidence it rests on. Where a decision rests on a comm
 | D-20 | The track is documented in the repository `CLAUDE.md` | Undocumented track |
 | D-21 | The paper corpus is two tiers; only scored methods carry numbers | D-19 scope cut |
 | D-22 | Repository location is `scene-graph-studio/` inside WekaExt | supersedes D-01, D-20 |
+| D-23 | The knowledge-map freeze is released; the page may be extended | supersedes D-13's freeze |
 
 ---
 
@@ -348,6 +349,10 @@ The RLE implementation is held to the same golden-vector discipline as the metri
 
 ## D-13 `system/web/knowledge-map` is harvested, then frozen
 
+> **Freeze released 2026-09-27 by D-23.** The harvest below stands, and so do the two validators;
+> what D-23 withdraws is the rule that the page is not extended. The text below is left intact as
+> the record of what was decided on 2026-09-15.
+
 **Decision, per the user's answer to B3.** The existing static page is the seed corpus for the content build and is then frozen.
 
 **What is harvested, and to where.**
@@ -597,6 +602,35 @@ platform's deploy, and this track's workflow never runs on a platform-only commi
 not filtered: `ci.yml` has no `paths:` of its own, so a commit here also runs the platform's
 backend and frontend jobs. That is the platform's file to change, not this track's.
 Deployment of this track remains out of scope.
+
+---
+
+## D-23 The knowledge-map freeze is released
+
+**Decided 2026-09-27, by the author.** Supersedes the freeze of D-13. D-13's harvest is not
+superseded.
+
+**Decision.** `system/web/knowledge-map/` may be extended. It is no longer only corrected.
+
+**What stands.**
+- **D-14 is untouched.** `pg.js evaluate()` is a teaching toy and never becomes the engine.
+- **The harvest.** The page stays the source of `data/content/kp.json`, `math.json` and
+  `deriv.json`. `npm run ci` begins with `npm run harvest` and fails on drift, so an edit to the
+  page and an edit to those three files are one edit: change the page, run the harvest, and
+  commit both.
+- **The validators.** `tools/audit.js` and `tools/check.js` still run as `npm run lint:frozen`.
+  The script keeps its name; renaming it would touch the workflow, the README and every
+  VERIFICATION entry that cites it, and change nothing it checks.
+- **The fallback.** The page must still open from disk with no build step, no dependency and no
+  network. That property is the reason D-13 gave for keeping the page at all, and releasing the
+  freeze is not a reason to lose it.
+
+**Why.** The freeze was set when the page was the seed and the MDX corpus did not exist yet. The
+corpus now exists, and seven dated corrections in `FROZEN.md` show the page was being maintained
+all the same, under a rule that made each change argue first that it was not an extension.
+
+**Records.** `FROZEN.md` keeps its name and its correction log. It now opens with this release,
+and later changes to the page are logged in `DEVIATIONS.md` like any other.
 
 ---
 

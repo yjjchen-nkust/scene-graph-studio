@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key and §24 the review minors), and all 100 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key and §24 the review minors), and all 101 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -49,12 +49,15 @@ cd scene-graph-studio\system ; npm run ci
 
 ## Traps
 
-- **Two numbering schemes coexist and collide.** `D-01…D-22` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D100` are deviations in `DEVIATIONS.md`. **`D-22`
+- **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
+  `docs/superpowers/specs/…-decisions.md`. `D1…D101` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
-- **`system/web/knowledge-map/` is frozen** (2026-09-15) and was harvested into `data/content/`
-  as the seed corpus. Do not extend it. Its `pg.js evaluate()` is a teaching toy over fifteen
-  hard-coded rows and **must never be promoted to the evaluation engine** (decision **D-14**).
+- **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
+  `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
+  be extended, but it is still the harvest's source, so edit the page, run `npm run harvest`, and
+  commit both; and it must still open from disk with no build step. Its `pg.js evaluate()` is a
+  teaching toy over fifteen hard-coded rows and **must never be promoted to the evaluation
+  engine** (decision **D-14**, which D-23 leaves standing).
   `system/tools/audit.js` and `check.js` validate it; `audit.js` exists to catch a `\` line break
   inside display math outside an alignment, which MathJax renders as a visible red error rather
   than failing loudly.

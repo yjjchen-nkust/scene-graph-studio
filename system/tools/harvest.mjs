@@ -1,7 +1,7 @@
-// Harvest the frozen knowledge map into the seed corpus the module content is built from.
+// Harvest the knowledge map into the seed corpus the module content is built from.
 //
-// The page is frozen (D-13). Its knowledge-point inventory, its MATH map and its DERIV map are
-// the only things taken; everything else on that page is presentation, and one thing on it is a
+// The page was frozen by D-13 and released by D-23; it remains the source of what this takes.
+// Its knowledge-point inventory, its MATH map and its DERIV map are the only things taken; everything else on that page is presentation, and one thing on it is a
 // trap.
 //
 // **`pg.js evaluate()` is deliberately not harvested (D-14).** It is a teaching instrument over

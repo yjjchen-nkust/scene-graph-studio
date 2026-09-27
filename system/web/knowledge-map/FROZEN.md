@@ -1,5 +1,11 @@
 # Frozen
 
+> **Released 2026-09-27 by decision D-23.** The page may be extended again. The harvest, the two
+> validators and D-14 stand, and the page must still open from disk with no build step. The rule
+> "do not extend this page" below is withdrawn. The rest of this file is kept as written: it is
+> the record of the freeze and of every correction made under it. Changes to the page after the
+> release are logged in `DEVIATIONS.md`.
+
 This page is frozen as of 2026-09-15 (decision D-13). Its knowledge-point inventory, its `MATH`
 map and its `DERIV` map are the seed corpus for the MDX modules under
 `system/frontend/src/content/`, harvested by `system/tools/harvest.mjs` into `data/content/`.

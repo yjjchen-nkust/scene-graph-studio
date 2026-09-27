@@ -1,7 +1,7 @@
 # Knowledge index
 
 Every planning document in this track, what it governs, and where each piece of knowledge is
-defined. Current as of **2026-09-26**.
+defined. Current as of **2026-09-27**.
 
 **Read order for someone new:** `decisions.md` → `contracts.md` → the plan you are about to
 execute. The PRD and SRS explain *why*; those two say *what is binding*.
@@ -18,7 +18,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/specs/2026-09-15-…-PRD.md` | Users, goals G1–G5, curriculum M0–M14, what we will not claim | approved |
 | `superpowers/specs/2026-09-15-…-SRS.md` | Architecture, data model, eval engine, API surface, NFR-1…8 | approved |
 | `superpowers/specs/2026-09-15-…-design.md` | PRD + SRS + the nine-phase plan; §7 open items, all closed | approved |
-| `superpowers/specs/2026-09-15-…-decisions.md` | **D-01…D-22. Binding. Read before any task.** | live |
+| `superpowers/specs/2026-09-15-…-decisions.md` | **D-01…D-23. Binding. Read before any task.** | live |
 | `superpowers/specs/2026-09-15-…-contracts.md` | **Normative field names, types, enum spellings** | live |
 | `superpowers/specs/2026-09-16-indvissgg-reading.md` | The anchor paper read as M11's source | reference |
 | `superpowers/specs/2026-09-19-playgrounds-design.md` | The `playground` step kind, and the three that complete M0 | **executed** |
@@ -38,10 +38,10 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-27-playgrounds-m3.md` | M3's corrections, `PhotoMarks`, E1 and E10, their golden cases, M3 s3 to s7 | **executed** |
 | `superpowers/plans/2026-09-27-graph-constraint-key.md` | Both engines re-keyed, gv-014, `semi` described, D51 corrected | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D100. Every departure from plan, with its reason.** | live |
+| `../DEVIATIONS.md` | **D1…D101. Every departure from plan, with its reason.** | live |
 | `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23) and the review minors (§24)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
-| `../system/web/knowledge-map/FROZEN.md` | What is frozen, and every correction since | live |
+| `../system/web/knowledge-map/FROZEN.md` | The freeze, its release by D-23, and every correction made under it | live |
 
 `brief.standalone.html` in this directory is a build output, not a source. Edit
 `../system/web/brief/index.html`; `npm run build:standalone` regenerates it and CI fails if it
@@ -49,7 +49,7 @@ drifts.
 
 ---
 
-## 2. Decisions — D-01 … D-22
+## 2. Decisions — D-01 … D-23
 
 | | | |
 |---|---|---|
@@ -65,7 +65,7 @@ drifts.
 | **D-10** | Slice composition: 200 images, allocated per dataset | plus the selection rule |
 | **D-11** | Eval engine is pure-Python stdlib | no numpy, no pycocotools |
 | **D-12** | COCO RLE decoded in-house, both languages | |
-| **D-13** | The knowledge-map is harvested, then frozen | see `FROZEN.md` |
+| **D-13** | The knowledge-map is harvested, then frozen | **freeze released 2026-09-27 by D-23**; the harvest stands |
 | **D-14** | `pg.js evaluate()` is a teaching toy, never the engine | both sides would be wrong together |
 | **D-15** | CI is one local command, mirrored by a workflow | `npm run ci` |
 | **D-16** | Golden vectors are one JSON both engines read | neither embeds a copy |
@@ -75,6 +75,7 @@ drifts.
 | **D-20** | The track is documented in the repo `CLAUDE.md` | **superseded 2026-09-19 by D-22** |
 | **D-21** | Paper corpus is two tiers; only scored methods carry numbers | 35 cards decided; 60 built, reason never recorded, closed at 60 (D92); no unverified tier |
 | **D-22** | Repository lives at `scene-graph-studio/` inside WekaExt | supersedes D-01, D-20; still not its own repo |
+| **D-23** | The knowledge-map freeze is released | the page may be extended; still the harvest source, still no build step; D-14 stands |
 
 ---
 
@@ -107,7 +108,7 @@ drifts.
 | Corpus layouts, per dataset | `system/backend/app/datasets/adapters/__init__.py` — `LAYOUTS` |
 | Which datasets may be committed or distributed | `data/LICENCES.md` |
 | The slice selection rule | `system/backend/app/datasets/loader.py` — `SELECTION_RULE` |
-| Why the frozen page must not be extended | `FROZEN.md`, and D-13 / D-14 |
+| What may change on the knowledge-map page, and what may not | D-23, `FROZEN.md`, and D-14 |
 | The eight labs L1–L8 | `PRD.md` §6.2; per-lab tasks in plans 02–04 |
 | The anchor paper's four equations | `design.md` §4.5 and `2026-09-16-indvissgg-reading.md` |
 | The `playground` step kind, and its twelve lint rules | `contracts.md` §2.4; rules in `system/tools/content_lint.mjs` |
@@ -354,6 +355,13 @@ prints B from the frame's size, and fits the panel in English, as E1 now does; `
 takes its table; F3's IoU is held to the engine's at every knob setting; both engines refuse a
 repeated `object_id`; and `gv-017` pins `semi`'s cap per object pair. See D100 and
 VERIFICATION §24.
+
+**The knowledge points indexed, and the freeze released, 2026-09-27.** `/map?view=kp` lists the
+93 knowledge points by cluster, each linked to the module that owns it and, where it has one,
+to the lecture step of its playground; the papers stay the default view. The owner is read from
+`assignment.json`, because a module's frontmatter also lists the points it only draws on. D-23
+releases the knowledge-map page from D-13's freeze; the harvest, the validators and D-14 stand.
+See D101 and D-23.
 
 **Verification.** `npm run ci` green, 2026-09-27, after D100: **277 pytest** and 7 skipped (the ten newest
 compare the requirement files to the interpreter), parity 17 agree, i18n 322 keys both locales,

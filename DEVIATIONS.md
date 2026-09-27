@@ -3499,3 +3499,43 @@ that failed first, except the SGCls state, which fit when first measured.
 files** (857 before), parity **17** (16 before), i18n 322 keys, content lint clean over **17 golden
 cases**. `npm run test:e2e` 72 (66 before; the English fit test and the badge test each run at
 three sizes). `npm run check:perf` 23. See VERIFICATION §24.
+
+## D101 — the map indexes the knowledge points, and the knowledge-map freeze is released (D-23)
+
+**Plan:** none; a request. **Decisions:** the author's, on 2026-09-27: the index is a second view
+of `/map`, rather than a new route or a section of the home page, and the freeze of D-13 is
+released, recorded as D-23. Branch `feat/sgs-kp-index`, from `main` at `2783ab6`.
+
+**The index.** `/map?view=kp` lists the 93 knowledge points under the twelve clusters of
+`kp.json`, with a cluster filter and a search over the id and both titles, each held in the URL.
+Every point links to the module that owns it, and a point with a playground also links to the
+lecture step that mounts it, the first part when the playground is split. The papers stay the
+default view, so every earlier link to `/map` lands where it did, and the paper filters survive a
+round trip through the other view. Contracts §2.2's `/map` row is amended. Eight i18n keys were
+added in both locales; the view is named 知識點 in 繁體中文.
+
+**The owner is the assignment, not the frontmatter.** The first version read each module's
+`knowledge_points` and sent F5 to M0. M0 lists F5 because it draws on it; `assignment.json` gives
+it to M1. `content_lint.mjs` checks that a module lists every point it owns, not that it lists no
+other, so the frontmatter names the owner and every module that mentions a point, in no order that
+tells them apart. The test that caught it compares every point's link with the assignment, and
+pins F5.
+
+**D-23.** Recorded in the decisions register, with a banner on D-13 in place. `FROZEN.md` opens
+with the release and keeps its correction log as written. CLAUDE.md, README and INDEX no longer
+say the page may not be extended, and `harvest.mjs`'s header says the page was frozen and
+released. What stands is stated in D-23: D-14, the harvest from the page, the two validators, and
+a page that opens from disk with no build step. `lint:frozen` keeps its name; D-23 says why.
+Nothing on the page itself changed.
+
+**The records test.** Two assertions written for D100 pinned the deviation count at 100, so any
+later deviation turned them red. They now require at least 100, and a new test pins D101 and
+D-23.
+
+**Verification.** `npm run ci` exit 0: 273 pytest and 11 skipped on this machine, where
+`SGS_CORPUS_ROOT` is unset and the four adapter tests skip; **880 vitest in 65 files** (870 in 64
+before: nine in `pages/test/KnowledgeIndex.test.tsx` and the new records test); parity 17; i18n
+**330 keys** (322 before); content lint clean; frozen-page lints clean; standalone current;
+frontend builds. `npm run test:e2e` 72 passed, the view unchanged at every earlier route.
+**Watched failing first:** the owner test, against the frontmatter version, sent
+F5 to `/m/m00`.
