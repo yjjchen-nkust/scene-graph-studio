@@ -4262,7 +4262,9 @@ and the records test refuses a form feed anywhere in README.
 **Verification.** The first push copied 192 files, 4.619 GB, with 0 failed. The NAS copy of
 `all_rgb_videos.zip` matches its `.md5` file (`c5b8901dba179d2eb10e9348f8163c79`), and all 190
 slice images match their local copies by SHA-256. A second push copied 0 and skipped 192, and
-`-Status` reports every group in step. `npm run ci` exit 0 in eleven steps: 287 pytest and 7
+`-Status` reports every group in step. A pull into a fresh worktree of this branch, which stands
+for a second machine, copied the same 192 files, left `git status` empty, reproduced the `.md5`,
+and `fetch-data.ps1 -Verify` exited 0 against the committed manifests. `npm run ci` exit 0 in eleven steps: 287 pytest and 7
 skipped, 1018 vitest in 74 files (1017 before; the one added is this record's test), parity 21,
 i18n 380 keys, 786 modules built. The new records test failed on the missing heading before this
 record was written. The gate runs no PowerShell, so the script's behaviour rests on the runs
