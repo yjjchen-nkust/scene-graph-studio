@@ -36,3 +36,7 @@ deliberately changed.
 | `gv-011` | `zR` with a non-null value. An always-null metric is not a tested metric |
 
 Tolerance is `1e-9` absolute. `zR` is `null` wherever a case declares no training split.
+
+Every case lists the complete set of warnings the engine must raise, derived in its `why` from
+the six conditions in `engine.py`, and both harnesses compare that set exactly: a warning
+missing and a warning extra fail alike (D103).

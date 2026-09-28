@@ -3628,3 +3628,81 @@ deviations, as it had made D100's require at least 100, and this record's pins 1
 files conflicted and nothing else did. On the merged result `npm run ci` exited 0 with 279 pytest
 and 7 skipped, **893 vitest in 66 files**, parity 17 and i18n **331 keys**; `npm run test:e2e`
 75 passed.
+
+## D103 — the checks D102 left open: every golden vector's warnings, and the locales' placeholders
+
+**Plan:** none; the two checks D102 left open, and the performance check its merge did not run.
+**Found by:** D102, which says that eight vectors list no warnings and three list one of three,
+that both harnesses test inclusion only, and that a rule in `i18n_parity.mjs` comparing
+placeholders between locales was set aside. **Decisions:** the author's, on 2026-09-28: "resume,
+fix problems". Branch `fix/sgs-d102-open`, from `main` at `9b678af`.
+
+**The golden vectors** (commit `8f3bb3a`).
+- *The warnings each vector lists.* The engine raises six warnings, each on one condition in
+  `engine.py`: `gt_boxes_not_pairs` under PredCls or SGCls, `empty_ground_truth` and
+  `empty_prediction` when a side has no relationship, `ties_broken_by_index` when two scores are
+  equal, `masks_ignored` when one graph carries masks and the other does not, and
+  `zero_shot_unavailable` when no training split is supplied. Eleven vectors listed fewer than the
+  engine raises for them: gv-005 to gv-011 and gv-014 none, gv-002 to gv-004 one of three. Each
+  case's `why` now derives its complete set from the six conditions and says why the others do not
+  apply. Thirteen vectors are PredCls, so thirteen list `gt_boxes_not_pairs`; gv-011 is the only
+  one with a training split, so it lists that warning alone; gv-009 carries masks in both graphs,
+  so it does not list `masks_ignored`.
+- *The harnesses.* Both required only that each listed warning be raised, so a warning raised in
+  error passed. Both now require every case to list its warnings, pytest in a test of its own, and
+  compare the list with the engine's as a sorted list, so a missing and an extra warning fail
+  alike and the order is not pinned. The regenerated `vectors.json` differs from the committed one
+  in those eleven cases' `why` and `warnings` alone, compared case by case.
+- *Watched failing first.* Before the vectors changed, pytest's golden file failed 12 tests and
+  passed 9, the eleven cases and the new listing test, and vitest's engine file failed the same
+  eleven cases. A mutant of both engines raising `masks_ignored` whenever either graph carries
+  masks fails gv-009, gv-012, gv-013, gv-015 and gv-016 in each harness on this branch, and passes
+  the committed harnesses and vectors: 20 pytest, 30 vitest. Parity was not run under it.
+
+**The locales' placeholders** (commit `4899911`).
+- 13 of the 331 keys carry a `{placeholder}`, and every caller fills one with `String.replace`,
+  which fills the first occurrence only. A translation that dropped or repeated a placeholder
+  passed `i18n_parity.mjs` and printed wrong in that locale alone. D102 set the rule aside because
+  every placeholder it added was rendered in both locales; that covers those strings, and not the
+  next translation. The check now compares each key's placeholders between en and zh-TW as a
+  sorted list, so each must appear in both, and as often, and refuses a placeholder that one value
+  repeats. All 13 keys agree and none repeats one; no string changed. The script now prints how
+  many keys carry a placeholder.
+- *The script had no test.* `tools/test/i18n_parity.test.mjs` runs it over two-locale fixtures, as
+  `content_lint.test.mjs` runs its lint: seven tests, two accepting and five refusing. The
+  placeholder tests failed before their rules existed, and each of the four rules, disabled alone,
+  fails its own tests and no other.
+
+**Performance on the merge.** D102's `npm run check:perf` ran on its branch only. On `main` at
+`9b678af`, on 2026-09-28, 23 passed; F3 33.8 ms, E1 34.4 ms, E10 31.8 ms.
+
+**Continuous integration, not changed.** The three commit statuses of `9b678af` read "Waiting to
+run" on 2026-09-28 at 02:38, queued since 00:27, as runs 4 to 7 did in §19. Gitea 1.21 answers 404
+on both runner-listing routes, so the runner's state cannot be read through the API. Registering a
+runner is `scripts/deploy/setup_cicd.sh` on a Docker host, with a token from the repository's
+settings; this branch does not do it.
+
+**The records tests.** D102's test held `D1…D102`, 102 deviations and the gate's counts as
+literals, so the next record had to rewrite it. It now requires each count to be at least D102's,
+through `atLeast` in `registry.test.tsx`, and this record's test bounds its own counts the same
+way. The new test failed on its missing heading before this record was written.
+
+**The branch review** found no Critical issue, one Important one and three minors; all four were
+acted on.
+- *Five cases derived no warnings in their `why`.* gv-001, gv-012, gv-013, gv-015 and gv-016
+  listed the right warnings, and `data/golden/README.md` and INDEX said every case derives its
+  set in its `why`, but these five wrote no derivation, and nothing said why the four SGDet cases
+  raise neither `gt_boxes_not_pairs` nor `masks_ignored`. Each now does, and
+  `test_every_case_derives_its_warnings_in_why` requires a "Warnings:" sentence naming every
+  warning a case lists; it failed on those five first. The regenerated `vectors.json` differs from
+  commit `6679f21`'s in their `why` alone.
+- *A placeholder both locales repeat.* The comparison passed `{n}` written twice in en and twice
+  in zh-TW, and both would print the second as written. The rule refusing a repeated placeholder
+  is above; its test failed before it.
+- *13 keys* was counted by a script of the session, not by the run §26 files it under; the check
+  now prints the figure, and its test failed before it did.
+- README's line for `lint:i18n` named one of its rules; it now names the four.
+
+**Verification.** `npm run ci` exit 0: **281 pytest** and 7 skipped (279 before), **901 vitest in
+67 files** (893 in 66 before), parity 17, i18n 331 keys, content lint clean over 17 golden cases.
+No frontend production code changed, so `npm run test:e2e` was not run on the branch. See VERIFICATION §26.
