@@ -12,7 +12,7 @@ import { VRD_PREDICATES, e13Copies } from '../E13/setup';
 import {
   admitByMask, annotatedTriplet, area, byScore, candidateSpace, capPerPair, conjuncts, failureMode, frameVerdict,
   hypothesisSpace, iouCounts, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
-  headShare, idRun, intersection, isInE, isInMergedE, matchedByMask, matchedTruths, measuredHeadShare, mergeMap,
+  headShare, idRun, intersection, isInE, isInMergedE, matchedByMask, matchedRanks, matchedTruths, measuredHeadShare, mergeMap,
   pairsWithSeveral, predicateLabels, ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, topK,
   tripletKey, truncatedRatio, unionArea, valPool, wholePixelBoxes, withDefects, type BoxTriplet,
 } from '../logic';
@@ -654,6 +654,10 @@ describe('M4: one ranked list, capped and cut', () => {
   it('names what it matches', () => {
     expect(matchedTruths(topK(capPerPair(ranked, 1), 2), frame.relationships)).toEqual([1, 4]);
     expect(matchedTruths(topK(capPerPair(ranked, Infinity), 12), frame.relationships)).toEqual([1, 2, 3, 4, 5]);
+  });
+  it('names the ranks that match, the same rule read the other way round', () => {
+    expect(matchedRanks(topK(capPerPair(ranked, 1), 4), frame.relationships)).toEqual(new Set([1, 3, 5]));
+    expect(matchedRanks(topK(capPerPair(ranked, Infinity), 12), frame.relationships)).toEqual(new Set([1, 3, 5, 7, 10]));
   });
 });
 

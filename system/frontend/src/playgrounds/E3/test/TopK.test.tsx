@@ -22,6 +22,16 @@ describe('E3', () => {
     expect(screen.getByTestId('readout-E3.truths')).toHaveTextContent('of the 6 annotated: g1, g4, g5');
   });
 
+  it('checks off ranks 1, 3 and 5 at the default k, and no others', () => {
+    renderAt('/m/m04');
+    for (const rank of [1, 3, 5]) {
+      expect(screen.getByTestId(`e3-list-row-${rank}`)).toHaveAttribute('data-matched', 'true');
+    }
+    for (const rank of [2, 4, 6, 7, 8, 9, 10, 11, 12]) {
+      expect(screen.getByTestId(`e3-list-row-${rank}`)).toHaveAttribute('data-matched', 'false');
+    }
+  });
+
   it('never lets the count fall as k rises', () => {
     const expected = [1, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3];
     const seen: string[] = [];

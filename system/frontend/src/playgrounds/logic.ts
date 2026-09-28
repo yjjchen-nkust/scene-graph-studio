@@ -555,9 +555,18 @@ export function topK<T>(pool: T[], k: number): T[] {
 }
 
 /**
- * The ground truths some row of `top` names exactly: the same subject id, the same object id and
- * the same predicate. Ascending, since a playground reports which ground truths a cut finds, not
- * the order the rows that found them happened to rank in.
+ * Whether one ranked row names one ground truth exactly: the same subject id, the same object id
+ * and the same predicate. The one rule `matchedTruths` and `matchedRanks` both read the pool
+ * through, so the two can never drift apart on what counts as a match -- only on which half of the
+ * pair, the truth or the row, each returns.
+ */
+function namesTruth(row: { subject: number; predicate: string; object: number }, truth: SGRelationship): boolean {
+  return row.subject === truth.subject_id && row.object === truth.object_id && row.predicate === truth.predicate;
+}
+
+/**
+ * The ground truths some row of `top` names exactly. Ascending, since a playground reports which
+ * ground truths a cut finds, not the order the rows that found them happened to rank in.
  */
 export function matchedTruths(
   top: { subject: number; predicate: string; object: number }[],
@@ -565,12 +574,27 @@ export function matchedTruths(
 ): number[] {
   const out: number[] = [];
   for (const truth of truths) {
-    const found = top.some(
-      (row) => row.subject === truth.subject_id && row.object === truth.object_id && row.predicate === truth.predicate,
-    );
-    if (found) out.push(truth.relationship_id);
+    if (top.some((row) => namesTruth(row, truth))) out.push(truth.relationship_id);
   }
   return out.sort((a, b) => a - b);
+}
+
+/**
+ * The ranks of `top`'s own rows that name some ground truth exactly, same rule as `matchedTruths`
+ * read the other way round: that asks each truth which row of `top` found it, this asks each row
+ * of `top` whether it found a truth. A `RankedList` marks a row's ✓ by rank, not by relationship
+ * id, so this is what a playground hands it rather than re-deriving ranks from `matchedTruths`'
+ * ids.
+ */
+export function matchedRanks(
+  top: { rank: number; subject: number; predicate: string; object: number }[],
+  truths: SGRelationship[],
+): Set<number> {
+  const out = new Set<number>();
+  for (const row of top) {
+    if (truths.some((truth) => namesTruth(row, truth))) out.add(row.rank);
+  }
+  return out;
 }
 
 /**

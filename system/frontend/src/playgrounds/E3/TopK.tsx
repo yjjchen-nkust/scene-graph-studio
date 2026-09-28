@@ -1,7 +1,7 @@
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { PlaygroundFrame, Readout, Slider } from '../controls';
-import { byScore, capPerPair, matchedTruths, snap, topK } from '../logic';
+import { byScore, capPerPair, matchedRanks, matchedTruths, snap, topK } from '../logic';
 import { M4_CAPS, M4_FRAME, M4_K_MAX, M4_RANKING } from '../M4/ranking';
 import { PairPhoto } from '../M4/PairPhoto';
 import { RankedList } from '../M4/RankedList';
@@ -33,13 +33,7 @@ export function TopK({ part }: PlaygroundProps = {}) {
 
   const frame = frameById(M4_FRAME)!;
   const matchedIds = matchedTruths(top, frame.relationships);
-  const matchedRanks = new Set(
-    top
-      .filter((r) => frame.relationships.some(
-        (rel) => rel.subject_id === r.subject && rel.object_id === r.object && rel.predicate === r.predicate,
-      ))
-      .map((r) => r.rank),
-  );
+  const matched = matchedRanks(top, frame.relationships);
 
   const rowView = part !== 2;
   const listView = part !== 1;
@@ -88,7 +82,7 @@ export function TopK({ part }: PlaygroundProps = {}) {
               kept={kept}
               k={k}
               chosen={row}
-              matched={matchedRanks}
+              matched={matched}
               testid="e3-list"
             />
             <div className="flex flex-wrap items-baseline justify-between gap-x-4">
