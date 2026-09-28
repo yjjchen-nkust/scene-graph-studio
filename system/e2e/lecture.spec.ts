@@ -381,6 +381,59 @@ test('M3\'s knobs write the address bar', async ({ page }) => {
   await expect(page.getByTestId('e10-given')).toHaveText(/無框、無標籤|no boxes, no labels/);
 });
 
+test('M4\'s playgrounds compute with no backend running', async ({ page }) => {
+  await page.goto('/lecture/m/m04/3');
+  await expect(page.getByTestId('readout-E3.truths-value')).toHaveText('3');
+  await page.goto('/lecture/m/m04/6');
+  await expect(page.getByTestId('readout-E4.truths-value')).toHaveText('2');
+  await expect(page.getByTestId('readout-E4.truths_none-value')).toHaveText('1');
+  await page.goto('/lecture/m/m04/10');
+  await expect(page.getByTestId('readout-E7.pool-value')).toHaveText('7');
+  await page.goto('/lecture/m/m04/13');
+  await expect(page.getByTestId('readout-E13.admitted-value')).toHaveText('1');
+  await page.goto('/lecture/m/m04/15');
+  await expect(page.getByTestId('readout-X2.pool-value')).toHaveText('300');
+});
+
+test('M4\'s knobs cross from each first part to its second', async ({ page }) => {
+  // D96 carries the query string between the parts of one playground: the mode set on E4's first
+  // part is the one its second counts under, and the m set on E7's first is the one its second
+  // pools under (Review Focus 5).
+  await page.goto('/lecture/m/m04/5?E4.mode=none');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('readout-E4.pool-value')).toHaveText('12');
+  await page.goto('/lecture/m/m04/9?E7.m=2');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('readout-E7.pool-value')).toHaveText('11');
+});
+
+test('M4\'s knobs work from the keyboard and never advance the deck', async ({ page }) => {
+  const cases = [
+    { step: 3, knob: 'E3.k', key: 'ArrowRight', watch: 'readout-E3.in_top-value' },
+    { step: 6, knob: 'E4.mode', key: 'ArrowDown', watch: 'readout-E4.pool-value' },
+    { step: 10, knob: 'E7.m', key: 'ArrowRight', watch: 'readout-E7.pool-value' },
+    { step: 13, knob: 'E13.multi', key: 'Space', watch: 'readout-E13.admitted-value' },
+    { step: 15, knob: 'X2.m', key: 'ArrowDown', watch: 'readout-X2.pool-value' },
+  ];
+  for (const c of cases) {
+    await page.goto(`/lecture/m/m04/${c.step}`);
+    const position = page.getByTestId('position');
+    const before = await position.textContent();
+    const watched = page.getByTestId(c.watch);
+    const was = await watched.textContent();
+    await page.getByTestId(c.knob).focus();
+    await page.keyboard.press(c.key);
+    await expect(watched, `${c.knob} moved nothing`).not.toHaveText(was ?? '');
+    await expect(position, `${c.knob} advanced the deck`).toHaveText(before ?? '');
+  }
+});
+
+test('M4\'s knobs write the address bar', async ({ page }) => {
+  await page.goto('/lecture/m/m04/5');
+  await page.getByTestId('E4.mode').selectOption('none');
+  await expect(page).toHaveURL(/E4\.mode=none/);
+});
+
 test('the knobs cross from one part of a playground to the next, and stop at its end', async ({ page }) => {
   // X1 in three parts (D96): the release chosen on the first is the one the second and third
   // explain. A knob that reset on each step would put v2 back on the screen while the professor

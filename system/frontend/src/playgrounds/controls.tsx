@@ -129,18 +129,18 @@ export function Readout({
 }: { id: string; label: string; value: string; note: string }) {
   return (
     <div data-testid={`readout-${id}`} className="flex flex-col">
-      <span className="text-[0.875em] uppercase tracking-wide text-slate-700">{label}</span>
+      <span className="text-[0.75em] uppercase leading-tight tracking-wide text-slate-700">{label}</span>
       {/* The value carries its own test id. `toHaveTextContent` is a substring match over the
           whole container, so an assertion on a number could be satisfied by a digit in the note
           or the label instead -- `note="|E| / 6"` made `toHaveTextContent('6')` pass for any
           value at all. Assertions on the number address this element. */}
       <span
         data-testid={`readout-${id}-value`}
-        className="font-mono text-[1.5em] tabular-nums text-slate-900"
+        className="font-mono text-[1.5em] leading-none tabular-nums text-slate-900"
       >
         {value}
       </span>
-      <span className="font-mono text-[0.875em] text-slate-700">{note}</span>
+      <span className="font-mono text-[0.75em] leading-tight text-slate-700">{note}</span>
     </div>
   );
 }
@@ -165,15 +165,15 @@ export function PlaygroundFrame({
   return (
     <section
       data-testid="playground-frame"
-      className="my-6 rounded-lg border border-slate-200 bg-slate-50 p-4"
+      className="my-1 rounded-lg border border-slate-200 bg-slate-50 p-2"
       aria-label={title}
     >
-      <div data-testid="playground-controls" className="flex flex-wrap items-center gap-x-6 gap-y-3">
+      <div data-testid="playground-controls" className="flex flex-wrap items-center gap-x-6 gap-y-2">
         {controls}
       </div>
       <div
         data-testid="playground-visual"
-        className={clip ? 'mt-4 max-h-[46vh] overflow-hidden' : 'mt-4'}
+        className={clip ? 'mt-1 max-h-[46vh] overflow-hidden' : 'mt-1'}
       >
         {children}
       </div>

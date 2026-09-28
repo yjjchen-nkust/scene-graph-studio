@@ -71,9 +71,9 @@ export function MaskPairing(_: PlaygroundProps = {}) {
 
   return (
     <PlaygroundFrame title="E13" controls={controls} clip={false}>
-      <div className="flex flex-col gap-3">
-        <table data-testid="e13-copies" className="w-full font-mono text-[0.875em]">
-          <caption className="text-left font-sans text-[1em] text-slate-700">
+      <div className="flex flex-col gap-2">
+        <table data-testid="e13-copies" className="w-full font-mono text-[0.75em] leading-none">
+          <caption className="text-left font-sans text-[1em] leading-none text-slate-700">
             {t('playground.e13.list')}
           </caption>
           <tbody>
@@ -87,15 +87,15 @@ export function MaskPairing(_: PlaygroundProps = {}) {
                   data-admitted={String(isAdmitted)}
                   className={isAdmitted ? 'text-slate-900' : 'text-slate-700 line-through'}
                 >
-                  <th scope="row" className="py-0.5 pl-2 pr-4 text-left font-sans">{i}</th>
-                  <td className="py-0.5 pr-4">{row.predicate}</td>
-                  <td className="py-0.5 pr-4 text-right tabular-nums">{row.score.toFixed(2)}</td>
+                  <th scope="row" className="py-0 pl-2 pr-4 text-left font-sans">{i}</th>
+                  <td className="py-0 pr-4">{row.predicate}</td>
+                  <td className="py-0 pr-4 text-right tabular-nums">{row.score.toFixed(2)}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-3">
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
           <Readout id="E13.emitted" label={t('playground.e13.emitted')} value={String(emitted.length)} note="d" />
           <Readout
             id="E13.admitted"
@@ -116,7 +116,7 @@ export function MaskPairing(_: PlaygroundProps = {}) {
             note={g4Note}
           />
         </div>
-        <p className="text-[0.875em] text-slate-700">{t('playground.e13.masks')}</p>
+        <p className="text-[0.875em] leading-tight text-slate-700">{t('playground.e13.masks')}</p>
       </div>
     </PlaygroundFrame>
   );

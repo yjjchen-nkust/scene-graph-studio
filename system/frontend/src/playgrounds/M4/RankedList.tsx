@@ -37,8 +37,8 @@ export function RankedList({
 
   return (
     <div>
-      <table data-testid={`${testid}-table`} className="w-full font-mono text-[0.875em]">
-        <caption className="text-left font-sans text-[1em] text-slate-700">{t('playground.m4.list')}</caption>
+      <table data-testid={`${testid}-table`} className="w-full font-mono text-[0.75em] leading-none">
+        <caption className="text-left font-sans text-[1em] leading-none text-slate-700">{t('playground.m4.list')}</caption>
         <tbody>
           {rows.flatMap((row) => {
             const isKept = keptRanks.has(row.rank);
@@ -59,7 +59,7 @@ export function RankedList({
                   isKept ? '' : 'line-through',
                 ].filter(Boolean).join(' ')}
               >
-                <th scope="row" className="py-0.5 pl-2 pr-4 text-left font-sans">
+                <th scope="row" className="py-0 pl-2 pr-4 text-left font-sans">
                   <span
                     data-testid={isChosen ? `${testid}-chosen` : undefined}
                     aria-hidden="true"
@@ -69,11 +69,11 @@ export function RankedList({
                   </span>
                   {row.rank}
                 </th>
-                <td className="py-0.5 pr-4 text-right tabular-nums">#{row.subject}</td>
-                <td className="py-0.5 pr-4">{row.predicate}</td>
-                <td className="py-0.5 pr-4 text-right tabular-nums">#{row.object}</td>
-                <td className="py-0.5 pr-4 text-right tabular-nums">{row.score.toFixed(2)}</td>
-                <td className="py-0.5 pl-2 text-left">
+                <td className="py-0 pr-4 text-right tabular-nums">#{row.subject}</td>
+                <td className="py-0 pr-4">{row.predicate}</td>
+                <td className="py-0 pr-4 text-right tabular-nums">#{row.object}</td>
+                <td className="py-0 pr-4 text-right tabular-nums">{row.score.toFixed(2)}</td>
+                <td className="py-0 pl-2 text-left">
                   <span aria-hidden={isMatched ? undefined : 'true'} className={isMatched ? undefined : 'invisible'}>✓</span>
                 </td>
               </tr>
@@ -82,7 +82,7 @@ export function RankedList({
             return [
               tr,
               <tr key={`cut-${row.rank}`} data-testid={`${testid}-cut`}>
-                <td colSpan={6} className="border-t-2 border-dashed border-slate-500 py-1 text-center text-[0.875em] text-slate-700">
+                <td colSpan={6} className="border-t-2 border-dashed border-slate-500 py-0 text-center text-[1em] text-slate-700">
                   {cutLabel}
                 </td>
               </tr>,
@@ -90,7 +90,7 @@ export function RankedList({
           })}
         </tbody>
       </table>
-      <p data-testid={`${testid}-legend`} className="mt-1 text-[0.875em] text-slate-700">
+      <p data-testid={`${testid}-legend`} className="text-[0.75em] leading-tight text-slate-700">
         {t('playground.m4.legend')}
       </p>
     </div>

@@ -90,7 +90,7 @@ export function PerPairCap({ part }: PlaygroundProps = {}) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {rowView && <PairPhoto row={chosenRow} testid="e7-pair" />}
         {listView && (
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-0">
             <RankedList
               rows={M4_RANKING}
               kept={kept}
@@ -99,7 +99,7 @@ export function PerPairCap({ part }: PlaygroundProps = {}) {
               matched={matched}
               testid="e7-list"
             />
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-2">
               <Readout
                 id="E7.pool"
                 label={t('playground.e7.pool')}
@@ -113,7 +113,7 @@ export function PerPairCap({ part }: PlaygroundProps = {}) {
                 note={truthsNote(matchedIds, locale, t)}
               />
             </div>
-            <p className="text-[0.875em] text-slate-700">{t('playground.m4.to_l2')}</p>
+            <p className="text-[0.75em] leading-tight text-slate-700">{t('playground.m4.to_l2')}</p>
           </div>
         )}
       </div>

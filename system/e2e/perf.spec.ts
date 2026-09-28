@@ -441,6 +441,46 @@ const PLAYGROUND_CASES: {
     readout: '[data-testid="e10-given"]',
     why: 'another protocol redraws what is given and re-marks its count',
   },
+  {
+    module: 'm04',
+    kp: 'E3',
+    step: 3,
+    act: { kind: 'set', testid: 'E3.k', value: '5' },
+    readout: '[data-testid="readout-E3.in_top-value"]',
+    why: 'moving k re-cuts the pool and recounts what is in it',
+  },
+  {
+    module: 'm04',
+    kp: 'E4',
+    step: 6,
+    act: { kind: 'set', testid: 'E4.mode', value: 'semi' },
+    readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'choosing another mode recaps the pool and both truth counts',
+  },
+  {
+    module: 'm04',
+    kp: 'E7',
+    step: 10,
+    act: { kind: 'set', testid: 'E7.m', value: '2' },
+    readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'moving m re-caps every pair and regrows the pool',
+  },
+  {
+    module: 'm04',
+    kp: 'E13',
+    step: 13,
+    act: { kind: 'click', testid: 'E13.multi' },
+    readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'MultiMPO admits every copy of the mask pair, not only the first',
+  },
+  {
+    module: 'm04',
+    kp: 'X2',
+    step: 15,
+    act: { kind: 'set', testid: 'X2.m', value: '70' },
+    readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'raising m regrows the pool and the share the cut leaves standing',
+  },
 ];
 
 test.describe('playground interaction', () => {
@@ -472,12 +512,12 @@ test.describe('playground interaction', () => {
     });
   }
 
-  test('all nine playgrounds were actually measured', () => {
+  test('all fourteen playgrounds were actually measured', () => {
     const timed = measured.filter((l) => l.startsWith('playground'));
     expect(
       timed.length,
-      `only ${timed.length} playgrounds were timed; M0 to M3 carry nine`,
-    ).toBe(9);
+      `only ${timed.length} playgrounds were timed; M0 to M4 carry fourteen`,
+    ).toBe(14);
   });
 });
 
