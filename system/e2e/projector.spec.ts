@@ -294,7 +294,7 @@ for (const size of SIZES) {
 
     test('the lecture fits the panel without scrolling sideways', async ({ page }) => {
       // M04 carries the heaviest mathematics in the corpus, so it is the widest content there is.
-      for (const step of [0, 1, 2, 3]) {
+      for (const step of [0, 1, 4, 7]) {
         await page.goto(`/lecture/m/m04/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
         await noHorizontalOverflow(page);

@@ -583,6 +583,24 @@ describe('the playground step kind', () => {
     expect((deriv as Record<string, string>).F3).toContain('\\lambda>\\sqrt{2}');
   });
 
+  it('M4 carries E3, E4, E7, E13 and X2 directly after the steps that teach them', () => {
+    const meta = getMeta('m04', 'en')!;
+    const part = (n?: number) => (n === undefined ? '' : `.${n}`);
+    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}${part(s.part)}` : ''}`)).toEqual([
+      's1:prose', 's2:math', 's3:playground/E3.1', 's4:playground/E3.2', 's5:math',
+      's6:playground/E4.1', 's7:playground/E4.2', 's8:math', 's9:math', 's10:playground/E7.1',
+      's11:playground/E7.2', 's12:math', 's13:math', 's14:playground/E13', 's15:math',
+      's16:playground/X2', 's17:prose', 's18:lab', 's19:checkpoint',
+    ]);
+    const steps = getModule('m04', 'zh-TW')!;
+    for (const step of steps.filter((s) => s.kind === 'playground')) {
+      const mounted = render(<MemoryRouter initialEntries={['/m/m04']}>{step.node}</MemoryRouter>);
+      expect(within(mounted.container).getByTestId('playground-frame')).toBeInTheDocument();
+      expect(mounted.container.querySelector('[data-testid="playground-unknown"]')).toBeNull();
+      mounted.unmount();
+    }
+  });
+
   it('M3 carries E1 and E10, in two parts each, directly after the steps that teach them', () => {
     const meta = getMeta('m03', 'en')!;
     const part = (n?: number) => (n === undefined ? '' : `.${n}`);

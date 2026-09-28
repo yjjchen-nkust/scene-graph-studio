@@ -19,8 +19,10 @@ function part(kp: string, n?: string, search = '') {
 const shown = (...ids: string[]) => ids.filter((id) => screen.queryByTestId(id) !== null);
 
 describe('a playground split across steps', () => {
-  it('registers the seven playgrounds too long for one panel, X1 in three parts and the rest in two', () => {
-    expect(PLAYGROUND_PARTS).toEqual({ E1: 2, E10: 2, F1: 2, F3: 2, F6: 2, F7: 2, X1: 3 });
+  it('registers the ten playgrounds too long for one panel, X1 in three parts and the rest in two', () => {
+    expect(PLAYGROUND_PARTS).toEqual({
+      E1: 2, E10: 2, E3: 2, E4: 2, E7: 2, F1: 2, F3: 2, F6: 2, F7: 2, X1: 3,
+    });
   });
 
   it('F1: the picture and its layers, then the density, the vocabulary and the readouts', () => {
@@ -70,6 +72,44 @@ describe('a playground split across steps', () => {
     part('E10', '2', '?E10.pr=sgcls');
     expect(shown(...all)).toEqual(['E10.pr', 'E10.voc', 'e10-inclusion', 'e10-counts', 'e10-vocabulary']);
     expect(screen.getByTestId('e10-row-sgcls')).toHaveAttribute('aria-current', 'true');
+  });
+
+  it('E3: the row on its photograph, then the ranked list and its two counts', () => {
+    const all = ['E3.k', 'E3.row', 'e3-pair', 'e3-list-table', 'readout-E3.in_top', 'readout-E3.truths'];
+    const one = part('E3', '1');
+    expect(shown(...all)).toEqual(['E3.k', 'E3.row', 'e3-pair']);
+    one.unmount();
+
+    // The k slider is unconditional, so part 2 shows it too, beside the list and its two counts.
+    part('E3', '2');
+    expect(shown(...all)).toEqual(['E3.k', 'e3-list-table', 'readout-E3.in_top', 'readout-E3.truths']);
+  });
+
+  it('E4: the mode and the row on its photograph, then the mode, k and the three counts', () => {
+    const all = [
+      'E4.mode', 'E4.k', 'E4.row', 'e4-pair', 'e4-list-table',
+      'readout-E4.pool', 'readout-E4.truths', 'readout-E4.truths_none',
+    ];
+    const one = part('E4', '1');
+    expect(shown(...all)).toEqual(['E4.mode', 'E4.row', 'e4-pair']);
+    one.unmount();
+
+    // The mode selector is unconditional, so part 2 shows it too, beside k, the list and the counts.
+    part('E4', '2');
+    expect(shown(...all)).toEqual([
+      'E4.mode', 'E4.k', 'e4-list-table', 'readout-E4.pool', 'readout-E4.truths', 'readout-E4.truths_none',
+    ]);
+  });
+
+  it('E7: m and the row on its photograph, then m, k and the two counts', () => {
+    const all = ['E7.m', 'E7.k', 'E7.row', 'e7-pair', 'e7-list-table', 'readout-E7.pool', 'readout-E7.truths'];
+    const one = part('E7', '1');
+    expect(shown(...all)).toEqual(['E7.m', 'E7.row', 'e7-pair']);
+    one.unmount();
+
+    // The m slider is unconditional, so part 2 shows it too, beside k, the list and the counts.
+    part('E7', '2');
+    expect(shown(...all)).toEqual(['E7.m', 'E7.k', 'e7-list-table', 'readout-E7.pool', 'readout-E7.truths']);
   });
 
   it('F3: the box moved and counted, then the threshold and the membership', () => {

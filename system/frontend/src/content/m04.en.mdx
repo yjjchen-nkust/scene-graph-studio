@@ -87,41 +87,87 @@ steps:
     seconds_budget: 240
     presenter_notes_en: "Four minutes, and two properties have to land together: R@k cannot fall as k rises, and nothing anywhere charges for a wrong guess, so a model pays nothing for emitting its fiftieth. Every repair that follows starts here."
   - id: s3
+    kind: playground
+    kp: E3
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. The row knob draws that row's subject-object pair on ph-001: row 1 is person #2 holding wrench #5, row 10 is person #2 wearing glove #4. Step through a few rows before moving on; the photograph is the only place a rank's own pair is seen rather than read off the table."
+  - id: s4
+    kind: playground
+    kp: E3
+    part: 2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Before k does anything, the graph constraint has already cut the pool from twelve rows to seven. Raise k from 1 to 12 and read the ground-truths-matched count: it goes 1, 2, 2, 3 and then stays at 3 for every k after, never falling, since a longer prefix can only add a match, never lose one. The plateau is the pool's own size, not a property of k."
+  - id: s5
     kind: math
     seconds_budget: 300
     presenter_notes_en: "Five minutes. The graph constraint allows at most one predicate per ordered pair; lifting it lets each pair's runner-up into the ranking. Stress that the model is untouched and what changed is the rule for reading its output, and that the effect is not small. This is the constraint knob in L2, exactly."
-  - id: s4
+  - id: s6
+    kind: playground
+    kp: E4
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Switch among the three constraints and read the pool size alone: graph keeps 7 of the twelve rows, semi keeps 11, none keeps all 12. Step to row 2 (next to, on the same person-wrench pair as row 1) and switch to graph: the row is struck, since only one prediction per ordered pair survives graph's cap. Switch to semi or none and it returns."
+  - id: s7
+    kind: playground
+    kp: E4
+    part: 2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. At k = 2, graph finds 2 ground truths and none finds only 1: none's second slot repeats the person-wrench pair rather than reaching a different one. At k = 6, semi finds 4 where graph and none each find 3, since semi's second slot on that same pair lets it into a fourth ground truth sooner than graph's single slot allows. By k = 12 the three settle at graph 3, semi 5, none 5: the two ground truths graph never reaches sit outside its seven-row pool."
+  - id: s8
     kind: math
     seconds_budget: 360
     presenter_notes_en: "Six minutes, and it is the centre of the module. R and mR are one weighted mean at α = 1 and α = 0, their difference is a single covariance, and that identity is the whole bias problem stated once. Write the derivation out; do not skip steps. The number in L3's identity panel is this one, and the whole of M06 assumes it."
-  - id: s5
+  - id: s9
     kind: math
     seconds_budget: 240
     presenter_notes_en: "Four minutes. ng-R@k turns the constraint of s5 from a switch into a degree: m predicates per pair instead of one. Raising m can only add candidates, so the pool grows until m passes the most predicates the model scores for any pair; recall at a fixed k need not follow, since each runner-up admitted takes a place in the top k. The next step shows it fall at k = 2. If s5 landed, this one can be compressed."
-  - id: s6
+  - id: s10
+    kind: playground
+    kp: E7
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Raise the m slider from 1: the pool grows 7, then 11, then reaches 12 at m = 3 and stops there, since no ordered pair in this ranking carries a fourth row to admit. Step through the row slider meanwhile; it draws that rank's own pair on ph-001, independent of m."
+  - id: s11
+    kind: playground
+    kp: E7
+    part: 2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Hold k at 2 and raise m from 1 to 2: the count falls from 2 to 1, since m = 2 admits the person-wrench pair's second row, and that second slot displaces the different pair's ground truth m = 1 had reached. Push k to 12: the same rise in m now lifts the count from 3 to 5, because at k = 12 there is room for both the crowding row and the pair it would have displaced at k = 2."
+  - id: s12
     kind: math
     seconds_budget: 420
     presenter_notes_en: "Seven minutes, and it is the page that matters most. The frequency baseline reads no pixels: given the two object classes it emits the commonest predicate for that pair. Ask the room to predict its R before revealing it — the gap between the guess and the number is the lesson. Under the mixing weight λ, R and mR move in opposite directions, and that is what L3 reproduces."
-  - id: s7
+  - id: s13
     kind: math
     seconds_budget: 300
     presenter_notes_en: "Five minutes. On a mask dataset a further free parameter appears that has nothing to do with the model: whether one subject-object pair may be counted more than once through several masks. Permitting it costs a one-stage model nothing and pays well. This is single_mpo against multi_mpo, and L6 shows it by scoring one fixed prediction under both."
-  - id: s8
+  - id: s14
+    kind: playground
+    kp: E13
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Set d = 3 with the multi toggle off: SingleMPO keeps only the first copy of the mask pair, next to, so person-holding-wrench (g4) is not matched, since the kept copy names the wrong predicate. Turn the toggle on: MultiMPO admits all three copies, one of them holding, and g4 is matched. The graph constraint drops nothing under either setting, since each admitted copy carries its own pair of object ids, however many times the same mask pair reused them."
+  - id: s15
     kind: math
     seconds_budget: 240
     presenter_notes_en: "Four minutes. VRD carries the same hazard in a different place: its recall admits several predicates per ordered pair, the count is a free parameter, and papers usually do not state it. The count is written m here, as in s9, because k is already the rank cutoff; VRD papers call it k. m = 1 is the graph constraint and m = 70 is no constraint at all. Worth adding that this project does not use VRD and that its licence gate is shut anyway."
-  - id: s9
+  - id: s16
+    kind: playground
+    kp: X2
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. ph-001's six objects fix 30 ordered pairs regardless of m. At m = 1 the pool is 30 candidates and the cut at 100 selects nothing, since every candidate already fits. At m = 10 the pool is 300; at m = 70 it is 2,100, and a single pair can now place up to 70 of the top 100 by itself. The cut only starts choosing once the pool exceeds it."
+  - id: s17
     kind: prose
     seconds_budget: 240
     presenter_notes_en: "Four minutes, four items, about a minute each, and none of them opened up. Zero-shot recall exposes a collapse that neither R nor mR can show. Open Images uses a different metric family and is simply not comparable. Six undeclared parameters are why cross-paper comparison fails by default, and four of them are attached to every MetricValue in this application. And nothing in this field measures calibration. The third item is the reason MetricReadout is built the way it is; make that link explicitly."
-  - id: s10
+  - id: s18
     kind: lab
     lab: L2
     seconds_budget: 480
-    presenter_notes_en: "Eight minutes across L2 and L3. In L2 the task is to find the setting where the R and mR curves are furthest apart and say what that gap measures — it does not measure model quality, and that sentence is worth repeating out loud. L3 turns the derivation of s6 into something seen rather than something told. If time is short, keep L3."
-  - id: s11
+    presenter_notes_en: "Eight minutes across L2 and L3. In L2 the task is to find the setting where the R and mR curves are furthest apart and say what that gap measures — it does not measure model quality, and that sentence is worth repeating out loud. L3 turns the derivation of s12 into something seen rather than something told. If time is short, keep L3."
+  - id: s19
     kind: checkpoint
-    presenter_notes_en: "Checkpoint. The questions to list are the six parameters of s9: split, constraint mode, τ, mask pairing, predicate merging, k. The two a paper has usually answered are the split and the constraint mode; the other four are usually silent. Ask for the list sorted into what the paper probably answered and what would have to be asked, rather than for the list alone."
+    presenter_notes_en: "Checkpoint. The questions to list are the six parameters of s17: split, constraint mode, τ, mask pairing, predicate merging, k. The two a paper has usually answered are the split and the constraint mode; the other four are usually silent. Ask for the list sorted into what the paper probably answered and what would have to be asked, rather than for the list alone."
 ---
 
 import { Formal, Implications, Intuition, Worked } from './math/Parts';
@@ -190,6 +236,22 @@ in this application, which is why `MetricReadout` refuses to render a bare `numb
 
 <Step id="s3">
 
+## One ranked list, one pair at a time
+
+<Playground kp="E3" part="1" />
+
+</Step>
+
+<Step id="s4">
+
+## The top k, counted
+
+<Playground kp="E3" part="2" />
+
+</Step>
+
+<Step id="s5">
+
 <Intuition>
 
 The graph constraint says a model may put at most one predicate on each ordered pair. Lift it and
@@ -237,7 +299,23 @@ reported quantity rather than a checked one.
 
 </Step>
 
-<Step id="s4">
+<Step id="s6">
+
+## What each mode keeps
+
+<Playground kp="E4" part="1" />
+
+</Step>
+
+<Step id="s7">
+
+## The top k of each pool
+
+<Playground kp="E4" part="2" />
+
+</Step>
+
+<Step id="s8">
 
 <Intuition>
 
@@ -288,7 +366,7 @@ correlation to zero.
 
 </Step>
 
-<Step id="s5">
+<Step id="s9">
 
 <Intuition>
 
@@ -336,7 +414,23 @@ object pair the top attention predicate and every spatial or contacting predicat
 
 </Step>
 
-<Step id="s6">
+<Step id="s10">
+
+## Predicates admitted per pair
+
+<Playground kp="E7" part="1" />
+
+</Step>
+
+<Step id="s11">
+
+## The pool and the top k
+
+<Playground kp="E7" part="2" />
+
+</Step>
+
+<Step id="s12">
 
 <Intuition>
 
@@ -394,7 +488,7 @@ quoted without its table is not yet a fact.
 
 </Step>
 
-<Step id="s7">
+<Step id="s13">
 
 <Intuition>
 
@@ -442,7 +536,15 @@ produces rather than reads about.
 
 </Step>
 
-<Step id="s8">
+<Step id="s14">
+
+## Copies of one mask pair
+
+<Playground kp="E13" />
+
+</Step>
+
+<Step id="s15">
 
 <Intuition>
 
@@ -490,7 +592,15 @@ derived.
 
 </Step>
 
-<Step id="s9">
+<Step id="s16">
+
+## VRD's per-pair count
+
+<Playground kp="X2" />
+
+</Step>
+
+<Step id="s17">
 
 ## Four more things the number does not tell you
 
@@ -513,7 +623,7 @@ top-ranked guess is right 90 per cent of the time can post the same $R@50$.
 
 </Step>
 
-<Step id="s10">
+<Step id="s18">
 
 ## In the lab
 
@@ -527,7 +637,7 @@ you are told.
 
 </Step>
 
-<Step id="s11">
+<Step id="s19">
 
 ## Checkpoint
 
