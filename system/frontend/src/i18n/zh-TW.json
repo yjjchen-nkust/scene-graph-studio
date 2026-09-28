@@ -341,5 +341,12 @@
   "playground.m4.none": "無",
   "playground.m4.to_l2": "recall 即此數除以 6，其計分屬 L2。",
   "playground.e3.in_top": "前 k 名之預測數",
-  "playground.e3.in_top_note": "min(k, 7)：graph constraint 保留 12 筆中之 7 筆"
+  "playground.e3.in_top_note": "min(k, 7)：graph constraint 保留 12 筆中之 7 筆",
+  "playground.e4.mode": "約束模式",
+  "playground.e4.graph": "graph，每一配對 1 個",
+  "playground.e4.semi": "semi，每一配對 2 個",
+  "playground.e4.none": "none，不設上限",
+  "playground.e4.pool": "該模式保留之候選數",
+  "playground.e4.pool_note": "共 12 筆預測",
+  "playground.e4.truths_none": "相同 k 下 none 之命中數"
 }

@@ -341,5 +341,12 @@
   "playground.m4.none": "none",
   "playground.m4.to_l2": "Recall, this count over 6, is L2's to score.",
   "playground.e3.in_top": "Predictions in the top k",
-  "playground.e3.in_top_note": "min(k, 7): the graph constraint keeps 7 of 12"
+  "playground.e3.in_top_note": "min(k, 7): the graph constraint keeps 7 of 12",
+  "playground.e4.mode": "Constraint",
+  "playground.e4.graph": "graph, 1 per pair",
+  "playground.e4.semi": "semi, 2 per pair",
+  "playground.e4.none": "none",
+  "playground.e4.pool": "Pool the mode keeps",
+  "playground.e4.pool_note": "of 12 predictions",
+  "playground.e4.truths_none": "Matched under none, same k"
 }
