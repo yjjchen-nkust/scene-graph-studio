@@ -339,5 +339,7 @@
   "playground.m4.truths": "前 k 名命中之標準答案數",
   "playground.m4.truths_note": "共 6 筆標註：{ids}",
   "playground.m4.none": "無",
-  "playground.m4.to_l2": "recall 即此數除以 6，其計分屬 L2。"
+  "playground.m4.to_l2": "recall 即此數除以 6，其計分屬 L2。",
+  "playground.e3.in_top": "前 k 名之預測數",
+  "playground.e3.in_top_note": "min(k, 7)：graph constraint 保留 12 筆中之 7 筆"
 }

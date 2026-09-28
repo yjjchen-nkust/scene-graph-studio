@@ -339,5 +339,7 @@
   "playground.m4.truths": "Ground truths matched in the top k",
   "playground.m4.truths_note": "of the 6 annotated: {ids}",
   "playground.m4.none": "none",
-  "playground.m4.to_l2": "Recall, this count over 6, is L2's to score."
+  "playground.m4.to_l2": "Recall, this count over 6, is L2's to score.",
+  "playground.e3.in_top": "Predictions in the top k",
+  "playground.e3.in_top_note": "min(k, 7): the graph constraint keeps 7 of 12"
 }
