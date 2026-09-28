@@ -351,5 +351,17 @@
   "playground.e4.truths_none": "Matched under none, same k",
   "playground.e7.m": "m, predicates per pair",
   "playground.e7.pool": "Pool with m per pair",
-  "playground.e7.pool_note": "7, 11, then 12 from m = 3, where it stops growing"
+  "playground.e7.pool_note": "7, 11, then 12 from m = 3, where it stops growing",
+  "playground.e13.multi": "MultiMPO (off: SingleMPO)",
+  "playground.e13.d": "d, copies of one mask pair",
+  "playground.e13.list": "Copies of the person–wrench mask pair, scores descending",
+  "playground.e13.emitted": "Predictions emitted",
+  "playground.e13.admitted": "Admitted by the pairing",
+  "playground.e13.admitted_note": "SingleMPO keeps 1 per mask pair; MultiMPO keeps all",
+  "playground.e13.kept": "Kept by the graph constraint",
+  "playground.e13.kept_note": "each copy is its own pair of object ids",
+  "playground.e13.g4": "person holding wrench matched",
+  "playground.e13.yes": "yes",
+  "playground.e13.no": "no",
+  "playground.e13.masks": "Masks are identities here: each copy carries its original's mask."
 }
