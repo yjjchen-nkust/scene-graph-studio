@@ -21,6 +21,14 @@ for (const [locale, table] of Object.entries(tables)) {
   for (const [key, value] of Object.entries(table)) {
     if (typeof value !== 'string' || value.trim() === '') {
       problems.push(`${key}: empty or non-string value in ${locale}`);
+      continue;
+    }
+    // Only a {\w+} name is compared below, so any other braced name would escape the comparison
+    // and a translation that dropped it would pass (D104).
+    for (const [token] of value.matchAll(/\{[^{}]*\}/g)) {
+      if (!/^\{\w+\}$/.test(token)) {
+        problems.push(`${key}: ${token} in ${locale} is not a placeholder name`);
+      }
     }
   }
 }
