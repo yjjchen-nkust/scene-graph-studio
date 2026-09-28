@@ -30,6 +30,10 @@ for (const [locale, table] of Object.entries(tables)) {
         problems.push(`${key}: ${token} in ${locale} is not a placeholder name`);
       }
     }
+    // A brace left once the innermost pairs are gone encloses none, as in {{n}} or a lone {.
+    if (/[{}]/.test(value.replace(/\{[^{}]*\}/g, ''))) {
+      problems.push(`${key}: a brace outside a placeholder in ${locale}`);
+    }
   }
 }
 

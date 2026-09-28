@@ -789,6 +789,54 @@ cases.append({
 })
 
 
+# ---------------------------------------------------------------- gv-020
+# No vector carried a prediction without a score, so the tie rule's null case and the ranking of
+# unscored predictions were held by nothing (D104's review).
+cases.append({
+    "id": "gv-020-unscored-predictions-do-not-tie",
+    "why": (
+        "Three of the four predictions carry no score, which the schema permits. A prediction "
+        "with no score sorts after every scored one and keeps its input order (NFR-4), so the "
+        "ranking is cup on table 0.4 (index 3), then cup on table (index 0), person on table "
+        "(index 1) and person on table (index 2). Index 3 matches GT cup on table. Index 0 finds "
+        "its only candidate consumed and is localization, as in gv-005. Index 1 matches GT "
+        "person on table, and index 2 finds it consumed: localization. R@20 = 2/2 = 1. One "
+        "predicate class 'on' with 2 GT and 2 hits, so mR@20 = 1. The constraint is none, so "
+        "ngR@20 = R = 1. zR is null. Ordering the unscored predictions by relationship_id would "
+        "put index 2 (id 1) before index 1 (id 2) and swap their verdicts; ranking them before "
+        "the scored one would give index 0 the cup and index 3 localization. Warnings: PredCls "
+        "hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs "
+        "and zero_shot_unavailable. A tie needs two equal scores and three predictions have "
+        "none, so the one score cannot tie and ties_broken_by_index does not apply; neither "
+        "graph carries masks, and neither is empty, so no other."
+    ),
+    "hand_checked": True,
+    "gt": graph(
+        "gv20",
+        [obj(1, "person", PERSON), obj(2, "table", TABLE), obj(3, "cup", CUP)],
+        [rel(1, 1, "on", 2), rel(2, 3, "on", 2)],
+        "gt",
+    ),
+    "pred": graph(
+        "gv20",
+        [obj(1, "person", PERSON), obj(2, "table", TABLE), obj(3, "cup", CUP)],
+        [rel(3, 3, "on", 2), rel(2, 1, "on", 2), rel(1, 1, "on", 2), rel(4, 3, "on", 2, 0.4)],
+        "pred",
+    ),
+    "params": dict(P_NONE),
+    "expect": {
+        "R": {"20": 1.0}, "mR": {"20": 1.0}, "ngR": {"20": 1.0}, "zR": {"20": None},
+        "verdicts": [
+            {"pred_index": 3, "verdict": "match"},
+            {"pred_index": 0, "verdict": "localization"},
+            {"pred_index": 1, "verdict": "match"},
+            {"pred_index": 2, "verdict": "localization"},
+        ],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
+    },
+})
+
+
 out = DATA_DIR / "golden" / "vectors.json"
 out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text(

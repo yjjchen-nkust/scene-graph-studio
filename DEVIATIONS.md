@@ -3723,8 +3723,9 @@ byte. Both engines raise the six warnings on the same conditions, line for line,
 17 vectors lists the set those conditions give its inputs, checked by a script of the reviewer's
 that applies the conditions without running either engine. D103's counts (281 pytest, 901 vitest
 in 67 files, 13 keys with a placeholder) and both of its mutation tables reproduce. The review
-found no Critical issue, one Important issue and six minors. Five minors are acted on below, and
-one is declined.
+found no Critical issue, one Important issue and six minors. Five minors are acted on: D103's
+wording of two conditions, corrected in place under the Important finding, and the four below.
+One is declined.
 
 **Two warnings no vector raised** (Important).
 - D103 made both harnesses compare each case's warnings exactly, and `data/golden/README.md`
@@ -3753,7 +3754,7 @@ one is declined.
 - *In place.* D103's two sentences are corrected in brackets: the one about a warning missing or
   extra, and the one on the six conditions. On the conditions, `ties_broken_by_index` compares
   non-null scores only, and `zero_shot_unavailable` is raised as well for an empty split. The
-  golden README now lists gv-012 to gv-019 in its table of what each case pins; its rows had
+  golden README now lists gv-012 to gv-020 in its table of what each case pins; its rows had
   stopped at gv-011.
 
 **Four minors acted on.**
@@ -3776,9 +3777,51 @@ one is declined.
 
 **D100's records tests pinned the vectors' count.** They required "The 17 golden vectors" in INDEX,
 and "parity 17/17" and "seventeen cases" in README, so this branch's two vectors turned both red:
-2 failed of 906. As D103 did for D102's test, the two figures are now bounded from below through
-`atLeast`. The word, which cannot be bounded, is held by refusing "sixteen", the count D100
-replaced. This record's test likewise refuses "seventeen".
+2 failed of 906. They were first bounded from below, as D103 bounded D102's; the branch review
+showed that a bound passes a count left stale, and the count is now taken from the file (below).
+
+**The branch review** found no Critical issue, one Important one and five minors. Four minors and
+the Important finding are acted on, the latter in part; one minor is accepted as it stands.
+- *Two conditions this record writes were held by no vector* (Important). No vector carried a
+  prediction without a score, and none supplied an empty training split. Each engine could count
+  a null score toward a tie, or treat `[]` as a split, and every harness passed.
+  **gv-020-unscored-predictions-do-not-tie** gives three of four predictions no score. An unscored
+  prediction ranks after every scored one and keeps its input order, and none of them ties. Its
+  expectations were computed on paper, and both engines agree with them.
+  - *Watched to fail.* Each of five mutants fails gv-020 in its own harness: a null score counted
+    toward a tie, in each engine; unscored predictions ordered by `relationship_id`, in each
+    engine; and unscored predictions ranked first, in Python.
+  - *Caught by gv-020 alone.* Ordering by `relationship_id` failed nothing else. Only the last
+    mutant also fails `test_missing_scores_sort_last_and_keep_input_order`.
+- *The empty split, left open.* Both engines treat `zero_shot_train_triplets: []` as a split not
+  supplied: zR is null and `zero_shot_unavailable` is raised, whose text reads "No training split
+  was supplied". SRS §4.3 defines zR on ground truth "absent from the training split"; an empty
+  split leaves every triplet absent, which gives zR = R. Contracts §1.5 makes the field optional
+  and says nothing of an empty one. A vector's expectation is computed from the definitions, and
+  here the definitions and both engines disagree. No vector is written until the author decides
+  which is intended, and the golden README names it as the one condition without a case.
+- *The count of minors.* The first review's six minors were counted as five acted on without
+  naming the fifth; the sentence above now names it.
+- *Braces outside an innermost pair.* `{{n}}` in English beside `{n}` in 繁體中文 exited 0,
+  and English would print `{5}`; so did `A {x {n} y}` and a lone `{kp`. A brace left once the
+  innermost pairs are removed is now refused as "a brace outside a placeholder". No current string
+  carries one; the test failed before the rule existed.
+- *§25 was not corrected in place.* Its heading dates the run at the merge 2026-09-27; a bracketed
+  correction now says it ran on 2026-09-28.
+- *The count of golden vectors, stale under a bound.* A lower bound would pass INDEX's 19 once a
+  twentieth vector exists. One records test now takes the count from `vectors.json` and compares
+  the six places INDEX and README state it, the README's in words. D100's and this record's
+  tests no longer state it. The test failed on INDEX's 19 when gv-020 made twenty.
+- *Accepted as it stands: gv-019's IoU of 2/3 is held by no test.* Neither harness compares a
+  verdict's IoUs, so gv-019's shifted box is illustrative. The verdict, `match` where a mask read
+  as empty would give `localization`, is what the harnesses hold.
+- *Recorded, as the reviewer measured and as re-measured here.* A `classify` that ignores the
+  subject class fails gv-018 alone and passes all 17 of `5eabab6`'s vectors: gv-018 is the only
+  vector that needs the subject class to agree.
+- *Set aside by the reviewer.* INDEX called `gt_boxes_not_pairs` unconditional, which contracts
+  §1.5 limits to `predcls` and `sgcls`; the row now says so. The harness finds a verdict row by
+  its first matching `pred_index`, so a `-1` row matches any missed one and an extra row is never
+  refused; this predates the range and is left.
 
 **Declined.**
 - *A `why` may name a warning it does not list.* `test_every_case_derives_its_warnings_in_why`
@@ -3797,6 +3840,6 @@ replaced. This record's test likewise refuses "seventeen".
 run" on 2026-09-28 at 10:13, queued since 09:08. Registering a runner remains
 `scripts/deploy/setup_cicd.sh` on a Docker host, with a token from the repository's settings.
 
-**Verification.** `npm run ci` exit 0: **285 pytest** and 7 skipped (281 before), **906 vitest in
-67 files** (901 before), parity 19, i18n 331 keys, content lint clean over 19 golden cases. No
+**Verification.** `npm run ci` exit 0: **286 pytest** and 7 skipped (281 before), **909 vitest in
+67 files** (901 before), parity 20, i18n 331 keys, content lint clean over 20 golden cases. No
 frontend production code changed on the branch. See VERIFICATION §27.

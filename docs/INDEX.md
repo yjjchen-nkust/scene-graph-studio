@@ -85,7 +85,7 @@ drifts.
 |---|---|---|
 | **NFR-1** | Offline-complete; every P0 feature works with the network down and `torch` absent | the committed placeholder slice |
 | **NFR-2** | Honest numbers: every figure carries a source and a `verified` flag | `content_lint.mjs` |
-| **NFR-3** | Two implementations, one truth | `parity.mjs`, 19 golden vectors |
+| **NFR-3** | Two implementations, one truth | `parity.mjs`, 20 golden vectors |
 | **NFR-4** | Determinism, including tie-break order | `sorted(key=(-score, relationship_id))` |
 | **NFR-5** | Projector-legible; colour-blind-safe diff | lecture shell |
 | **NFR-6** | Bilingual parity; no fallback locale | `i18n_parity.mjs` |
@@ -101,10 +101,10 @@ drifts.
 | Field names, types, enum spellings | `contracts.md` — normative, not descriptive; §1.10 is marked **superseded** (D72) |
 | `SceneGraph`, `SGObject`, `SGRelationship`, `BBox` | `system/backend/app/schema.py` |
 | The match relation, R@K, mR@K, ng-R@K, zR@K | `design.md` §4.3; code in `system/backend/app/eval/` |
-| Protocols `predcls` / `sgcls` / `sgdet` | `design.md` §4.3; the `gt_boxes_not_pairs` warning is unconditional |
+| Protocols `predcls` / `sgcls` / `sgdet` | `design.md` §4.3; the `gt_boxes_not_pairs` warning is raised on every `predcls` and `sgcls` response (contracts §1.5) |
 | Constraint modes `graph` / `none` / `semi` | `design.md` §4.3 |
 | Mask pairing `single_mpo` / `multi_mpo` | `design.md` §4.3; L6 runs both |
-| The 19 golden vectors | `system/backend/scripts/build_golden.py`, each with a `why` |
+| The 20 golden vectors | `system/backend/scripts/build_golden.py`, each with a `why` |
 | Corpus layouts, per dataset | `system/backend/app/datasets/adapters/__init__.py` — `LAYOUTS` |
 | Which datasets may be committed or distributed | `data/LICENCES.md` |
 | The slice selection rule | `system/backend/app/datasets/loader.py` — `SELECTION_RULE` |
@@ -120,7 +120,7 @@ drifts.
 ## 5. State, 2026-09-26
 
 **Built.** Plan 01: FastAPI backend, the evaluation engine in Python and TypeScript held identical
-by golden vectors (13 at plan 01's close, 16 after D99, 17 since D100, 19 since D104), slice ingestion with both licence gates, `/api/health`, `/api/eval`,
+by golden vectors (13 at plan 01's close, 16 after D99, 17 since D100, 20 since D104), slice ingestion with both licence gates, `/api/health`, `/api/eval`,
 `/api/datasets`, the Vite frontend skeleton, and CI as one command.
 
 **Data.** Corpora at `C:\DataRaw` (`SGS_CORPUS_ROOT`). Three slices cut with seed 20260915:
@@ -380,14 +380,18 @@ for a runner. See D103 and VERIFICATION §26.
 **The review of the open checks, 2026-09-28.** The exact comparison held only the warnings some
 vector raises, and no vector ran SGCls or carried masks in one graph only, so either engine could
 drop `masks_ignored` or SGCls's `gt_boxes_not_pairs` and every harness passed. gv-018 and gv-019
-raise them, and two tests require the vectors to raise every warning and run every protocol.
-`i18n_parity.mjs` refuses a braced name outside `\w+`, which its comparison could not read; the
-missing-key check is tested in both directions; each records test reads its own record alone.
+raise them, and two tests require the vectors to raise every warning and run every protocol;
+gv-020 holds the tie rule on predictions without a score. An empty training split has no vector:
+the engines treat it as none supplied, SRS §4.3's definition gives zR = R, and the choice is the
+author's. `i18n_parity.mjs` refuses a braced name outside `\w+` and a brace outside any
+placeholder, neither of which its comparison could read; the missing-key check is tested in both
+directions; each records test reads its own record alone, and the count of golden vectors is
+taken from the file.
 `npm run test:e2e` and `npm run check:perf` passed on `main` at `5eabab6`. CI for `5eabab6` is
 still waiting for a runner. See D104 and VERIFICATION §27.
 
-**Verification.** `npm run ci` green, 2026-09-28, after D104: **285 pytest** and 7 skipped, parity 19 agree, i18n 331 keys both locales,
-**906 vitest** in 67 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**Verification.** `npm run ci` green, 2026-09-28, after D104: **286 pytest** and 7 skipped, parity 20 agree, i18n 331 keys both locales,
+**909 vitest** in 67 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 44 symbols, 42 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (254 equations), frontend builds. `npm run test:e2e`,

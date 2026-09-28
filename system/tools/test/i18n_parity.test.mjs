@@ -109,6 +109,21 @@ describe('i18n parity', () => {
     expect(run.out).toContain('a.zh: {幀} in zh-TW is not a placeholder name');
   });
 
+  it('refuses a brace outside any placeholder', () => {
+    // {{n}} holds a placeholder the comparison reads, and prints its outer braces; a lone brace
+    // encloses no name at all (D104's branch review).
+    const run = parity(tables(
+      { 'a.count': 'Count {{n}}', 'a.open': 'Point {kp', 'a.nest': 'A {x {n} y}' },
+      { 'a.count': '數量 {n}', 'a.open': '知識點 {kp', 'a.nest': '甲 {n}' },
+    ));
+    expect(run.ok).toBe(false);
+    expect(run.out).toContain('a.count: a brace outside a placeholder in en');
+    expect(run.out).not.toContain('a.count: a brace outside a placeholder in zh-TW');
+    expect(run.out).toContain('a.open: a brace outside a placeholder in en');
+    expect(run.out).toContain('a.open: a brace outside a placeholder in zh-TW');
+    expect(run.out).toContain('a.nest: a brace outside a placeholder in en');
+  });
+
   it('counts the keys that carry a placeholder', () => {
     const run = parity(tables(
       { 'a.picture': 'Frame {frame}', 'a.plain': 'Plain' },

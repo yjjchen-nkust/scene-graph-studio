@@ -1202,7 +1202,9 @@ from §21's measured column and photograph; it was not measured directly.
 D102. Every number below is from the run that produced it, on branch `fix/sgs-d100-deferred`. In
 the table, `npm run ci` and `npm run test:e2e` ran after the branch review's fixes, and
 `npm run check:perf` on commit `680dc35`'s code, which no later commit changes outside tests and
-records.
+records. [**Corrected 2026-09-28 (D104):** the run at the merge, the last subsection below, was
+on 2026-09-28, not on the date in the heading: it ran on a tree holding `761b571`, committed at
+00:04 that day.]
 
 | Step | Result |
 |---|---|
@@ -1351,11 +1353,11 @@ D104. Every number below is from the run that produced it. The three rows marked
 | `npm run ci`, `main` | exit 0: 281 pytest and 7 skipped, 901 vitest in 67 files, parity 17, i18n 331 keys |
 | `npm run test:e2e`, `main` | **75 passed** |
 | `npm run check:perf`, `main` | 23 passed; F3 32.7 ms, E1 33.1 ms, E10 33.2 ms |
-| pytest | **285 passed**, 7 skipped (281 before) |
-| vitest | **906 passed in 67 files** (901 before) |
-| parity | **19 cases agree** (17 before) |
+| pytest | **286 passed**, 7 skipped (281 before) |
+| vitest | **909 passed in 67 files** (901 before) |
+| parity | **20 cases agree** (17 before) |
 | i18n parity | 331 keys, both locales complete; 13 carry a placeholder, all agreeing |
-| content lint | 19 golden cases, 42 playground cases, 25 release figures, clean |
+| content lint | 20 golden cases, 42 playground cases, 25 release figures, clean |
 
 The tree was clean after the three runs on `main`. `npm run test:e2e` was not run on the branch:
 it changes no frontend production code.
@@ -1365,7 +1367,7 @@ it changes no frontend production code.
 Four mutants, each applied alone to one engine and restored afterwards, against the committed
 vectors and harness and against the branch's:
 
-| Mutant | `5eabab6` | This branch |
+| Mutant | `5eabab6` | This branch, at 19 vectors |
 |---|---|---|
 | Python, `masks_ignored` never raised | pytest 281 passed | 1 failed (gv-019), 284 passed |
 | Python, `gt_boxes_not_pairs` under PredCls alone | pytest 281 passed | 1 failed (gv-018), 284 passed |
@@ -1384,8 +1386,8 @@ it passed all 26 tests.
 
 ### i18n parity by mutation
 
-Each rule of `i18n_parity.mjs` disabled alone, against the nine tests in
-`tools/test/i18n_parity.test.mjs`:
+Each rule of `i18n_parity.mjs` disabled alone, against the ten tests in
+`tools/test/i18n_parity.test.mjs`, after the branch review:
 
 | Rule disabled | Result |
 |---|---|
@@ -1393,10 +1395,12 @@ Each rule of `i18n_parity.mjs` disabled alone, against the nine tests in
 | the missing-key check, run from en only | 1 failed: the key in 繁體中文 only |
 | an empty value | 1 failed: the empty-value test |
 | a braced name that is not a placeholder | 1 failed: the braced-name test |
+| a brace outside a placeholder | 1 failed: the stray-brace test |
 | the placeholders compared between locales | 2 failed: a placeholder dropped, and one repeated in one locale |
 | a placeholder repeated in one value | 1 failed: the repeat in both locales |
 
-The braced-name test failed, 1 of 9, before its rule existed. The committed script, run over
+The braced-name test failed, 1 of 9, before its rule existed, and the stray-brace test, 1 of
+10, before its own. The committed script, run over
 `{kp-id}` in en with no placeholder in zh-TW, exited 0 and printed "1 keys, both locales complete;
 0 carry a placeholder".
 
@@ -1405,7 +1409,28 @@ The braced-name test failed, 1 of 9, before its rule existed. The committed scri
 With "Waiting to run" removed from D103's record alone and restored afterwards, the D103 records
 test failed, 1 of 27, on that item. Sliced from D103's heading to the end of the file, the
 record still contained the phrase, in D104. After the two vectors, D100's two records tests
-failed, 2 of 906, on their pinned counts before they were bounded from below.
+failed, 2 of 906, on their pinned counts. With gv-020 written and the records still at 19, the
+test that takes the count from `vectors.json` failed on INDEX's NFR-3 row, 19 against 20.
+
+### After the branch review
+
+gv-020's five mutants, each applied alone and restored afterwards, on the branch:
+
+| Mutant | Result |
+|---|---|
+| Python, a null score counted toward a tie | pytest 1 failed (gv-020), 285 passed |
+| Python, unscored predictions ordered by `relationship_id` | pytest 1 failed (gv-020), 285 passed |
+| Python, unscored predictions ranked first | pytest 2 failed (gv-020, `test_missing_scores_sort_last_and_keep_input_order`), 284 passed |
+| TypeScript, a null score counted toward a tie | metrics 1 failed (gv-020), 41 passed |
+| TypeScript, unscored predictions ordered by `relationship_id` | metrics 1 failed (gv-020), 41 passed |
+
+Built back from the source, parity: 20 cases agree. A `classify` that compares the predicate and
+object class alone, restored afterwards, failed gv-018 alone on the branch (1 failed, 285
+passed) and passed all 17 golden cases of `5eabab6`.
+
+Both engines, called on gv-001 with `zero_shot_train_triplets: []`, return R, mR and ngR 1, zR
+null, and the warnings `gt_boxes_not_pairs` and `zero_shot_unavailable`. SRS §4.3's definition
+gives zR = R for that input; no vector pins either reading (D104).
 
 ### The runner
 
