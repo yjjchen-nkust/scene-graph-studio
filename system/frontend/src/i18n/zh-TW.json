@@ -348,5 +348,8 @@
   "playground.e4.none": "none，不設上限",
   "playground.e4.pool": "該模式保留之候選數",
   "playground.e4.pool_note": "共 12 筆預測",
-  "playground.e4.truths_none": "相同 k 下 none 之命中數"
+  "playground.e4.truths_none": "相同 k 下 none 之命中數",
+  "playground.e7.m": "每一配對之 predicate 數 m",
+  "playground.e7.pool": "每一配對 m 個時之候選數",
+  "playground.e7.pool_note": "7、11，自 m = 3 起為 12 且不再增長"
 }

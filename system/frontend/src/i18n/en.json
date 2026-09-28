@@ -348,5 +348,8 @@
   "playground.e4.none": "none",
   "playground.e4.pool": "Pool the mode keeps",
   "playground.e4.pool_note": "of 12 predictions",
-  "playground.e4.truths_none": "Matched under none, same k"
+  "playground.e4.truths_none": "Matched under none, same k",
+  "playground.e7.m": "m, predicates per pair",
+  "playground.e7.pool": "Pool with m per pair",
+  "playground.e7.pool_note": "7, 11, then 12 from m = 3, where it stops growing"
 }

@@ -5,6 +5,7 @@ import { byScore, capPerPair, matchedRanks, matchedTruths, snap, topK } from '..
 import { M4_CAPS, M4_FRAME, M4_K_MAX, M4_RANKING } from '../M4/ranking';
 import { PairPhoto } from '../M4/PairPhoto';
 import { RankedList } from '../M4/RankedList';
+import { truthsNote } from '../M4/truths';
 import type { PlaygroundProps } from '../mounts';
 import { frameById } from '../slice';
 
@@ -37,12 +38,6 @@ export function TopK({ part }: PlaygroundProps = {}) {
 
   const rowView = part !== 2;
   const listView = part !== 1;
-
-  const separator = locale === 'zh-TW' ? '、' : ', ';
-  const idsText = matchedIds.length > 0
-    ? matchedIds.map((id) => `g${id}`).join(separator)
-    : t('playground.m4.none');
-  const truthsNote = t('playground.m4.truths_note').replace('{ids}', idsText);
 
   const controls = (
     <>
@@ -96,7 +91,7 @@ export function TopK({ part }: PlaygroundProps = {}) {
                 id="E3.truths"
                 label={t('playground.m4.truths')}
                 value={String(matchedIds.length)}
-                note={truthsNote}
+                note={truthsNote(matchedIds, locale, t)}
               />
             </div>
             <p className="text-[0.875em] text-slate-700">{t('playground.m4.to_l2')}</p>
