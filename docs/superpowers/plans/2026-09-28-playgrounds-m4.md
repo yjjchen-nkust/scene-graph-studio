@@ -16,7 +16,7 @@
 - **Working directory is `scene-graph-studio/system/`.** Every `npm` command runs there. Paths are relative to it unless they start with `../`.
 - **A playground computes a count, a bound or a set membership. Never a metric.** No R, mR or R@K is displayed; |G ∩ X_k| is shown as a count. Nothing in `frontend/src/playgrounds/` outside `test/` imports a value from `sgg-metrics`; types are allowed.
 - **The ranked list is spec §4.1's table, exactly:** twelve rows, their ranks, pairs, predicates and scores. Its counts are spec §4.1's table; a test that disagrees with that table is the defect, not the table.
-- **No figure is recalled.** Every number is computed from ph-001, the ranked list or the copies of §5.4; VRD's 70 predicates are labelled "M4 s8", and K = 100 "the engine's largest cut".
+- **No figure is recalled.** Every number is computed from ph-001, the ranked list or the copies of §5.4; VRD's 70 predicates are labelled "M4 s8", and K = 100 "the engine's largest cut". [**Open (D106):** Task 10's renumbering made the VRD step s15, and the label still reads "M4 s8".]
 - **Bilingual parity** (NFR-6); **formal written Chinese** with Chinese punctuation; titles are noun phrases; numbers and technical terms verbatim. Display math is shared by both locales, as M4's already is.
 - **Lecture legibility:** type in `em`, never below 18 px; ink `slate-700` or darker; marks differ in shape as well as colour; no text inside an SVG.
 - **Knob ids equal their query keys:** `E3.k`, `E3.row`, `E4.mode`, `E4.k`, `E4.row`, `E7.m`, `E7.k`, `E7.row`, `E13.multi`, `E13.d`, `X2.m`. Numbers pass through `snap(value, low, high, step)`; a string knob not among its options falls back to its default.
@@ -45,7 +45,7 @@
 
 - [ ] **Step 1: Write the failing test** in `registry.test.tsx`, beside M3's corrections test, `it('M4 derives only what the engine and the definitions force')`. Read both M4 locale files and import `math.json` like `deriv.json`, collapse whitespace, and assert, writing each backslash doubled in the TS source:
   - each M4 file contains `k\\ge\\lvert X^{\\mathrm{ng}}\\rvert &\\Rightarrow R@k\\le \\mathrm{ngR}@k`, `R@2=1,\\ \\mathrm{ngR}@2=0`, `\\frac{1}{\\lvert\\mathcal{P}^{\\prime}\\rvert}`, `recall over its ranking is piecewise constant` and `\\text{VRD papers call it } k`;
-  - neither contains `X_k\\subseteq X_k^{\\mathrm{ng}}`, `\\cap X_k`, `gap keeps widening`, `The slider moves`, `Both are affine in`, `Proposition 4c`, `for the same reason the protocol ordering holds`, `同一切片上` or `on the same slice`;
+  - neither contains `X_k\\subseteq X_k^{\\mathrm{ng}}`, `\\cap X_k`, `gap keeps widening`, `The slider moves`, `Both are affine in`, `Proposition 4c`, `for the same reason the protocol ordering holds`, `同一切片上` or `on the same slice`; [**As built (D106):** `\\cap X_k` is narrowed to `\\bigr\\}\\cap X_k`, since s2's correct R@k = |G ∩ X_k| / |G| contains the broader string.]
   - `deriv.E4`, `deriv.E7`, `deriv.E6`, `deriv.E11` and `deriv.X2` contain none of `X_k\\subseteq X_k^{\\mathrm{ng}}`, `\\cap X_k`, `\\frac{1}{C}`, `Both are affine in`, `Proposition 4c`; `math.X2` contains `m=\\lvert`.
   In the same test, render M4's math steps through `getModule('m04', locale)` for both locales and assert no `.katex-error` element.
 
@@ -115,7 +115,7 @@ m=70 &\Rightarrow \text{every predicate of every pair is a candidate; the cut at
 
 - [ ] **Step 6: Search the brief.** Run `grep -n "ngR\|affine\|Proposition 4\|same slice" web/brief/index.html`. If a line states R@k ≤ ngR@k at a fixed k, monotonicity in m at a fixed k, recall affine in λ, or "Proposition 4c", correct it as above in both languages and run `npm run build:standalone`; otherwise record "the brief states none of them" in the commit message.
 
-- [ ] **Step 7: Verify.** Run `npm run harvest && npx vitest run frontend/src/content && node --test tools/test/harvest.test.mjs && npm run lint:frozen && npm run lint:content && npm run lint:standalone`. Expected: all pass; the harvest still reports 26 formulas and 23 derivations; `git status` shows `kp.json`, `math.json` and `deriv.json` changed.
+- [ ] **Step 7: Verify.** Run `npm run harvest && npx vitest run frontend/src/content && node --test tools/test/harvest.test.mjs && npm run lint:frozen && npm run lint:content && npm run lint:standalone`. Expected: all pass; the harvest still reports 26 formulas and 23 derivations; `git status` shows `kp.json`, `math.json` and `deriv.json` changed. [**As built (D106):** `harvest.test.mjs` is a vitest suite, which `node --test` cannot run; `npm run ci`'s vitest step runs it, 8 tests.]
 
 - [ ] **Step 8: Commit.** `npm run ci`, then stage the files above, then `git commit -m "fix(sgs): M4's constraint inequalities stated for the pool, its blend, its α line and VRD's per-pair count"`.
 
@@ -147,6 +147,7 @@ m=70 &\Rightarrow \text{every predicate of every pair is a candidate; the cut at
   - `matchedTruths(top: { subject: number; predicate: string; object: number }[], truths: SGRelationship[]): number[]`, the `relationship_id`s whose subject id, object id and predicate agree with some row, ascending;
   - `admitByMask<T extends { masks: string }>(ranked: T[], multi: boolean): T[]`, the first row per `masks` under SingleMPO, all under MultiMPO;
   - `matchedByMask(rows: MaskRow[], truths: SGRelationship[]): number[]`, a truth matched when `${subject_id}|${object_id}` equals a row's `masks` and the predicates agree. X2 uses the existing `candidateSpace(6, Math.min(m, VRD_PREDICATES), true)`.
+  - [**As built (D106):** `matchedByMask` takes `{ masks: string; predicate: string }[]`, since an existing test forbids `logic.ts` to import a playground module; and `matchedRanks(top, truths): Set<number>`, the ranks a top k matches, was added in Task 4's review, sharing `matchedTruths`'s rule.]
 
 - [ ] **Step 1: Write the failing tests** in `logic.test.ts`:
 
@@ -265,6 +266,7 @@ describe('X2: VRD per-pair count on ph-001', () => {
 **Files:**
 - Create: `frontend/src/playgrounds/E3/TopK.tsx`, `frontend/src/playgrounds/E3/test/TopK.test.tsx`
 - Modify: `mounts.tsx` (`E3: TopK`, `PLAYGROUND_PARTS.E3 = 2`), `test/Playground.test.tsx` (pinned ids gain `'E3'`), both locale tables
+- [**As built (D106):** registration of all five, here and in Tasks 5 to 8, moved to Task 10, which inserts their steps in the same commit: `KnowledgeIndex.test` requires every registered playground to have a lecture step, and E3 registered alone failed 1 test of 943. Tasks 4 to 8 test their components by direct mount, and Task 9 ran after Task 10, since content-lint rule 11 refuses a golden case for an unregistered playground.]
 
 **Interfaces:**
 - Consumes: Tasks 2 and 3.
@@ -341,6 +343,7 @@ describe('X2: VRD per-pair count on ph-001', () => {
 
 **Files:**
 - Create: `frontend/src/playgrounds/E7/PerPairCap.tsx`, `frontend/src/playgrounds/E7/test/PerPairCap.test.tsx`
+- [**As built (D106):** first, `frontend/src/playgrounds/M4/truths.ts`, the matched-truths note E3 and E4 each carried, shared by E3, E4 and E7 (`2db3f6f`).]
 - Modify: `mounts.tsx` (`E7: PerPairCap`, `PLAYGROUND_PARTS.E7 = 2`), `Playground.test.tsx`, both locale tables
 
 **Interfaces:**
@@ -397,6 +400,8 @@ describe('X2: VRD per-pair count on ph-001', () => {
 | `playground.e13.no` | no | 否 |
 | `playground.e13.masks` | Masks are identities here: each copy carries its original's mask. | 此處遮罩以識別碼表示：每一複本沿用原物件之遮罩。 |
 
+[**As built (D106):** the review added `playground.e13.g4_note`, "kept: {predicates}; g4 is person holding wrench" / 「保留：{predicates}；g4 為 person holding wrench」, since a note reading "g4" carried no arithmetic.]
+
 - [ ] **Step 1: Write the failing tests:**
   - `opens at SingleMPO, d = 3: 3 emitted, 1 admitted, 1 kept, not matched`;
   - `MultiMPO at d = 3 admits and keeps 3 and matches g4`;
@@ -437,6 +442,8 @@ describe('X2: VRD per-pair count on ph-001', () => {
 | `playground.x2.cut` | Does the cut at 100 select? | 截斷於 100 是否發揮篩選作用 |
 | `playground.x2.cut_yes` | yes: {pool} candidates for 100 places | 是：{pool} 個候選競逐 100 個名次 |
 | `playground.x2.cut_no` | no: all {pool} candidates fit in 100 | 否：{pool} 個候選均在 100 名以內 |
+
+[**As built (D106):** the table gives `X2.cut` no note; it carries `pool > 100` in both locales, written in the component.]
 
 - [ ] **Step 1: Write the failing tests:**
   - `opens at m = 10: 30 pairs, 300 candidates, 10 per pair, the cut selects`;
@@ -491,11 +498,11 @@ describe('X2: VRD per-pair count on ph-001', () => {
   - E4.1 "What each mode keeps" / 「各約束模式之保留內容」; E4.2 "The top k of each pool" / 「各候選池之前 k 名」;
   - E7.1 "Predicates admitted per pair" / 「每一配對容許之 predicate 數」; E7.2 "The pool and the top k" / 「候選池與前 k 名」;
   - E13 "Copies of one mask pair" / 「同一遮罩配對之複本」; X2 "VRD's per-pair count" / 「VRD 之每配對數量」.
-  Cross-references move with the ids: the s5 Intuition's "step 5" and 「第五節」 are already right from Task 1; the lab's notes' "s6" becomes "s12"; the checkpoint's "s9" becomes "s17", in both locales.
+  Cross-references move with the ids: the s5 Intuition's "step 5" and 「第五節」 are already right from Task 1; the lab's notes' "s6" becomes "s12"; the checkpoint's "s9" becomes "s17", in both locales. [**As built (D106):** the em dashes already in those two notes stay, since only their ids were to change.]
 
 - [ ] **Step 4: The widest-mathematics loop.** In `e2e/projector.spec.ts`, `for (const step of [0, 1, 2, 3])` on m04 becomes `[0, 1, 4, 7]`, so it still reads M4's widest mathematics.
 
-- [ ] **Step 5: Run it and confirm it passes.** Run `npx vitest run frontend/src/content && npm run lint:content`. Expected: PASS; content lint reports 117 steps and 234 presenter notes.
+- [ ] **Step 5: Run it and confirm it passes.** Run `npx vitest run frontend/src/content && npm run lint:content`. Expected: PASS; content lint reports 117 steps and 234 presenter notes. [**As built (D106):** content lint prints neither number; both were counted from the modules, and a records test now counts the steps.]
 
 - [ ] **Step 6: Commit.** `npm run ci`, then `git commit -m "feat(sgs): M4 gains E3, E4, E7, E13 and X2 after the steps that teach them"`.
 
@@ -512,7 +519,7 @@ describe('X2: VRD per-pair count on ph-001', () => {
   - `M4's knobs work from the keyboard and never advance the deck`: `E3.k` ArrowRight watching `readout-E3.in_top-value`; `E4.mode` ArrowDown watching `readout-E4.pool-value`; `E7.m` ArrowRight watching `readout-E7.pool-value`; `E13.multi` Space watching `readout-E13.admitted-value`; `X2.m` ArrowDown watching `readout-X2.pool-value`;
   - `M4's knobs write the address bar`: `E4.mode` → `none` gives `E4.mode=none`.
 
-- [ ] **Step 2: `projector.spec.ts`.** `PARTS_LONGEST` gains `m04/2?E3.k=12&E3.row=12`, `m04/3?E3.k=12`, `m04/5?E4.mode=none&E4.k=12`, `m04/6?E4.mode=none&E4.k=12`, `m04/9?E7.m=10&E7.k=12`, `m04/10?E7.m=10&E7.k=12`, `m04/13?E13.multi=1&E13.d=5` and `m04/15?X2.m=70`. The new steps join every list M3's steps are in: the contrast walk, the 18 px floor, and `F3, E1 and E10 draw their marks on their photographs`, which gains E3, E4 and E7 and is renamed to name them. If a part fails to fit, split it by measurement and record the measured overflow.
+- [ ] **Step 2: `projector.spec.ts`.** `PARTS_LONGEST` gains `m04/2?E3.k=12&E3.row=12`, `m04/3?E3.k=12`, `m04/5?E4.mode=none&E4.k=12`, `m04/6?E4.mode=none&E4.k=12`, `m04/9?E7.m=10&E7.k=12`, `m04/10?E7.m=10&E7.k=12`, `m04/13?E13.multi=1&E13.d=5` and `m04/15?X2.m=70`. The new steps join every list M3's steps are in: the contrast walk, the 18 px floor, and `F3, E1 and E10 draw their marks on their photographs`, which gains E3, E4 and E7 and is renamed to name them. If a part fails to fit, split it by measurement and record the measured overflow. [**As built (D106):** E3's, E4's and E7's second parts, E13 and X2 ran 411, 543, 411, 386 and 74 px past 1024 × 768 and were tightened within their parts, not split; the tightening is `PlaygroundFrame`'s opt-in `dense`, after the review found that tightening the shared kit moved the nine earlier playgrounds. The review also added M4's photographs to the photograph-size test and M4's playground steps to the controls-reachable check.]
 
 - [ ] **Step 3: `perf.spec.ts`.** `PLAYGROUND_CASES` gains E3 (`set E3.k 5`, readout `[data-testid="readout-E3.in_top-value"]`), E4 (`set E4.mode semi`), E7 (`set E7.m 2`), E13 (`click E13.multi`), X2 (`set X2.m 70`), at their part-2 or single step; "all nine playgrounds" becomes "all fourteen", with the count 14.
 
@@ -528,7 +535,7 @@ describe('X2: VRD per-pair count on ph-001', () => {
 - Modify: `../DEVIATIONS.md` (append **D106**), `../docs/VERIFICATION.md` (append **§29**), `../docs/INDEX.md`, `../README.md`, `../CLAUDE.md`, and the spec, where the build departed from it (in-place bracketed notes)
 - Test: `frontend/src/content/test/registry.test.tsx`
 
-- [ ] **Step 1: Write the failing records test**, `it('the records carry D106 and M4's playgrounds')`, through `record(deviations, 'D106')` and `atLeast`: D106's heading, VERIFICATION `## 29. `, `D1…D106` in CLAUDE.md and INDEX, CLAUDE.md's `§29 the M4 playgrounds` and 106 deviations, INDEX's `the M4 playgrounds (§29)`, and D106 naming `R@2=1`, `E13`, `X2` and `992287e`.
+- [ ] **Step 1: Write the failing records test**, `it('the records carry D106 and M4's playgrounds')`, through `record(deviations, 'D106')` and `atLeast`: D106's heading, VERIFICATION `## 29. `, `D1…D106` in CLAUDE.md and INDEX, CLAUDE.md's `§29 the M4 playgrounds` and 106 deviations, INDEX's `the M4 playgrounds (§29)`, and D106 naming `R@2=1`, `E13`, `X2` and `992287e`. [**As built (D106):** a second test takes the number of playgrounds, of live points without one and of steps from the mount table, the harvest and the modules, and compares them with CLAUDE.md, INDEX and README.]
 
 - [ ] **Step 2: Run it and confirm it fails** on the missing heading.
 

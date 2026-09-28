@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs';
 import deriv from '../../../../../data/content/deriv.json';
+import kp from '../../../../../data/content/kp.json';
 import math from '../../../../../data/content/math.json';
 import { render, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setLocale } from '../../i18n/useLocale';
+import { PLAYGROUND_MOUNTS, PLAYGROUND_PARTS } from '../../playgrounds/mounts';
 import { getMeta, getModule, moduleIds } from '../registry';
 
 beforeEach(() => {
@@ -543,6 +545,61 @@ describe('the playground step kind', () => {
     expect(golden).toContain('| `gv-021` |');
     expect(golden).not.toContain('One condition has no case');
     for (const item of ['gv-021', 'zR = R', 'Treat as none', 'ba87229']) expect(d105, item).toContain(item);
+  });
+
+  it("the records carry D106 and M4's playgrounds", () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const d106 = record(deviations, 'D106').replace(/\s+/g, ' ');
+    expect(deviations).toContain(
+      "## D106 — M4's playgrounds, E3, E4, E7, E13 and X2, and the constraint statements the engine contradicted",
+    );
+    expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 29. ');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 106, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 106, 'CLAUDE.md deviations');
+    expect(claude).toContain('§29 the M4 playgrounds');
+    expect(index).toContain('the M4 playgrounds (§29)');
+    // The counterexample, two of the five playgrounds, and where the branch was cut.
+    for (const item of ['R@2=1', 'E13', 'X2', '992287e']) expect(d106, item).toContain(item);
+    // M4's density is its own; the nine earlier playgrounds keep the layout their records measured.
+    expect(claude).toContain("`PlaygroundFrame`'s `dense` is M4's");
+    // The browser tests CLAUDE.md cites by name are tests the projector suite runs.
+    const projector = source('../../../../e2e/projector.spec.ts');
+    for (const cited of ['draw their marks on their photographs', 'show their photographs']) {
+      const name = new RegExp(`\`([^\`]*${cited}[^\`]*)\``).exec(claude)?.[1];
+      expect(name, cited).toBeDefined();
+      expect(projector, cited).toContain(name);
+    }
+  });
+
+  it('the records state as many playgrounds, uncovered live points and steps as the code holds', () => {
+    // Taken from the mount table, the harvest and the modules, as the vectors' count is taken from
+    // their file: a bound passes a count left stale (D104's branch review, D106).
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    const mounted = Object.keys(PLAYGROUND_MOUNTS);
+    const uncovered = kp.filter((p) => p.status === 'live' && !mounted.includes(p.id)).length;
+    const steps = moduleIds().reduce((n, id) => n + getMeta(id, 'en')!.steps.length, 0);
+    const split = Object.keys(PLAYGROUND_PARTS).length;
+    const stated = (text: string, pattern: RegExp) => pattern.exec(text)?.slice(1);
+    // Whitespace as \s+, since a phrase may wrap across a line of the record.
+    expect(stated(claude, /8 labs,\s+(\d+)\s+playgrounds/), 'CLAUDE.md playgrounds').toEqual([String(mounted.length)]);
+    expect(stated(claude, /(\d+)\s+live\s+knowledge\s+points\s+have\s+none/), 'CLAUDE.md uncovered')
+      .toEqual([String(uncovered)]);
+    expect(stated(claude, /All\s+(\d+)\s+steps\s+carry\s+theirs;\s+(\d+)\s+notes/), 'CLAUDE.md notes')
+      .toEqual([String(steps), String(2 * steps)]);
+    expect(stated(index, /holds\s+(\d+)\s+and\s+(\d+)\s+since\s+D\d+\]/), 'INDEX notes')
+      .toEqual([String(steps), String(2 * steps)]);
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      expect(stated(text, /five\s+labs\s+and\s+([\w-]+)\s+playgrounds/), `${name} perf`)
+        .toEqual([NUMBER_WORDS[mounted.length]]);
+    }
+    expect(stated(readme, /The\s+([\w-]+)\s+playgrounds\s+too\s+tall\s+for\s+one\s+panel/), 'README parts')
+      .toEqual([NUMBER_WORDS[split]]);
   });
 
   it('the records state as many golden vectors as the file holds', () => {

@@ -1488,3 +1488,139 @@ test, each restored afterwards, now fail it:
 The commit statuses of `ba87229`, read through the Gitea API on 2026-09-28 at 11:14: `CI /
 backend`, `CI / frontend` and `scene-graph-studio / ci`, each "Waiting to run" since its push at
 11:11.
+
+## 29. The M4 playgrounds — measured, 2026-09-28
+
+D106. Every number below is from the run that produced it, on branch `feat/playgrounds-m4`, from
+`main` at `992287e`. The table's three runs were made on `9b5fd86`, the branch's last commit before
+its records, and `npm run ci` was run again on the records commit, where this record's two tests
+bring vitest to 1009. The tree was clean after each run.
+
+| Step | Result |
+|---|---|
+| harvest | 93 knowledge points, 27 live; 26 formulas and 23 derivations, unchanged in number after M4's five were corrected |
+| pytest | 287 passed, 7 skipped |
+| vitest | **1007 passed in 74 files** (911 in 67 before) |
+| parity | 21 cases agree |
+| i18n parity | **376 keys**, both locales complete (331 before); **19** carry a placeholder (13 before), all agreeing |
+| content lint | 21 golden cases, **64 playground cases** (42 before), 25 release figures, 7 licence rows, 15 of 15 modules × 2 locales, 93 points assigned, **45 symbols** (44 before), clean |
+| frozen lints | no problems; 26 playgrounds, 26 formulas, 23 derivations |
+| standalone | up to date, 254 equations, 1063 KB |
+| frontend build | 785 modules |
+| `npm run test:e2e` | **79 passed** (75 before), 1.3 min |
+| `npm run check:perf` | **28 passed** (23 before), 25.0 s |
+
+The corpus holds 117 steps a locale and 234 presenter notes (109 and 218 before); content lint does
+not print the number, and the second records test counts it from the modules. The 44 symbols
+before are counted from `main`'s module files at `992287e`.
+
+### The corrections
+
+A test reads both M4 locale files and the harvested `math.json` and `deriv.json`. Each M4 file
+carries the pool nesting's `k\ge\lvert X^{\mathrm{ng}}\rvert &\Rightarrow R@k\le \mathrm{ngR}@k`,
+the counterexample's `R@2=1,\ \mathrm{ngR}@2=0`, `\frac{1}{\lvert\mathcal{P}^{\prime}\rvert}`,
+"recall over its ranking is piecewise constant" and "VRD papers call it k", and none carries
+`X_k\subseteq X_k^{\mathrm{ng}}`, `\bigr\}\cap X_k`, "gap keeps widening", "The slider moves",
+"Both are affine in", "Proposition 4c", "for the same reason the protocol ordering holds", 同一切片上
+or "on the same slice". The derivations of E4, E6, E7, E11 and X2 carry none of the defects, and
+`math.X2` writes `m=\lvert`. Before the change the test failed on the first required string. It
+also renders every M4 math step in both locales and finds no KaTeX error.
+
+### The engine
+
+| Check | Settings | Result |
+|---|---|---|
+| `applyConstraint` against `capPerPair` | caps 1 to 10, and `none` | the same rows in the same order |
+| `evaluate`'s R@k × 6 against the count | k 1 to 12, under caps 1, 2, 3 and `none` | equal |
+| `applyPairing` against `admitByMask` | d 1 to 5, `single_mpo` and `multi_mpo` | the same number admitted |
+| `evaluate`'s `matched_count` against `matchedByMask` | the same, under `graph` | equal |
+
+All four passed on their first run, and no count of spec §4.1's table disagreed with the
+implementation or the engine.
+
+### The arithmetic
+
+|G ∩ X_k| on `ph-001`, of |G| = 6, by cap per pair; `graph` is cap 1 and `semi` cap 2:
+
+| k | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| cap 1 (pool 7) | 1 | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| cap 2 (pool 11) | 1 | 1 | 2 | 2 | 3 | 4 | 4 | 4 | 5 | 5 | 5 | 5 |
+| cap ≥ 3 (pool 12) | 1 | 1 | 2 | 2 | 3 | 3 | 4 | 4 | 4 | 5 | 5 | 5 |
+
+| Playground | Setting | Counts |
+|---|---|---|
+| E13 | SingleMPO, d = 3 | 3 emitted, 1 admitted, 1 kept, g4 not matched |
+| E13 | MultiMPO, d = 1 | 1, 1, 1, not matched |
+| E13 | MultiMPO, d = 2 | 2, 2, 2, matched |
+| E13 | MultiMPO, d = 5 | 5, 5, 5, matched |
+| X2 | m = 1 | 30 pairs, pool 30, share 1, the cut does not select |
+| X2 | m = 10 | 30, 300, 10, selects |
+| X2 | m = 70 | 30, 2,100, 70, selects |
+
+Twenty-two golden cases pin these and the E3, E4 and E7 rows above. With the cases written and no
+block to run them, the golden test failed 1 of 46, on "every case is run by exactly one block",
+first at `pg-E3-k1`; with the five blocks it passed 68.
+
+### Fit
+
+Pixels between the step's content and the bottom of the panel, in 繁體中文, each playground in its
+longest state; "past" is the overflow before any layout change, 1024 × 768 alone. Both columns were
+measured during the branch, the first before the tightening and the rest after `dense` was made
+opt-in.
+
+| Step | Past, before | Margin, 1024×768 | 1280×800 | 1920×1080 |
+|---|---|---|---|---|
+| M4 s3, E3 part 1 | — | 145.9 | 173.0 | 401.8 |
+| M4 s4, E3 part 2 | 411 | 27.0 | 65.0 | 389.0 |
+| M4 s6, E4 part 1 | — | 140.9 | 168.0 | 396.8 |
+| M4 s7, E4 part 2 | 543 | 22.0 | 60.0 | 384.0 |
+| M4 s10, E7 part 1 | — | 145.9 | 173.0 | 401.8 |
+| M4 s11, E7 part 2 | 411 | 27.0 | 65.0 | 389.0 |
+| M4 s14, E13 | 386 | 90.8 | 128.8 | 537.8 |
+| M4 s16, X2 | 74 | 135.0 | 266.0 | 683.0 |
+
+The first parts were not measured before the change. On the production build of `9b5fd86`, for
+this record, `step.scrollHeight − step.clientHeight` was 0 for all eight in 繁體中文 at all three
+sizes. In English, which the suite does not hold to the panel, it was 16 px on E3's second part,
+102 px on E4's second, 16 px on E7's second and 37 px on E13 at 1024 × 768, and 0 on the other
+four; at 1280 × 800 and 1920 × 1080 it was 0 for all eight.
+
+The contrast walk read 12 and 82 rows on E3's parts, 11 and 85 on E4's, 12 and 83 on E7's, 32 on
+E13 and 19 on X2 when its floors were set, at 9, 70, 8, 72, 9, 70, 25 and 14; in this run, at all
+three sizes, no row was skipped and none was below 7:1. All nineteen M4 steps hold the 18 px floor
+at the three sizes, the dense list rows at 0.75em of the 24 px base, which is 18 px exactly. On
+the first parts of E3, E4 and E7 the overlay's box equals the photograph's to within 1 px at all
+three sizes, and each photograph has a size and lies on the screen.
+
+### NFR-8
+
+`npm run check:perf`, exit 0, 28 tests. One knob each, on the part or step that shows its count:
+
+| Playground | Knob | Input to paint | Two-frame floor |
+|---|---|---|---|
+| E3 | k to 5 | 32.4 ms | 33.6 ms |
+| E4 | mode to semi | 34.6 ms | 33.7 ms |
+| E7 | m to 2 | 33.6 ms | 33.9 ms |
+| E13 | MultiMPO on | 33.2 ms | 32.6 ms |
+| X2 | m to 70 | 33.1 ms | 34.3 ms |
+
+Each is within 1 ms of its floor. Cold starts read 211 to 309 ms. The two runs of the branch before
+this one gave E3 33.8 and 32.8 ms, E4 33.5 and 32.9 ms, E7 34.8 and 32.9 ms, E13 33.4 and 33.1 ms,
+and X2 33.5 and 33.1 ms.
+
+### The records tests
+
+Run alone before the records were written, both of this record's tests failed: the D106 test on
+its missing heading, and the second, which takes the number of playgrounds, of live points without
+one and of steps from the mount table, the harvest and the modules, on CLAUDE.md's 9 playgrounds
+against 14. Once the records were written, five record mutations, each applied alone and restored
+byte for byte, each failed one of the two:
+
+| Mutation | Result |
+|---|---|
+| CLAUDE.md's 14 live knowledge points without a playground left at 19 | 1 failed: CLAUDE.md uncovered, 19 against 14 |
+| CLAUDE.md's sentence on `dense` removed | 1 failed: the D106 test |
+| CLAUDE.md naming the marks test by a title the projector suite does not carry | 1 failed: the D106 test |
+| INDEX's presenter notes left at 109 steps and 218 notes | 1 failed: INDEX notes, against 117 and 234 |
+| README's playgrounds in parts left at nine | 1 failed: README parts, nine against ten |

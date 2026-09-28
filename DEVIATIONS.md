@@ -3907,3 +3907,214 @@ run" on 2026-09-28 at 11:14, queued since its push at 11:11.
 **Verification.** `npm run ci` exit 0: **287 pytest** and 7 skipped (286 before), **911 vitest
 in 67 files** (909 before), parity 21, i18n 331 keys, content lint clean over 21 golden cases. No
 engine or frontend production code changed. See VERIFICATION §28.
+
+## D106 — M4's playgrounds, E3, E4, E7, E13 and X2, and the constraint statements the engine contradicted
+
+**Plan:** `specs/2026-09-28-playgrounds-m4-design.md`, `plans/2026-09-28-playgrounds-m4.md`.
+**Decisions:** the author's, on 2026-09-28: the scope "Five count/set", E3, E4, E7, E13 and X2,
+each a playground step directly after the math step that teaches it, with E5, E6 and E11 left to
+L2 and L3, which score them; approach A, one hand-built ranked list on `ph-001` shared by E3, E4
+and E7, with the chosen row's pair drawn on the photograph; and "subagent" execution. Branch
+`feat/playgrounds-m4`, from `main` at `992287e`.
+
+**Five findings, read on 2026-09-28** in `packages/sgg-metrics/src/`, with which the Python engine
+agrees. The constraint filters the whole ranking before the cut is taken (`index.ts:59`), so the
+constrained top k is the top k of a smaller pool and can hold predictions that the unconstrained
+top k ranks below k. On the built engine, three predictions (1,2,on,.9), (1,2,near,.8) and
+(3,4,on,.7) against the one ground truth (3,4,on) give, at K = 2, `R@2=1, ngR@2=0` under `graph`;
+`semi` gives R@2 = 1 with a cap of 1 and R@2 = 0 with a cap of 2.
+1. *M4 s3 derived R@k ≤ ngR@k from X_k ⊆ X_k^ng*, and the map's E4 derivation repeated it. X_k is
+   the top k of the constrained pool, not a subset of the unconstrained top k. What holds is the
+   nesting of the pools, X ⊆ X^ng, so R@k ≤ ngR@k once k covers the unconstrained pool; at a fixed
+   k either side can be larger. Its line on when the inequality is strict failed for the same
+   reason.
+2. *M4 s5 derived ngR(m) ≤ ngR(m′) for m′ ≥ m* by the same intersection with X_k, and said "the
+   gap keeps widening to m = 50", as the map's E7 note did. The pool grows with m; recall at a
+   fixed k need not.
+3. *M4 s4 spoke of "the slider" for α*, which exists on the map only, and divided by C, glossed as
+   the number of predicate classes, where the Formal line and the engine average over the classes
+   present in the ground truth, |P′|.
+4. *M4 s6 called R and mR "both affine in λ".* The blended score is affine in λ; recall over the
+   blended ranking changes only where two blended scores cross, so it is piecewise constant in λ,
+   as L3 computes it.
+5. *M4 s8 wrote k for VRD's predicates per pair*, where the module defines k as the rank cutoff;
+   cited "Proposition 4c", which the course defines nowhere; said that at k = 70 the metric
+   measures pair detection, although the cut at K still ranks every candidate of every pair; and
+   said that R ≤ PR holds for the reason the protocol ordering holds, which M3 s3 records as
+   observed, not implied (D98). *M4 s10* said that L3 runs the frequency baseline against the
+   learned models on the same slice; L3 fits a frequency prior to a synthetic long-tailed corpus
+   and blends it with a hand-written visual scorer.
+
+**The corrections**, in both locales, before any playground was built (`ce699e3`). s3's Worked
+step derives the nesting of the pools and, from it, R@k ≤ ngR@k for k ≥ |X^ng|, states that at a
+smaller k either side can be larger, and carries the counterexample; its STTran figures keep
+`verified: false`. s5's derives that the pool grows with m and stops at the most predicates any
+pair carries, and the widening sentence became the pool's growth to m = 50. s4 divides by |P′| in
+four places and says that as α moves from 1 to 0 the weighted mean moves from R to mR. |P′|
+replaces C in M4's symbol table, while M1 keeps C with its own gloss, so the corpus has 45 symbols
+(44 before). s6 says that the blended score is affine in λ and recall over its ranking piecewise
+constant. s8 writes m, says once that VRD papers call it k, drops "Proposition 4c", and states only
+what the cut at K does. s10 describes L3 as it is. The map's MATH.X2 and DERIV.E4, E6, E7, E11 and
+X2 are rebuilt from the corrected MDX, the E7 note and kp X2's knobs are corrected, and the harvest
+still gives 26 formulas and 23 derivations; `FROZEN.md` records the five findings. The brief,
+searched for `ngR`, `affine`, `Proposition 4` and `same slice`, states none of the claims and is
+unchanged. kp X2's title, "VRD and the undeclared k", is left as it is: it is the frozen page's
+title, and its knobs and M4 s15 now write m.
+- *The test.* It reads both M4 files and the harvested derivations, requires the five corrected
+  statements, refuses the defects, and renders every M4 math step in both locales with no KaTeX
+  error. It failed first, on s3's inequality.
+- *One refusal narrowed.* `\cap X_k` also occurs in s2's correct R@k = |G ∩ X_k| / |G|, so a
+  refusal of it could never pass. The test refuses `\bigr\}\cap X_k`, the construct s5 carried. An
+  intersection with X_k reintroduced in another form would pass it.
+- *A plan error.* The plan ran `node --test tools/test/harvest.test.mjs`; the file is a vitest
+  suite, and `npm run ci`'s vitest step runs it (8 tests).
+
+**The ranked list and its arithmetic** (`f077c18`). `playgrounds/M4/ranking.ts` holds spec §4.1's
+twelve predictions on `ph-001` under PredCls, scored 0.95 down to 0.40, over seven ordered pairs
+carrying 3, 2, 2, 1, 2, 1 and 1 predictions; g6, wrench resting against table, is never predicted.
+`logic.ts` gains `byScore`, `capPerPair`, `topK`, `matchedTruths`, `matchedRanks`, `admitByMask`
+and `matchedByMask`; X2 uses the existing `candidateSpace`. The pools are 7, 11 and 12 under caps
+1, 2 and 3 or more, and the counts |G ∩ X_k| are spec §4.1's table at every k. Four tests hold them
+to the engine:
+- `applyConstraint` keeps the rows `capPerPair` keeps, in order, at every cap from 1 to 10 and
+  under `none`;
+- `evaluate`'s R@k × 6 equals the count at every k from 1 to 12 under caps 1, 2 and 3 and under
+  `none`, which covers every pool the list has;
+- `applyPairing` admits as many copies as `admitByMask` at d = 1 to 5 under both pairings;
+- `evaluate`'s `matched_count` equals `matchedByMask`'s under the graph constraint, for the same
+  cases.
+
+Every count agreed with the table and with the engine on the first run. Two departures from the
+plan:
+- *`matchedByMask` takes a structural `{ masks; predicate }[]`* where the plan named `MaskRow[]`,
+  since an existing test forbids `logic.ts` to import a playground module.
+- *`matchedRanks` was added in E3's review.* E3 had restated `matchedTruths`'s rule inline to mark
+  the list, so the ranks and the relationship ids came from two copies of one test. Both now call
+  one predicate, and a test requires E3's list to mark ranks 1, 3 and 5 at the default k and no
+  other.
+
+**Shared parts** (`991ebb9`, `2db3f6f`). `RankedList` draws the twelve rows as a table of text. A
+dropped row is struck through, a matched row in the top k carries ✓, the chosen row is outlined
+and carries `aria-current`, and the cut is a row after the k-th kept row, or after the last kept
+row when k passes the pool. A row is marked matched only when it is kept, in the top k and in
+`matched`, whatever the caller passes. `PairPhoto` draws the chosen row's subject and object on
+`ph-001` through `PhotoMarks`, with E10's badge placements. The note listing the matched ground
+truths, g1, g4 … by locale or "none", became one helper, `M4/truths.ts`, before E7 would have made
+a third copy of it.
+
+**The five playgrounds**, each counting and none scoring.
+- *E3*, at s3 and s4, after s2: k from 1 to 12 under the graph constraint. At k = 4 it holds four
+  predictions and three ground truths, g1, g4 and g5. The count reads 1, 2, 2, 3 and then 3 to
+  k = 12, and the predictions stop at 7 from k = 7 (`8185305`, `2b04221`).
+- *E4*, at s6 and s7, after the graph-constraint step s5: graph, semi or none, and k. At k = 2
+  graph finds two and none one; at k = 6 semi finds four where both others find three; at k = 12
+  the counts are 3, 5 and 5, with the cut after the seventh kept row under graph (`a277beb`).
+- *E7*, at s10 and s11, after the ng-R@k step s9: m from 1 to 10, and k. The pool is 7, 11, then 12
+  from m = 3; at k = 2 the count falls from 2 to 1 as m goes from 1 to 2, and at k = 12 it rises
+  from 3 to 5 (`f987375`).
+- *E13*, at s14, after the mask-pairing step s13: SingleMPO or MultiMPO, and d from 1 to 5 copies of
+  the person–wrench mask pair. SingleMPO admits one, the copy saying next to; MultiMPO admits d;
+  the graph constraint keeps every admitted copy, each on its own object ids; g4 is matched under
+  MultiMPO from d = 2 and never under SingleMPO. It matches the copies the graph constraint keeps
+  after the pairing, in the engine's order, and strikes through the copies not admitted. Its
+  review found the matched readout's note, "g4", carrying no arithmetic; the note now names the
+  predicates the constraint kept (`cce1268`, `5e7ae5a`).
+- *X2*, at s16, after the VRD step s15: m ∈ {1, 10, 70} over `ph-001`'s six objects. It shows 30
+  ordered pairs, a pool of 30, 300 or 2,100, at most 1, 10 or 70 of the top 100 for any one pair,
+  and whether the cut at 100 selects, which it does not at m = 1. The copy table gave the
+  cut's readout no note; it carries `pool > 100` in both locales, the one note not in a locale
+  table (`b97bd0a`).
+
+E3, E4 and E7 span two parts each, the photograph and then the list, as the spec expected; E13 and
+X2 are one step each. Twenty-two golden cases on `ph-001` pin the five, 64 playground cases in all
+(42 before). The golden test failed first on "every case is run by exactly one block", at
+`pg-E3-k1` (`2976fdb`).
+
+**M4's steps, and the order of registration** (`f7bb931`). M4 went from 11 steps to 19: the old s3
+to s11 became s5, s8, s9, s12, s13, s15, s17, s18 and s19. Each new step is 90 s, a noun-phrase
+heading and the tag, with presenter notes in both locales naming the setting to show and the
+number it gives. The lab's note now cites s12 and the checkpoint's s17; their pre-existing em
+dashes stay, since only the ids in those two notes were to change. The corpus holds 117 steps a
+locale and 234 presenter notes (109 and 218 before). The projector suite's widest-mathematics loop
+on M4 reads steps 0, 1, 4 and 7, the old s1 to s4.
+- *Registration moved.* The plan registered each playground in its own task. `KnowledgeIndex.test`
+  requires every registered playground to have a lecture step, so E3 registered alone turned
+  `npm run ci` red, 1 failed of 943. All five were registered in the commit that inserts their
+  steps, and Tasks 4 to 8 tested their components by direct mount.
+- *The golden cases followed it.* Content-lint rule 11 refuses a golden case for an unregistered
+  playground, so the golden cases were written after the steps.
+
+**The fit.** Each part is held to 1024 × 768 in 繁體中文 in its longest state: E3, E4 and E7 at
+k = 12, with E4 under `none` and E7 at m = 10; E13 at d = 5 under MultiMPO; X2 at m = 70.
+- *Measured before any layout change,* during the branch: E3's second part ran 411 px past the
+  panel, E4's 543, E7's 411, E13 386 and X2 74. The three second parts ran about 411 to 416 px past
+  at their default settings too, since the list always shows its twelve rows.
+- *Tightened within the parts, not split further.* M4's list rows went from 0.875em to 0.75em,
+  18 px on the lecture's 24 px base, which is the floor. `Readout`'s labels and notes went to
+  0.75em, and the frame's padding and gaps were reduced.
+- *The first version tightened `controls.tsx` for every playground.* Every test still passed. The
+  review found that it moved the nine playgrounds whose layout D95 to D102 measured. The
+  tightening is now `PlaygroundFrame`'s opt-in `dense`, carried to `Readout` by context and passed
+  by M4's five alone. The nine render `2976fdb`'s classes, compared in the source and read from the
+  running build at one step of each.
+- *After,* by the step's content against the panel at 1024 × 768, measured during the branch: E3's,
+  E4's and E7's second parts leave 27.0, 22.0 and 27.0 px, their first parts 145.9, 140.9 and
+  145.9 px, E13 90.8 px and X2 135.0 px; every margin is larger at 1280 × 800 and 1920 × 1080
+  (VERIFICATION §29).
+- *English,* which the suite does not hold to the panel, measured on `9b5fd86` for this record: at
+  1024 × 768 E3's and E7's second parts run 16 px past, E4's second 102 px and E13 37 px; every M4
+  step fits in English at 1280 × 800 and 1920 × 1080.
+
+**The browser** (`d207b1f`, `9b5fd86`). `lecture.spec.ts` gains four tests: M4's playgrounds compute
+with no backend, a knob set on a first part reaches the second, every knob works from the keyboard
+without advancing the deck, and a knob writes the address bar. `projector.spec.ts` holds the eight
+longest states to the panel at all three sizes. It adds M4's eight playground steps to the contrast
+walk, with floors below the rows measured, and to the check that a playground step fits with its
+controls reachable. All nineteen M4 steps join the 18 px floor. E3's, E4's and E7's pairs join
+`F3, E1, E10, E3, E4 and E7 draw their marks on their photographs, not beside them`, and their
+photographs join `F1, F3, E3, E4 and E7 show their photographs, whole and on the screen`; the
+review found the photographs missing from the second. `perf.spec.ts` times one knob of each of the
+five and requires fourteen playgrounds measured.
+
+**Found while writing this record.**
+- *X2's pool note cites "M4 s8"*, in both locales ("70 predicates, M4 s8"; 「見 M4 s8」), as the
+  plan's constraints required. The renumbering made the VRD step s15; s8 is now the step on mR
+  and its weighting identity. The same id stands in the comments of `E13/setup.ts` and
+  `X2/VrdPerPair.tsx` and in X2's tests. The label is the plan's, so it is left open for the
+  author.
+- *`FROZEN.md`'s 2026-09-28 entry* said that the count is written m "as in s5 (the ids Task 10
+  gives after renumbering)". s5 was the ng-R@k step when the entry was written, and the
+  renumbering made it s9. A bracketed correction in the entry now says so.
+
+**Eighteen minor findings of the reviews are deferred to the author.**
+- `logic.test.ts` and E4 shadow the imported `ranked` with a local of the same name.
+- `RankedList` has no column headers, and its ✓ has no accessible name beyond the legend.
+- E3's test does not pin `E3.row`'s presence in each part, and its truths note's "none" branch
+  cannot be reached.
+- E4's tests assert neither the semi and none pools, 11 and 12, at the component nor, as E3's
+  do, that no recall is shown.
+- E7's three locale keys landed in the refactor commit `2db3f6f` rather than in `f987375`;
+  `PerPairCap.tsx`'s comment on `M_MAX` reads ambiguously; and the pair of calls to
+  `matchedTruths` and `matchedRanks` repeats in E3, E4 and E7.
+- E13 caps with a bare `1` where E3 and E4 use `M4_CAPS.graph`.
+- M4's registry test renders every playground step, more than M2's and M3's do.
+- M4's dense text sits at 18 px exactly, with no margin above the floor; two classes, `gap-0` and
+  `py-0`, change nothing; E13's closing line is 0.875em where E3's, E4's and E7's are 0.75em; and
+  the address-bar test does not reload the URL it reads.
+- The photograph-size test's name omits E1 and E10, whose steps its list also holds.
+
+Two further minors are settled by this record: CLAUDE.md named the marks test by its old title,
+and a projector comment cited D106 before it existed.
+
+**The records tests.** This record's test failed first on its missing heading. A second test takes
+the number of playgrounds, of live points without one and of steps from the mount table, the
+harvest and the modules, and compares them with CLAUDE.md, INDEX and README; it failed first on
+CLAUDE.md's 9 playgrounds against 14.
+
+**Verification.** `npm run ci` exit 0: 287 pytest and 7 skipped, **1009 vitest in 74 files** (911
+in 67 before), parity 21, **i18n 376 keys** (331 before), 19 of them with a placeholder (13
+before), content lint clean over 21 golden cases, **64 playground cases** and 25 release figures
+with 45 symbols, standalone current at 254 equations, frontend builds 785 modules.
+`npm run test:e2e` **79** (75 before). `npm run check:perf` **28** (23 before); E3 32.4 ms, E4
+34.6 ms, E7 33.6 ms, E13 33.2 ms and X2 33.1 ms, each within 1 ms of its two-frame floor. See
+VERIFICATION §29.

@@ -17,6 +17,10 @@ top-K), **E4** (graph, none, semi), **E5** (R@K), **E6** (mR@K and the weighting
 **E7** (ng-R@K), **E11** (the FREQ prior), **E13** (MultiMPO against SingleMPO) and **X2** (VRD's
 undeclared k). M4 teaches E3 and E5 at s2, E4 at s3, E6 at s4, E7 at s5, E11 at s6, E13 at s7
 and X2 at s8, all math steps; L2 and L3 at s10 are its anchor labs.
+[**As built, 2026-09-28 (D106):** the step ids in §1 to §3 are M4's before the build. M4 has 19
+steps since: E3 at s3 and s4, the graph-constraint step at s5, E4 at s6 and s7, the mR step at s8,
+the ng-R@k step at s9, E7 at s10 and s11, the FREQ step at s12, the mask-pairing step at s13, E13
+at s14, the VRD step at s15, X2 at s16, and L2 and L3 at s18.]
 
 L2 scores R, mR, ngR and zR at any K under each protocol, constraint and τ, over five scored
 predictions (`labs/L2/fixture.ts`). L3 scores the λ blend of a frequency prior and a visual scorer
@@ -100,7 +104,9 @@ and re-harvested, and `FROZEN.md` recording it, as D98 did. The brief is searche
   not be. The widening sentence becomes the pool's growth to m = |P|.
 - **s4.** The line naming "the slider" says instead that as α moves from 1 to 0 the weighted mean
   moves from R to mR, L3 computing both ends and their gap; C becomes |P′| in the Worked
-  step, with n̄ = N/|P′|, and the symbol table gains |P′|.
+  step, with n̄ = N/|P′|, and the symbol table gains |P′|. [**As built (D106):** |P′| replaces C
+  in M4's symbol table, since no M4 step uses C after the correction; M1 keeps C, glossed as the
+  number of predicate classes.]
 - **s6.** "Both are affine in λ" becomes: the blended score is affine in λ, and recall over its
   ranking is piecewise constant, changing where two blended scores cross.
 - **s8.** VRD's per-pair count is written m, as in s5, with "VRD papers call it k" once; the
@@ -173,6 +179,11 @@ pair under each pairing, and VRD's pool size. Nothing in `playgrounds/` outside 
 value from `sgg-metrics`; tests hold the cap to `applyConstraint`, the admission to
 `applyPairing`, and the matched count to `evaluate`'s R@k × |G|, at every k from 1 to 12 and every
 cap from 1 to 10.
+[**As built (D106):** VRD's pool size is the existing `candidateSpace`. `matchedRanks`, the ranks
+a top k matches, was added beside `matchedTruths`, the two sharing one rule, so that the list's
+marks and the readout's ids cannot differ. `applyConstraint` is held at every cap from 1 to 10 and
+under `none`; `evaluate` at every k under caps 1, 2 and 3 and `none`, which give every pool the
+list has; and a fourth test holds E13's matched count to `evaluate`'s `matched_count`.]
 
 ---
 
@@ -181,6 +192,10 @@ cap from 1 to 10.
 Parts follow D96: a playground spans consecutive steps where one panel cannot hold it at
 1024 × 768 in 繁體中文 in its longest state, the count set in `PLAYGROUND_PARTS` by measurement.
 E3, E4 and E7 are expected to take two parts each, the photograph and the list.
+[**As built (D106):** two parts each. Before any layout change the second parts ran 411, 543 and
+411 px past 1024 × 768 in their longest states, E13 386 px and X2 74 px. All fit through
+`PlaygroundFrame`'s opt-in `dense`, which M4's five alone pass, so the earlier playgrounds keep the
+layout their records measured.]
 
 ### 5.1 E3, after s2: the top k of one ranked list
 
@@ -211,6 +226,9 @@ the graph constraint then keeps (every admitted copy, since the copies are disti
 and whether g4 is matched (under MultiMPO
 from d = 2; never under SingleMPO, which keeps next to). Masks are identities, not pixels: each
 duplicate carries its original's mask. No photograph: ph-001 carries no masks.
+[**As built (D106):** the match is taken on the copies the graph constraint keeps after the
+pairing, the engine's order; the list strikes through the copies not admitted; and the g4
+readout's note names the predicates the constraint kept.]
 
 ### 5.5 X2, after s8: VRD's per-pair count
 
@@ -218,6 +236,9 @@ A three-way `Choice` for m ∈ {1, 10, 70}. Counts for an image with ph-001's si
 ordered pairs; with VRD's 70 predicates the pool is 30 · m = 30, 300 or 2,100; the most of the top
 K = 100 one pair can take is min(m, 100) = 1, 10 or 70; and whether the cut at 100 selects at all
 (not at m = 1, where the pool of 30 is below 100). No fixture and no photograph.
+[**As built (D106):** the cut's readout carries the note `pool > 100` in both locales, the one
+note outside the locale tables. The pool's note cites "M4 s8", the VRD step's id before the build;
+the step is s15, and the label is left open (D106).]
 
 ---
 

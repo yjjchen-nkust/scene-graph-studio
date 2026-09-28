@@ -306,10 +306,11 @@ was run and its outcome. All nine have been run and passed; check 6 was first re
 **not run** (D69) and passed on 2026-09-18.
 
 `npm run ci` is green on py12: 287 Python tests (7 skipped for a corpus this machine may not
-have), 911 TypeScript tests across 67 files, parity 21/21, i18n 331 keys in both locales,
-content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 75
-passed and `npm run check:perf` is 23. All were measured 2026-09-28, `test:e2e` and
-`check:perf` on `main` at `5eabab6`; `docs/VERIFICATION.md` §27 records those runs and §28 the gate after them, §15 to §26 the twelve before it, and §14 the earlier run that reconciled
+have), 1009 TypeScript tests across 74 files, parity 21/21, i18n 376 keys in both locales,
+content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 79
+passed and `npm run check:perf` is 28. All were measured 2026-09-28 on branch
+`feat/playgrounds-m4`; `docs/VERIFICATION.md` §29 records those runs, §15 to §28 the fourteen
+before it, and §14 the earlier run that reconciled
 three documents carrying three different counts.
 
 Two further checks are scripts rather than prose:
@@ -333,10 +334,10 @@ M11, so authoring that module was transcription rather than a fresh reading.
 
 * The measured prediction tier, blocked on licences (`data/predictions/PROVENANCE.md`).
 * Slides that run past the bottom of a 1024×768 projector. 25 of the then 92 were reviewed and
-  accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). The seven
-  playgrounds too tall for one panel are split across steps (D96 to D98), and every part fits
-  1024×768 in 繁體中文 in every state measured (§20 to §22). In English some parts still run past it, by up to
-  163 px, and F2 and F8, one step each, by 24 and 27 px in 繁體中文. The step region scrolls inside
+  accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). The ten
+  playgrounds too tall for one panel are split across steps (D96 to D98, D106), and every part fits
+  1024×768 in 繁體中文 in every state measured (§20 to §22, §29). In English some parts, and E13's one
+  step, still run past it, by up to 163 px, and F2 and F8, one step each, by 24 and 27 px in 繁體中文. The step region scrolls inside
   a fixed shell, so the position and the section clock stay on screen, and no playground hides a
   word where that scroll cannot reach it (D93, D95).
 * `vrd` and `haystack` state no licence, so nothing is cut from either and both gates stay shut.

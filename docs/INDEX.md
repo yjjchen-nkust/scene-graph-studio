@@ -1,7 +1,7 @@
 # Knowledge index
 
 Every planning document in this track, what it governs, and where each piece of knowledge is
-defined. Current as of **2026-09-27**.
+defined. Current as of **2026-09-28**.
 
 **Read order for someone new:** `decisions.md` → `contracts.md` → the plan you are about to
 execute. The PRD and SRS explain *why*; those two say *what is binding*.
@@ -27,6 +27,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/specs/2026-09-27-playgrounds-m2-design.md` | F3, and three statements about IoU the opened sources contradict | **executed** |
 | `superpowers/specs/2026-09-27-playgrounds-m3-design.md` | E1, E10, and four statements about matching and protocols the engine and sources contradict | **executed** |
 | `superpowers/specs/2026-09-27-graph-constraint-key-design.md` | The graph and semi constraints keyed on object pairs, as the reference keys them | **executed** |
+| `superpowers/specs/2026-09-28-playgrounds-m4-design.md` | E3, E4, E7, E13, X2, and five statements about constraints, blends and VRD's per-pair count the engine contradicts | **executed** |
 | `superpowers/plans/…-00-master.md` | Index, dependency graph, global constraints | live |
 | `superpowers/plans/…-01-skeleton-and-eval-engine.md` | Phases 1–2 | **executed** |
 | `superpowers/plans/…-02-graph-labs-and-content.md` | Phases 3–4: graph, L1, L2, harvest, corpus | **executed** |
@@ -37,9 +38,10 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-27-playgrounds-m2.md` | The IoU corrections, F3's arithmetic and golden cases, the component, M2 s3 and s4 | **executed** |
 | `superpowers/plans/2026-09-27-playgrounds-m3.md` | M3's corrections, `PhotoMarks`, E1 and E10, their golden cases, M3 s3 to s7 | **executed** |
 | `superpowers/plans/2026-09-27-graph-constraint-key.md` | Both engines re-keyed, gv-014, `semi` described, D51 corrected | **executed** |
+| `superpowers/plans/2026-09-28-playgrounds-m4.md` | M4's corrections, the ranked list and its arithmetic, E3, E4, E7, E13 and X2, their golden cases, M4 s3 to s16 | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D105. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27) and the empty training split (§28)** | live |
+| `../DEVIATIONS.md` | **D1…D106. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28) and the M4 playgrounds (§29)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | The freeze, its release by D-23, and every correction made under it | live |
 
@@ -112,7 +114,7 @@ drifts.
 | The eight labs L1–L8 | `PRD.md` §6.2; per-lab tasks in plans 02–04 |
 | The anchor paper's four equations | `design.md` §4.5 and `2026-09-16-indvissgg-reading.md` |
 | The `playground` step kind, and its twelve lint rules | `contracts.md` §2.4; rules in `system/tools/content_lint.mjs` |
-| The playground arithmetic, and the forty-two cases that pin it | `system/frontend/src/playgrounds/logic.ts`; `data/content/playground_golden.json` |
+| The playground arithmetic, and the sixty-four cases that pin it | `system/frontend/src/playgrounds/logic.ts`; `data/content/playground_golden.json` |
 | How to build a project like this again | `PLAYBOOK.md` |
 
 ---
@@ -221,7 +223,7 @@ jsdom for the rule and in Chromium for the hit testing jsdom does not have.
 **Presenter notes are complete, 2026-09-19.** All 95 steps carry them in both locales, 190 in
 total [**corrected 2026-09-26:** 92 steps and 184 notes on this date, as first written and as this
 paragraph's last sentence says; 95 and 190 replaced them on 2026-09-20, after M0's playgrounds,
-the corpus held 98 steps and 196 notes after M1's playgrounds, held 103 and 206 after D96, 105 and 210 after D97, and holds 109 and 218 since D98], written against each step's own content: what
+the corpus held 98 steps and 196 notes after M1's playgrounds, held 103 and 206 after D96, 105 and 210 after D97, 109 and 218 after D98, and holds 117 and 234 since D106], written against each step's own content: what
 has to land, what to put on the board before
 the slide does, what the room usually gets wrong, what to compress when the clock is short. They
 are procedural rather than expository — none introduces a claim its module does not already make.
@@ -282,7 +284,9 @@ against the 24 px shell, and they are sized in `em` now. See D88 and VERIFICATIO
 
 **Twenty-two live knowledge points still have no playground.** `kp.json` marks 27 points
 `status: 'live'`; F1, F2, F6, F7 and X1 are five of them, and F8 is not among them at all, so 22
-remain. Each is its own cycle against the pattern M0 established.
+remain. Each is its own cycle against the pattern M0 established. [21 after D97's F3, 19 after
+D98's E1 and E10, and 14 since D106's E3, E4, E7, E13 and X2: E5, E6 and E11, which L2 and L3
+score, and T1, T2, D1, O1, V1, L8, L9, L10, S1, G2 and G4.]
 
 **M1's three playgrounds landed 2026-09-26, after the premise X1 rested on was corrected.** F6
 merges four spatial predicates and three names for people over the committed `vg150-sgb` slice,
@@ -396,15 +400,31 @@ no split: zR is null and `zero_shot_unavailable` is raised, as both engines alre
 also stating that an unscored prediction never ties, and gv-021 pins the ruling. No engine code
 changed. See D105 and VERIFICATION §28.
 
-**Verification.** `npm run ci` green, 2026-09-28, after D105: **287 pytest** and 7 skipped, parity 21 agree, i18n 331 keys both locales,
-**911 vitest** in 67 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
-assigned, 44 symbols, 42 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
+**M4's playgrounds, E3, E4, E7, E13 and X2, 2026-09-28.** E3, E4 and E7 share one ranked list of
+twelve predictions on `ph-001`, drawn as a table with the cut at k and the chosen row's pair on the
+photograph. E3 counts the top k under the graph constraint; E4 counts it under graph, semi and
+none, beside the unconstrained count at the same k; E7 caps the predicates per pair at m and shows
+the pool growing 7, 11, 12 while the count at k = 2 falls from 2 to 1. E13 counts what SingleMPO and
+MultiMPO admit at one mask pair and whether person holding wrench is matched; X2 counts VRD's
+candidates, 30, 300 or 2,100, against the cut at 100. Each follows the math step that teaches it,
+E3, E4 and E7 in two parts each, M4 going from 11 steps to 19. Five statements were corrected
+first: s3 derived R@k ≤ ngR@k from an inclusion between two top-k cuts, which three predictions on
+the built engine refute (R@2=1, ngR@2=0); s5 derived recall rising with m at a fixed k; s4 named a
+slider the lecture does not have and divided by C where the engine averages over |P′|; s6 called
+recall affine in λ; and s8 wrote k for VRD's per-pair count and cited a proposition the course
+never states. s10's account of L3 was corrected with them. M4's parts fit 1024×768 in 繁體中文 through `PlaygroundFrame`'s opt-in `dense`,
+which leaves the nine earlier playgrounds' measured layout as it was. See D106 and VERIFICATION
+§29.
+
+**Verification.** `npm run ci` green, 2026-09-28, after D106: **287 pytest** and 7 skipped, parity 21 agree, i18n 376 keys both locales,
+**1009 vitest** in 74 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+assigned, 45 symbols, 64 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (254 equations), frontend builds. `npm run test:e2e`,
-2026-09-28, on `main` at `5eabab6`:
-75 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
+2026-09-28, on branch `feat/playgrounds-m4` at `9b5fd86`:
+79 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
-check:perf`, 2026-09-28, on `main` at `5eabab6`: 23 passed, NFR-8 measured over five labs and nine playgrounds, plus the D75 selection guard.
+check:perf`, 2026-09-28, on branch `feat/playgrounds-m4` at `9b5fd86`: 28 passed, NFR-8 measured over five labs and fourteen playgrounds, plus the D75 selection guard.
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in
@@ -470,6 +490,8 @@ until they had already happened.
 | Moving a step's text to a step of its own cannot fit a playground whose frame alone is taller than the panel; the playground itself has to be divided, and its knobs carried across the division | `DEVIATIONS.md` D96, `VERIFICATION.md` §20 |
 | A count of relationship rows is not a count of triplets when a frame annotates one twice, and a merge can make two rows of one pair the same triplet | `DEVIATIONS.md` D96 |
 | A regularity quoted as forced is checked by asking what the argument proves: an inclusion of what each protocol allows bounds no model's recall | `DEVIATIONS.md` D98, `VERIFICATION.md` §22 |
+| Two pools that nest do not make their top k nest: each cut is taken from its own pool, so at a fixed k either recall can be the larger | `DEVIATIONS.md` D106, `FROZEN.md` 2026-09-28 |
+| A layout tightened in the shared control kit to fit one playground moves every playground an earlier record measured, with every test still passing | `DEVIATIONS.md` D106, `VERIFICATION.md` §29 |
 | An overlay on a photograph is right only if it has the photograph's box; given a stretched column instead, `meet` scaling moves every mark off its object while every number beside it stays right, and only a picture of the slide shows it | `DEVIATIONS.md` D97, `VERIFICATION.md` §21 |
 | An `overflow: hidden` box inside a scrolling step hides words no scroll can reach, and a contrast walk that asks only whether a word is painted measures them as passing | `DEVIATIONS.md` D93, `VERIFICATION.md` §17 |
 | A figure repeated across a page, a brief and a decision from one early reading is wrong everywhere at once, and only opening the source finds it | `DEVIATIONS.md` D93, `FROZEN.md` 2026-09-26 |

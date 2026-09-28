@@ -270,7 +270,9 @@ as the rank cutoff; cited "Proposition 4c", which the course defines nowhere; sa
 the metric "measures pair detection" and `R@k → PR@k`, although the cut at `K` still ranks every
 candidate of every pair by score; and said `R ≤ PR` "holds for the same reason the protocol
 ordering holds", which M3 s3 records as observed, not implied (D98). The count is now written `m`,
-as in s5 (the ids Task 10 gives after renumbering); the "Proposition 4c" reference is removed; and
+as in s5 (the ids Task 10 gives after renumbering) [**Corrected 2026-09-28 (D106):** s5 was the
+ng-R@k step when this entry was written; M4's playground steps made it s9, the id the VRD step's
+presenter notes cite, and made the VRD step s15]; the "Proposition 4c" reference is removed; and
 the top-of-range and `R ≤ PR` statements are rewritten to make no ordering or inclusion claim
 beyond what the cut at `K` does. M4 s10 said "L3 runs the frequency baseline against the learned
 models on the same slice"; L3 runs a synthetic long-tailed corpus and a hand-written visual scorer,
