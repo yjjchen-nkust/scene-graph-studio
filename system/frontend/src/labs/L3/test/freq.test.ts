@@ -163,7 +163,7 @@ describe('the frequency baseline', () => {
   });
 
   it('is affine in the blend parameter', () => {
-    // E11 derives that `R_p(lambda)` is affine -- the per-pair *score* is. Plan 04 asserts it of
+    // E11's blend `sigma_p(lambda)` is affine -- the per-pair *score* is. Plan 04 asserts it of
     // recall within 0.05, which does not follow: recall is a property of a ranking, and a ranking
     // is a step function of the scores. The exact claim is testable, so it is the one tested.
     // DEVIATIONS D43.

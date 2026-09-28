@@ -12,6 +12,15 @@ symbols:
   - sym: "X_k"
     gloss_en: "the top-k predictions after the constraint mode has been applied"
     gloss_zh: "套用約束模式後的前 k 筆預測"
+  - sym: "X"
+    gloss_en: "the pool the constraint keeps, before the cut at k"
+    gloss_zh: "約束保留之候選池（截斷於 k 之前）"
+  - sym: "X^{\\mathrm{ng}}"
+    gloss_en: "the pool with no constraint"
+    gloss_zh: "無約束之候選池"
+  - sym: "m"
+    gloss_en: "predicates admitted per ordered pair"
+    gloss_zh: "每一有序配對容許之 predicate 數"
   - sym: "\\lvert G\\rvert"
     gloss_en: "number of ground-truth triplets in the image"
     gloss_zh: "影像中標準答案三元組的數量"
@@ -97,7 +106,7 @@ steps:
     kp: E3
     part: 2
     seconds_budget: 90
-    presenter_notes_zh: "九十秒。尚未套用 k 之前，graph constraint 已先將候選池由十二列縮減為七列。將 k 由 1 提高至 12，並觀察命中標準答案之計數：其依序為 1、2、2、3，其後於每一 k 值均維持 3，不曾下降，因前綴愈長，命中數僅能增加，不會減少。此一高原係候選池本身大小所致，而非 k 之性質。"
+    presenter_notes_zh: "九十秒。尚未套用 k 之前，graph constraint 已先將候選池由十二列縮減為七列。將 k 由 1 提高至 12，並觀察命中標準答案之計數：其依序為 1、2、2、3，其後於每一 k 值均維持 3，不曾下降，因前綴愈長，命中數僅能增加，不會減少。此一高原為 3，即七列候選池中所含之標準答案數，而非 k 之性質。"
   - id: s5
     kind: math
     seconds_budget: 300
@@ -107,13 +116,13 @@ steps:
     kp: E4
     part: 1
     seconds_budget: 90
-    presenter_notes_zh: "九十秒。依序切換三種約束模式，僅觀察候選池大小：graph 於十二列中保留 7 列，semi 保留 11 列，none 保留全部 12 列。切至第 2 列（next to，與第 1 列同屬 person–wrench 配對）並切換至 graph：該列出現刪除線，因 graph 之上限僅容許每一有序配對保留一筆預測。切換至 semi 或 none 時該列恢復。"
+    presenter_notes_zh: "九十秒。依序切換三種約束模式，僅觀察候選池大小：graph 於十二列中保留 7 列，semi 保留 11 列（semi 將每一有序配對之 predicate 上限定為兩個，其定義見 s9），none 保留全部 12 列。切至第 2 列（next to，與第 1 列同屬 person–wrench 配對）並切換至 graph：照片旁之說明列顯示「遭約束排除」，因 graph 之上限僅容許每一有序配對保留一筆預測。切換至 semi 或 none 時，該說明列顯示「保留」。"
   - id: s7
     kind: playground
     kp: E4
     part: 2
     seconds_budget: 90
-    presenter_notes_zh: "九十秒。於 k = 2 時，graph 命中 2 筆標準答案，none 僅命中 1 筆：none 之第二個名額重複落於 person–wrench 配對，而非觸及另一配對。於 k = 6 時，semi 命中 4 筆，graph 與 none 均命中 3 筆，因 semi 於同一配對之第二名額使其較 graph 之單一名額更早觸及第四筆標準答案。至 k = 12 時，三者依序穩定於 graph 3、semi 5、none 5：graph 始終無法觸及之兩筆標準答案，位於其七列候選池之外。"
+    presenter_notes_zh: "九十秒。於 k = 2 時，graph 命中 2 筆標準答案，none 僅命中 1 筆：none 之第二個名額重複落於 person–wrench 配對，而非觸及另一配對。於 k = 6 時，semi 命中 4 筆，graph 與 none 均命中 3 筆：semi 之第四筆命中來自 person–table 配對之次順位，即第 7 列（near，g2），graph 將其排除；none 則由 person–wrench 配對之第三列，即第 6 列，占去第六個名額，使第 7 列落於 k = 6 之外。至 k = 12 時，三者依序穩定於 graph 3、semi 5、none 5：graph 始終無法觸及之兩筆標準答案，位於其七列候選池之外。"
   - id: s8
     kind: math
     seconds_budget: 360
@@ -121,19 +130,19 @@ steps:
   - id: s9
     kind: math
     seconds_budget: 240
-    presenter_notes_zh: "四分鐘。ng-R@k 將 s5 之約束由開關改為程度：每一配對容許 m 個 predicate。提高 m 僅能增加候選，故候選池隨之增長，直至 m 超過模型對任一配對所評分之 predicate 數量為止；固定 k 時 recall 未必隨之上升，因每一新納入之次順位均占去前 k 名之一席。下一步驟呈現其於 k = 2 時下降之情形。若 s5 已充分說明，此處可壓縮。"
+    presenter_notes_zh: "四分鐘。ng-R@k 將 s5 之約束由開關改為程度：每一配對容許 m 個 predicate。提高 m 僅能增加候選，故候選池隨之增長，直至 m 超過模型對任一配對所評分之 predicate 數量為止；固定 k 時 recall 未必隨之上升，因每一新納入之次順位均占去前 k 名之一席。s11 呈現其於 k = 2 時下降之情形。若 s5 已充分說明，此處可壓縮。"
   - id: s10
     kind: playground
     kp: E7
     part: 1
     seconds_budget: 90
-    presenter_notes_zh: "九十秒。將 m 滑桿由 1 提高：候選池依序增為 7、11，至 m = 3 時達到 12 並停止增長，因本排序清單中無任何配對具備第四列可供納入。同時切換列滑桿；其於 ph-001 上繪出該列自身之配對，與 m 無關。"
+    presenter_notes_zh: "九十秒。將 m 滑桿由 1 提高：候選池依序增為 7、11，至 m = 3 時達到 12 並停止增長，因本排序清單中無任何配對具備第四列可供納入。同時切換列滑桿；其於 ph-001 上繪出該列自身之配對，與 m 無關，而照片旁之說明列則標示此 m 下之候選池是否保留該列：第 6 列為 person–wrench 配對之第三列，於 m = 3 之前均顯示「遭約束排除」。"
   - id: s11
     kind: playground
     kp: E7
     part: 2
     seconds_budget: 90
-    presenter_notes_zh: "九十秒。將 k 固定於 2，把 m 由 1 提高至 2：計數由 2 降為 1，因 m = 2 額外納入 person–wrench 配對之第二列，而該名額排擠了 m = 1 時原可觸及之另一配對標準答案。將 k 提高至 12：同樣提高 m，計數反自 3 升至 5，因 k = 12 已足以同時容納排擠者與被排擠之配對。"
+    presenter_notes_zh: "九十秒。將 k 固定於 2，把 m 由 1 提高至 2：計數由 2 降為 1，因 m = 2 額外納入 person–wrench 配對之第二列，而該名額排擠了 m = 1 時原可觸及之另一配對標準答案。將 k 提高至 12：同樣提高 m，計數反自 3 升至 5，所增之兩筆為 graph 所排除之次順位，即 person near table（第 7 列，g2）與 person wearing glove（第 10 列，g3）；g1 於 m = 1 時已計入。"
   - id: s12
     kind: math
     seconds_budget: 420
@@ -410,7 +419,7 @@ $$
 <Formal>
 
 $$
-R_p(\lambda)=(1-\lambda)\underbrace{\Pr[p\mid c_s,c_o]}_{\text{no pixels consulted}}+\lambda\underbrace{f_\theta(V,s,o)}_{\text{visual model}}
+\sigma_p(\lambda)=(1-\lambda)\underbrace{\Pr[p\mid c_s,c_o]}_{\text{no pixels consulted}}+\lambda\underbrace{f_\theta(V,s,o)}_{\text{visual model}}
 $$
 
 </Formal>
@@ -419,9 +428,9 @@ $$
 
 $$
 \begin{aligned}
-R_p(\lambda) &= (1-\lambda)\,\pi_p + \lambda\, f_p, \qquad \pi_p=\Pr[p\mid c_s,c_o],\ f_p=f_\theta(V,s,o)\\
-R(\lambda) &= \sum_p \tfrac{n_p}{N}R_p(\lambda) = (1-\lambda)\textstyle\sum_p \tfrac{n_p}{N}\pi_p + \lambda\sum_p \tfrac{n_p}{N}f_p\\
-mR(\lambda) &= (1-\lambda)\,\overline{\pi} + \lambda\,\overline{f}
+\sigma_p(\lambda) &= (1-\lambda)\,\pi_p + \lambda\, f_p, \qquad \pi_p=\Pr[p\mid c_s,c_o],\ f_p=f_\theta(V,s,o)\\
+R(\lambda) &= R@k \text{ of the ranking by } \sigma(\lambda), \text{ and likewise } mR(\lambda)\\
+&\text{constant in } \lambda \text{ except where two blended scores cross and the ranking changes}
 \end{aligned}
 $$
 

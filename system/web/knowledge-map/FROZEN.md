@@ -283,3 +283,15 @@ and s10 now says so.
 `data/content/`. The brief (`web/brief/index.html`) was searched for `ngR`, `affine`,
 `Proposition 4` and `same slice`; it states none of them. No option, control or knowledge point was
 added. The map's toy playgrounds are unchanged.
+
+**6 · M4 s12 (item 4's s6) still derived recall as affine in λ** (D106's final review). Its Formal
+line named the blend `R_p(λ)`, and its Worked step summed it over `p` into `R(λ)` and `mR(λ)`, both
+affine in λ. The blend is a score, `σ_p(λ)`; the Worked step now says that `R(λ)` is `R@k` of the
+ranking by `σ(λ)`, and likewise `mR(λ)`, constant in λ except where two blended scores cross.
+`R_p` stays the per-predicate recall of M4 s8. MATH.E11 and DERIV.E11 are rebuilt from the
+corrected MDX.
+
+**7 · The X2 note still made the claim item 5 removed from M4** (D106's final review): at `k = 70`
+the number is "close to pair recall". The note now writes `m` for the per-pair count, VRD's `k`,
+and says that at `m = 70` every predicate of every pair is a candidate while the cut at `K` still
+ranks them; it makes no claim about pair recall. The knob's label and title still write `k`.

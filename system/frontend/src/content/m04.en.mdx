@@ -12,6 +12,15 @@ symbols:
   - sym: "X_k"
     gloss_en: "the top-k predictions after the constraint mode has been applied"
     gloss_zh: "套用約束模式後的前 k 筆預測"
+  - sym: "X"
+    gloss_en: "the pool the constraint keeps, before the cut at k"
+    gloss_zh: "約束保留之候選池（截斷於 k 之前）"
+  - sym: "X^{\\mathrm{ng}}"
+    gloss_en: "the pool with no constraint"
+    gloss_zh: "無約束之候選池"
+  - sym: "m"
+    gloss_en: "predicates admitted per ordered pair"
+    gloss_zh: "每一有序配對容許之 predicate 數"
   - sym: "\\lvert G\\rvert"
     gloss_en: "number of ground-truth triplets in the image"
     gloss_zh: "影像中標準答案三元組的數量"
@@ -97,7 +106,7 @@ steps:
     kp: E3
     part: 2
     seconds_budget: 90
-    presenter_notes_en: "Ninety seconds. Before k does anything, the graph constraint has already cut the pool from twelve rows to seven. Raise k from 1 to 12 and read the ground-truths-matched count: it goes 1, 2, 2, 3 and then stays at 3 for every k after, never falling, since a longer prefix can only add a match, never lose one. The plateau is the pool's own size, not a property of k."
+    presenter_notes_en: "Ninety seconds. Before k does anything, the graph constraint has already cut the pool from twelve rows to seven. Raise k from 1 to 12 and read the ground-truths-matched count: it goes 1, 2, 2, 3 and then stays at 3 for every k after, never falling, since a longer prefix can only add a match, never lose one. The plateau is 3, the number of ground truths inside the seven-row pool, not a property of k."
   - id: s5
     kind: math
     seconds_budget: 300
@@ -107,13 +116,13 @@ steps:
     kp: E4
     part: 1
     seconds_budget: 90
-    presenter_notes_en: "Ninety seconds. Switch among the three constraints and read the pool size alone: graph keeps 7 of the twelve rows, semi keeps 11, none keeps all 12. Step to row 2 (next to, on the same person-wrench pair as row 1) and switch to graph: the row is struck, since only one prediction per ordered pair survives graph's cap. Switch to semi or none and it returns."
+    presenter_notes_en: "Ninety seconds. Switch among the three constraints and read the pool size alone: graph keeps 7 of the twelve rows, semi, which caps each ordered pair at two predicates (s9 defines it), keeps 11, none keeps all 12. Step to row 2 (next to, on the same person-wrench pair as row 1) and switch to graph: the line beside the photograph reads dropped by the constraint, since only one prediction per ordered pair survives graph's cap. Switch to semi or none and it reads kept."
   - id: s7
     kind: playground
     kp: E4
     part: 2
     seconds_budget: 90
-    presenter_notes_en: "Ninety seconds. At k = 2, graph finds 2 ground truths and none finds only 1: none's second slot repeats the person-wrench pair rather than reaching a different one. At k = 6, semi finds 4 where graph and none each find 3, since semi's second slot on that same pair lets it into a fourth ground truth sooner than graph's single slot allows. By k = 12 the three settle at graph 3, semi 5, none 5: the two ground truths graph never reaches sit outside its seven-row pool."
+    presenter_notes_en: "Ninety seconds. At k = 2, graph finds 2 ground truths and none finds only 1: none's second slot repeats the person-wrench pair rather than reaching a different one. At k = 6, semi finds 4 where graph and none each find 3: semi's fourth is person-table's runner-up, rank 7 (near, g2), which graph drops, while under none person-wrench's third row, rank 6, takes the sixth place and pushes rank 7 past k = 6. By k = 12 the three settle at graph 3, semi 5, none 5: the two ground truths graph never reaches sit outside its seven-row pool."
   - id: s8
     kind: math
     seconds_budget: 360
@@ -121,19 +130,19 @@ steps:
   - id: s9
     kind: math
     seconds_budget: 240
-    presenter_notes_en: "Four minutes. ng-R@k turns the constraint of s5 from a switch into a degree: m predicates per pair instead of one. Raising m can only add candidates, so the pool grows until m passes the most predicates the model scores for any pair; recall at a fixed k need not follow, since each runner-up admitted takes a place in the top k. The next step shows it fall at k = 2. If s5 landed, this one can be compressed."
+    presenter_notes_en: "Four minutes. ng-R@k turns the constraint of s5 from a switch into a degree: m predicates per pair instead of one. Raising m can only add candidates, so the pool grows until m passes the most predicates the model scores for any pair; recall at a fixed k need not follow, since each runner-up admitted takes a place in the top k. s11 shows it fall at k = 2. If s5 landed, this one can be compressed."
   - id: s10
     kind: playground
     kp: E7
     part: 1
     seconds_budget: 90
-    presenter_notes_en: "Ninety seconds. Raise the m slider from 1: the pool grows 7, then 11, then reaches 12 at m = 3 and stops there, since no ordered pair in this ranking carries a fourth row to admit. Step through the row slider meanwhile; it draws that rank's own pair on ph-001, independent of m."
+    presenter_notes_en: "Ninety seconds. Raise the m slider from 1: the pool grows 7, then 11, then reaches 12 at m = 3 and stops there, since no ordered pair in this ranking carries a fourth row to admit. Step through the row slider meanwhile; it draws that rank's own pair on ph-001, independent of m, and the line beside the photograph says whether the pool at this m keeps that row: row 6, the person-wrench pair's third, reads dropped by the constraint until m = 3."
   - id: s11
     kind: playground
     kp: E7
     part: 2
     seconds_budget: 90
-    presenter_notes_en: "Ninety seconds. Hold k at 2 and raise m from 1 to 2: the count falls from 2 to 1, since m = 2 admits the person-wrench pair's second row, and that second slot displaces the different pair's ground truth m = 1 had reached. Push k to 12: the same rise in m now lifts the count from 3 to 5, because at k = 12 there is room for both the crowding row and the pair it would have displaced at k = 2."
+    presenter_notes_en: "Ninety seconds. Hold k at 2 and raise m from 1 to 2: the count falls from 2 to 1, since m = 2 admits the person-wrench pair's second row, and that second slot displaces the different pair's ground truth m = 1 had reached. Push k to 12: the same rise in m now lifts the count from 3 to 5, and the two it adds are the runner-ups graph drops, person near table (rank 7, g2) and person wearing glove (rank 10, g3); g1 was already counted at m = 1."
   - id: s12
     kind: math
     seconds_budget: 420
@@ -443,7 +452,7 @@ a visual model and watch what each metric does as the mixing weight moves.
 <Formal>
 
 $$
-R_p(\lambda)=(1-\lambda)\underbrace{\Pr[p\mid c_s,c_o]}_{\text{no pixels consulted}}+\lambda\underbrace{f_\theta(V,s,o)}_{\text{visual model}}
+\sigma_p(\lambda)=(1-\lambda)\underbrace{\Pr[p\mid c_s,c_o]}_{\text{no pixels consulted}}+\lambda\underbrace{f_\theta(V,s,o)}_{\text{visual model}}
 $$
 
 </Formal>
@@ -452,9 +461,9 @@ $$
 
 $$
 \begin{aligned}
-R_p(\lambda) &= (1-\lambda)\,\pi_p + \lambda\, f_p, \qquad \pi_p=\Pr[p\mid c_s,c_o],\ f_p=f_\theta(V,s,o)\\
-R(\lambda) &= \sum_p \tfrac{n_p}{N}R_p(\lambda) = (1-\lambda)\textstyle\sum_p \tfrac{n_p}{N}\pi_p + \lambda\sum_p \tfrac{n_p}{N}f_p\\
-mR(\lambda) &= (1-\lambda)\,\overline{\pi} + \lambda\,\overline{f}
+\sigma_p(\lambda) &= (1-\lambda)\,\pi_p + \lambda\, f_p, \qquad \pi_p=\Pr[p\mid c_s,c_o],\ f_p=f_\theta(V,s,o)\\
+R(\lambda) &= R@k \text{ of the ranking by } \sigma(\lambda), \text{ and likewise } mR(\lambda)\\
+&\text{constant in } \lambda \text{ except where two blended scores cross and the ranking changes}
 \end{aligned}
 $$
 

@@ -246,8 +246,26 @@ describe('the playground step kind', () => {
         expect(text, `${file}: ${absent}`).not.toContain(absent);
       }
     }
+    // The final review (D106): s12 still wrote recall as affine in λ, R_p(λ) and a sum over p; the
+    // blend is a score, σ_p(λ), and recall is R@k of the ranking it gives.
+    for (const file of ['../m04.en.mdx', '../m04.zh-TW.mdx']) {
+      const text = readFileSync(new URL(file, import.meta.url), 'utf8').replace(/\s+/g, ' ');
+      expect(text, file).toContain('\\sigma_p(\\lambda)=(1-\\lambda)');
+      expect(text, file).not.toContain('R(\\lambda) &= \\sum_p');
+      expect(text, file).not.toContain('R_p(\\lambda)=(1-\\lambda)');
+    }
     const formulas = math as Record<string, string>;
     const derivations = deriv as Record<string, string>;
+    expect(formulas.E11).toContain('\\sigma_p(\\lambda)=(1-\\lambda)');
+    expect(derivations.E11).not.toContain('R(\\lambda) &= \\sum_p');
+    expect(derivations.E11).not.toContain('R_p(\\lambda)=(1-\\lambda)');
+    // The map's X2 note made the claim s15 refutes: the cut at K still ranks every candidate.
+    const x2 = /pg\(\{id:'X2'[\s\S]*?note_zh:'[^']*'/.exec(source('../../../../web/knowledge-map/pg.js'))?.[0] ?? '';
+    expect(x2).toContain('note_en:');
+    expect(x2).toContain('note_zh:');
+    expect(x2).not.toContain('close to pair recall');
+    // Both locales: the zh note said the number 幾乎等同 pair recall.
+    expect(x2).not.toContain('pair recall');
     for (const id of ['E4', 'E7', 'E6', 'E11', 'X2']) {
       for (const absent of [
         'X_k\\subseteq X_k^{\\mathrm{ng}}',
@@ -266,6 +284,60 @@ describe('the playground step kind', () => {
         expect(container.querySelector('.katex-error'), `${locale} ${step.id}`).toBeNull();
         unmount();
       }
+    }
+  });
+
+  it('every citation of an M4 step names the step it means', () => {
+    // M4 went from 11 steps to 19 (D106), and M8, M11 and M12 kept citing three of its steps by the
+    // ids before: s7 for mask pairing, s4 for the covariance identity, s9 for the calibration item.
+    // Every citation in the modules and the locale tables is listed here with what its step must
+    // be, read from the step itself; a citation not in the table fails as surely as a wrong one.
+    const steps = getMeta('m04', 'en')!.steps;
+    const kind = (id: string) => steps.find((s) => s.id === id)?.kind;
+    const body = (locale: string, id: string) => {
+      const text = source(`../m04.${locale}.mdx`);
+      const start = text.indexOf(`<Step id="${id}">`);
+      return start === -1 ? '' : text.slice(start, text.indexOf('</Step>', start));
+    };
+    const worked = (locale: string, id: string) => {
+      const text = body(locale, id);
+      const start = text.indexOf('<Worked>');
+      return start === -1 ? '' : text.slice(start, text.indexOf('</Worked>', start));
+    };
+    const means: Record<string, (locale: string) => boolean> = {
+      // R@k cannot fall as k rises, and nothing charges for a wrong guess.
+      s2: (l) => kind('s2') === 'math' && body(l, 's2').includes('k^{\\prime}\\ge k\\Rightarrow R@k^{\\prime}\\ge R@k'),
+      // R − mR as one covariance.
+      s8: (l) => kind('s8') === 'math' && worked(l, 's8').includes('\\operatorname{Cov}(n,R)'),
+      // SingleMPO against MultiMPO, and the inequality the extra copies buy.
+      s13: (l) => kind('s13') === 'math' && worked(l, 's13').includes('\\text{SingleMPO}')
+        && worked(l, 's13').includes('\\widehat{\\mu}'),
+      // VRD's per-pair count, which X2's pool note cites for its 70 predicates.
+      s15: (l) => kind('s15') === 'math' && worked(l, 's15').includes('\\text{VRD papers call it } k'),
+      // The prose step "Four more things", whose last item is calibration.
+      s17: (l) => kind('s17') === 'prose' && (l === 'en'
+        ? body(l, 's17').includes('## Four more things') && body(l, 's17').includes('Calibration is absent from the field')
+        : body(l, 's17').includes('另外四件事') && body(l, 's17').includes('本領域並無校準相關指標')),
+    };
+    const cited = [
+      'm07 en s2', 'm07 zh-TW s2',
+      'm08 en s13', 'm08 en s13', 'm08 zh-TW s13', 'm08 zh-TW s13',
+      'm11 en s8', 'm11 zh-TW s8',
+      'm12 en s17', 'm12 zh-TW s17',
+      'i18n en s15', 'i18n zh-TW s15',
+    ];
+    const citations = (text: string, where: string) =>
+      [...text.matchAll(/\bM0?4 (s\d+)\b/g)].map((match) => `${where} ${match[1]}`);
+    const found = [
+      ...moduleIds().flatMap((id) =>
+        (['en', 'zh-TW'] as const).flatMap((locale) => citations(source(`../${id}.${locale}.mdx`), `${id} ${locale}`))),
+      ...(['en', 'zh-TW'] as const).flatMap((locale) =>
+        citations(source(`../../i18n/${locale}.json`), `i18n ${locale}`)),
+    ];
+    expect(found.sort()).toEqual([...cited].sort());
+    for (const citation of cited) {
+      const [, locale, id] = citation.split(' ') as [string, string, string];
+      expect(means[id]?.(locale) ?? false, citation).toBe(true);
     }
   });
 
