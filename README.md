@@ -150,9 +150,11 @@ decision D-14.
 ## Data
 
 ```powershell
-.etch-data.ps1                          # what exists, what each dataset still needs
-.etch-data.ps1 -Fetch -Dataset psg      # per-image download from source, hash-checked
-.etch-data.ps1 -Unpack <bundle.zip>     # unpack a slice bundle, then verify it
+.\fetch-data.ps1                          # what exists, what each dataset still needs
+.\fetch-data.ps1 -Fetch -Dataset psg      # per-image download from source, hash-checked
+.\fetch-data.ps1 -Unpack <bundle.zip>     # unpack a slice bundle, then verify it
+.\sync-data.ps1                           # compare the git-ignored data with the NAS copy
+.\sync-data.ps1 -Push                     # copy it to the NAS; -Pull copies it back
 ```
 
 `fetch-data.ps1` does **not** download a corpus, and neither does anything else here — D-08
@@ -164,6 +166,13 @@ dataset.**
 
 Committed: `annotations.json` and `MANIFEST.json` per slice, plus the placeholder frames.
 Not committed: `data/_raw/`, and every real slice's `images/`.
+
+The data git does not carry moves between the author's machines through the NAS, never
+through the remote (D108). `sync-data.ps1` copies whatever git ignores under `data/` to
+`C:\DataRaw\scene-graph` and back; `SGS_DATA_NAS` or `-Nas` names another directory. A pull
+refuses any file that would land on a path git does not ignore, and neither direction
+overwrites a newer file or deletes one. The NAS copy is private storage, not a route to
+students: `bundle_distribute` in `data/LICENCES.md` still governs that.
 
 `data/LICENCES.md` carries two findings per dataset, because downloading for your own use and
 handing images to a class are different acts:

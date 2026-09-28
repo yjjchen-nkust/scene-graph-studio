@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split and §29 the M4 playgrounds), and all 107 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split and §29 the M4 playgrounds), and all 108 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -28,7 +28,7 @@ WekaExt's `docker-compose.yml`, `ci.yml` or `deploy.yml`.
 
 **All machinery lives under `system/`** — the npm workspace root, `backend/`, `frontend/`,
 `packages/sgg-metrics/`, `tools/`, `web/`. `data/`, `docs/`, `start.ps1` and `fetch-data.ps1`
-stayed at the track root. **Every `npm` command runs from `system/`.**
+stayed at the track root, and `sync-data.ps1` (D108) joined them. **Every `npm` command runs from `system/`.**
 
 ```powershell
 cd scene-graph-studio ; .\start.ps1     # checks both toolchains, installs on first run, launches
@@ -51,7 +51,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D107` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D108` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
   `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
@@ -92,9 +92,13 @@ cd scene-graph-studio\system ; npm run ci
   either fails a byte-equality step or — worse, because it is silent — leaves `git status`
   dirty after every green gate with `git diff` showing nothing (**D89**). Adding a generator
   that writes into a tracked path means adding its path there too.
-- **Large binary corpora are not committed.** `data/_raw/` (4.7 GB) and `data/slices/*/images/`
-  are excluded by this track's own `.gitignore`; `fetch-data.ps1` retrieves them. WekaExt's root
-  `.gitignore` has no rule over this tree, so every exclusion the track needs is stated locally.
+- **Large binary corpora are not committed, and the NAS carries them instead (D108).**
+  `data/_raw/` (4.7 GB) and `data/slices/*/images/` are excluded by this track's own
+  `.gitignore`. `fetch-data.ps1` obtains slice images from their source; `sync-data.ps1` copies
+  everything git ignores under `data/` to `C:\DataRaw\scene-graph` and back, and a pull refuses a
+  file that would land on a path git does not ignore. Never commit data to move it between
+  machines. WekaExt's root `.gitignore` has no rule over this tree, so every exclusion the track
+  needs is stated locally.
 - **The design document's ARM64/Snapdragon hardware table describes a different machine** and is
   marked superseded in place.
 - **A playground reads `data/` from outside vitest's root, and the allow list is why that works.**

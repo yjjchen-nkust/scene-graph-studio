@@ -676,6 +676,36 @@ describe('the playground step kind', () => {
     expect(existsSync(at('../../../../tools/test/mockup.check.mjs'))).toBe(false);
   });
 
+  it('the records carry D108, and the data git ignores moves through the NAS', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    const script = source('../../../../../sync-data.ps1');
+    const d108 = record(deviations, 'D108').replace(/\s+/g, ' ');
+    expect(deviations).toContain('## D108 — the data git does not carry moves through the NAS, by `sync-data.ps1`');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 108, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 108, 'CLAUDE.md deviations');
+    // The directory the author named, in the script and in both of its readers.
+    for (const [name, text] of [['script', script], ['CLAUDE.md', claude], ['README', readme]]) {
+      expect(text, name).toContain('C:\\DataRaw\\scene-graph');
+    }
+    // The set comes from git, a pull asks git first, and no robocopy switch deletes anything.
+    expect(script).toContain('ls-files --others --ignored --exclude-standard --directory -- data');
+    expect(script).toContain('check-ignore -z --stdin');
+    expect(script).toContain("'/XO'");
+    for (const flag of ["'/MIR'", "'/PURGE'", "'/MOV'", "'/MOVE'"]) expect(script, flag).not.toContain(flag);
+    // README's commands are commands: a `\f` meant as `.\fetch` had been written as a form feed.
+    expect(readme).not.toContain('\f');
+    expect(readme).toContain('.\\fetch-data.ps1 -Unpack');
+    expect(readme).toContain('.\\sync-data.ps1 -Push');
+    for (const item of ['eb68d64', 'bundle_distribute', 'CRLF', 'c5b8901d', 'form feed']) {
+      expect(d108, item).toContain(item);
+    }
+  });
+
   it('the records state as many playgrounds, uncovered live points and steps as the code holds', () => {
     // Taken from the mount table, the harvest and the modules, as the vectors' count is taken from
     // their file: a bound passes a count left stale (D104's branch review, D106).

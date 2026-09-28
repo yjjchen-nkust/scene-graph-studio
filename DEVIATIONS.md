@@ -4213,3 +4213,57 @@ map or the tests read the page; the only reader was its own check.
 **Verification.** `npm run ci` exit 0 in eleven steps: 287 pytest and 7 skipped, 1017 vitest in 74 files (1016 before; the one added is this record's test), parity 21, i18n 380 keys, content lint clean, 786 modules built. The new records test failed on the missing
 heading before this record was written, and requires that `lint:mockup` is gone from the scripts
 and from `ci`, that CLAUDE.md names eleven steps, and that neither file exists.
+
+## D108 — the data git does not carry moves through the NAS, by `sync-data.ps1`
+
+**Plan:** none. **Decisions:** the author's, on 2026-09-29: "for scene-graph-studio, the data
+should not go to github. Please use NAS: C:\DataRaw\scene-graph to sync the untracked data."
+Branch `chore/sgs-data-nas-sync`, from `main` at `eb68d64`.
+
+**How the request was read.** The remote is Gitea (`gitea.cillab.me`), not GitHub, so "github" is
+read as the git remote. What git carries stays in git: the slice annotations and manifests,
+`data/content/`, the golden vectors, the predictions, `data/vlm/` and the placeholder frames, 65
+files and 2.5 MB that the licence gates cleared and the gate reads. What git ignores under
+`data/` moves through the NAS: on this machine `data/_raw/industreal/` (2 files, 4.619 GB) and the
+images of four slices, `indoorvg`, `mini-isg`, `psg` and `vg150-sgb` (190 files, 25.3 MB). None of
+it had reached the remote; `.gitignore` already excluded all of it. The corpora at
+`C:\DataRaw\psg`, `C:\DataRaw\vg150-sgb` and `C:\DataRaw\indoorvg`, which `SGS_CORPUS_ROOT` names,
+were already on that drive and were not touched.
+
+**What was added.** `sync-data.ps1` at the track root, beside `fetch-data.ps1`. `-Status`, the
+default, compares this checkout with the NAS group by group and names the direction each group
+needs; `-Push` and `-Pull` copy with robocopy; `-DryRun` lists and copies nothing. The NAS
+directory stands for `data/` and defaults to `C:\DataRaw\scene-graph`; `SGS_DATA_NAS` or `-Nas`
+overrides it. The copied set is what `git ls-files --others --ignored --exclude-standard` reports
+under `data/`, so a new ignore rule extends it with no edit to the script.
+`data/predictions/.latency.json` is left out, because each machine reports its own timings in
+`PROVENANCE.md`. A pull refuses to start when any file on the NAS maps to a path that
+`git check-ignore` does not report ignored; that covers a committed file the pull would overwrite
+and a new file the next `git add` would commit. Copies are additive: `/XO` never overwrites a
+newer file, and no deletion travels in either direction.
+
+**What it is not.** The NAS copy is the author's storage between the author's machines. It is not
+a route to students: `bundle_distribute` in `data/LICENCES.md` still governs that, and it is NO for
+`psg`, `vg150-sgb` and `indoorvg`. It downloads nothing from a source, so D-08 stands, and it does
+not replace `fetch-data.ps1`.
+
+**A fault found before the first pull.** Fed one path per line from PowerShell,
+`git check-ignore --stdin` reported no path ignored: PowerShell ends each piped line with CRLF, and
+git kept the CR as part of the path, so the guard refused every file. The script now passes the
+paths NUL-separated in both directions (`-z`). Against a scratch NAS holding one committed path
+(`slices/psg/annotations.json`), the machine-local timings file, a stray file at the root and two
+ignored files, the corrected guard refused exactly the first three.
+
+**Also corrected.** README's Data commands read `.` followed by a form feed and `etch-data.ps1` on
+three lines: the `\f` of `.\fetch-data.ps1` had been written as the control character, the
+backslash collapse recorded for Git Bash heredocs. The three lines read `.\fetch-data.ps1` again,
+and the records test refuses a form feed anywhere in README.
+
+**Verification.** The first push copied 192 files, 4.619 GB, with 0 failed. The NAS copy of
+`all_rgb_videos.zip` matches its `.md5` file (`c5b8901dba179d2eb10e9348f8163c79`), and all 190
+slice images match their local copies by SHA-256. A second push copied 0 and skipped 192, and
+`-Status` reports every group in step. `npm run ci` exit 0 in eleven steps: 287 pytest and 7
+skipped, 1018 vitest in 74 files (1017 before; the one added is this record's test), parity 21,
+i18n 380 keys, 786 modules built. The new records test failed on the missing heading before this
+record was written. The gate runs no PowerShell, so the script's behaviour rests on the runs
+above; the test holds its text: the NAS path, the two git calls, `/XO`, and no deleting switch.
