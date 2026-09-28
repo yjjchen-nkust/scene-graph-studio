@@ -21,7 +21,7 @@ describe('X2', () => {
     expect(screen.getByTestId('readout-X2.pairs-value')).toHaveTextContent('30');
     expect(screen.getByTestId('readout-X2.pairs')).toHaveTextContent('6 × 5');
     expect(screen.getByTestId('readout-X2.pool-value')).toHaveTextContent('300');
-    expect(screen.getByTestId('readout-X2.pool')).toHaveTextContent('30 × min(m, 70); 70 predicates, M4 s8');
+    expect(screen.getByTestId('readout-X2.pool')).toHaveTextContent('30 × min(m, 70); 70 predicates, M4 s15');
     expect(screen.getByTestId('readout-X2.share-value')).toHaveTextContent('10');
     expect(screen.getByTestId('readout-X2.share')).toHaveTextContent('min(m, 100); K = 100, the engine\'s largest cut');
     expect(screen.getByTestId('readout-X2.cut-value')).toHaveTextContent('yes: 300 candidates for 100 places');
@@ -64,7 +64,7 @@ describe('X2', () => {
     renderAt('/m/m04');
     expect(screen.getByTestId('readout-X2.pairs')).toHaveTextContent('ph-001 六個物件之有序配對數');
     expect(screen.getByTestId('readout-X2.pool')).toHaveTextContent('候選數');
-    expect(screen.getByTestId('readout-X2.pool')).toHaveTextContent('30 × min(m, 70)；70 個 predicate，見 M4 s8');
+    expect(screen.getByTestId('readout-X2.pool')).toHaveTextContent('30 × min(m, 70)；70 個 predicate，見 M4 s15');
     expect(screen.getByTestId('readout-X2.share')).toHaveTextContent('單一配對至多可占前 100 名之數量');
     expect(screen.getByTestId('readout-X2.share')).toHaveTextContent('min(m, 100)；K = 100 為引擎之最大截斷值');
     expect(screen.getByTestId('readout-X2.cut')).toHaveTextContent('截斷於 100 是否發揮篩選作用');

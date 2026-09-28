@@ -237,8 +237,8 @@ ordered pairs; with VRD's 70 predicates the pool is 30 · m = 30, 300 or 2,100; 
 K = 100 one pair can take is min(m, 100) = 1, 10 or 70; and whether the cut at 100 selects at all
 (not at m = 1, where the pool of 30 is below 100). No fixture and no photograph.
 [**As built (D106):** the cut's readout carries the note `pool > 100` in both locales, the one
-note outside the locale tables. The pool's note cites "M4 s8", the VRD step's id before the build;
-the step is s15, and the label is left open (D106).]
+note outside the locale tables. The pool's note cites the VRD step as "M4 s15"; the plan's "M4 s8"
+was its id before the build.]
 
 ---
 

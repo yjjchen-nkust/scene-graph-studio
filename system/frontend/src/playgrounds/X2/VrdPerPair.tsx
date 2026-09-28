@@ -15,7 +15,7 @@ const X2_FRAME = 'ph-001';
 /**
  * X2 — VRD's per-pair count.
  *
- * A three-way `Choice` for m, VRD's predicates admitted per ordered pair (its own k, M4 s8).
+ * A three-way `Choice` for m, VRD's predicates admitted per ordered pair (its own k, M4 s15).
  * ph-001's six objects fix 30 ordered pairs regardless of m; the pool is those pairs times
  * min(m, 70), since VRD carries only 70 predicates; the most one pair can place in the top
  * K = 100 is min(m, 100); and the cut at 100 selects only once the pool exceeds it, which does

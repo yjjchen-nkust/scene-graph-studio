@@ -47,7 +47,7 @@ export function e13Copies(d: number): MaskRow[] {
   });
 }
 
-/** VRD's predicate vocabulary per pair, as M4 s8 states. */
+/** VRD's predicate vocabulary per pair, as M4 s15 states. */
 export const VRD_PREDICATES = 70;
 
 /** K = 100, the engine's largest cut. */

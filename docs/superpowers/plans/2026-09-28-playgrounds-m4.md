@@ -16,7 +16,7 @@
 - **Working directory is `scene-graph-studio/system/`.** Every `npm` command runs there. Paths are relative to it unless they start with `../`.
 - **A playground computes a count, a bound or a set membership. Never a metric.** No R, mR or R@K is displayed; |G ∩ X_k| is shown as a count. Nothing in `frontend/src/playgrounds/` outside `test/` imports a value from `sgg-metrics`; types are allowed.
 - **The ranked list is spec §4.1's table, exactly:** twelve rows, their ranks, pairs, predicates and scores. Its counts are spec §4.1's table; a test that disagrees with that table is the defect, not the table.
-- **No figure is recalled.** Every number is computed from ph-001, the ranked list or the copies of §5.4; VRD's 70 predicates are labelled "M4 s8", and K = 100 "the engine's largest cut". [**Open (D106):** Task 10's renumbering made the VRD step s15, and the label still reads "M4 s8".]
+- **No figure is recalled.** Every number is computed from ph-001, the ranked list or the copies of §5.4; VRD's 70 predicates are labelled "M4 s8", and K = 100 "the engine's largest cut". [**As built (D106):** "M4 s8" was the VRD step's id before Task 10's renumbering, which made it s15; the label reads "M4 s15" since the records' fix round, and s8 is the step on mR and its weighting identity.]
 - **Bilingual parity** (NFR-6); **formal written Chinese** with Chinese punctuation; titles are noun phrases; numbers and technical terms verbatim. Display math is shared by both locales, as M4's already is.
 - **Lecture legibility:** type in `em`, never below 18 px; ink `slate-700` or darker; marks differ in shape as well as colour; no text inside an SVG.
 - **Knob ids equal their query keys:** `E3.k`, `E3.row`, `E4.mode`, `E4.k`, `E4.row`, `E7.m`, `E7.k`, `E7.row`, `E13.multi`, `E13.d`, `X2.m`. Numbers pass through `snap(value, low, high, step)`; a string knob not among its options falls back to its default.
@@ -139,7 +139,7 @@ m=70 &\Rightarrow \text{every predicate of every pair is a candidate; the cut at
   - `export interface MaskRow { subject: number; object: number; masks: string; predicate: string; score: number }`;
   - `export const E13_COPIES: { predicate: string; score: number }[]`: next to 0.90, holding 0.88, near 0.70, attached to 0.60, in front of 0.50;
   - `export function e13Copies(d: number): MaskRow[]`: copy 1 on objects 2 → 5, copy i ≥ 2 on objects `10 + i` → `20 + i`, every `masks` equal to `'2|5'`, the i-th predicate and score;
-  - `export const VRD_PREDICATES = 70`, with a doc comment "as M4 s8 states", and `export const VRD_CUT = 100`, "the engine's largest cut".
+  - `export const VRD_PREDICATES = 70`, with a doc comment "as M4 s8 states", and `export const VRD_CUT = 100`, "the engine's largest cut". [**As built (D106):** the comment reads "as M4 s15 states", the VRD step's id after Task 10.]
 - **`logic.ts`:**
   - `byScore<T extends { score: number }>(rows: T[]): T[]`, score descending, equal scores in input order;
   - `capPerPair<T extends { subject: number; object: number }>(ranked: T[], cap: number): T[]`, at most `cap` rows per ordered pair, in order;
@@ -443,7 +443,7 @@ describe('X2: VRD per-pair count on ph-001', () => {
 | `playground.x2.cut_yes` | yes: {pool} candidates for 100 places | 是：{pool} 個候選競逐 100 個名次 |
 | `playground.x2.cut_no` | no: all {pool} candidates fit in 100 | 否：{pool} 個候選均在 100 名以內 |
 
-[**As built (D106):** the table gives `X2.cut` no note; it carries `pool > 100` in both locales, written in the component.]
+[**As built (D106):** the table gives `X2.cut` no note; it carries `pool > 100` in both locales, written in the component. `playground.x2.pool_note` reads "M4 s15" / 「見 M4 s15」 in place of "M4 s8", the VRD step's id after Task 10's renumbering.]
 
 - [ ] **Step 1: Write the failing tests:**
   - `opens at m = 10: 30 pairs, 300 candidates, 10 per pair, the cut selects`;

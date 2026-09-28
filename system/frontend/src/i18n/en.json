@@ -369,7 +369,7 @@
   "playground.x2.pairs": "Ordered pairs of ph-001's 6 objects",
   "playground.x2.pairs_note": "6 × 5",
   "playground.x2.pool": "Candidates",
-  "playground.x2.pool_note": "30 × min(m, 70); 70 predicates, M4 s8",
+  "playground.x2.pool_note": "30 × min(m, 70); 70 predicates, M4 s15",
   "playground.x2.share": "Most of the top 100 one pair can take",
   "playground.x2.share_note": "min(m, 100); K = 100, the engine's largest cut",
   "playground.x2.cut": "Does the cut at 100 select?",

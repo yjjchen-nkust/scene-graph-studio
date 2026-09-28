@@ -369,7 +369,7 @@
   "playground.x2.pairs": "ph-001 六個物件之有序配對數",
   "playground.x2.pairs_note": "6 × 5",
   "playground.x2.pool": "候選數",
-  "playground.x2.pool_note": "30 × min(m, 70)；70 個 predicate，見 M4 s8",
+  "playground.x2.pool_note": "30 × min(m, 70)；70 個 predicate，見 M4 s15",
   "playground.x2.share": "單一配對至多可占前 100 名之數量",
   "playground.x2.share_note": "min(m, 100)；K = 100 為引擎之最大截斷值",
   "playground.x2.cut": "截斷於 100 是否發揮篩選作用",

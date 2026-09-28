@@ -3918,7 +3918,8 @@ and E7, with the chosen row's pair drawn on the photograph; and "subagent" execu
 `feat/playgrounds-m4`, from `main` at `992287e`.
 
 **Five findings, read on 2026-09-28** in `packages/sgg-metrics/src/`, with which the Python engine
-agrees. The constraint filters the whole ranking before the cut is taken (`index.ts:59`), so the
+agrees. The findings and the corrections name M4's steps by their ids before the renumbering
+below; from the five playgrounds on, this record uses the ids since. The constraint filters the whole ranking before the cut is taken (`index.ts:59`), so the
 constrained top k is the top k of a smaller pool and can hold predictions that the unconstrained
 top k ranks below k. On the built engine, three predictions (1,2,on,.9), (1,2,near,.8) and
 (3,4,on,.7) against the one ground truth (3,4,on) give, at K = 2, `R@2=1, ngR@2=0` under `graph`;
@@ -3959,7 +3960,7 @@ X2 are rebuilt from the corrected MDX, the E7 note and kp X2's knobs are correct
 still gives 26 formulas and 23 derivations; `FROZEN.md` records the five findings. The brief,
 searched for `ngR`, `affine`, `Proposition 4` and `same slice`, states none of the claims and is
 unchanged. kp X2's title, "VRD and the undeclared k", is left as it is: it is the frozen page's
-title, and its knobs and M4 s15 now write m.
+title, and its knobs and M4's VRD step now write m.
 - *The test.* It reads both M4 files and the harvested derivations, requires the five corrected
   statements, refuses the defects, and renders every M4 math step in both locales with no KaTeX
   error. It failed first, on s3's inequality.
@@ -4077,11 +4078,13 @@ review found the photographs missing from the second. `perf.spec.ts` times one k
 five and requires fourteen playgrounds measured.
 
 **Found while writing this record.**
-- *X2's pool note cites "M4 s8"*, in both locales ("70 predicates, M4 s8"; 「見 M4 s8」), as the
-  plan's constraints required. The renumbering made the VRD step s15; s8 is now the step on mR
-  and its weighting identity. The same id stands in the comments of `E13/setup.ts` and
-  `X2/VrdPerPair.tsx` and in X2's tests. The label is the plan's, so it is left open for the
-  author.
+- *X2's pool note cited the VRD step by its old id.* It read "30 × min(m, 70); 70 predicates,
+  M4 s8" and 「30 × min(m, 70)；70 個 predicate，見 M4 s8」, as the plan's constraints required.
+  The plan wrote that label before Task 10's renumbering, which made the VRD step s15 and gave s8
+  to the step on mR and its weighting identity, so the note sent the room to the wrong step. On
+  the controller's ruling it reads "M4 s15" and 「見 M4 s15」 now, as do the comments of
+  `E13/setup.ts` and `X2/VrdPerPair.tsx` and X2's two tests of the note. No other file under
+  `frontend/src` cited "M4 s8".
 - *`FROZEN.md`'s 2026-09-28 entry* said that the count is written m "as in s5 (the ids Task 10
   gives after renumbering)". s5 was the ng-R@k step when the entry was written, and the
   renumbering made it s9. A bracketed correction in the entry now says so.
