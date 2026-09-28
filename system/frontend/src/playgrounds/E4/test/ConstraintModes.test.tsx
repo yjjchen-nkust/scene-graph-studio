@@ -65,14 +65,15 @@ describe('E4', () => {
     expect(screen.getByTestId('e4-list-row-2')).toHaveAttribute('data-top', 'false');
   });
 
-  it('part 1 holds the mode, the row and the photograph; part 2 the mode, k and the list', () => {
+  it('part 1 holds the mode, the row, the photograph, its line and the pool; part 2 the mode, k and the list', () => {
     renderAt('/m/m04', { part: 1 });
     expect(screen.getByTestId('e4-pair')).toBeInTheDocument();
     expect(screen.getByTestId('E4.mode')).toBeInTheDocument();
     expect(screen.getByTestId('E4.row')).toBeInTheDocument();
+    expect(screen.getByTestId('e4-row-line')).toBeInTheDocument();
+    expect(screen.getByTestId('readout-E4.pool')).toBeInTheDocument();
     expect(screen.queryByTestId('E4.k')).toBeNull();
     expect(screen.queryByTestId('e4-list-table')).toBeNull();
-    expect(screen.queryByTestId('readout-E4.pool')).toBeNull();
     cleanup();
     renderAt('/m/m04', { part: 2 });
     expect(screen.getByTestId('e4-list-table')).toBeInTheDocument();
@@ -81,6 +82,31 @@ describe('E4', () => {
     expect(screen.queryByTestId('E4.row')).toBeNull();
     expect(screen.getByTestId('readout-E4.pool')).toBeInTheDocument();
     expect(screen.queryByTestId('e4-pair')).toBeNull();
+    expect(screen.queryByTestId('e4-row-line')).toBeNull();
+  });
+
+  it('part 1 reads the pool at graph as 7, and names row 2 dropped by the constraint', () => {
+    renderAt('/m/m04', { part: 1 });
+    expect(screen.getByTestId('readout-E4.pool-value')).toHaveTextContent('7');
+    expect(screen.getByTestId('readout-E4.pool')).toHaveTextContent('of 12 predictions');
+    cleanup();
+    renderAt('/m/m04?E4.row=2', { part: 1 });
+    const line = screen.getByTestId('e4-row-line').textContent ?? '';
+    expect(line).toBe('Row 2: #2 person next to #5 wrench, dropped by the constraint');
+    expect(line.endsWith('dropped by the constraint')).toBe(true);
+  });
+
+  it('part 1 keeps row 2 under semi and none, and row 6 only under none', () => {
+    for (const [url, state] of [
+      ['?E4.mode=semi&E4.row=2', 'kept'],
+      ['?E4.mode=none&E4.row=2', 'kept'],
+      ['?E4.mode=semi&E4.row=6', 'dropped by the constraint'],
+      ['?E4.mode=none&E4.row=6', 'kept'],
+    ] as const) {
+      renderAt(`/m/m04${url}`, { part: 1 });
+      expect(screen.getByTestId('e4-row-line').textContent, url).toMatch(new RegExp(`, ${state}$`));
+      cleanup();
+    }
   });
 
   it('reads in 繁體中文', () => {
@@ -88,6 +114,9 @@ describe('E4', () => {
     renderAt('/m/m04');
     expect(screen.getByTestId('readout-E4.truths')).toHaveTextContent('共 6 筆標註：g1、g4');
     expect(screen.getByTestId('readout-E4.truths_none')).toHaveTextContent('共 6 筆標註：g4');
+    cleanup();
+    renderAt('/m/m04?E4.row=2', { part: 1 });
+    expect(screen.getByTestId('e4-row-line')).toHaveTextContent('第 2 列：#2 person next to #5 wrench，遭約束排除');
   });
 
   it('takes no focus on mount', () => {

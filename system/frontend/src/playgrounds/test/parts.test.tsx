@@ -74,10 +74,12 @@ describe('a playground split across steps', () => {
     expect(screen.getByTestId('e10-row-sgcls')).toHaveAttribute('aria-current', 'true');
   });
 
-  it('E3: the row on its photograph, then the ranked list and its two counts', () => {
-    const all = ['E3.k', 'E3.row', 'e3-pair', 'e3-list-table', 'readout-E3.in_top', 'readout-E3.truths'];
+  it('E3: the row on its photograph and its line, then the ranked list and its two counts', () => {
+    const all = [
+      'E3.k', 'E3.row', 'e3-pair', 'e3-row-line', 'e3-list-table', 'readout-E3.in_top', 'readout-E3.truths',
+    ];
     const one = part('E3', '1');
-    expect(shown(...all)).toEqual(['E3.k', 'E3.row', 'e3-pair']);
+    expect(shown(...all)).toEqual(['E3.k', 'E3.row', 'e3-pair', 'e3-row-line']);
     one.unmount();
 
     // The k slider is unconditional, so part 2 shows it too, beside the list and its two counts.
@@ -85,13 +87,13 @@ describe('a playground split across steps', () => {
     expect(shown(...all)).toEqual(['E3.k', 'e3-list-table', 'readout-E3.in_top', 'readout-E3.truths']);
   });
 
-  it('E4: the mode and the row on its photograph, then the mode, k and the three counts', () => {
+  it('E4: the mode, the row on its photograph, its line and the pool, then the mode, k and the three counts', () => {
     const all = [
-      'E4.mode', 'E4.k', 'E4.row', 'e4-pair', 'e4-list-table',
+      'E4.mode', 'E4.k', 'E4.row', 'e4-pair', 'e4-row-line', 'e4-list-table',
       'readout-E4.pool', 'readout-E4.truths', 'readout-E4.truths_none',
     ];
     const one = part('E4', '1');
-    expect(shown(...all)).toEqual(['E4.mode', 'E4.row', 'e4-pair']);
+    expect(shown(...all)).toEqual(['E4.mode', 'E4.row', 'e4-pair', 'e4-row-line', 'readout-E4.pool']);
     one.unmount();
 
     // The mode selector is unconditional, so part 2 shows it too, beside k, the list and the counts.
@@ -101,10 +103,12 @@ describe('a playground split across steps', () => {
     ]);
   });
 
-  it('E7: m and the row on its photograph, then m, k and the two counts', () => {
-    const all = ['E7.m', 'E7.k', 'E7.row', 'e7-pair', 'e7-list-table', 'readout-E7.pool', 'readout-E7.truths'];
+  it('E7: m, the row on its photograph, its line and the pool, then m, k and the two counts', () => {
+    const all = [
+      'E7.m', 'E7.k', 'E7.row', 'e7-pair', 'e7-row-line', 'e7-list-table', 'readout-E7.pool', 'readout-E7.truths',
+    ];
     const one = part('E7', '1');
-    expect(shown(...all)).toEqual(['E7.m', 'E7.row', 'e7-pair']);
+    expect(shown(...all)).toEqual(['E7.m', 'E7.row', 'e7-pair', 'e7-row-line', 'readout-E7.pool']);
     one.unmount();
 
     // The m slider is unconditional, so part 2 shows it too, beside k, the list and the counts.

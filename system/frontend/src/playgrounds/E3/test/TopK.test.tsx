@@ -76,9 +76,10 @@ describe('E3', () => {
     }
   });
 
-  it('part 1 holds the photograph and part 2 the list', () => {
+  it('part 1 holds the photograph and the row line, and part 2 the list', () => {
     renderAt('/m/m04', { part: 1 });
     expect(screen.getByTestId('e3-pair')).toBeInTheDocument();
+    expect(screen.getByTestId('e3-row-line')).toBeInTheDocument();
     expect(screen.queryByTestId('e3-list-table')).toBeNull();
     expect(screen.queryByTestId('readout-E3.in_top')).toBeNull();
     cleanup();
@@ -86,12 +87,28 @@ describe('E3', () => {
     expect(screen.getByTestId('e3-list-table')).toBeInTheDocument();
     expect(screen.getByTestId('readout-E3.in_top')).toBeInTheDocument();
     expect(screen.queryByTestId('e3-pair')).toBeNull();
+    expect(screen.queryByTestId('e3-row-line')).toBeNull();
+  });
+
+  it('the row line names the chosen row and whether the graph constraint keeps it', () => {
+    renderAt('/m/m04', { part: 1 });
+    expect(screen.getByTestId('e3-row-line')).toHaveTextContent('Row 1: #2 person holding #5 wrench, kept');
+    cleanup();
+    // Row 2 is the person–wrench pair's runner-up, which one prediction per pair drops.
+    renderAt('/m/m04?E3.row=2', { part: 1 });
+    expect(screen.getByTestId('e3-row-line')).toHaveTextContent(
+      'Row 2: #2 person next to #5 wrench, dropped by the constraint',
+    );
+    cleanup();
+    renderAt('/m/m04?E3.row=12', { part: 1 });
+    expect(screen.getByTestId('e3-row-line')).toHaveTextContent('Row 12: #1 table behind #2 person, kept');
   });
 
   it('reads in 繁體中文', () => {
     setLocale('zh-TW');
     renderAt('/m/m04');
     expect(screen.getByTestId('readout-E3.truths')).toHaveTextContent('共 6 筆標註：g1、g4、g5');
+    expect(screen.getByTestId('e3-row-line')).toHaveTextContent('第 1 列：#2 person holding #5 wrench，保留');
   });
 
   it('takes no focus on mount', () => {

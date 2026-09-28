@@ -52,14 +52,16 @@ describe('E7', () => {
     expect(screen.getByTestId('readout-E7.pool-value')).toHaveTextContent('12');
   });
 
-  it('part 1 holds m, the row and the photograph; part 2 holds m, k and the list', () => {
+  it('part 1 holds m, the row, the photograph, its line and the pool; part 2 holds m, k and the list', () => {
     renderAt('/m/m04', { part: 1 });
     expect(screen.getByTestId('e7-pair')).toBeInTheDocument();
     expect(screen.getByTestId('E7.m')).toBeInTheDocument();
     expect(screen.getByTestId('E7.row')).toBeInTheDocument();
+    expect(screen.getByTestId('e7-row-line')).toBeInTheDocument();
+    expect(screen.getByTestId('readout-E7.pool')).toBeInTheDocument();
     expect(screen.queryByTestId('E7.k')).toBeNull();
     expect(screen.queryByTestId('e7-list-table')).toBeNull();
-    expect(screen.queryByTestId('readout-E7.pool')).toBeNull();
+    expect(screen.queryByTestId('readout-E7.truths')).toBeNull();
     cleanup();
     renderAt('/m/m04', { part: 2 });
     expect(screen.getByTestId('e7-list-table')).toBeInTheDocument();
@@ -69,6 +71,22 @@ describe('E7', () => {
     expect(screen.getByTestId('readout-E7.pool')).toBeInTheDocument();
     expect(screen.getByTestId('readout-E7.truths')).toBeInTheDocument();
     expect(screen.queryByTestId('e7-pair')).toBeNull();
+    expect(screen.queryByTestId('e7-row-line')).toBeNull();
+  });
+
+  it('part 1 at m = 2 reads the pool as 11, and the row line follows m', () => {
+    renderAt('/m/m04?E7.m=2', { part: 1 });
+    expect(screen.getByTestId('readout-E7.pool-value')).toHaveTextContent('11');
+    cleanup();
+    // Row 6 is the person–wrench pair's third prediction: dropped until m reaches 3.
+    renderAt('/m/m04?E7.m=2&E7.row=6', { part: 1 });
+    expect(screen.getByTestId('e7-row-line')).toHaveTextContent(
+      'Row 6: #2 person near #5 wrench, dropped by the constraint',
+    );
+    cleanup();
+    renderAt('/m/m04?E7.m=3&E7.row=6', { part: 1 });
+    expect(screen.getByTestId('e7-row-line')).toHaveTextContent('Row 6: #2 person near #5 wrench, kept');
+    expect(screen.getByTestId('readout-E7.pool-value')).toHaveTextContent('12');
   });
 
   it('shows no recall', () => {

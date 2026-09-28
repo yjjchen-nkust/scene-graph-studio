@@ -88,6 +88,11 @@ export function MaskPairing(_: PlaygroundProps = {}) {
                   className={isAdmitted ? 'text-slate-900' : 'text-slate-700 line-through'}
                 >
                   <th scope="row" className="py-0 pl-2 pr-4 text-left font-sans">{i}</th>
+                  {/* The copy's own object ids, which the kept note rests on: the graph constraint
+                      keys on these, the mask pairing on the one mask pair every copy shares. */}
+                  <td data-testid={`e13-copy-${i}-ids`} className="py-0 pr-4 tabular-nums">
+                    #{row.subject} → #{row.object}
+                  </td>
                   <td className="py-0 pr-4">{row.predicate}</td>
                   <td className="py-0 pr-4 text-right tabular-nums">{row.score.toFixed(2)}</td>
                 </tr>

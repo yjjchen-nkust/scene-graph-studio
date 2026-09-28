@@ -74,9 +74,9 @@ export function VrdPerPair(_: PlaygroundProps = {}) {
           value={share.toLocaleString('en-US')}
           note={t('playground.x2.share_note')}
         />
-        {/* No copy-table key names this note; "pool > 100" is the plain arithmetic condition
-            the yes/no rests on, not translated because no key exists for it (see the report). */}
-        <Readout id="X2.cut" label={t('playground.x2.cut')} value={cutValue} note="pool > 100" />
+        {/* The arithmetic condition the yes/no rests on, from the locale tables like every other
+            note (D106). */}
+        <Readout id="X2.cut" label={t('playground.x2.cut')} value={cutValue} note={t('playground.x2.cut_note')} />
       </div>
     </PlaygroundFrame>
   );

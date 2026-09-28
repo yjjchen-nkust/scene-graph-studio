@@ -25,7 +25,7 @@ describe('X2', () => {
     expect(screen.getByTestId('readout-X2.share-value')).toHaveTextContent('10');
     expect(screen.getByTestId('readout-X2.share')).toHaveTextContent('min(m, 100); K = 100, the engine\'s largest cut');
     expect(screen.getByTestId('readout-X2.cut-value')).toHaveTextContent('yes: 300 candidates for 100 places');
-    expect(screen.getByTestId('readout-X2.cut')).toHaveTextContent('pool > 100');
+    expect(screen.getByTestId('readout-X2.cut')).toHaveTextContent('candidates > 100');
   });
 
   it('m = 1: 30 candidates, the cut does not select', () => {
@@ -69,6 +69,8 @@ describe('X2', () => {
     expect(screen.getByTestId('readout-X2.share')).toHaveTextContent('min(m, 100)；K = 100 為引擎之最大截斷值');
     expect(screen.getByTestId('readout-X2.cut')).toHaveTextContent('截斷於 100 是否發揮篩選作用');
     expect(screen.getByTestId('readout-X2.cut-value')).toHaveTextContent('是：300 個候選競逐 100 個名次');
+    expect(screen.getByTestId('readout-X2.cut')).toHaveTextContent('候選數 > 100');
+    expect(screen.getByTestId('readout-X2.cut')).not.toHaveTextContent('pool');
   });
 
   it('takes no focus on mount', () => {

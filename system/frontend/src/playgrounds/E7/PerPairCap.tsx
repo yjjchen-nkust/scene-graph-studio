@@ -5,6 +5,7 @@ import { byScore, capPerPair, matchedRanks, matchedTruths, snap, topK } from '..
 import { M4_FRAME, M4_K_MAX, M4_RANKING } from '../M4/ranking';
 import { PairPhoto } from '../M4/PairPhoto';
 import { RankedList } from '../M4/RankedList';
+import { RowLine } from '../M4/RowLine';
 import { truthsNote } from '../M4/truths';
 import type { PlaygroundProps } from '../mounts';
 import { frameById } from '../slice';
@@ -24,8 +25,10 @@ const M_MAX = 10;
  * the same k slots, which is why the top-k count can fall as m rises even though the pool only
  * grows.
  *
- * Two parts (D96): part 1 is m, the row and the photograph the row chooses; part 2 is m, k, the
- * ranked list and the two counts. Mounted without a part, as its unit tests mount it, it is both.
+ * Two parts (D96): part 1 is m, the row, the photograph the row chooses and, beside it, the line
+ * saying whether m keeps that row and the pool at m; part 2 is m, k, the ranked list and the two
+ * counts. Mounted without a part, as its unit tests mount it, it is both, and the pool is drawn
+ * once, with the list.
  */
 export function PerPairCap({ part }: PlaygroundProps = {}) {
   const { t, locale } = useLocale();
@@ -45,6 +48,15 @@ export function PerPairCap({ part }: PlaygroundProps = {}) {
 
   const rowView = part !== 2;
   const listView = part !== 1;
+
+  const pool = (
+    <Readout
+      id="E7.pool"
+      label={t('playground.e7.pool')}
+      value={String(kept.length)}
+      note={t('playground.e7.pool_note')}
+    />
+  );
 
   const controls = (
     <>
@@ -89,6 +101,12 @@ export function PerPairCap({ part }: PlaygroundProps = {}) {
     <PlaygroundFrame title="E7" controls={controls} clip={false} dense>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {rowView && <PairPhoto row={chosenRow} testid="e7-pair" />}
+        {rowView && (
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <RowLine row={chosenRow} kept={kept} testid="e7-row-line" />
+            {!listView && pool}
+          </div>
+        )}
         {listView && (
           <div className="flex min-w-0 flex-1 flex-col gap-0">
             <RankedList
@@ -100,12 +118,7 @@ export function PerPairCap({ part }: PlaygroundProps = {}) {
               testid="e7-list"
             />
             <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-              <Readout
-                id="E7.pool"
-                label={t('playground.e7.pool')}
-                value={String(kept.length)}
-                note={t('playground.e7.pool_note')}
-              />
+              {pool}
               <Readout
                 id="E7.truths"
                 label={t('playground.m4.truths')}

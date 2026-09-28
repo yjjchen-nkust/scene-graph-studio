@@ -340,6 +340,9 @@
   "playground.m4.truths_note": "of the 6 annotated: {ids}",
   "playground.m4.none": "none",
   "playground.m4.to_l2": "Recall, this count over 6, is L2's to score.",
+  "playground.m4.row_line": "Row {row}: #{s} {sname} {predicate} #{o} {oname}, {state}",
+  "playground.m4.row_kept": "kept",
+  "playground.m4.row_dropped": "dropped by the constraint",
   "playground.e3.in_top": "Predictions in the top k",
   "playground.e3.in_top_note": "min(k, 7): the graph constraint keeps 7 of 12",
   "playground.e4.mode": "Constraint",
@@ -374,5 +377,6 @@
   "playground.x2.share_note": "min(m, 100); K = 100, the engine's largest cut",
   "playground.x2.cut": "Does the cut at 100 select?",
   "playground.x2.cut_yes": "yes: {pool} candidates for 100 places",
-  "playground.x2.cut_no": "no: all {pool} candidates fit in 100"
+  "playground.x2.cut_no": "no: all {pool} candidates fit in 100",
+  "playground.x2.cut_note": "candidates > 100"
 }

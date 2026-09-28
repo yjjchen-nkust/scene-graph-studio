@@ -39,9 +39,10 @@ const PARTS_LONGEST = [
   'm02/2?F3.lambda=2&F3.dx=120&F3.dy=100', 'm02/3?F3.lambda=2&F3.tau=0.95&F3.dx=120&F3.dy=100',
   'm03/2?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1', 'm03/3?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1',
   'm03/3?E1.bs=1',  'm03/5?E10.pr=predcls', 'm03/6?E10.pr=sgdet&E10.voc=vg150', 'm03/6?E10.pr=sgcls&E10.voc=vg150',
-  'm04/2?E3.k=12&E3.row=12', 'm04/3?E3.k=12',
-  'm04/5?E4.mode=none&E4.k=12', 'm04/6?E4.mode=none&E4.k=12',
-  'm04/9?E7.m=10&E7.k=12', 'm04/10?E7.m=10&E7.k=12',
+  // The first parts at a dropped row: their longest line, "dropped by the constraint" (D106).
+  'm04/2?E3.k=12&E3.row=2', 'm04/3?E3.k=12',
+  'm04/5?E4.mode=graph&E4.k=12&E4.row=2', 'm04/6?E4.mode=none&E4.k=12',
+  'm04/9?E7.m=1&E7.k=12&E7.row=2', 'm04/10?E7.m=10&E7.k=12',
   'm04/13?E13.multi=1&E13.d=5', 'm04/15?X2.m=70',
 ];
 

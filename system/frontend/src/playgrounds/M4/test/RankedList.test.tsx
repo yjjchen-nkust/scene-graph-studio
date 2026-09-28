@@ -56,11 +56,17 @@ describe('RankedList', () => {
     render(
       <RankedList rows={M4_RANKING} kept={KEPT_CAP1} k={1} chosen={1} matched={new Set([1])} testid="list" />,
     );
+    // Every row holds a ✓ so that no row's width moves with the match; a text match would pass for
+    // every row. What differs is whether the sign is shown.
+    const sign = (rank: number) =>
+      [...screen.getByTestId(`list-row-${rank}`).querySelectorAll('span')].find((s) => s.textContent === '✓')!;
     const row1 = screen.getByTestId('list-row-1');
     expect(row1).toHaveAttribute('data-matched', 'true');
-    expect(row1).toHaveTextContent('✓');
+    expect(sign(1)).not.toHaveClass('invisible');
     const row3 = screen.getByTestId('list-row-3');
+    expect(row3).toHaveAttribute('data-kept', 'true');
     expect(row3).toHaveAttribute('data-matched', 'false');
+    expect(sign(3)).toHaveClass('invisible');
   });
 
   it('does not mark a matched row that the cap dropped or the cut excluded', () => {

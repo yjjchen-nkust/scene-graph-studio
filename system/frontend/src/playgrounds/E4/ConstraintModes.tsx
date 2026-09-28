@@ -5,6 +5,7 @@ import { byScore, capPerPair, matchedRanks, matchedTruths, snap, topK } from '..
 import { M4_CAPS, M4_FRAME, M4_K_MAX, M4_RANKING } from '../M4/ranking';
 import { PairPhoto } from '../M4/PairPhoto';
 import { RankedList } from '../M4/RankedList';
+import { RowLine } from '../M4/RowLine';
 import { truthsNote } from '../M4/truths';
 import type { PlaygroundProps } from '../mounts';
 import { frameById } from '../slice';
@@ -21,9 +22,10 @@ type ConstraintMode = (typeof MODES)[number];
  * the same k, so a mode's own count sits beside the count it changed from -- one arithmetic,
  * `matchedTruths`, read twice over two pools built by the one `capPerPair`.
  *
- * Two parts (D96): part 1 is the mode, the row and the photograph the row chooses; part 2 is the
- * mode, k, the ranked list and the three counts. Mounted without a part, as its unit tests mount
- * it, it is both.
+ * Two parts (D96): part 1 is the mode, the row, the photograph the row chooses and, beside it,
+ * the line saying whether the mode keeps that row and the pool the mode keeps; part 2 is the mode,
+ * k, the ranked list and the three counts. Mounted without a part, as its unit tests mount it, it
+ * is both, and the pool is drawn once, with the list.
  */
 export function ConstraintModes({ part }: PlaygroundProps = {}) {
   const { t, locale } = useLocale();
@@ -50,6 +52,15 @@ export function ConstraintModes({ part }: PlaygroundProps = {}) {
 
   const rowView = part !== 2;
   const listView = part !== 1;
+
+  const pool = (
+    <Readout
+      id="E4.pool"
+      label={t('playground.e4.pool')}
+      value={String(kept.length)}
+      note={t('playground.e4.pool_note')}
+    />
+  );
 
   const controls = (
     <>
@@ -91,6 +102,12 @@ export function ConstraintModes({ part }: PlaygroundProps = {}) {
     <PlaygroundFrame title="E4" controls={controls} clip={false} dense>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {rowView && <PairPhoto row={chosenRow} testid="e4-pair" />}
+        {rowView && (
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <RowLine row={chosenRow} kept={kept} testid="e4-row-line" />
+            {!listView && pool}
+          </div>
+        )}
         {listView && (
           <div className="flex min-w-0 flex-1 flex-col gap-0">
             <RankedList
@@ -102,12 +119,7 @@ export function ConstraintModes({ part }: PlaygroundProps = {}) {
               testid="e4-list"
             />
             <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-              <Readout
-                id="E4.pool"
-                label={t('playground.e4.pool')}
-                value={String(kept.length)}
-                note={t('playground.e4.pool_note')}
-              />
+              {pool}
               <Readout
                 id="E4.truths"
                 label={t('playground.m4.truths')}

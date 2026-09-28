@@ -5,6 +5,7 @@ import { byScore, capPerPair, matchedRanks, matchedTruths, snap, topK } from '..
 import { M4_CAPS, M4_FRAME, M4_K_MAX, M4_RANKING } from '../M4/ranking';
 import { PairPhoto } from '../M4/PairPhoto';
 import { RankedList } from '../M4/RankedList';
+import { RowLine } from '../M4/RowLine';
 import { truthsNote } from '../M4/truths';
 import type { PlaygroundProps } from '../mounts';
 import { frameById } from '../slice';
@@ -17,9 +18,10 @@ import { frameById } from '../slice';
  * truths one of them names exactly. |G ∩ X_k| is a count, never R@k -- L2 is where the count is
  * divided by 6.
  *
- * Two parts (D96): part 1 is both knobs and the photograph of the row `E3.row` chooses; part 2
- * is the ranked list at `E3.k`, its two counts, and the line pointing at L2. Mounted without a
- * part, as its unit tests mount it, it is both.
+ * Two parts (D96): part 1 is both knobs, the photograph of the row `E3.row` chooses and the line
+ * beside it saying whether the graph constraint keeps that row; part 2 is the ranked list at
+ * `E3.k`, its two counts, and the line pointing at L2. Mounted without a part, as its unit tests
+ * mount it, it is both.
  */
 export function TopK({ part }: PlaygroundProps = {}) {
   const { t, locale } = useLocale();
@@ -70,6 +72,11 @@ export function TopK({ part }: PlaygroundProps = {}) {
     <PlaygroundFrame title="E3" controls={controls} clip={false} dense>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {rowView && <PairPhoto row={chosenRow} testid="e3-pair" />}
+        {rowView && (
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <RowLine row={chosenRow} kept={kept} testid="e3-row-line" />
+          </div>
+        )}
         {listView && (
           <div className="flex min-w-0 flex-1 flex-col gap-0">
             <RankedList

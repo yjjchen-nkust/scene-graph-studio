@@ -62,6 +62,13 @@ describe('E13', () => {
     expect(screen.getByTestId('e13-copy-1').className).not.toContain('line-through');
   });
 
+  it("names each copy's own pair of object ids, which is why the graph constraint keeps them all", () => {
+    renderAt('/m/m04?E13.multi=1&E13.d=5');
+    for (const [i, ids] of [[1, '#2 → #5'], [2, '#12 → #22'], [3, '#13 → #23'], [4, '#14 → #24'], [5, '#15 → #25']] as const) {
+      expect(screen.getByTestId(`e13-copy-${i}-ids`)).toHaveTextContent(ids);
+    }
+  });
+
   it('MultiMPO admits every copy, none struck through', () => {
     renderAt('/m/m04?E13.multi=1&E13.d=3');
     for (const i of [1, 2, 3]) {
