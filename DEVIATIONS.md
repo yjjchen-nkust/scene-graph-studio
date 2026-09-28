@@ -3843,3 +3843,51 @@ run" on 2026-09-28 at 10:13, queued since 09:08. Registering a runner remains
 **Verification.** `npm run ci` exit 0: **286 pytest** and 7 skipped (281 before), **909 vitest in
 67 files** (901 before), parity 20, i18n 331 keys, content lint clean over 20 golden cases. No
 frontend production code changed on the branch. See VERIFICATION §27.
+
+## D105 — an empty training split is no split: the author's ruling, pinned
+
+**Plan:** none. D104 left one condition without a vector: a request supplying
+`zero_shot_train_triplets: []`. **Decisions:** the author's, on 2026-09-28. The question offered
+three choices: "Treat as none", "Follow SRS: zR = R" and "Reject with 422". The author chose
+"Treat as none". Branch `fix/sgs-empty-split`, from `main` at `ba87229`.
+
+**The disagreement.** Both engines read an empty split as a split not supplied. zR is null at
+every K, and `zero_shot_unavailable` is raised; its text reads "No training split was supplied".
+SRS §4.3 defines zR@K on the ground truth "absent from the training split". Read literally, an
+empty split leaves every triplet absent, which gives zR = R. Contracts §1.5 said only "Omitted →
+every zR MetricValue has value null". The ruling adopts what both engines already do, so no
+engine code changes.
+
+**The ruling, where each reader meets it.**
+- SRS §4.3 and contracts §1.5 each carry a bracketed amendment.
+- The contract's amendment also states D104's rule on unscored predictions, which it had not
+  stated: a prediction without a score shares no score, ranks after every scored one in input
+  order, and raises no tie.
+- In the golden README, gv-021's row replaces the sentence that named the empty split as the one
+  condition without a case.
+
+**gv-021-empty-training-split.** This is gv-001's scene with the split supplied as `[]`.
+- *Expectation.* R, mR and ngR at 20 are 1 and zR is null. The warnings are
+  `gt_boxes_not_pairs` and `zero_shot_unavailable`. The literal reading would give zR@20 = 1, and
+  a build that returned 0 would also fail.
+- *Provenance.* The expectation was computed on paper from the amended definition, and both
+  engines agree with it. `vectors.json` gains this case and changes no other.
+- *Watched to fail.* Each engine was mutated to read `[]` as a split: zR computed, and the warning
+  raised only when the field is absent. Each mutant fails gv-021 alone:
+  - pytest: 1 failed, 286 passed;
+  - vitest's metrics project: 1 failed, 42 passed;
+  - with the TypeScript mutant built, `parity.mjs` reports "zR@20: python=null typescript=1" and
+    the warnings differing.
+- *Nothing held this before.* At `ba87229`, no vector supplied an empty split. gv-011, the only
+  vector with a split, supplies two triplets.
+
+**The records tests.** This record's test failed on its missing heading first. The test that
+takes the count of golden vectors from the file failed on INDEX's 20 once gv-021 was written,
+before INDEX and README were brought to 21.
+
+**Continuous integration, not changed.** The three commit statuses of `ba87229` read "Waiting to
+run" on 2026-09-28 at 11:14, queued since its push at 11:11.
+
+**Verification.** `npm run ci` exit 0: **287 pytest** and 7 skipped (286 before), **911 vitest
+in 67 files** (909 before), parity 21, i18n 331 keys, content lint clean over 21 golden cases. No
+engine or frontend production code changed. See VERIFICATION §28.
