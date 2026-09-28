@@ -24,6 +24,17 @@ const source = (path: string) => readFileSync(new URL(path, import.meta.url), 'u
 const atLeast = (text: string, pattern: RegExp, floor: number, name: string) =>
   expect(Number(pattern.exec(text)?.[1]), name).toBeGreaterThanOrEqual(floor);
 
+/**
+ * One deviation's record, from its heading to the next, empty when it has none. Sliced to the end
+ * of the file, a later record naming an item would satisfy this one's test (D104).
+ */
+const record = (deviations: string, id: string) => {
+  const start = deviations.indexOf(`## ${id} — `);
+  if (start === -1) return '';
+  const end = deviations.indexOf('\n## ', start + 1);
+  return deviations.slice(start, end === -1 ? undefined : end);
+};
+
 describe('the module registry', () => {
   it('finds m00 in both locales without a hand-kept list', () => {
     expect(moduleIds()).toContain('m00');
@@ -296,8 +307,9 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', source('../../../../../CLAUDE.md')], ['INDEX', index]]) {
       expect(Number(/D1…D(\d+)/.exec(text)?.[1]), name).toBeGreaterThanOrEqual(100);
     }
-    expect(index).toContain('The 17 golden vectors');
-    expect(source('../../../../../README.md')).toContain('parity 17/17');
+    // At least D100's 17: D104 added two, and a pinned count turned this test red (D104).
+    atLeast(index, /The (\d+) golden vectors/, 17, 'INDEX golden vectors');
+    atLeast(source('../../../../../README.md'), /parity (\d+)\/\d+/, 17, 'README parity');
   });
 
   it("the records say what D100's branch measured and moved (its review)", () => {
@@ -306,7 +318,9 @@ describe('the playground step kind', () => {
     const claude = source('../../../../../CLAUDE.md');
     const index = source('../../../../../docs/INDEX.md');
     // Counts and section lists the branch moved.
-    expect(source('../../../../../README.md')).toContain('seventeen cases');
+    // The count is a word, so it is held from below by refusing the one D100 replaced (D104).
+    expect(source('../../../../../README.md')).toMatch(/`data\/golden\/vectors\.json`, \w+ cases whose/);
+    expect(source('../../../../../README.md')).not.toContain('sixteen cases');
     expect(claude).toContain('§24 the review minors');
     expect(claude).toContain('three tests in `playgrounds/test/logic.test.ts`');
     expect(index).toContain('the review minors (§24)');
@@ -376,7 +390,7 @@ describe('the playground step kind', () => {
     expect(index).not.toContain('the ten newest');
     // The five items D100's review deferred, each named where it was settled.
     for (const item of ['dangling_reference', 'gv-017', 'idRun', 'E1_DEFECTS', '►']) {
-      expect(deviations.slice(deviations.indexOf('## D102 — ')), item).toContain(item);
+      expect(record(deviations, 'D102'), item).toContain(item);
     }
   });
 
@@ -386,7 +400,7 @@ describe('the playground step kind', () => {
     const index = source('../../../../../docs/INDEX.md');
     const readme = source('../../../../../README.md');
     // Whitespace collapsed, since a phrase may wrap across a line of the record.
-    const d103 = deviations.slice(deviations.indexOf('## D103 — ')).replace(/\s+/g, ' ');
+    const d103 = record(deviations, 'D103').replace(/\s+/g, ' ');
     expect(deviations).toContain('## D103 — ');
     expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 26. ');
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
@@ -404,6 +418,38 @@ describe('the playground step kind', () => {
     atLeast(readme, /(\d+) TypeScript tests across \d+ files/, 901, 'README vitest');
     atLeast(index, /\*\*(\d+) pytest\*\*/, 281, 'INDEX pytest');
     atLeast(index, /\*\*(\d+) vitest\*\* in \d+ files/, 901, 'INDEX vitest');
+  });
+
+  it('the records carry D104 and the vectors it added', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    const golden = source('../../../../../data/golden/README.md');
+    const d104 = record(deviations, 'D104').replace(/\s+/g, ' ');
+    expect(deviations).toContain('## D104 — ');
+    expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 27. ');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 104, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 104, 'CLAUDE.md deviations');
+    expect(claude).toContain('§27 the review of the open checks');
+    expect(index).toContain('the review of the open checks (§27)');
+    // The two vectors, each where a reader of the golden file looks for what a case pins.
+    for (const id of ['gv-018', 'gv-019']) {
+      expect(golden, id).toContain(`| \`${id}\` |`);
+      expect(d104, id).toContain(id);
+    }
+    atLeast(index, /parity (\d+) agree/, 19, 'INDEX parity');
+    atLeast(readme, /parity (\d+)\/\d+/, 19, 'README parity');
+    expect(readme).not.toContain('seventeen cases');
+    // What was settled, what was declined, and what is still queued.
+    for (const item of ['test_some_case_raises_every_warning', 'not a placeholder name', "record(",
+      'Declined', '5eabab6', 'Waiting to run']) {
+      expect(d104, item).toContain(item);
+    }
+    atLeast(readme, /(\d+) Python tests/, 285, 'README pytest');
+    atLeast(index, /\*\*(\d+) pytest\*\*/, 285, 'INDEX pytest');
   });
 
   it('the protocol ordering survives nowhere as a law', () => {

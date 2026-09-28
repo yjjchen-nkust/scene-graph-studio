@@ -38,8 +38,8 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-27-playgrounds-m3.md` | M3's corrections, `PhotoMarks`, E1 and E10, their golden cases, M3 s3 to s7 | **executed** |
 | `superpowers/plans/2026-09-27-graph-constraint-key.md` | Both engines re-keyed, gv-014, `semi` described, D51 corrected | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D103. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25) and the open checks (§26)** | live |
+| `../DEVIATIONS.md` | **D1…D104. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26) and the review of the open checks (§27)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | The freeze, its release by D-23, and every correction made under it | live |
 
@@ -85,7 +85,7 @@ drifts.
 |---|---|---|
 | **NFR-1** | Offline-complete; every P0 feature works with the network down and `torch` absent | the committed placeholder slice |
 | **NFR-2** | Honest numbers: every figure carries a source and a `verified` flag | `content_lint.mjs` |
-| **NFR-3** | Two implementations, one truth | `parity.mjs`, 17 golden vectors |
+| **NFR-3** | Two implementations, one truth | `parity.mjs`, 19 golden vectors |
 | **NFR-4** | Determinism, including tie-break order | `sorted(key=(-score, relationship_id))` |
 | **NFR-5** | Projector-legible; colour-blind-safe diff | lecture shell |
 | **NFR-6** | Bilingual parity; no fallback locale | `i18n_parity.mjs` |
@@ -104,7 +104,7 @@ drifts.
 | Protocols `predcls` / `sgcls` / `sgdet` | `design.md` §4.3; the `gt_boxes_not_pairs` warning is unconditional |
 | Constraint modes `graph` / `none` / `semi` | `design.md` §4.3 |
 | Mask pairing `single_mpo` / `multi_mpo` | `design.md` §4.3; L6 runs both |
-| The 17 golden vectors | `system/backend/scripts/build_golden.py`, each with a `why` |
+| The 19 golden vectors | `system/backend/scripts/build_golden.py`, each with a `why` |
 | Corpus layouts, per dataset | `system/backend/app/datasets/adapters/__init__.py` — `LAYOUTS` |
 | Which datasets may be committed or distributed | `data/LICENCES.md` |
 | The slice selection rule | `system/backend/app/datasets/loader.py` — `SELECTION_RULE` |
@@ -120,7 +120,7 @@ drifts.
 ## 5. State, 2026-09-26
 
 **Built.** Plan 01: FastAPI backend, the evaluation engine in Python and TypeScript held identical
-by golden vectors (13 at plan 01's close, 16 after D99, 17 since D100), slice ingestion with both licence gates, `/api/health`, `/api/eval`,
+by golden vectors (13 at plan 01's close, 16 after D99, 17 since D100, 19 since D104), slice ingestion with both licence gates, `/api/health`, `/api/eval`,
 `/api/datasets`, the Vite frontend skeleton, and CI as one command.
 
 **Data.** Corpora at `C:\DataRaw` (`SGS_CORPUS_ROOT`). Three slices cut with seed 20260915:
@@ -377,15 +377,24 @@ key to carry the same placeholders in both locales, each as often, and no value 
 and a suite holds its four rules. `npm run check:perf` passed 23 on the merged `main`. CI for `9b678af` is still waiting
 for a runner. See D103 and VERIFICATION §26.
 
-**Verification.** `npm run ci` green, 2026-09-28, after D103: **281 pytest** and 7 skipped, parity 17 agree, i18n 331 keys both locales,
-**901 vitest** in 67 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**The review of the open checks, 2026-09-28.** The exact comparison held only the warnings some
+vector raises, and no vector ran SGCls or carried masks in one graph only, so either engine could
+drop `masks_ignored` or SGCls's `gt_boxes_not_pairs` and every harness passed. gv-018 and gv-019
+raise them, and two tests require the vectors to raise every warning and run every protocol.
+`i18n_parity.mjs` refuses a braced name outside `\w+`, which its comparison could not read; the
+missing-key check is tested in both directions; each records test reads its own record alone.
+`npm run test:e2e` and `npm run check:perf` passed on `main` at `5eabab6`. CI for `5eabab6` is
+still waiting for a runner. See D104 and VERIFICATION §27.
+
+**Verification.** `npm run ci` green, 2026-09-28, after D104: **285 pytest** and 7 skipped, parity 19 agree, i18n 331 keys both locales,
+**906 vitest** in 67 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 44 symbols, 42 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (254 equations), frontend builds. `npm run test:e2e`,
-2026-09-27:
+2026-09-28, on `main` at `5eabab6`:
 75 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
-check:perf`, 2026-09-28, on `main` at `9b678af`: 23 passed, NFR-8 measured over five labs and nine playgrounds, plus the D75 selection guard.
+check:perf`, 2026-09-28, on `main` at `5eabab6`: 23 passed, NFR-8 measured over five labs and nine playgrounds, plus the D75 selection guard.
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in
