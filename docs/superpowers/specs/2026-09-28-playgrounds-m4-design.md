@@ -240,7 +240,9 @@ K = 100 one pair can take is min(m, 100) = 1, 10 or 70; and whether the cut at 1
 (not at m = 1, where the pool of 30 is below 100). No fixture and no photograph.
 [**As built (D106):** the cut's readout carries the note `pool > 100` in both locales, the one
 note outside the locale tables. The pool's note cites the VRD step as "M4 s15"; the plan's "M4 s8"
-was its id before the build.]
+was its id before the build.] [**Corrected 2026-09-28 (D106's final review):** it was not the one
+note outside the tables; E13's `note="d"`, a symbol shown the same in both locales, is another.
+The cut's note is now `playground.x2.cut_note`, "candidates > 100" and 「候選數 > 100」.]
 
 ---
 

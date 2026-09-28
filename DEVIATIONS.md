@@ -4023,8 +4023,10 @@ a third copy of it.
 - *X2*, at s16, after the VRD step s15: m ∈ {1, 10, 70} over `ph-001`'s six objects. It shows 30
   ordered pairs, a pool of 30, 300 or 2,100, at most 1, 10 or 70 of the top 100 for any one pair,
   and whether the cut at 100 selects, which it does not at m = 1. The copy table gave the
-  cut's readout no note; it carries `pool > 100` in both locales, the one note not in a locale
-  table (`b97bd0a`).
+  cut's readout no note; it carried `pool > 100` in both locales, written in the component
+  (`b97bd0a`). It was not the one note outside the locale tables, as this record first said:
+  E13's `note="d"` is another, a symbol shown the same in both locales. The final review below
+  moved the cut's note into the tables.
 
 E3, E4 and E7 span two parts each, the photograph and then the list, as the spec expected; E13 and
 X2 are one step each. Twenty-two golden cases on `ph-001` pin the five, 64 playground cases in all
@@ -4123,3 +4125,70 @@ with 45 symbols, standalone current at 254 equations, frontend builds 785 module
 34.6 ms, E7 33.6 ms, E13 33.2 ms and X2 33.1 ms. E3, E7 and X2 fall below their two-frame
 floors, and none is more than 1 ms above its floor: E4 is 0.9 ms above and E13 0.6 ms. See
 VERIFICATION §29.
+
+**The final review** (`f082e1b`, `b57328b`). A review of the whole branch, `992287e..480bd1e`,
+found five items and triaged the deferred minors; each is settled here except M7, which is open.
+- *I1, notes describing what the first parts did not show.* s6's and s10's notes read the pool
+  and a struck-through row off E4's and E7's first parts, which showed neither, and s9's sent the
+  room to "the next step", s10, for the fall at k = 2 that s11 shows. Part 1 of E3, E4 and E7 now
+  carries, beside the photograph, a line naming the chosen row as a triplet of `ph-001`'s object
+  ids and class names and saying whether the pool keeps it (`playground.m4.row_line`, `row_kept`,
+  `row_dropped`, test ids `e3-row-line`, `e4-row-line`, `e7-row-line`); E4's and E7's first parts
+  carry the `E4.pool` and `E7.pool` readouts too. s9's note names s11, and s6's and s10's describe
+  the line and the pool. The first parts' margins at 1024 × 768 in 繁體中文 are unchanged, 145.9,
+  140.9 and 145.9 px, in every row state measured, since the column beside the photograph is
+  shorter than the photograph. The projector suite's first-part states are now dropped rows, whose
+  line is the longest.
+- *I2, other modules citing M4's steps by their old ids.* M8 cited "M04 s7" twice for mask
+  pairing, M11 "M04 s4" for the covariance identity and M12 "M04 s9" for the calibration item;
+  they now cite s13, s8 and s17, in both locales. A registry test lists every citation of an M4
+  step in the modules and the locale tables, twelve, and holds each to its step's kind and
+  content; before the change it failed on the eight citations of the old ids.
+- *I3, s12 still derived recall as affine in λ.* The Formal line named the blend `R_p(λ)`, and the
+  Worked step summed it into `R(λ)` and `mR(λ)`, both affine. The blend is now `σ_p(λ)`, the score
+  of the symbol table; the Worked step says that `R(λ)` is `R@k` of the ranking by `σ(λ)`, and
+  likewise `mR(λ)`, constant in λ except where two blended scores cross; `R_p` stays s8's
+  per-predicate recall. MATH.E11 and DERIV.E11 are rebuilt and harvested, and L3's two comments
+  naming the blend write `sigma_p`. The corrections test now refuses `R(\lambda) &= \sum_p` and
+  `R_p(\lambda)=(1-\lambda)` in both M4 files and `deriv.E11`; it failed first on the missing σ.
+- *I4, the map's X2 note* said that at k = 70 the number is close to pair recall. It now writes m
+  for VRD's k and says that at m = 70 every predicate of every pair is a candidate while the cut at
+  K still ranks them. The corrections test refuses "pair recall" in the note, and failed first on
+  "close to pair recall". `FROZEN.md` records I3 and I4 as items 6 and 7 of its 2026-09-28 entry.
+- *I5, right numbers, wrong causes.* s7's note credited semi's fourth match at k = 6 to "a second
+  slot on that same pair"; it is person–table's runner-up, rank 7 (near, g2), which graph drops,
+  while under none person–wrench's third row, rank 6, takes the sixth place. s11's credited the
+  rise from 3 to 5 at k = 12 to "room for both"; the two it adds are the runner-ups graph drops,
+  rank 7 (g2) and rank 10 (g3), g1 being counted at m = 1 already.
+- *The minors.* s6's note now defines semi where it is first used, pointing at s9 (M4); s4's says
+  that the plateau is 3, the ground truths inside the seven-row pool (M8); M4's symbol table gains
+  X, X^ng and m, 48 symbols in the corpus (M9); X2's cut note is `playground.x2.cut_note`,
+  "candidates > 100" and 「候選數 > 100」 (T8), which also corrects this record's "the one note not in
+  a locale table" and spec §5.5's (M2); RankedList's ✓ test asserts that the matched row's sign is
+  visible and an unmatched kept row's is not, where `toHaveTextContent('✓')` held for every row
+  (M1); a test renders all fourteen playgrounds and requires the dense frame of exactly E3, E4,
+  E7, E13 and X2 and the measured frame of every other (M3); E13's table names each copy's object
+  ids, #2 → #5 to #15 → #25, at an unchanged margin of 90.8 px (M5); INDEX's M4 paragraph marks its
+  ids as those before the renumbering (T12b). The ✓ test failed under a mutation showing every
+  sign, which the old test passed; the dense test failed with E13's `dense` removed, with F2's
+  added, and with the dense padding changed.
+- *Open, M7.* The brief (`web/brief/index.html:577`) defines pair recall,
+  PR@k = |π(G) ∩ π(X_k)| / |π(G)|, and states R@k ≤ PR@k with no condition on the constraint. The
+  bound holds under the graph constraint, where X_k carries one triplet a pair, and fails without
+  it when two ground truths share a pair. A counterexample run for this record: ground truths
+  (1,2,on), (1,2,near) and (3,4,on) against the predictions (1,2,on,.9), (1,2,near,.8) and
+  (3,4,on,.7) give, on the built engine under `none`, R@2 = 2/3 (it prints 0.6666666666666666),
+  while X_2 covers 1 of the 2 annotated pairs, so PR@2 = 1/2; under `graph` X_2 covers both. The engine computes no pair
+  recall, and the pair count is read off the example. M4 s15 now writes PR@K for phrase
+  detection, while the brief writes PR@k for pair recall and M8 speaks of pair recall. Left for its
+  own cycle.
+- *Found and left open.* The symbol table's new m, predicates per ordered pair, is the letter
+  s13's Formal and Worked lines use for a mask, |{m : π(m) = (s,o)}|; and s12's prior π_p shares
+  its letter with the pair map π of the symbol table.
+- *Verification.* `npm run ci` exit 0: 287 pytest and 7 skipped, **1016 vitest in 74 files**
+  (1009 before), parity 21, **i18n 380 keys** (376 before), 20 of them with a placeholder (19
+  before), content lint clean over 21 golden cases, 64 playground cases and 25 release figures
+  with **48 symbols** (45 before), standalone current at 254 equations, frontend builds 786
+  modules (785 before). `npm run test:e2e` 79, 1.4 min. `npm run check:perf` 28; E3 32.8 ms, E4
+  32.9 ms, E7 34.5 ms, E13 33.9 ms and X2 31.3 ms, where E7 is 1.3 ms above its 33.2 ms
+  two-frame floor and the other four are below theirs. See VERIFICATION §29.

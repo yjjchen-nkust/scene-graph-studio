@@ -116,7 +116,8 @@ cd scene-graph-studio\system ; npm run ci
   clips only a picture** (`clip`, default on): a playground of words and figures passes
   `clip={false}`, because a word under the clip is beyond the reach of the step's scroll (D93).
   **`PlaygroundFrame`'s `dense` is M4's**, for its twelve-row lists at 1024×768; the earlier
-  playgrounds keep the measured default, and their records (D95 to D102) measure it (D106).
+  playgrounds keep the measured default, and their records (D95 to D102) measure it (D106);
+  `playgrounds/test/Playground.test.tsx` requires the dense frame of exactly E3, E4, E7, E13 and X2.
   **A playground too tall for one panel spans consecutive steps as parts** (D96): `part: n` on
   each step and its tag, the count in `PLAYGROUND_PARTS` in `mounts.tsx`, E1, E10, E3, E4, E7, F1, F3, F6 and F7 in two
   and X1 in three. The stepper carries the knobs between the parts of one playground and nowhere

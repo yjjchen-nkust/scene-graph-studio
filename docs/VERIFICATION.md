@@ -1625,3 +1625,72 @@ byte for byte, each failed one of the two:
 | CLAUDE.md naming the marks test by a title the projector suite does not carry | 1 failed: the D106 test |
 | INDEX's presenter notes left at 109 steps and 218 notes | 1 failed: INDEX notes, against 117 and 234 |
 | README's playgrounds in parts left at nine | 1 failed: README parts, nine against ten |
+
+### The final review, re-run
+
+D106's final review (`f082e1b`, `b57328b`). The three runs below were made on `b57328b`, the wave's
+last commit before its records, and `npm run ci` again on the records commit. The tree was clean
+after each run.
+
+| Step | Result |
+|---|---|
+| harvest | 93 knowledge points, 27 live; 26 formulas and 23 derivations, MATH.E11 and DERIV.E11 rebuilt |
+| pytest | 287 passed, 7 skipped |
+| vitest | **1016 passed in 74 files** (1009 before) |
+| parity | 21 cases agree |
+| i18n parity | **380 keys**, both locales complete (376 before); **20** carry a placeholder (19 before), all agreeing |
+| content lint | 21 golden cases, 64 playground cases, 25 release figures, 7 licence rows, 15 of 15 modules × 2 locales, 93 points assigned, **48 symbols** (45 before), clean |
+| frozen lints | no problems; 26 playgrounds, 26 formulas, 23 derivations |
+| standalone | up to date, 254 equations, 1063 KB |
+| frontend build | **786 modules** (785 before) |
+| `npm run test:e2e` | **79 passed**, 1.4 min |
+| `npm run check:perf` | **28 passed**, 22.8 s |
+
+The seven new vitest tests: the row line on E3's first part, E4's first part at graph and at row
+2, E4's rows 2 and 6 under semi and none, E7's first part at m = 2 and m = 3, E13's object ids,
+the dense boundary, and every citation of an M4 step. The five component tests failed before the
+change on a missing test id, and the citation test on the eight citations of the old ids. The
+dense test and the strengthened ✓ test pass on correct code and were run against mutations:
+
+| Mutation | Result |
+|---|---|
+| RankedList's ✓ shown in every row | the new ✓ test failed; the old one passed 10 of 10 |
+| E13 without `dense` | the dense test failed: `E3, E4, E7, X2` against the five |
+| F2 with `dense` | the dense test failed: `F2` among the dense |
+| the dense frame's padding `p-2` made `p-4` | the dense test failed on E13's class |
+
+**Fit.** Pixels between the step's content and the bottom of the panel, in the measure of the table
+above, on the production build of `f082e1b`'s code: every row state of the first parts, rows 1 to
+12 under graph for E3, under graph, semi and none for E4, and at m = 1, 2, 3 and 10 for E7. The
+same measure gives the table above's second parts and X2, and E13 with its new column of object
+ids, to the tenth of a pixel at all three sizes.
+
+| Step | 繁體中文, 1024×768 | 1280×800 | 1920×1080 | English, 1024×768 | 1280×800 | 1920×1080 |
+|---|---|---|---|---|---|---|
+| M4 s3, E3 part 1 | 145.9 | 173.0 | 401.8 | 106.9 | 167.0 | 401.8 |
+| M4 s6, E4 part 1 | 140.9 | 168.0 | 396.8 | 101.9 | 162.0 | 396.8 |
+| M4 s10, E7 part 1 | 145.9 | 173.0 | 401.8 | 106.9 | 167.0 | 401.8 |
+| M4 s14, E13 | 90.8 | 128.8 | 537.8 | 37 past | 122.8 | 452.8 |
+
+The first parts' margins are the ones measured before the row line and the pool were added: at
+every size the column beside the photograph is shorter than the photograph, 66 px of line at most
+at 1024 × 768 against a photograph 261.1 px high. The English second parts run past the panel as
+before, 16, 102 and 16 px at 1024 × 768. The projector suite's first-part states are now row 2
+under graph, and at m = 1 for E7, where the line reads "dropped by the constraint".
+
+**NFR-8.** `npm run check:perf`, exit 0, 28 tests:
+
+| Playground | Knob | Input to paint | Two-frame floor |
+|---|---|---|---|
+| E3 | k to 5 | 32.8 ms | 33.4 ms |
+| E4 | mode to semi | 32.9 ms | 33.7 ms |
+| E7 | m to 2 | 34.5 ms | 33.2 ms |
+| E13 | MultiMPO on | 33.9 ms | 34.0 ms |
+| X2 | m to 70 | 31.3 ms | 34.1 ms |
+
+E7 is 1.3 ms above its floor, as the run printed the work above it; the other four are below
+theirs. Cold starts read 209 to 317 ms.
+
+**Open.** M7 is recorded in D106: the brief's R@k ≤ PR@k for pair recall needs the graph
+constraint, and a counterexample run on the engine for that record gives R@2 = 2/3 under `none`
+with 1 of 2 annotated pairs covered.

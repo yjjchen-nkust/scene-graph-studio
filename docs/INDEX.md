@@ -408,23 +408,26 @@ the pool growing 7, 11, 12 while the count at k = 2 falls from 2 to 1. E13 count
 MultiMPO admit at one mask pair and whether person holding wrench is matched; X2 counts VRD's
 candidates, 30, 300 or 2,100, against the cut at 100. Each follows the math step that teaches it,
 E3, E4 and E7 in two parts each, M4 going from 11 steps to 19. Five statements were corrected
-first: s3 derived R@k ≤ ngR@k from an inclusion between two top-k cuts, which three predictions on
+first (M4's step ids before the renumbering): s3 derived R@k ≤ ngR@k from an inclusion between two top-k cuts, which three predictions on
 the built engine refute (R@2=1, ngR@2=0); s5 derived recall rising with m at a fixed k; s4 named a
 slider the lecture does not have and divided by C where the engine averages over |P′|; s6 called
 recall affine in λ; and s8 wrote k for VRD's per-pair count and cited a proposition the course
 never states. s10's account of L3 was corrected with them. M4's parts fit 1024×768 in 繁體中文 through `PlaygroundFrame`'s opt-in `dense`,
-which leaves the nine earlier playgrounds' measured layout as it was. See D106 and VERIFICATION
-§29.
+which leaves the nine earlier playgrounds' measured layout as it was. The branch's final review
+found the first parts of E3, E4 and E7 described in their notes but not shown, and three other
+modules citing M4's steps by their old ids; the first parts now name the chosen row and, for E4
+and E7, the pool, the citations name s13, s8 and s17, s12's blend is the score σ_p(λ), and the
+brief's unconditioned R@k ≤ PR@k is left open. See D106 and VERIFICATION §29.
 
-**Verification.** `npm run ci` green, 2026-09-28, after D106: **287 pytest** and 7 skipped, parity 21 agree, i18n 376 keys both locales,
-**1009 vitest** in 74 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
-assigned, 45 symbols, 64 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
+**Verification.** `npm run ci` green, 2026-09-28, after D106's final review: **287 pytest** and 7 skipped, parity 21 agree, i18n 380 keys both locales,
+**1016 vitest** in 74 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+assigned, 48 symbols, 64 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (254 equations), frontend builds. `npm run test:e2e`,
-2026-09-28, on branch `feat/playgrounds-m4` at `9b5fd86`:
+2026-09-28, on branch `feat/playgrounds-m4` at `b57328b`:
 79 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
-check:perf`, 2026-09-28, on branch `feat/playgrounds-m4` at `9b5fd86`: 28 passed, NFR-8 measured over five labs and fourteen playgrounds, plus the D75 selection guard.
+check:perf`, 2026-09-28, on branch `feat/playgrounds-m4` at `b57328b`: 28 passed, NFR-8 measured over five labs and fourteen playgrounds, plus the D75 selection guard.
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in

@@ -636,6 +636,15 @@ describe('the playground step kind', () => {
     expect(index).toContain('the M4 playgrounds (§29)');
     // The counterexample, two of the five playgrounds, and where the branch was cut.
     for (const item of ['R@2=1', 'E13', 'X2', '992287e']) expect(d106, item).toContain(item);
+    // The final review: what it changed, M7 left open, and the "one note" claim corrected where it
+    // was made, in this record and in spec §5.5.
+    for (const item of ['The final review', 'row_line', 'M04 s7', 'playground.x2.cut_note', 'Open, M7', 'R@2 = 2/3']) {
+      expect(d106, item).toContain(item);
+    }
+    expect(d106).not.toContain('`pool > 100` in both locales, the one note');
+    expect(source('../../../../../docs/superpowers/specs/2026-09-28-playgrounds-m4-design.md'))
+      .toContain("[**Corrected 2026-09-28 (D106's final review):** it was not the one");
+    expect(index).toContain("(M4's step ids before the renumbering)");
     // M4's density is its own; the nine earlier playgrounds keep the layout their records measured.
     expect(claude).toContain("`PlaygroundFrame`'s `dense` is M4's");
     // The browser tests CLAUDE.md cites by name are tests the projector suite runs.
