@@ -512,3 +512,123 @@ export function idRun(ids: readonly number[]): { first: number; last: number } |
   }
   return { first: sorted[0]!, last: sorted[sorted.length - 1]! };
 }
+
+// ---- M4: the ranked list and its arithmetic -------------------------------------------------
+
+/**
+ * Score descending; equal scores keep their input order.
+ *
+ * `Array.prototype.sort` is stable in the engines this project targets, but the tie-break is
+ * spelled out rather than leaned on: a row's own index, carried alongside it through the sort,
+ * is what "input order" means once two scores tie, and stays true whatever the engine underneath.
+ */
+export function byScore<T extends { score: number }>(rows: T[]): T[] {
+  return rows
+    .map((row, index) => ({ row, index }))
+    .sort((a, b) => b.row.score - a.row.score || a.index - b.index)
+    .map(({ row }) => row);
+}
+
+/**
+ * At most `cap` rows per ordered (subject, object) pair, in the order `ranked` already carries.
+ *
+ * The graph constraint is `cap = 1`, the engine's `semi` default is `cap = 2`, and `M4_CAPS.none`
+ * (`Infinity`) keeps every row: `seen >= Infinity` never holds, so nothing is dropped and no
+ * special case is needed for "no cap at all".
+ */
+export function capPerPair<T extends { subject: number; object: number }>(ranked: T[], cap: number): T[] {
+  const counts = new Map<string, number>();
+  const out: T[] = [];
+  for (const row of ranked) {
+    const key = `${row.subject}|${row.object}`;
+    const seen = counts.get(key) ?? 0;
+    if (seen >= cap) continue;
+    counts.set(key, seen + 1);
+    out.push(row);
+  }
+  return out;
+}
+
+/** The first `k` rows of a pool already in the order that decides membership. */
+export function topK<T>(pool: T[], k: number): T[] {
+  return pool.slice(0, k);
+}
+
+/**
+ * Whether one ranked row names one ground truth exactly: the same subject id, the same object id
+ * and the same predicate. The one rule `matchedTruths` and `matchedRanks` both read the pool
+ * through, so the two can never drift apart on what counts as a match -- only on which half of the
+ * pair, the truth or the row, each returns.
+ */
+function namesTruth(row: { subject: number; predicate: string; object: number }, truth: SGRelationship): boolean {
+  return row.subject === truth.subject_id && row.object === truth.object_id && row.predicate === truth.predicate;
+}
+
+/**
+ * The ground truths some row of `top` names exactly. Ascending, since a playground reports which
+ * ground truths a cut finds, not the order the rows that found them happened to rank in.
+ */
+export function matchedTruths(
+  top: { subject: number; predicate: string; object: number }[],
+  truths: SGRelationship[],
+): number[] {
+  const out: number[] = [];
+  for (const truth of truths) {
+    if (top.some((row) => namesTruth(row, truth))) out.push(truth.relationship_id);
+  }
+  return out.sort((a, b) => a - b);
+}
+
+/**
+ * The ranks of `top`'s own rows that name some ground truth exactly, same rule as `matchedTruths`
+ * read the other way round: that asks each truth which row of `top` found it, this asks each row
+ * of `top` whether it found a truth. A `RankedList` marks a row's ✓ by rank, not by relationship
+ * id, so this is what a playground hands it rather than re-deriving ranks from `matchedTruths`'
+ * ids.
+ */
+export function matchedRanks(
+  top: { rank: number; subject: number; predicate: string; object: number }[],
+  truths: SGRelationship[],
+): Set<number> {
+  const out = new Set<number>();
+  for (const row of top) {
+    if (truths.some((truth) => namesTruth(row, truth))) out.add(row.rank);
+  }
+  return out;
+}
+
+/**
+ * The first row per `masks` key under SingleMPO; every row under MultiMPO.
+ *
+ * Restates `sgg-metrics`' `applyPairing` for the fixtures a playground itself builds rather than
+ * the engine's own `Triplet`: E13's admission is a set-membership count, never the engine's
+ * arithmetic, so the two are held to each other rather than one calling the other.
+ */
+export function admitByMask<T extends { masks: string }>(ranked: T[], multi: boolean): T[] {
+  if (multi) return [...ranked];
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const row of ranked) {
+    if (seen.has(row.masks)) continue;
+    seen.add(row.masks);
+    out.push(row);
+  }
+  return out;
+}
+
+/**
+ * The ground truths a mask-keyed row names: `${subject_id}|${object_id}` equal to the row's
+ * `masks`, and the predicates agreeing. Ascending, as `matchedTruths` is.
+ */
+export function matchedByMask(
+  rows: { masks: string; predicate: string }[],
+  truths: SGRelationship[],
+): number[] {
+  const out: number[] = [];
+  for (const truth of truths) {
+    const key = `${truth.subject_id}|${truth.object_id}`;
+    const found = rows.some((row) => row.masks === key && row.predicate === truth.predicate);
+    if (found) out.push(truth.relationship_id);
+  }
+  return out.sort((a, b) => a - b);
+}

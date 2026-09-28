@@ -4,7 +4,7 @@ import type { SceneGraph } from 'sgg-metrics';
 /**
  * FREQ, the frequency prior that humiliated the field, and the covariance that explains why.
  *
- * Knowledge point E11: `R_p(lambda) = (1 - lambda) * Pr[p | c_s, c_o] + lambda * f_theta(V, s, o)`.
+ * Knowledge point E11: `sigma_p(lambda) = (1 - lambda) * Pr[p | c_s, c_o] + lambda * f_theta(V, s, o)`.
  * At `lambda = 0` nothing in this module can see an image — there is no parameter through which
  * one could arrive — and yet `Cov(n, pi)` is large and positive by construction, so `R` is high
  * and `mR` is near zero. That is the entire lesson, and it is why a paper can post a competitive

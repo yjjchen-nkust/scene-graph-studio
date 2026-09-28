@@ -2,14 +2,16 @@ import { describe, expect, it } from 'vitest';
 import golden from '../../../../../data/content/playground_golden.json';
 import { VG150_CLASSES, VG150_PREDICATES } from '../E10/setup';
 import { E1_DEFECTS, E1_RELATIONSHIP } from '../E1/setup';
+import { VRD_CUT, VRD_PREDICATES, e13Copies } from '../E13/setup';
 import { F3_FRAME, F3_OBJECT } from '../F3/setup';
 import { OBJECT_GROUP, PREDICATE_GROUP } from '../F6/groups';
 import {
-  annotatedTriplet, area, candidateSpace, classCounts, conjuncts, failureMode, frameVerdict, hypothesisSpace, iouCounts,
-  densityCut, explain, headShare, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap,
-  objectLabels, predicateLabels, ranked, ratio, scaleBound, scaledBox, splitDifference, tailToHead, unionArea,
+  admitByMask, annotatedTriplet, area, byScore, candidateSpace, capPerPair, classCounts, conjuncts, failureMode, frameVerdict, hypothesisSpace, iouCounts,
+  densityCut, explain, headShare, intersection, isInE, isInMergedE, matchedByMask, matchedTruths, measuredHeadShare, mergeMap,
+  objectLabels, predicateLabels, ranked, ratio, scaleBound, scaledBox, splitDifference, tailToHead, topK, unionArea,
   wholePixelBoxes, withDefects, type Protocol,
 } from '../logic';
+import { M4_CAPS, M4_RANKING } from '../M4/ranking';
 import { SLICE_CLASS_COUNT, SLICE_PREDICATE_COUNT, VG_FRAMES, frameById, vgFrameById } from '../slice';
 import { releaseById, type Split } from '../splits';
 
@@ -41,6 +43,11 @@ const RUNS: Record<string, (c: Case) => boolean> = {
   'F7 model': (c) => c.kp === 'F7' && c.scope === 'model',
   'F7 slice': (c) => c.kp === 'F7' && c.scope === 'slice',
   X1: (c) => c.kp === 'X1',
+  E3: (c) => c.kp === 'E3',
+  E4: (c) => c.kp === 'E4',
+  E7: (c) => c.kp === 'E7',
+  E13: (c) => c.kp === 'E13',
+  X2: (c) => c.kp === 'X2',
 };
 const run = (block: string) => cases.filter(RUNS[block]!);
 
@@ -193,5 +200,64 @@ describe('playground golden cases', () => {
     const d = splitDifference(a, b, c.knobs.split as Split);
     expect(d).toBe(c.expect.difference);
     expect(d === null ? null : explain(d, c.knobs.split as Split, [a, b])?.value ?? null).toBe(c.expect.explained_by);
+  });
+
+  it.each(run('E3'))('$id', (c) => {
+    const frame = frameById(c.image_id!)!;
+    const kept = capPerPair(byScore(M4_RANKING), M4_CAPS.graph);
+    const top = topK(kept, c.knobs.k as number);
+    const matchedIds = matchedTruths(top, frame.relationships);
+    expect(top).toHaveLength(c.expect.in_top as number);
+    expect(matchedIds).toHaveLength(c.expect.matched as number);
+    expect(matchedIds.join(',')).toBe(c.expect.truths);
+  });
+
+  it.each(run('E4'))('$id', (c) => {
+    const frame = frameById(c.image_id!)!;
+    const byScoreRows = byScore(M4_RANKING);
+    const mode = c.knobs.mode as keyof typeof M4_CAPS;
+    const kept = capPerPair(byScoreRows, M4_CAPS[mode]);
+    const top = topK(kept, c.knobs.k as number);
+    const matchedIds = matchedTruths(top, frame.relationships);
+    const noneTop = topK(capPerPair(byScoreRows, M4_CAPS.none), c.knobs.k as number);
+    const noneIds = matchedTruths(noneTop, frame.relationships);
+    expect(kept).toHaveLength(c.expect.pool as number);
+    expect(matchedIds).toHaveLength(c.expect.matched as number);
+    expect(noneIds).toHaveLength(c.expect.matched_none as number);
+  });
+
+  it.each(run('E7'))('$id', (c) => {
+    const frame = frameById(c.image_id!)!;
+    const kept = capPerPair(byScore(M4_RANKING), c.knobs.m as number);
+    const top = topK(kept, c.knobs.k as number);
+    const matchedIds = matchedTruths(top, frame.relationships);
+    expect(kept).toHaveLength(c.expect.pool as number);
+    expect(matchedIds).toHaveLength(c.expect.matched as number);
+  });
+
+  it.each(run('E13'))('$id', (c) => {
+    const frame = frameById(c.image_id!)!;
+    const emitted = e13Copies(c.knobs.d as number);
+    const admitted = admitByMask(emitted, c.knobs.multi as boolean);
+    const kept = capPerPair(admitted, 1);
+    const matchedIds = matchedByMask(kept, frame.relationships);
+    expect(emitted).toHaveLength(c.expect.emitted as number);
+    expect(admitted).toHaveLength(c.expect.admitted as number);
+    expect(kept).toHaveLength(c.expect.kept as number);
+    expect(matchedIds.includes(4)).toBe(c.expect.g4);
+  });
+
+  it.each(run('X2'))('$id', (c) => {
+    const frame = frameById(c.image_id!)!;
+    const n = frame.objects.length;
+    const m = c.knobs.m as number;
+    const pairs = candidateSpace(n, 1, true);
+    const pool = candidateSpace(n, Math.min(m, VRD_PREDICATES), true);
+    const share = Math.min(m, VRD_CUT);
+    const cut = pool > VRD_CUT;
+    expect(pairs).toBe(c.expect.pairs);
+    expect(pool).toBe(c.expect.pool);
+    expect(share).toBe(c.expect.share);
+    expect(cut).toBe(c.expect.cut);
   });
 });

@@ -132,7 +132,7 @@
     "knobs": "3-way knob: graph / none / semi",
     "status": "live",
     "math": "\\[ \\pi(\\langle s,p,o\\rangle)=(s,o);\\qquad \\text{graph constraint}\\iff\\forall\\,t\\ne t^{\\prime}\\in X_k:\\ \\pi(t)\\ne\\pi(t^{\\prime}) \\]",
-    "deriv": "\\[\\begin{aligned}\nX_k &= \\{t\\in X_k^{\\mathrm{ng}} : \\sigma(t)=\\max_{p}\\sigma(\\langle s,p,o\\rangle)\\} &&\\text{constraint keeps the arg-max per pair}\\\\\n&\\Rightarrow X_k\\subseteq X_k^{\\mathrm{ng}}\\\\\n&\\Rightarrow \\mu(G,X_k)\\le\\mu(G,X_k^{\\mathrm{ng}}) \\;\\Rightarrow\\; R@k\\le \\mathrm{ngR}@k\n\\end{aligned}\\]\\[\\begin{gathered}\\text{The inequality is strict whenever a ground-truth predicate is any pair's runner-up.}\n\\\\ \\text{STTran on Action Genome: PredCls } R@50 = 71.8 \\text{ constrained}, \\; 99.1 \\text{ unconstrained.}\\end{gathered}\\]"
+    "deriv": "\\[\\begin{aligned}\nX &= \\{t\\in X^{\\mathrm{ng}} : \\sigma(t)=\\max_{p}\\sigma(\\langle s,p,o\\rangle)\\} &&\\text{the constraint keeps the arg-max per pair}\\\\\n&\\Rightarrow X\\subseteq X^{\\mathrm{ng}} \\Rightarrow \\mu(G,X)\\le\\mu(G,X^{\\mathrm{ng}}) &&\\text{the pools nest}\\\\\nX_k &= \\text{top-}k(X),\\qquad X_k^{\\mathrm{ng}}=\\text{top-}k(X^{\\mathrm{ng}}) &&\\text{each cut from its own pool}\\\\\nk\\ge\\lvert X^{\\mathrm{ng}}\\rvert &\\Rightarrow R@k\\le \\mathrm{ngR}@k &&\\text{at a smaller } k \\text{ either side can be larger}\n\\end{aligned}\\]\\[\\begin{gathered}\\text{Over the whole pool the gap is strict whenever a ground-truth predicate is some pair's runner-up.}\n\\\\ \\text{At } k=2\\text{: } (1,2,\\text{on},.9),\\ (1,2,\\text{near},.8),\\ (3,4,\\text{on},.7) \\text{ against } (3,4,\\text{on}) \\text{ give } R@2=1,\\ \\mathrm{ngR}@2=0.\n\\\\ \\text{STTran on Action Genome: PredCls } R@50 = 71.8 \\text{ constrained}, \\; 99.1 \\text{ unconstrained.}\\end{gathered}\\]"
   },
   {
     "id": "E5",
@@ -154,7 +154,7 @@
     "knobs": "slider: weighting exponent α, w_p ∝ n_p^α; α=1 gives R, α=0 gives mR",
     "status": "live",
     "math": "\\[ w_p\\propto n_p^{\\alpha};\\qquad \\underbrace{R@k=\\sum_p\\frac{n_p}{\\lvert G\\rvert}R_p@k}_{\\alpha=1}\\qquad \\underbrace{mR@k=\\sum_p\\frac{1}{\\lvert\\mathcal{P}^{\\prime}\\rvert}R_p@k}_{\\alpha=0} \\]",
-    "deriv": "\\[\\begin{aligned}\nR@k-mR@k &= \\sum_p \\frac{n_p}{N}R_p - \\frac{1}{C}\\sum_p R_p &&\\text{Definition 9}\\\\\n&= \\frac{1}{N}\\sum_p\\Bigl(n_p-\\frac{N}{C}\\Bigr)R_p = \\frac{1}{N}\\sum_p (n_p-\\bar n)R_p &&\\bar n=N/C\\\\\n&= \\frac{1}{N}\\sum_p (n_p-\\bar n)(R_p-\\bar R) &&\\textstyle\\sum_p(n_p-\\bar n)=0\\\\\n&= \\frac{C}{N}\\operatorname{Cov}(n,R) = \\frac{\\operatorname{Cov}(n,R)}{\\bar n}\n\\end{aligned}\\]\\[\\begin{gathered}\\text{The slider moves } \\alpha \\text{ in } w_p(\\alpha)\\propto n_p^{\\alpha}. \\;\\; \\alpha=1 \\text{ gives } R, \\;\\; \\alpha=0 \\text{ gives } mR.\n\\\\ \\text{The whole bias problem is the sign of one covariance.}\\end{gathered}\\]"
+    "deriv": "\\[\\begin{aligned}\nR@k-mR@k &= \\sum_p \\frac{n_p}{N}R_p - \\frac{1}{\\lvert\\mathcal{P}^{\\prime}\\rvert}\\sum_p R_p &&\\text{Definition 9, } p\\in\\mathcal{P}^{\\prime}\\\\\n&= \\frac{1}{N}\\sum_p\\Bigl(n_p-\\frac{N}{\\lvert\\mathcal{P}^{\\prime}\\rvert}\\Bigr)R_p = \\frac{1}{N}\\sum_p (n_p-\\bar n)R_p &&\\bar n=N/\\lvert\\mathcal{P}^{\\prime}\\rvert\\\\\n&= \\frac{1}{N}\\sum_p (n_p-\\bar n)(R_p-\\bar R) &&\\textstyle\\sum_p(n_p-\\bar n)=0\\\\\n&= \\frac{\\lvert\\mathcal{P}^{\\prime}\\rvert}{N}\\operatorname{Cov}(n,R) = \\frac{\\operatorname{Cov}(n,R)}{\\bar n}\n\\end{aligned}\\]\\[\\begin{gathered}\\text{As } \\alpha \\text{ moves from 1 to 0 in } w_p(\\alpha)\\propto n_p^{\\alpha}, \\text{ the weighted mean moves from } R \\text{ to } mR.\n\\\\ \\text{The whole bias problem is the sign of one covariance.}\\end{gathered}\\]"
   },
   {
     "id": "E7",
@@ -166,7 +166,7 @@
     "knobs": "slider: predicates admitted per pair, 1 to 10",
     "status": "live",
     "math": "\\[ \\mathrm{ngR}@k:\\ \\pi \\text{ need not be injective};\\qquad \\lvert\\{t\\in X_k:\\pi(t)=(s,o)\\}\\rvert\\le n_{\\text{pair}} \\]",
-    "deriv": "\\[\\begin{aligned}\nX_k^{\\mathrm{ng}}(m) &= \\bigcup_{(s,o)}\\bigl\\{\\text{top-}m\\text{ predicates for }(s,o)\\bigr\\}\\cap X_k\\\\\nm'\\ge m &\\Rightarrow X_k^{\\mathrm{ng}}(m)\\subseteq X_k^{\\mathrm{ng}}(m') \\Rightarrow \\mathrm{ngR}(m)\\le \\mathrm{ngR}(m')\n\\end{aligned}\\]\\[\\begin{gathered}\\text{Saturates once } m \\text{ exceeds the number of runner-up predicates the model actually carries.}\n\\\\ \\text{A real model carries } \\lvert\\mathcal{P}\\rvert=50, \\text{ so the gap keeps widening to } m=50.\\end{gathered}\\]"
+    "deriv": "\\[\\begin{aligned}\nX^{\\mathrm{ng}}(m) &= \\bigcup_{(s,o)}\\bigl\\{\\text{top-}m\\text{ predicates for }(s,o)\\bigr\\} &&\\text{the pool with } m \\text{ per pair}\\\\\nm'\\ge m &\\Rightarrow X^{\\mathrm{ng}}(m)\\subseteq X^{\\mathrm{ng}}(m') &&\\text{the pool grows with } m\\\\\nk\\ge\\lvert X^{\\mathrm{ng}}(m')\\rvert &\\Rightarrow \\mathrm{ngR}_m@k\\le \\mathrm{ngR}_{m'}@k &&\\text{at a smaller } k \\text{ it need not}\n\\end{aligned}\\]\\[\\begin{gathered}\\text{The pool stops growing once } m \\text{ reaches the most predicates any pair carries.}\n\\\\ \\text{A model scoring all } \\lvert\\mathcal{P}\\rvert=50 \\text{ predicates per pair grows its pool until } m=50.\\end{gathered}\\]"
   },
   {
     "id": "E8",
@@ -209,8 +209,8 @@
     "title_zh": "FREQ 頻率先驗",
     "knobs": "slider: blend λ between co-occurrence prior and visual model",
     "status": "live",
-    "math": "\\[ R_p(\\lambda)=(1-\\lambda)\\underbrace{\\Pr[p\\mid c_s,c_o]}_{\\text{no pixels consulted}}+\\lambda\\underbrace{f_\\theta(V,s,o)}_{\\text{visual model}} \\]",
-    "deriv": "\\[\\begin{aligned}\nR_p(\\lambda) &= (1-\\lambda)\\,\\pi_p + \\lambda\\, f_p, \\qquad \\pi_p=\\Pr[p\\mid c_s,c_o],\\ f_p=f_\\theta(V,s,o)\\\\\nR(\\lambda) &= \\sum_p \\tfrac{n_p}{N}R_p(\\lambda) = (1-\\lambda)\\textstyle\\sum_p \\tfrac{n_p}{N}\\pi_p + \\lambda\\sum_p \\tfrac{n_p}{N}f_p\\\\\nmR(\\lambda) &= (1-\\lambda)\\,\\overline{\\pi} + \\lambda\\,\\overline{f}\n\\end{aligned}\\]\\[\\begin{gathered}\\text{Both are affine in } \\lambda. \\text{ At } \\lambda=0 \\text{ the predictor reads no pixels, yet}\n\\\\ \\operatorname{Cov}(n,\\pi)\\gg 0 \\text{ by construction, so } R \\text{ is high and } mR \\text{ is near zero.}\n\\\\[4pt]\n\\text{VG150, PredCls } mR@100: \\ \\text{FREQ } 16.0 \\; > \\; \\text{MOTIFS } 15.3 \\; > \\; \\text{IMP}^{+}\\ 10.5.\\end{gathered}\\]"
+    "math": "\\[ \\sigma_p(\\lambda)=(1-\\lambda)\\underbrace{\\Pr[p\\mid c_s,c_o]}_{\\text{no pixels consulted}}+\\lambda\\underbrace{f_\\theta(V,s,o)}_{\\text{visual model}} \\]",
+    "deriv": "\\[\\begin{aligned}\n\\sigma_p(\\lambda) &= (1-\\lambda)\\,\\pi_p + \\lambda\\, f_p, \\qquad \\pi_p=\\Pr[p\\mid c_s,c_o],\\ f_p=f_\\theta(V,s,o)\\\\\nR(\\lambda) &= R@k \\text{ of the ranking by } \\sigma(\\lambda), \\text{ and likewise } mR(\\lambda)\\\\\n&\\text{constant in } \\lambda \\text{ except where two blended scores cross and the ranking changes}\n\\end{aligned}\\]\\[\\begin{gathered}\\text{The blended score is affine in } \\lambda\\text{; recall over its ranking is piecewise constant.}\n\\\\ \\text{At } \\lambda=0 \\text{ the predictor reads no pixels, yet}\n\\\\ \\operatorname{Cov}(n,\\pi)\\gg 0 \\text{ by construction, so } R \\text{ is high and } mR \\text{ is near zero.}\n\\\\[4pt]\n\\text{VG150, PredCls } mR@100: \\ \\text{FREQ } 16.0 \\; > \\; \\text{MOTIFS } 15.3 \\; > \\; \\text{IMP}^{+}\\ 10.5.\\end{gathered}\\]"
   },
   {
     "id": "E12",
@@ -823,10 +823,10 @@
     "cluster_zh": "資料集",
     "title_en": "VRD and the undeclared k",
     "title_zh": "VRD 與未交代的 k",
-    "knobs": "knob: k ∈ {1,10,70}",
+    "knobs": "knob: m ∈ {1,10,70}, the predicates admitted per pair (VRD's k)",
     "status": "live",
-    "math": "\\[ R@k \\text{ on VRD depends on } k=\\lvert\\{p:\\langle s,p,o\\rangle\\in X\\}\\rvert\\in\\{1,10,70\\},\\ \\text{usually undeclared} \\]",
-    "deriv": "\\[\\begin{aligned}\nR@k \\text{ on VRD admits } k \\text{ predicates per ordered pair}, \\ k\\in\\{1,10,70\\}\\\\\nk=1 &\\equiv \\text{graph constraint} \\qquad k=\\lvert\\mathcal{P}\\rvert=70 \\equiv \\text{no constraint at all}\\\\\nk=70 &\\Rightarrow \\text{every predicate enters for every pair} \\Rightarrow R@k \\to PR@k\n\\end{aligned}\\]\\[\\begin{gathered}\\text{At } k=70 \\text{ the metric measures pair detection, not relation classification (Proposition 4c).}\n\\\\ \\text{Papers routinely omit } k, \\text{ so VRD numbers are not comparable across papers by default.}\\end{gathered}\\]"
+    "math": "\\[ R@K \\text{ on VRD depends on } m=\\lvert\\{p:\\langle s,p,o\\rangle\\in X\\}\\rvert\\in\\{1,10,70\\},\\ \\text{usually undeclared} \\]",
+    "deriv": "\\[\\begin{aligned}\n&R@K \\text{ on VRD admits } m \\text{ predicates per ordered pair}, \\ m\\in\\{1,10,70\\} &&\\text{VRD papers call it } k\\\\\nm=1 &\\equiv \\text{graph constraint} \\qquad m=\\lvert\\mathcal{P}\\rvert=70 \\equiv \\text{no constraint at all}\\\\\nm=70 &\\Rightarrow \\text{every predicate of every pair is a candidate; the cut at } K \\text{ still ranks them}\n\\end{aligned}\\]\\[\\begin{gathered}\\text{At } m=70 \\text{ no predicate is excluded for its pair; only the cut at } K \\text{ excludes a candidate.}\n\\\\ \\text{Papers routinely omit } m, \\text{ so VRD numbers are not comparable across papers by default.}\\end{gathered}\\]"
   },
   {
     "id": "X3",

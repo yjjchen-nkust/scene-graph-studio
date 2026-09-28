@@ -5,14 +5,14 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks and §28 the empty training split), and all 105 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split and §29 the M4 playgrounds), and all 106 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
 
 A full-stack teaching application for scene graph generation, built for 大語言模型技術與應用
 (2026) and anchored on Wang et al., *IndVisSGG*, Advanced Engineering Informatics 65 (2025)
-103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 9 playgrounds, 60 paper
+103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 14 playgrounds, 60 paper
 cards and 5 frozen leaderboards.
 
 It lives at `scene-graph-studio/` inside the WekaExt repository and is **not** a separate
@@ -42,15 +42,15 @@ cd scene-graph-studio\system ; npm run ci
 - **`npm run ci` is the gate**, twelve steps: harvest, pytest, the metrics build, vitest, ruff,
   parity, i18n, content, frozen, mockup, standalone, frontend build.
 - **Four checks `ci` does not run**, each for a reason: `npm run test:e2e` (check 8, the keyboard
-  walkthrough at three projector resolutions, 75 tests, over the production build with no backend
+  walkthrough at three projector resolutions, 79 tests, over the production build with no backend
   running), `npm run check:offline` (check 6, a torch-free interpreter with every outward request
   intercepted), `npm run check:perf` (NFR-8, cold start on five routes and input-to-paint on five
-  labs and nine playgrounds, against a backend it starts itself), `npm run check:pins`.
+  labs and fourteen playgrounds, against a backend it starts itself), `npm run check:pins`.
 
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D105` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D106` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
   `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
@@ -73,14 +73,16 @@ cd scene-graph-studio\system ; npm run ci
   by the lower object id. **Do not move it back onto the rects.**
 - **`ImageOverlay` has no width of its own.** Its children are all absolutely positioned, so a
   container that does not give it a width renders the photograph 0×0, with no error and a step
-  that "fits" the panel. F1 did so on every projector until D96; `F1 shows its photograph` in
+  that "fits" the panel. F1 did so on every projector until D96;
+  `F1, F3, E3, E4 and E7 show their photographs, whole and on the screen` in
   `e2e/projector.spec.ts` now measures it. F3, E1 and E10 draw through
   `playgrounds/PhotoMarks.tsx`, an `<svg>` over the same kind of photograph that must have the
-  photograph's box exactly: in a stretched column it drew every mark 122 px below its object in F3's
-  longest state, 96.5 px at Δx = 18, with every readout correct (D97), and `F3, E1 and E10 draw their marks on their photographs` now
-  measures that (D98).
+  photograph's box exactly (E3, E4 and E7 through `playgrounds/M4/PairPhoto.tsx`, which uses it):
+  in a stretched column it drew every mark 122 px below its object in F3's
+  longest state, 96.5 px at Δx = 18, with every readout correct (D97), and
+  `F3, E1, E10, E3, E4 and E7 draw their marks on their photographs` now measures that (D98, D106).
 - **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
-  in both locales (**D76**). All 109 steps carry theirs; 218 notes.
+  in both locales (**D76**). All 117 steps carry theirs; 234 notes.
 - **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and
   `npm run lint:standalone` asserts they agree. Edit the source, then run
   `npm run build:standalone` in the same commit.
@@ -109,12 +111,15 @@ cd scene-graph-studio\system ; npm run ci
   D95 for the twelfth). **It computes a
   count, a bound or a set membership, never a metric** — a metric is a lab's business and the
   boundary is the point. Nothing in `frontend/src/playgrounds/` imports from `sgg-metrics` except
-  its types, and three tests in `playgrounds/test/logic.test.ts` that hold F3's IoU to `boxIou`, on the golden cases and at every knob setting, and E1's verdict to `classify` (D97, D98, D100). M0 carries three (F1, F2, F8), M1
-  three (F6, F7, X1) and M2 one (F3) and M3 two (E1, E10); 19 live knowledge points have none. See D88, D93, D97 and D98. **`PlaygroundFrame`
+  its types, and three tests in `playgrounds/test/logic.test.ts` that hold F3's IoU to `boxIou`, on the golden cases and at every knob setting, and E1's verdict to `classify` (D97, D98, D100), and four more there that hold M4's cap to `applyConstraint`, its counts to `evaluate`, and E13's admission to `applyPairing` and its match to `evaluate` (D106). M0 carries three (F1, F2, F8), M1
+  three (F6, F7, X1), M2 one (F3), M3 two (E1, E10) and M4 five (E3, E4, E7, E13, X2); 14 live knowledge points have none. See D88, D93, D97, D98 and D106. **`PlaygroundFrame`
   clips only a picture** (`clip`, default on): a playground of words and figures passes
   `clip={false}`, because a word under the clip is beyond the reach of the step's scroll (D93).
+  **`PlaygroundFrame`'s `dense` is M4's**, for its twelve-row lists at 1024×768; the earlier
+  playgrounds keep the measured default, and their records (D95 to D102) measure it (D106);
+  `playgrounds/test/Playground.test.tsx` requires the dense frame of exactly E3, E4, E7, E13 and X2.
   **A playground too tall for one panel spans consecutive steps as parts** (D96): `part: n` on
-  each step and its tag, the count in `PLAYGROUND_PARTS` in `mounts.tsx`, E1, E10, F1, F3, F6 and F7 in two
+  each step and its tag, the count in `PLAYGROUND_PARTS` in `mounts.tsx`, E1, E10, E3, E4, E7, F1, F3, F6 and F7 in two
   and X1 in three. The stepper carries the knobs between the parts of one playground and nowhere
   else, and the projector suite asserts that every part fits 1024×768 in 繁體中文 in its longest
   state. **F6 and F7 count distinct triplets** (D96): E is a set, and 208 of the slice's 892

@@ -10,7 +10,7 @@
   "E6": "\\[ w_p\\propto n_p^{\\alpha};\\qquad \\underbrace{R@k=\\sum_p\\frac{n_p}{\\lvert G\\rvert}R_p@k}_{\\alpha=1}\\qquad \\underbrace{mR@k=\\sum_p\\frac{1}{\\lvert\\mathcal{P}^{\\prime}\\rvert}R_p@k}_{\\alpha=0} \\]",
   "E7": "\\[ \\mathrm{ngR}@k:\\ \\pi \\text{ need not be injective};\\qquad \\lvert\\{t\\in X_k:\\pi(t)=(s,o)\\}\\rvert\\le n_{\\text{pair}} \\]",
   "E10": "\\[ \\mathcal{H}_{\\text{PredCls}}\\subseteq\\mathcal{H}_{\\text{SGCls}}\\subseteq\\mathcal{H}_{\\text{SGDet}} \\]",
-  "E11": "\\[ R_p(\\lambda)=(1-\\lambda)\\underbrace{\\Pr[p\\mid c_s,c_o]}_{\\text{no pixels consulted}}+\\lambda\\underbrace{f_\\theta(V,s,o)}_{\\text{visual model}} \\]",
+  "E11": "\\[ \\sigma_p(\\lambda)=(1-\\lambda)\\underbrace{\\Pr[p\\mid c_s,c_o]}_{\\text{no pixels consulted}}+\\lambda\\underbrace{f_\\theta(V,s,o)}_{\\text{visual model}} \\]",
   "E13": "\\[ \\text{MultiMPO permits }\\lvert\\{m:\\pi(m)=(s,o)\\}\\rvert>1 \\;\\Longrightarrow\\; \\widehat{mR}=\\rho\\cdot mR,\\quad\\rho>1 \\]",
   "T1": "\\[ \\text{cost}=N(N-1)\\lvert\\mathcal{P}\\rvert=O\\!\\left(N^{2}\\lvert\\mathcal{P}\\rvert\\right),\\qquad \\text{true relations}=O(N) \\]",
   "T2": "\\[ b^{(t+1)}_i=(1-w)\\,b^{(0)}_i+w\\,\\overline{b^{(t)}_{\\mathcal{N}(i)}}\\ \\xrightarrow[\\ t\\to\\infty\\ ]{w>0}\\ \\overline{b^{(0)}}\\quad(\\text{consensus; information destroyed}) \\]",
@@ -24,5 +24,5 @@
   "G2": "\\[ \\mathcal{G}_{\\ell+1}=\\Phi_{\\ell}(\\mathcal{G}_{\\ell}),\\qquad \\lvert V_{\\ell+1}\\rvert\\ll\\lvert V_{\\ell}\\rvert,\\qquad \\text{tokens}\\approx 7\\,\\lvert V_{\\ell}\\rvert \\]",
   "G4": "\\[ V_{\\text{task}}=\\{v\\in V:\\ \\mathrm{sim}(v,\\text{task})>\\theta\\};\\qquad \\text{granularity is a property of the task, not the scene} \\]",
   "X1": "\\[ \\texttt{VG150}\\ \\mapsto\\ \\text{releases } r,\\ \\text{each with its own }(\\mathcal{D}_{\\text{train}},\\mathcal{D}_{\\text{val}},\\mathcal{D}_{\\text{test}})_r\\ \\Longrightarrow\\ \\text{a number is comparable only when its } r \\text{ is named} \\]",
-  "X2": "\\[ R@k \\text{ on VRD depends on } k=\\lvert\\{p:\\langle s,p,o\\rangle\\in X\\}\\rvert\\in\\{1,10,70\\},\\ \\text{usually undeclared} \\]"
+  "X2": "\\[ R@K \\text{ on VRD depends on } m=\\lvert\\{p:\\langle s,p,o\\rangle\\in X\\}\\rvert\\in\\{1,10,70\\},\\ \\text{usually undeclared} \\]"
 }

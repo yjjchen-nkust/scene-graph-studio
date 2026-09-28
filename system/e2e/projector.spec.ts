@@ -25,7 +25,11 @@ import { expect, test, type Page } from '@playwright/test';
  * its knobs' values (D96): F6 with both merges, and on frame 2008 with the merge; F7 at fifty
  * classes; X1 at the release pairs that carry Xu's pool, two explanations, and the longest lines
  * of provenance. F3 at λ = 2 shifted to the corner, where its readout notes are longest, and with τ at
- * 0.95, where both of its status lines show.
+ * 0.95, where both of its status lines show. E3, E4 and E7 at k = 12 (E4 and E7 also at their own
+ * knob's largest, mode `none` and m = 10, which is the pool each grows to), the state where the
+ * ranked list shows every row and the readouts' notes list the most matched ground truths. E13 at
+ * d = 5 under MultiMPO and X2 at m = 70 are not split, but carry the same longest-state fit and
+ * clip checks as the parts above.
  */
 const PARTS_LONGEST = [
   'm00/1', 'm00/2',
@@ -35,6 +39,11 @@ const PARTS_LONGEST = [
   'm02/2?F3.lambda=2&F3.dx=120&F3.dy=100', 'm02/3?F3.lambda=2&F3.tau=0.95&F3.dx=120&F3.dy=100',
   'm03/2?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1', 'm03/3?E1.cs=1&E1.co=1&E1.p=1&E1.bs=1&E1.bo=1',
   'm03/3?E1.bs=1',  'm03/5?E10.pr=predcls', 'm03/6?E10.pr=sgdet&E10.voc=vg150', 'm03/6?E10.pr=sgcls&E10.voc=vg150',
+  // The first parts at a dropped row: their longest line, "dropped by the constraint" (D106).
+  'm04/2?E3.k=12&E3.row=2', 'm04/3?E3.k=12',
+  'm04/5?E4.mode=graph&E4.k=12&E4.row=2', 'm04/6?E4.mode=none&E4.k=12',
+  'm04/9?E7.m=1&E7.k=12&E7.row=2', 'm04/10?E7.m=10&E7.k=12',
+  'm04/13?E13.multi=1&E13.d=5', 'm04/15?X2.m=70',
 ];
 
 const SIZES = [
@@ -294,7 +303,7 @@ for (const size of SIZES) {
 
     test('the lecture fits the panel without scrolling sideways', async ({ page }) => {
       // M04 carries the heaviest mathematics in the corpus, so it is the widest content there is.
-      for (const step of [0, 1, 2, 3]) {
+      for (const step of [0, 1, 4, 7]) {
         await page.goto(`/lecture/m/m04/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
         await noHorizontalOverflow(page);
@@ -371,7 +380,9 @@ for (const size of SIZES) {
       // A floor per step, measured rather than guessed: the walk reads 203 rows on the
       // mathematics step, 17 and 23 on F1's parts, 24 on F2 and 17 on F8, 18 and 15 on F6's, 27
       // and 20 on F7's, and 34, 18 and 19 on X1's, at every panel size (2026-09-26, D96); and 26 and 16 on
-      // F3's (2026-09-27, D97); 25 and 19 on E1's and 10 and 22 on E10's (2026-09-27, D98).
+      // F3's (2026-09-27, D97); 25 and 19 on E1's and 10 and 22 on E10's (2026-09-27, D98); and
+      // 12 and 82 on E3's, 11 and 85 on E4's, 12 and 83 on E7's, 32 on E13's and 19 on X2's
+      // (2026-09-28, D106).
       // `toBeGreaterThan(3)` was kept here after the oklch finding with a comment explaining why it had failed to catch it,
       // which is a floor known to be inadequate left in place. These are set below the
       // measured counts so ordinary content edits do not trip them, and far enough above zero
@@ -395,6 +406,14 @@ for (const size of SIZES) {
         { module: 'm03', step: 3, floor: 14 },
         { module: 'm03', step: 5, floor: 7 },
         { module: 'm03', step: 6, floor: 16 },
+        { module: 'm04', step: 2, floor: 9 },
+        { module: 'm04', step: 3, floor: 70 },
+        { module: 'm04', step: 5, floor: 8 },
+        { module: 'm04', step: 6, floor: 72 },
+        { module: 'm04', step: 9, floor: 9 },
+        { module: 'm04', step: 10, floor: 70 },
+        { module: 'm04', step: 13, floor: 25 },
+        { module: 'm04', step: 15, floor: 14 },
       ];
       for (const { module, step, floor } of pages) {
         await page.goto(`/lecture/m/${module}/${step}`);
@@ -443,6 +462,7 @@ for (const size of SIZES) {
         ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((s) => ['m01', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7].map((s) => ['m02', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => ['m03', s] as const),
+        ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map((s) => ['m04', s] as const),
       ]) {
         await page.goto(`/lecture/m/${module}/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
@@ -485,6 +505,7 @@ for (const size of SIZES) {
         'm00/1', 'm00/2', 'm00/4', 'm00/5',
         'm01/2', 'm01/3', 'm01/5', 'm01/6', 'm01/8', 'm01/9', 'm01/10',
         'm02/2', 'm02/3', 'm03/2', 'm03/3', 'm03/5', 'm03/6',
+        'm04/2', 'm04/3', 'm04/5', 'm04/6', 'm04/9', 'm04/10', 'm04/13', 'm04/15',
       ]) {
         await page.goto(`/lecture/m/${where}`);
         const controls = page.getByTestId('playground-controls');
@@ -511,15 +532,21 @@ for (const size of SIZES) {
       }
     });
 
-    test('F1 and F3 show their photographs, whole and on the screen', async ({ page }) => {
+    test('F1, F3, E3, E4 and E7 show their photographs, whole and on the screen', async ({ page }) => {
       // The overlay's children are all absolutely positioned, so the box around it has no width
       // of its own; in a row at 1024 px and wider it was given none, and the photograph F1 opens
       // on rendered 0×0 on every projector from the day it landed. Its step "fit" because the
       // picture was missing (D96). F3 draws its own overlay over the same kind of photograph,
-      // so it is held to the same measure.
-      for (const where of ['m00/1', 'm02/2', 'm03/2', 'm03/5']) {
+      // so it is held to the same measure. E3, E4 and E7's first part draws `PairPhoto` through
+      // the same `PhotoMarks`, and spec §6 names none of the nine playgrounds this check predates
+      // as exempt from it.
+      for (const [where, picture] of [
+        ['m00/1', 'playground-frame'], ['m02/2', 'playground-frame'],
+        ['m03/2', 'playground-frame'], ['m03/5', 'playground-frame'],
+        ['m04/2', 'e3-pair'], ['m04/5', 'e4-pair'], ['m04/9', 'e7-pair'],
+      ] as const) {
         await page.goto(`/lecture/m/${where}`);
-        const image = page.getByTestId('playground-frame').locator('img');
+        const image = page.getByTestId(picture).locator('img');
         await expect(image, where).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
         const box = await image.boundingBox();
@@ -596,14 +623,16 @@ for (const size of SIZES) {
       }
     });
 
-    test('F3, E1 and E10 draw their marks on their photographs, not beside them', async ({ page }) => {
+    test('F3, E1, E10, E3, E4 and E7 draw their marks on their photographs, not beside them', async ({ page }) => {
       // The overlay is laid over the photograph, and its viewBox is the frame's own 640 × 480, so
       // it lands on the objects only if it has the photograph's box exactly. It first took the
       // box of its stretched column instead, and `meet` scaling centred the marks 96.5 px below
       // the objects they outline at 1024 × 768 in F3's Δx = 18 state, 122 px in its longest, with
-      // every readout still correct.
+      // every readout still correct. E3, E4 and E7 draw through the same `PhotoMarks` on their
+      // first part, `PairPhoto`'s two boxes rather than F3's one or E1's and E10's whole frame.
       for (const [where, picture] of [
         ['m02/2?F3.dx=18', 'f3-picture'], ['m03/2?E1.bs=1', 'e1-picture'], ['m03/5', 'e10-picture'],
+        ['m04/2', 'e3-pair'], ['m04/5', 'e4-pair'], ['m04/9', 'e7-pair'],
       ] as const) {
         await page.goto(`/lecture/m/${where}`);
         const image = page.getByTestId(picture).locator('img');

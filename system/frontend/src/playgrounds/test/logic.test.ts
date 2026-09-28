@@ -1,18 +1,20 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { SceneGraph } from 'sgg-metrics';
-import { boxIou, classify, toTriplets } from 'sgg-metrics';
+import { applyConstraint, applyPairing, boxIou, classify, encodeCounts, evaluate, rank, toTriplets } from 'sgg-metrics';
 import golden from '../../../../../data/content/playground_golden.json';
 import { FRAMES, SLICE_CLASS_COUNT, frameById } from '../slice';
 import { RELEASES, type Release, type Split } from '../splits';
 import { E1_DEFECTS, E1_FRAME, E1_RELATIONSHIP } from '../E1/setup';
 import { F3_FRAME, F3_OBJECT, F3_RANGES } from '../F3/setup';
+import { M4_CAPS, M4_FRAME, M4_K_MAX, M4_RANKING } from '../M4/ranking';
+import { VRD_PREDICATES, e13Copies } from '../E13/setup';
 import {
-  annotatedTriplet, area, candidateSpace, conjuncts, failureMode, frameVerdict, hypothesisSpace, iouCounts,
-  canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
-  headShare, idRun, intersection, isInE, isInMergedE, measuredHeadShare, mergeMap, pairsWithSeveral, predicateLabels,
-  ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, tripletKey, truncatedRatio, unionArea,
-  valPool, wholePixelBoxes, withDefects, type BoxTriplet,
+  admitByMask, annotatedTriplet, area, byScore, candidateSpace, capPerPair, conjuncts, failureMode, frameVerdict,
+  hypothesisSpace, iouCounts, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
+  headShare, idRun, intersection, isInE, isInMergedE, matchedByMask, matchedRanks, matchedTruths, measuredHeadShare, mergeMap,
+  pairsWithSeveral, predicateLabels, ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, topK,
+  tripletKey, truncatedRatio, unionArea, valPool, wholePixelBoxes, withDefects, type BoxTriplet,
 } from '../logic';
 
 /** The engine's triplet, which `sgg-metrics` does not export by name. */
@@ -629,5 +631,175 @@ describe('idRun', () => {
   });
   it("runs over ph-001's six objects from 1 to 6", () => {
     expect(idRun(ph001.objects.map((o) => o.object_id))).toEqual({ first: 1, last: 6 });
+  });
+});
+
+describe('M4: one ranked list, capped and cut', () => {
+  const frame = frameById(M4_FRAME)!;
+  const ranked = byScore(M4_RANKING);
+  const counts = (cap: number) => Array.from({ length: 12 }, (_, i) =>
+    matchedTruths(topK(capPerPair(ranked, cap), i + 1), frame.relationships).length);
+  it('ranks the twelve by score', () => {
+    expect(ranked.map((r) => r.rank)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  });
+  it('keeps 7, 11 and 12 under caps 1, 2 and 3 and any cap above', () => {
+    expect([1, 2, 3, 10, Infinity].map((c) => capPerPair(ranked, c).length)).toEqual([7, 11, 12, 12, 12]);
+  });
+  it('counts the ground truths of spec §4.1 at every k', () => {
+    expect(counts(1)).toEqual([1, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3]);
+    expect(counts(2)).toEqual([1, 1, 2, 2, 3, 4, 4, 4, 5, 5, 5, 5]);
+    expect(counts(3)).toEqual([1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5]);
+    expect(counts(Infinity)).toEqual(counts(3));
+  });
+  it('names what it matches', () => {
+    expect(matchedTruths(topK(capPerPair(ranked, 1), 2), frame.relationships)).toEqual([1, 4]);
+    expect(matchedTruths(topK(capPerPair(ranked, Infinity), 12), frame.relationships)).toEqual([1, 2, 3, 4, 5]);
+  });
+  it('names the ranks that match, the same rule read the other way round', () => {
+    expect(matchedRanks(topK(capPerPair(ranked, 1), 4), frame.relationships)).toEqual(new Set([1, 3, 5]));
+    expect(matchedRanks(topK(capPerPair(ranked, Infinity), 12), frame.relationships)).toEqual(new Set([1, 3, 5, 7, 10]));
+  });
+});
+
+describe('E13: copies of one mask pair', () => {
+  const frame = frameById(M4_FRAME)!;
+  it('SingleMPO admits one copy, MultiMPO every copy', () => {
+    for (const d of [1, 2, 3, 4, 5]) {
+      expect(admitByMask(e13Copies(d), false)).toHaveLength(1);
+      expect(admitByMask(e13Copies(d), true)).toHaveLength(d);
+    }
+  });
+  it('the graph constraint keeps every admitted copy', () => {
+    expect(capPerPair(admitByMask(e13Copies(5), true), 1)).toHaveLength(5);
+  });
+  it('matches person holding wrench only once the second copy is admitted', () => {
+    expect(matchedByMask(admitByMask(e13Copies(5), false), frame.relationships)).toEqual([]);
+    expect(matchedByMask(admitByMask(e13Copies(1), true), frame.relationships)).toEqual([]);
+    expect(matchedByMask(admitByMask(e13Copies(2), true), frame.relationships)).toEqual([4]);
+  });
+});
+
+describe('X2: VRD per-pair count on ph-001', () => {
+  it('pools 30, 300 and 2,100 candidates', () => {
+    expect([1, 10, 70].map((m) => candidateSpace(6, Math.min(m, VRD_PREDICATES), true))).toEqual([30, 300, 2100]);
+  });
+});
+
+describe('M4 against the engine', () => {
+  const frame = frameById(M4_FRAME)!;
+  const ranked = byScore(M4_RANKING);
+  const ks = Array.from({ length: M4_K_MAX }, (_, i) => i + 1);
+  const pred: SceneGraph = {
+    ...frame,
+    relationships: M4_RANKING.map((r) => ({
+      relationship_id: r.rank,
+      subject_id: r.subject,
+      object_id: r.object,
+      predicate: r.predicate,
+      score: r.score,
+    })),
+    provenance: { kind: 'model', fidelity: 'reconstructed', model: 'm4' },
+  };
+
+  it('the cap agrees with applyConstraint at every cap from 1 to 10', () => {
+    for (let cap = 1; cap <= 10; cap += 1) {
+      const engine = applyConstraint(rank(toTriplets(pred)), cap === 1 ? 'graph' : 'semi', cap);
+      const ours = capPerPair(ranked, cap);
+      expect(engine.map((t) => t.relationship_id)).toEqual(ours.map((r) => r.rank));
+    }
+    const engineNone = applyConstraint(rank(toTriplets(pred)), 'none', 1);
+    const oursNone = capPerPair(ranked, M4_CAPS.none);
+    expect(engineNone.map((t) => t.relationship_id)).toEqual(oursNone.map((r) => r.rank));
+  });
+
+  it('the counts agree with evaluate at every k and cap', () => {
+    const counts = (cap: number) => ks.map((k) =>
+      matchedTruths(topK(capPerPair(ranked, cap), k), frame.relationships).length);
+    const cases: { cap: number; constraint: 'graph' | 'semi' | 'none'; semiMax: number }[] = [
+      { cap: M4_CAPS.graph, constraint: 'graph', semiMax: M4_CAPS.graph },
+      { cap: M4_CAPS.semi, constraint: 'semi', semiMax: M4_CAPS.semi },
+      { cap: 3, constraint: 'semi', semiMax: 3 },
+      { cap: M4_CAPS.none, constraint: 'none', semiMax: 1 },
+    ];
+    for (const { cap, constraint, semiMax } of cases) {
+      const expected = counts(cap);
+      const result = evaluate({
+        gt: frame,
+        pred,
+        protocol: 'predcls',
+        constraint,
+        semi_constraint_max_per_pair: semiMax,
+        k: ks,
+        iou_thresh: 0.5,
+        mask_pairing: 'single_mpo',
+      });
+      for (const k of ks) {
+        const r = result.metrics.find((m) => m.metric === 'R' && m.k === k)!.value!;
+        expect(Math.round(r * 6)).toBe(expected[k - 1]);
+      }
+    }
+  });
+});
+
+describe('E13 against the engine', () => {
+  const frame = frameById(M4_FRAME)!;
+  const maskFor = (id: number): { counts: string; size: [number, number] } => ({
+    counts: encodeCounts([id, 1, 15 - id]),
+    size: [4, 4],
+  });
+  const gtObjects = frame.objects.map((o) => ({ ...o, mask: maskFor(o.object_id) }));
+  const gt: SceneGraph = { ...frame, objects: gtObjects };
+  const object2 = gtObjects.find((o) => o.object_id === 2)!;
+  const object5 = gtObjects.find((o) => o.object_id === 5)!;
+
+  const predFor = (d: number): SceneGraph => {
+    const copies: typeof gtObjects = [];
+    for (let i = 2; i <= d; i += 1) {
+      copies.push({ ...object2, object_id: 10 + i });
+      copies.push({ ...object5, object_id: 20 + i });
+    }
+    const rows = e13Copies(d);
+    return {
+      ...frame,
+      objects: [...gtObjects, ...copies],
+      relationships: rows.map((row, index) => ({
+        relationship_id: index + 1,
+        subject_id: row.subject,
+        object_id: row.object,
+        predicate: row.predicate,
+        score: row.score,
+      })),
+      provenance: { kind: 'model', fidelity: 'reconstructed', model: 'm4' },
+    };
+  };
+
+  it('applyPairing agrees with admitByMask at every d and every mode', () => {
+    for (const d of [1, 2, 3, 4, 5]) {
+      const pred = predFor(d);
+      for (const mode of ['single_mpo', 'multi_mpo'] as const) {
+        const engine = applyPairing(rank(toTriplets(pred)), mode);
+        const ours = admitByMask(e13Copies(d), mode === 'multi_mpo');
+        expect(engine).toHaveLength(ours.length);
+      }
+    }
+  });
+
+  it('matched_count agrees with matchedByMask under the graph constraint', () => {
+    for (const d of [1, 2, 3, 4, 5]) {
+      const pred = predFor(d);
+      for (const mode of ['single_mpo', 'multi_mpo'] as const) {
+        const result = evaluate({
+          gt,
+          pred,
+          protocol: 'predcls',
+          constraint: 'graph',
+          k: [20],
+          iou_thresh: 0.5,
+          mask_pairing: mode,
+        });
+        const admitted = admitByMask(e13Copies(d), mode === 'multi_mpo');
+        expect(result.matched_count).toBe(matchedByMask(admitted, frame.relationships).length);
+      }
+    }
   });
 });

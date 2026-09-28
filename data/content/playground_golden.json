@@ -336,6 +336,182 @@
       "knobs": { "protocol": "sgdet", "vocabulary": "vg150" },
       "expect": { "count": "630784734166697385600000000" },
       "why": "B = 23,679,052,800 = C(641,2) x C(481,2) = 205,120 x 115,440 whole-pixel boxes in 640 x 480; B(B - 1) = 560,697,541,481,508,787,200; x 150^2 x 50 = x 1,125,000 = 630,784,734,166,697,385,600,000,000."
+    },
+    {
+      "id": "pg-E3-k1",
+      "kp": "E3",
+      "image_id": "ph-001",
+      "knobs": { "k": 1 },
+      "expect": { "in_top": 1, "matched": 1, "truths": "4" },
+      "why": "Capping spec 4.1's twelve ranked rows at 1 per ordered pair drops rank 2 and 6 (both 2,5, repeating rank 1), rank 7 (2,1, repeating rank 4), rank 9 (3,1, repeating rank 3) and rank 10 (2,4, repeating rank 8), leaving 7 rows in rank order 1, 3, 4, 5, 8, 11, 12. At k = 1 only rank 1 survives: person(2) holding wrench(5), score 0.95, is exactly g4. in_top = 1, matched = 1, truths = \"4\"."
+    },
+    {
+      "id": "pg-E3-k2",
+      "kp": "E3",
+      "image_id": "ph-001",
+      "knobs": { "k": 2 },
+      "expect": { "in_top": 2, "matched": 2, "truths": "1,4" },
+      "why": "The same cap-1 pool keeps ranks 1, 3, 4, 5, 8, 11, 12 in that order. At k = 2 the top two are rank 1 (person(2) holding wrench(5) = g4) and rank 3 (box(3) on table(1) = g1): in_top = 2, matched = 2, and the ids sorted ascending give truths = \"1,4\"."
+    },
+    {
+      "id": "pg-E3-k4",
+      "kp": "E3",
+      "image_id": "ph-001",
+      "knobs": { "k": 4 },
+      "expect": { "in_top": 4, "matched": 3, "truths": "1,4,5" },
+      "why": "At k = 4 the cap-1 pool's first four rows are ranks 1, 3, 4 and 5: person(2) holding wrench(5) = g4, box(3) on table(1) = g1, person(2) in front of table(1) names no truth, and panel(6) above table(1) = g5. in_top = 4, matched = 3, truths = \"1,4,5\"."
+    },
+    {
+      "id": "pg-E3-k7",
+      "kp": "E3",
+      "image_id": "ph-001",
+      "knobs": { "k": 7 },
+      "expect": { "in_top": 7, "matched": 3, "truths": "1,4,5" },
+      "why": "The cap-1 pool holds only 7 rows (ranks 1, 3, 4, 5, 8, 11, 12), so topK at k = 7 takes all of them: in_top = 7. Rank 8 (person(2) holding glove(4)), rank 11 (wrench(5) on table(1)) and rank 12 (table(1) behind person(2)) name no truth beyond the three already found at k = 4, so matched stays 3 and truths = \"1,4,5\"."
+    },
+    {
+      "id": "pg-E3-k12",
+      "kp": "E3",
+      "image_id": "ph-001",
+      "knobs": { "k": 12 },
+      "expect": { "in_top": 7, "matched": 3, "truths": "1,4,5" },
+      "why": "topK cannot exceed the pool it cuts: the cap-1 pool has only 7 rows, so k = 12 still yields in_top = 7, the same 7 rows as k = 7. No further truth is named past the three already found (g4, g1, g5), so matched stays 3 and truths = \"1,4,5\"."
+    },
+    {
+      "id": "pg-E4-graph-k2",
+      "kp": "E4",
+      "image_id": "ph-001",
+      "knobs": { "mode": "graph", "k": 2 },
+      "expect": { "pool": 7, "matched": 2, "matched_none": 1 },
+      "why": "Mode graph caps at 1 per pair: 7 rows survive (ranks 1, 3, 4, 5, 8, 11, 12), so pool = 7. At k = 2 the top two, rank 1 (g4) and rank 3 (g1), give matched = 2. Under mode none (cap = Infinity) the same k = 2 takes ranks 1 and 2 (both pair 2,5), of which only rank 1 names g4, so matched_none = 1."
+    },
+    {
+      "id": "pg-E4-none-k2",
+      "kp": "E4",
+      "image_id": "ph-001",
+      "knobs": { "mode": "none", "k": 2 },
+      "expect": { "pool": 12, "matched": 1, "matched_none": 1 },
+      "why": "Mode none keeps every row, so pool = 12. At k = 2 the top two are rank 1 (person(2) holding wrench(5) = g4) and rank 2 (person(2) next to wrench(5), no truth), so matched = 1. The mode already is none, so matched_none repeats the same computation: matched_none = 1."
+    },
+    {
+      "id": "pg-E4-semi-k6",
+      "kp": "E4",
+      "image_id": "ph-001",
+      "knobs": { "mode": "semi", "k": 6 },
+      "expect": { "pool": 11, "matched": 4, "matched_none": 3 },
+      "why": "Mode semi caps at 2 per pair, dropping only rank 6 (a third 2,5 row): 11 rows survive, pool = 11. At k = 6 the top six are ranks 1, 2, 3, 4, 5, 7, naming g4, none, g1, none, g5, g2: matched = 4 (ids 1, 2, 4, 5). Under mode none at the same k = 6, ranks 1 to 6 name g4, none, g1, none, g5, none (rank 6 itself has no truth): matched_none = 3."
+    },
+    {
+      "id": "pg-E4-graph-k12",
+      "kp": "E4",
+      "image_id": "ph-001",
+      "knobs": { "mode": "graph", "k": 12 },
+      "expect": { "pool": 7, "matched": 3, "matched_none": 5 },
+      "why": "Mode graph's pool is the same 7 rows as always, pool = 7; at k = 12, topK cannot exceed 7 rows, so it is all of them, naming g4, g1, g5: matched = 3, as at k = 7. Under mode none at k = 12 all 12 rows are taken, adding rank 7 (g2) and rank 10 (g3) to the three already found: matched_none = 5."
+    },
+    {
+      "id": "pg-E4-none-k12",
+      "kp": "E4",
+      "image_id": "ph-001",
+      "knobs": { "mode": "none", "k": 12 },
+      "expect": { "pool": 12, "matched": 5, "matched_none": 5 },
+      "why": "Mode none's pool is all 12 rows, pool = 12. At k = 12 every row is taken: ranks 1, 3, 5, 7 and 10 name g4, g1, g5, g2 and g3, giving matched = 5. The mode already is none, so matched_none repeats the same five: matched_none = 5."
+    },
+    {
+      "id": "pg-E7-m1-k2",
+      "kp": "E7",
+      "image_id": "ph-001",
+      "knobs": { "m": 1, "k": 2 },
+      "expect": { "pool": 7, "matched": 2 },
+      "why": "m = 1 caps at 1 per pair, the same pool E4's graph mode uses: 7 rows, pool = 7. At k = 2 the top two, rank 1 (person(2) holding wrench(5) = g4) and rank 3 (box(3) on table(1) = g1), give matched = 2."
+    },
+    {
+      "id": "pg-E7-m2-k2",
+      "kp": "E7",
+      "image_id": "ph-001",
+      "knobs": { "m": 2, "k": 2 },
+      "expect": { "pool": 11, "matched": 1 },
+      "why": "m = 2 caps at 2 per pair, the same pool E4's semi mode uses: 11 rows (only rank 6 dropped), pool = 11. At k = 2 the top two are ranks 1 and 2, both on pair (2,5); only rank 1 names g4, so matched = 1."
+    },
+    {
+      "id": "pg-E7-m1-k12",
+      "kp": "E7",
+      "image_id": "ph-001",
+      "knobs": { "m": 1, "k": 12 },
+      "expect": { "pool": 7, "matched": 3 },
+      "why": "m = 1's pool has only 7 rows (ranks 1, 3, 4, 5, 8, 11, 12), so k = 12 still takes all 7: pool = 7. Three of them, ranks 1, 3 and 5, name g4, g1 and g5; the rest name nothing, so matched = 3."
+    },
+    {
+      "id": "pg-E7-m2-k12",
+      "kp": "E7",
+      "image_id": "ph-001",
+      "knobs": { "m": 2, "k": 12 },
+      "expect": { "pool": 11, "matched": 5 },
+      "why": "m = 2's pool has 11 rows (every rank but 6), so k = 12 still takes all 11: pool = 11. Ranks 1, 3, 5, 7 and 10 name g4, g1, g5, g2 and g3, so matched = 5."
+    },
+    {
+      "id": "pg-E7-m10-k12",
+      "kp": "E7",
+      "image_id": "ph-001",
+      "knobs": { "m": 10, "k": 12 },
+      "expect": { "pool": 12, "matched": 5 },
+      "why": "The largest count any one pair holds is 3 (pair 2,5, at ranks 1, 2 and 6), so a cap of m = 10 drops nothing: pool = 12, the full ranked list. At k = 12 the same five ranks (1, 3, 5, 7, 10) name g4, g1, g5, g2 and g3, so matched = 5."
+    },
+    {
+      "id": "pg-E13-single-d3",
+      "kp": "E13",
+      "image_id": "ph-001",
+      "knobs": { "multi": false, "d": 3 },
+      "expect": { "emitted": 3, "admitted": 1, "kept": 1, "g4": false },
+      "why": "d = 3 emits the first 3 copies of the person-wrench mask pair: predicates next to (0.9), holding (0.88) and near (0.7), all keyed '2|5'. emitted = 3. SingleMPO (multi = false) keeps only the first row per mask key, so admitted = 1 (the 'next to' copy). The graph cap keeps that one admitted row, so kept = 1. g4 needs a kept row with predicate holding, but the surviving copy's predicate is next to, so g4 = false."
+    },
+    {
+      "id": "pg-E13-multi-d1",
+      "kp": "E13",
+      "image_id": "ph-001",
+      "knobs": { "multi": true, "d": 1 },
+      "expect": { "emitted": 1, "admitted": 1, "kept": 1, "g4": false },
+      "why": "d = 1 emits only the first copy: subject 2, object 5, predicate next to, score 0.9, masked '2|5'. emitted = 1. MultiMPO (multi = true) keeps every emitted row unchanged, so admitted = 1; the graph cap changes nothing on one row, so kept = 1. Its predicate is next to, not holding, so g4 = false."
+    },
+    {
+      "id": "pg-E13-multi-d2",
+      "kp": "E13",
+      "image_id": "ph-001",
+      "knobs": { "multi": true, "d": 2 },
+      "expect": { "emitted": 2, "admitted": 2, "kept": 2, "g4": true },
+      "why": "d = 2 emits copy 1 (subject 2, object 5, next to, 0.9) and copy 2 (subject 12, object 22, holding, 0.88), both masked '2|5'. emitted = 2; MultiMPO keeps both: admitted = 2. Their subject-object pairs differ, so the graph cap drops neither: kept = 2. Copy 2 is masked '2|5' with predicate holding, exactly what g4 needs, so g4 = true."
+    },
+    {
+      "id": "pg-E13-multi-d5",
+      "kp": "E13",
+      "image_id": "ph-001",
+      "knobs": { "multi": true, "d": 5 },
+      "expect": { "emitted": 5, "admitted": 5, "kept": 5, "g4": true },
+      "why": "d = 5 emits all five copies, every one masked '2|5' though their subject-object ids run 2/5, 12/22, 13/23, 14/24 and 15/25. emitted = 5; MultiMPO keeps all five, admitted = 5; every pair is distinct, so the graph cap drops none: kept = 5. Copy 2's predicate is holding on mask '2|5', so g4 = true."
+    },
+    {
+      "id": "pg-X2-m1",
+      "kp": "X2",
+      "image_id": "ph-001",
+      "knobs": { "m": 1 },
+      "expect": { "pairs": 30, "pool": 30, "share": 1, "cut": false },
+      "why": "ph-001 has 6 objects, so directed ordered pairs = 6 x 5 = 30: pairs = 30. At m = 1 the pool is pairs times min(1, 70) = 30 x 1 = 30. share = min(1, 100) = 1. Since 30 is not greater than 100, cut = false."
+    },
+    {
+      "id": "pg-X2-m10",
+      "kp": "X2",
+      "image_id": "ph-001",
+      "knobs": { "m": 10 },
+      "expect": { "pairs": 30, "pool": 300, "share": 10, "cut": true },
+      "why": "pairs stays 6 x 5 = 30, unaffected by m. At m = 10 the pool is 30 x min(10, 70) = 30 x 10 = 300. share = min(10, 100) = 10. Since 300 > 100, cut = true."
+    },
+    {
+      "id": "pg-X2-m70",
+      "kp": "X2",
+      "image_id": "ph-001",
+      "knobs": { "m": 70 },
+      "expect": { "pairs": 30, "pool": 2100, "share": 70, "cut": true },
+      "why": "pairs is still 30. At m = 70 the pool is 30 x min(70, 70) = 30 x 70 = 2100. share = min(70, 100) = 70. Since 2100 > 100, cut = true."
     }
   ]
 }

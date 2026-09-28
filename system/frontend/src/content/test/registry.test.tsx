@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs';
 import deriv from '../../../../../data/content/deriv.json';
+import kp from '../../../../../data/content/kp.json';
 import math from '../../../../../data/content/math.json';
 import { render, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setLocale } from '../../i18n/useLocale';
+import { PLAYGROUND_MOUNTS, PLAYGROUND_PARTS } from '../../playgrounds/mounts';
 import { getMeta, getModule, moduleIds } from '../registry';
 
 beforeEach(() => {
@@ -204,6 +206,138 @@ describe('the playground step kind', () => {
         expect(container.querySelector('.katex-error'), `${locale} ${step.id}`).toBeNull();
         unmount();
       }
+    }
+  });
+
+  it('M4 derives only what the engine and the definitions force', () => {
+    // §2's five findings: s3's Worked step claimed X_k ⊆ X_k^ng from the constrained pool, where
+    // only the pools nest (X ⊆ X^ng) and R@k ≤ ngR@k holds once k covers the unconstrained pool;
+    // s5 claimed the gap widens at a fixed k, where only the pool grows with m; s4 divided by C,
+    // the count of all predicate classes, where the engine and the Formal line average over the
+    // classes present in the ground truth, |P'|; s6 called both R and mR affine in λ, where only
+    // the blended score is, recall over its ranking being piecewise constant; s8 used k for VRD's
+    // per-pair count where the symbol table already defines k as the rank cutoff, cited a
+    // "Proposition 4c" the course defines nowhere, and asserted an ordering M3 s3 records as
+    // observed, not implied.
+    for (const file of ['../m04.en.mdx', '../m04.zh-TW.mdx']) {
+      const text = readFileSync(new URL(file, import.meta.url), 'utf8').replace(/\s+/g, ' ');
+      for (const present of [
+        'k\\ge\\lvert X^{\\mathrm{ng}}\\rvert &\\Rightarrow R@k\\le \\mathrm{ngR}@k',
+        'R@2=1,\\ \\mathrm{ngR}@2=0',
+        '\\frac{1}{\\lvert\\mathcal{P}^{\\prime}\\rvert}',
+        'recall over its ranking is piecewise constant',
+        '\\text{VRD papers call it } k',
+      ]) {
+        expect(text, `${file}: ${present}`).toContain(present);
+      }
+      for (const absent of [
+        'X_k\\subseteq X_k^{\\mathrm{ng}}',
+        // The bare '\cap X_k' also matches s2's untouched R@k = |G ∩ X_k| / |G|, so the removed
+        // s5 defect (top-m predicates ∩ X_k) is pinned by its closing brace instead.
+        '\\bigr\\}\\cap X_k',
+        'gap keeps widening',
+        'The slider moves',
+        'Both are affine in',
+        'Proposition 4c',
+        'for the same reason the protocol ordering holds',
+        '同一切片上',
+        'on the same slice',
+      ]) {
+        expect(text, `${file}: ${absent}`).not.toContain(absent);
+      }
+    }
+    // The final review (D106): s12 still wrote recall as affine in λ, R_p(λ) and a sum over p; the
+    // blend is a score, σ_p(λ), and recall is R@k of the ranking it gives.
+    for (const file of ['../m04.en.mdx', '../m04.zh-TW.mdx']) {
+      const text = readFileSync(new URL(file, import.meta.url), 'utf8').replace(/\s+/g, ' ');
+      expect(text, file).toContain('\\sigma_p(\\lambda)=(1-\\lambda)');
+      expect(text, file).not.toContain('R(\\lambda) &= \\sum_p');
+      expect(text, file).not.toContain('R_p(\\lambda)=(1-\\lambda)');
+    }
+    const formulas = math as Record<string, string>;
+    const derivations = deriv as Record<string, string>;
+    expect(formulas.E11).toContain('\\sigma_p(\\lambda)=(1-\\lambda)');
+    expect(derivations.E11).not.toContain('R(\\lambda) &= \\sum_p');
+    expect(derivations.E11).not.toContain('R_p(\\lambda)=(1-\\lambda)');
+    // The map's X2 note made the claim s15 refutes: the cut at K still ranks every candidate.
+    const x2 = /pg\(\{id:'X2'[\s\S]*?note_zh:'[^']*'/.exec(source('../../../../web/knowledge-map/pg.js'))?.[0] ?? '';
+    expect(x2).toContain('note_en:');
+    expect(x2).toContain('note_zh:');
+    expect(x2).not.toContain('close to pair recall');
+    // Both locales: the zh note said the number 幾乎等同 pair recall.
+    expect(x2).not.toContain('pair recall');
+    for (const id of ['E4', 'E7', 'E6', 'E11', 'X2']) {
+      for (const absent of [
+        'X_k\\subseteq X_k^{\\mathrm{ng}}',
+        '\\cap X_k',
+        '\\frac{1}{C}',
+        'Both are affine in',
+        'Proposition 4c',
+      ]) {
+        expect(derivations[id], `${id}: ${absent}`).not.toContain(absent);
+      }
+    }
+    expect(formulas.X2).toContain('m=\\lvert');
+    for (const locale of ['en', 'zh-TW'] as const) {
+      for (const step of getModule('m04', locale)!.filter((s) => s.kind === 'math')) {
+        const { container, unmount } = render(<>{step.node}</>);
+        expect(container.querySelector('.katex-error'), `${locale} ${step.id}`).toBeNull();
+        unmount();
+      }
+    }
+  });
+
+  it('every citation of an M4 step names the step it means', () => {
+    // M4 went from 11 steps to 19 (D106), and M8, M11 and M12 kept citing three of its steps by the
+    // ids before: s7 for mask pairing, s4 for the covariance identity, s9 for the calibration item.
+    // Every citation in the modules and the locale tables is listed here with what its step must
+    // be, read from the step itself; a citation not in the table fails as surely as a wrong one.
+    const steps = getMeta('m04', 'en')!.steps;
+    const kind = (id: string) => steps.find((s) => s.id === id)?.kind;
+    const body = (locale: string, id: string) => {
+      const text = source(`../m04.${locale}.mdx`);
+      const start = text.indexOf(`<Step id="${id}">`);
+      return start === -1 ? '' : text.slice(start, text.indexOf('</Step>', start));
+    };
+    const worked = (locale: string, id: string) => {
+      const text = body(locale, id);
+      const start = text.indexOf('<Worked>');
+      return start === -1 ? '' : text.slice(start, text.indexOf('</Worked>', start));
+    };
+    const means: Record<string, (locale: string) => boolean> = {
+      // R@k cannot fall as k rises, and nothing charges for a wrong guess.
+      s2: (l) => kind('s2') === 'math' && body(l, 's2').includes('k^{\\prime}\\ge k\\Rightarrow R@k^{\\prime}\\ge R@k'),
+      // R − mR as one covariance.
+      s8: (l) => kind('s8') === 'math' && worked(l, 's8').includes('\\operatorname{Cov}(n,R)'),
+      // SingleMPO against MultiMPO, and the inequality the extra copies buy.
+      s13: (l) => kind('s13') === 'math' && worked(l, 's13').includes('\\text{SingleMPO}')
+        && worked(l, 's13').includes('\\widehat{\\mu}'),
+      // VRD's per-pair count, which X2's pool note cites for its 70 predicates.
+      s15: (l) => kind('s15') === 'math' && worked(l, 's15').includes('\\text{VRD papers call it } k'),
+      // The prose step "Four more things", whose last item is calibration.
+      s17: (l) => kind('s17') === 'prose' && (l === 'en'
+        ? body(l, 's17').includes('## Four more things') && body(l, 's17').includes('Calibration is absent from the field')
+        : body(l, 's17').includes('另外四件事') && body(l, 's17').includes('本領域並無校準相關指標')),
+    };
+    const cited = [
+      'm07 en s2', 'm07 zh-TW s2',
+      'm08 en s13', 'm08 en s13', 'm08 zh-TW s13', 'm08 zh-TW s13',
+      'm11 en s8', 'm11 zh-TW s8',
+      'm12 en s17', 'm12 zh-TW s17',
+      'i18n en s15', 'i18n zh-TW s15',
+    ];
+    const citations = (text: string, where: string) =>
+      [...text.matchAll(/\bM0?4 (s\d+)\b/g)].map((match) => `${where} ${match[1]}`);
+    const found = [
+      ...moduleIds().flatMap((id) =>
+        (['en', 'zh-TW'] as const).flatMap((locale) => citations(source(`../${id}.${locale}.mdx`), `${id} ${locale}`))),
+      ...(['en', 'zh-TW'] as const).flatMap((locale) =>
+        citations(source(`../../i18n/${locale}.json`), `i18n ${locale}`)),
+    ];
+    expect(found.sort()).toEqual([...cited].sort());
+    for (const citation of cited) {
+      const [, locale, id] = citation.split(' ') as [string, string, string];
+      expect(means[id]?.(locale) ?? false, citation).toBe(true);
     }
   });
 
@@ -485,6 +619,70 @@ describe('the playground step kind', () => {
     for (const item of ['gv-021', 'zR = R', 'Treat as none', 'ba87229']) expect(d105, item).toContain(item);
   });
 
+  it("the records carry D106 and M4's playgrounds", () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const d106 = record(deviations, 'D106').replace(/\s+/g, ' ');
+    expect(deviations).toContain(
+      "## D106 — M4's playgrounds, E3, E4, E7, E13 and X2, and the constraint statements the engine contradicted",
+    );
+    expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 29. ');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 106, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 106, 'CLAUDE.md deviations');
+    expect(claude).toContain('§29 the M4 playgrounds');
+    expect(index).toContain('the M4 playgrounds (§29)');
+    // The counterexample, two of the five playgrounds, and where the branch was cut.
+    for (const item of ['R@2=1', 'E13', 'X2', '992287e']) expect(d106, item).toContain(item);
+    // The final review: what it changed, M7 left open, and the "one note" claim corrected where it
+    // was made, in this record and in spec §5.5.
+    for (const item of ['The final review', 'row_line', 'M04 s7', 'playground.x2.cut_note', 'Open, M7', 'R@2 = 2/3']) {
+      expect(d106, item).toContain(item);
+    }
+    expect(d106).not.toContain('`pool > 100` in both locales, the one note');
+    expect(source('../../../../../docs/superpowers/specs/2026-09-28-playgrounds-m4-design.md'))
+      .toContain("[**Corrected 2026-09-28 (D106's final review):** it was not the one");
+    expect(index).toContain("(M4's step ids before the renumbering)");
+    // M4's density is its own; the nine earlier playgrounds keep the layout their records measured.
+    expect(claude).toContain("`PlaygroundFrame`'s `dense` is M4's");
+    // The browser tests CLAUDE.md cites by name are tests the projector suite runs.
+    const projector = source('../../../../e2e/projector.spec.ts');
+    for (const cited of ['draw their marks on their photographs', 'show their photographs']) {
+      const name = new RegExp(`\`([^\`]*${cited}[^\`]*)\``).exec(claude)?.[1];
+      expect(name, cited).toBeDefined();
+      expect(projector, cited).toContain(name);
+    }
+  });
+
+  it('the records state as many playgrounds, uncovered live points and steps as the code holds', () => {
+    // Taken from the mount table, the harvest and the modules, as the vectors' count is taken from
+    // their file: a bound passes a count left stale (D104's branch review, D106).
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    const mounted = Object.keys(PLAYGROUND_MOUNTS);
+    const uncovered = kp.filter((p) => p.status === 'live' && !mounted.includes(p.id)).length;
+    const steps = moduleIds().reduce((n, id) => n + getMeta(id, 'en')!.steps.length, 0);
+    const split = Object.keys(PLAYGROUND_PARTS).length;
+    const stated = (text: string, pattern: RegExp) => pattern.exec(text)?.slice(1);
+    // Whitespace as \s+, since a phrase may wrap across a line of the record.
+    expect(stated(claude, /8 labs,\s+(\d+)\s+playgrounds/), 'CLAUDE.md playgrounds').toEqual([String(mounted.length)]);
+    expect(stated(claude, /(\d+)\s+live\s+knowledge\s+points\s+have\s+none/), 'CLAUDE.md uncovered')
+      .toEqual([String(uncovered)]);
+    expect(stated(claude, /All\s+(\d+)\s+steps\s+carry\s+theirs;\s+(\d+)\s+notes/), 'CLAUDE.md notes')
+      .toEqual([String(steps), String(2 * steps)]);
+    expect(stated(index, /holds\s+(\d+)\s+and\s+(\d+)\s+since\s+D\d+\]/), 'INDEX notes')
+      .toEqual([String(steps), String(2 * steps)]);
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      expect(stated(text, /five\s+labs\s+and\s+([\w-]+)\s+playgrounds/), `${name} perf`)
+        .toEqual([NUMBER_WORDS[mounted.length]]);
+    }
+    expect(stated(readme, /The\s+([\w-]+)\s+playgrounds\s+too\s+tall\s+for\s+one\s+panel/), 'README parts')
+      .toEqual([NUMBER_WORDS[split]]);
+  });
+
   it('the records state as many golden vectors as the file holds', () => {
     // Taken from the file, not bounded from below: a bound passes a count left stale, and a pinned
     // count turns every earlier records test red when a vector is added (D104's branch review).
@@ -521,6 +719,24 @@ describe('the playground step kind', () => {
       expect(text, file).not.toContain('\\lambda\\ge\\sqrt{2}');
     }
     expect((deriv as Record<string, string>).F3).toContain('\\lambda>\\sqrt{2}');
+  });
+
+  it('M4 carries E3, E4, E7, E13 and X2 directly after the steps that teach them', () => {
+    const meta = getMeta('m04', 'en')!;
+    const part = (n?: number) => (n === undefined ? '' : `.${n}`);
+    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}${part(s.part)}` : ''}`)).toEqual([
+      's1:prose', 's2:math', 's3:playground/E3.1', 's4:playground/E3.2', 's5:math',
+      's6:playground/E4.1', 's7:playground/E4.2', 's8:math', 's9:math', 's10:playground/E7.1',
+      's11:playground/E7.2', 's12:math', 's13:math', 's14:playground/E13', 's15:math',
+      's16:playground/X2', 's17:prose', 's18:lab', 's19:checkpoint',
+    ]);
+    const steps = getModule('m04', 'zh-TW')!;
+    for (const step of steps.filter((s) => s.kind === 'playground')) {
+      const mounted = render(<MemoryRouter initialEntries={['/m/m04']}>{step.node}</MemoryRouter>);
+      expect(within(mounted.container).getByTestId('playground-frame')).toBeInTheDocument();
+      expect(mounted.container.querySelector('[data-testid="playground-unknown"]')).toBeNull();
+      mounted.unmount();
+    }
   });
 
   it('M3 carries E1 and E10, in two parts each, directly after the steps that teach them', () => {
