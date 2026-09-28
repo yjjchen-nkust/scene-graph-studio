@@ -24,5 +24,5 @@
   "G2": "\\[ \\mathcal{G}_{\\ell+1}=\\Phi_{\\ell}(\\mathcal{G}_{\\ell}),\\qquad \\lvert V_{\\ell+1}\\rvert\\ll\\lvert V_{\\ell}\\rvert,\\qquad \\text{tokens}\\approx 7\\,\\lvert V_{\\ell}\\rvert \\]",
   "G4": "\\[ V_{\\text{task}}=\\{v\\in V:\\ \\mathrm{sim}(v,\\text{task})>\\theta\\};\\qquad \\text{granularity is a property of the task, not the scene} \\]",
   "X1": "\\[ \\texttt{VG150}\\ \\mapsto\\ \\text{releases } r,\\ \\text{each with its own }(\\mathcal{D}_{\\text{train}},\\mathcal{D}_{\\text{val}},\\mathcal{D}_{\\text{test}})_r\\ \\Longrightarrow\\ \\text{a number is comparable only when its } r \\text{ is named} \\]",
-  "X2": "\\[ R@k \\text{ on VRD depends on } k=\\lvert\\{p:\\langle s,p,o\\rangle\\in X\\}\\rvert\\in\\{1,10,70\\},\\ \\text{usually undeclared} \\]"
+  "X2": "\\[ R@K \\text{ on VRD depends on } m=\\lvert\\{p:\\langle s,p,o\\rangle\\in X\\}\\rvert\\in\\{1,10,70\\},\\ \\text{usually undeclared} \\]"
 }

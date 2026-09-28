@@ -33,9 +33,9 @@ symbols:
   - sym: "\\mathcal{P}"
     gloss_en: "predicate class set"
     gloss_zh: "predicate 類別集合"
-  - sym: "C"
-    gloss_en: "number of predicate classes"
-    gloss_zh: "predicate 類別數"
+  - sym: "\\lvert\\mathcal{P}^{\\prime}\\rvert"
+    gloss_en: "number of predicate classes present in the ground truth"
+    gloss_zh: "標準答案中出現之 predicate 類別數"
   - sym: "n_p"
     gloss_en: "number of ground-truth triplets carrying predicate p"
     gloss_zh: "標準答案中 predicate p 的三元組數量"
@@ -97,7 +97,7 @@ steps:
   - id: s5
     kind: math
     seconds_budget: 240
-    presenter_notes_en: "Four minutes. ng-R@k turns the constraint of s3 from a switch into a degree: m predicates per pair instead of one. Raising m can only add candidates, so the metric rises, and it stops rising once m exceeds the number of runners-up the model actually distinguishes. If s3 landed, this one can be compressed."
+    presenter_notes_en: "Four minutes. ng-R@k turns the constraint of s5 from a switch into a degree: m predicates per pair instead of one. Raising m can only add candidates, so the pool grows until m passes the most predicates the model scores for any pair; recall at a fixed k need not follow, since each runner-up admitted takes a place in the top k. The next step shows it fall at k = 2. If s5 landed, this one can be compressed."
   - id: s6
     kind: math
     seconds_budget: 420
@@ -109,7 +109,7 @@ steps:
   - id: s8
     kind: math
     seconds_budget: 240
-    presenter_notes_en: "Four minutes. VRD carries the same hazard in a different place: its recall admits several predicates per ordered pair, the count is a free parameter, and papers usually do not state it. k = 1 is the graph constraint and k = 70 is no constraint at all. Worth adding that this project does not use VRD and that its licence gate is shut anyway."
+    presenter_notes_en: "Four minutes. VRD carries the same hazard in a different place: its recall admits several predicates per ordered pair, the count is a free parameter, and papers usually do not state it. The count is written m here, as in s9, because k is already the rank cutoff; VRD papers call it k. m = 1 is the graph constraint and m = 70 is no constraint at all. Worth adding that this project does not use VRD and that its licence gate is shut anyway."
   - id: s9
     kind: prose
     seconds_budget: 240
@@ -210,9 +210,10 @@ $$
 
 $$
 \begin{aligned}
-X_k &= \{t\in X_k^{\mathrm{ng}} : \sigma(t)=\max_{p}\sigma(\langle s,p,o\rangle)\} &&\text{constraint keeps the arg-max per pair}\\
-&\Rightarrow X_k\subseteq X_k^{\mathrm{ng}}\\
-&\Rightarrow \mu(G,X_k)\le\mu(G,X_k^{\mathrm{ng}}) \;\Rightarrow\; R@k\le \mathrm{ngR}@k
+X &= \{t\in X^{\mathrm{ng}} : \sigma(t)=\max_{p}\sigma(\langle s,p,o\rangle)\} &&\text{the constraint keeps the arg-max per pair}\\
+&\Rightarrow X\subseteq X^{\mathrm{ng}} \Rightarrow \mu(G,X)\le\mu(G,X^{\mathrm{ng}}) &&\text{the pools nest}\\
+X_k &= \text{top-}k(X),\qquad X_k^{\mathrm{ng}}=\text{top-}k(X^{\mathrm{ng}}) &&\text{each cut from its own pool}\\
+k\ge\lvert X^{\mathrm{ng}}\rvert &\Rightarrow R@k\le \mathrm{ngR}@k &&\text{at a smaller } k \text{ either side can be larger}
 \end{aligned}
 $$
 
@@ -221,7 +222,8 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{The inequality is strict whenever a ground-truth predicate is any pair's runner-up.}
+\begin{gathered}\text{Over the whole pool the gap is strict whenever a ground-truth predicate is some pair's runner-up.}
+\\ \text{At } k=2\text{: } (1,2,\text{on},.9),\ (1,2,\text{near},.8),\ (3,4,\text{on},.7) \text{ against } (3,4,\text{on}) \text{ give } R@2=1,\ \mathrm{ngR}@2=0.
 \\ \text{STTran on Action Genome: PredCls } R@50 = 71.8 \text{ constrained}, \; 99.1 \text{ unconstrained.}\end{gathered}
 $$
 
@@ -257,10 +259,10 @@ $$
 
 $$
 \begin{aligned}
-R@k-mR@k &= \sum_p \frac{n_p}{N}R_p - \frac{1}{C}\sum_p R_p &&\text{Definition 9}\\
-&= \frac{1}{N}\sum_p\Bigl(n_p-\frac{N}{C}\Bigr)R_p = \frac{1}{N}\sum_p (n_p-\bar n)R_p &&\bar n=N/C\\
+R@k-mR@k &= \sum_p \frac{n_p}{N}R_p - \frac{1}{\lvert\mathcal{P}^{\prime}\rvert}\sum_p R_p &&\text{Definition 9, } p\in\mathcal{P}^{\prime}\\
+&= \frac{1}{N}\sum_p\Bigl(n_p-\frac{N}{\lvert\mathcal{P}^{\prime}\rvert}\Bigr)R_p = \frac{1}{N}\sum_p (n_p-\bar n)R_p &&\bar n=N/\lvert\mathcal{P}^{\prime}\rvert\\
 &= \frac{1}{N}\sum_p (n_p-\bar n)(R_p-\bar R) &&\textstyle\sum_p(n_p-\bar n)=0\\
-&= \frac{C}{N}\operatorname{Cov}(n,R) = \frac{\operatorname{Cov}(n,R)}{\bar n}
+&= \frac{\lvert\mathcal{P}^{\prime}\rvert}{N}\operatorname{Cov}(n,R) = \frac{\operatorname{Cov}(n,R)}{\bar n}
 \end{aligned}
 $$
 
@@ -269,7 +271,7 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{The slider moves } \alpha \text{ in } w_p(\alpha)\propto n_p^{\alpha}. \;\; \alpha=1 \text{ gives } R, \;\; \alpha=0 \text{ gives } mR.
+\begin{gathered}\text{As } \alpha \text{ moves from 1 to 0 in } w_p(\alpha)\propto n_p^{\alpha}, \text{ the weighted mean moves from } R \text{ to } mR.
 \\ \text{The whole bias problem is the sign of one covariance.}\end{gathered}
 $$
 
@@ -290,10 +292,11 @@ correlation to zero.
 
 <Intuition>
 
-No-graph recall is the constraint of step 3 relaxed by degrees rather than switched off: allow
-$m$ predicates per pair instead of one. Increasing $m$ can only add candidates, so the metric
-rises, and it stops rising once $m$ passes the number of runner-up predicates the model actually
-distinguishes.
+No-graph recall is the constraint of step 5 relaxed by degrees rather than switched off: allow
+$m$ predicates per pair instead of one. Increasing $m$ can only add candidates to the pool, which
+stops growing once $m$ passes the number of predicates the model scores for any pair. Recall at a
+fixed $k$ need not rise with it: every runner-up admitted takes a place in the top $k$ from
+something else.
 
 </Intuition>
 
@@ -309,8 +312,9 @@ $$
 
 $$
 \begin{aligned}
-X_k^{\mathrm{ng}}(m) &= \bigcup_{(s,o)}\bigl\{\text{top-}m\text{ predicates for }(s,o)\bigr\}\cap X_k\\
-m'\ge m &\Rightarrow X_k^{\mathrm{ng}}(m)\subseteq X_k^{\mathrm{ng}}(m') \Rightarrow \mathrm{ngR}(m)\le \mathrm{ngR}(m')
+X^{\mathrm{ng}}(m) &= \bigcup_{(s,o)}\bigl\{\text{top-}m\text{ predicates for }(s,o)\bigr\} &&\text{the pool with } m \text{ per pair}\\
+m'\ge m &\Rightarrow X^{\mathrm{ng}}(m)\subseteq X^{\mathrm{ng}}(m') &&\text{the pool grows with } m\\
+k\ge\lvert X^{\mathrm{ng}}(m')\rvert &\Rightarrow \mathrm{ngR}_m@k\le \mathrm{ngR}_{m'}@k &&\text{at a smaller } k \text{ it need not}
 \end{aligned}
 $$
 
@@ -319,8 +323,8 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{Saturates once } m \text{ exceeds the number of runner-up predicates the model actually carries.}
-\\ \text{A real model carries } \lvert\mathcal{P}\rvert=50, \text{ so the gap keeps widening to } m=50.\end{gathered}
+\begin{gathered}\text{The pool stops growing once } m \text{ reaches the most predicates any pair carries.}
+\\ \text{A model scoring all } \lvert\mathcal{P}\rvert=50 \text{ predicates per pair grows its pool until } m=50.\end{gathered}
 $$
 
 The application's third mode, `semi`, sits between the two: at most $m$ predicates
@@ -365,7 +369,8 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{Both are affine in } \lambda. \text{ At } \lambda=0 \text{ the predictor reads no pixels, yet}
+\begin{gathered}\text{The blended score is affine in } \lambda\text{; recall over its ranking is piecewise constant.}
+\\ \text{At } \lambda=0 \text{ the predictor reads no pixels, yet}
 \\ \operatorname{Cov}(n,\pi)\gg 0 \text{ by construction, so } R \text{ is high and } mR \text{ is near zero.}
 \\[4pt]
 \text{VG150, PredCls } mR@100: \ \text{FREQ } 16.0 \; > \; \text{MOTIFS } 15.3 \; > \; \text{IMP}^{+}\ 10.5.\end{gathered}
@@ -449,7 +454,7 @@ pair, the number is a free parameter, and papers usually do not say which they u
 <Formal>
 
 $$
-R@k \text{ on VRD depends on } k=\lvert\{p:\langle s,p,o\rangle\in X\}\rvert\in\{1,10,70\},\ \text{usually undeclared}
+R@K \text{ on VRD depends on } m=\lvert\{p:\langle s,p,o\rangle\in X\}\rvert\in\{1,10,70\},\ \text{usually undeclared}
 $$
 
 </Formal>
@@ -458,9 +463,9 @@ $$
 
 $$
 \begin{aligned}
-R@k \text{ on VRD admits } k \text{ predicates per ordered pair}, \ k\in\{1,10,70\}\\
-k=1 &\equiv \text{graph constraint} \qquad k=\lvert\mathcal{P}\rvert=70 \equiv \text{no constraint at all}\\
-k=70 &\Rightarrow \text{every predicate enters for every pair} \Rightarrow R@k \to PR@k
+&R@K \text{ on VRD admits } m \text{ predicates per ordered pair}, \ m\in\{1,10,70\} &&\text{VRD papers call it } k\\
+m=1 &\equiv \text{graph constraint} \qquad m=\lvert\mathcal{P}\rvert=70 \equiv \text{no constraint at all}\\
+m=70 &\Rightarrow \text{every predicate of every pair is a candidate; the cut at } K \text{ still ranks them}
 \end{aligned}
 $$
 
@@ -469,15 +474,17 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{At } k=70 \text{ the metric measures pair detection, not relation classification (Proposition 4c).}
-\\ \text{Papers routinely omit } k, \text{ so VRD numbers are not comparable across papers by default.}\end{gathered}
+\begin{gathered}\text{At } m=70 \text{ no predicate is excluded for its pair; only the cut at } K \text{ excludes a candidate.}
+\\ \text{Papers routinely omit } m, \text{ so VRD numbers are not comparable across papers by default.}\end{gathered}
 $$
 
-At the top of that range the metric has quietly become a different metric. Every predicate enters
-for every pair, so whether the model ranked the right relation first no longer affects the score —
-only whether it found the pair at all. That limit is $PR@k$, phrase recall, and the bound
-$R \le PR$ holds for the same reason the protocol ordering holds: the easier question is a relaxation
-of the harder one.
+At the top of that range the rule that excluded a pair's runner-ups is gone: every predicate of
+every pair is a candidate, and only the cut at $K$ decides which reach the score, by comparing
+candidates across pairs. A model is therefore still rewarded for scoring the right relation high,
+though no longer for ranking it first within its pair. Phrase detection, $PR@K$, is a different
+relaxation: it tests one box around the whole pair instead of one box per object. Nothing here
+orders the two metrics; as with the protocol ordering of M3, any gap between them is measured, not
+derived.
 
 </Implications>
 
@@ -514,8 +521,9 @@ L2 puts $k$, the protocol, the constraint mode and $\tau$ on controls and draws 
 against $K$ on one axis. Find the configuration where the two curves are furthest apart, then
 state what that gap is measuring — it is not model quality.
 
-L3 runs the frequency baseline against the learned models on the same slice, so the last
-derivation above is something you watch happen rather than something you are told.
+L3 fits the frequency prior to a synthetic long-tailed corpus and blends it with a hand-written
+visual scorer, so the last derivation above is something you watch happen rather than something
+you are told.
 
 </Step>
 

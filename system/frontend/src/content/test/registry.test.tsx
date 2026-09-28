@@ -207,6 +207,66 @@ describe('the playground step kind', () => {
     }
   });
 
+  it('M4 derives only what the engine and the definitions force', () => {
+    // §2's five findings: s3's Worked step claimed X_k ⊆ X_k^ng from the constrained pool, where
+    // only the pools nest (X ⊆ X^ng) and R@k ≤ ngR@k holds once k covers the unconstrained pool;
+    // s5 claimed the gap widens at a fixed k, where only the pool grows with m; s4 divided by C,
+    // the count of all predicate classes, where the engine and the Formal line average over the
+    // classes present in the ground truth, |P'|; s6 called both R and mR affine in λ, where only
+    // the blended score is, recall over its ranking being piecewise constant; s8 used k for VRD's
+    // per-pair count where the symbol table already defines k as the rank cutoff, cited a
+    // "Proposition 4c" the course defines nowhere, and asserted an ordering M3 s3 records as
+    // observed, not implied.
+    for (const file of ['../m04.en.mdx', '../m04.zh-TW.mdx']) {
+      const text = readFileSync(new URL(file, import.meta.url), 'utf8').replace(/\s+/g, ' ');
+      for (const present of [
+        'k\\ge\\lvert X^{\\mathrm{ng}}\\rvert &\\Rightarrow R@k\\le \\mathrm{ngR}@k',
+        'R@2=1,\\ \\mathrm{ngR}@2=0',
+        '\\frac{1}{\\lvert\\mathcal{P}^{\\prime}\\rvert}',
+        'recall over its ranking is piecewise constant',
+        '\\text{VRD papers call it } k',
+      ]) {
+        expect(text, `${file}: ${present}`).toContain(present);
+      }
+      for (const absent of [
+        'X_k\\subseteq X_k^{\\mathrm{ng}}',
+        // The bare '\cap X_k' also matches s2's untouched R@k = |G ∩ X_k| / |G|, so the removed
+        // s5 defect (top-m predicates ∩ X_k) is pinned by its closing brace instead.
+        '\\bigr\\}\\cap X_k',
+        'gap keeps widening',
+        'The slider moves',
+        'Both are affine in',
+        'Proposition 4c',
+        'for the same reason the protocol ordering holds',
+        '同一切片上',
+        'on the same slice',
+      ]) {
+        expect(text, `${file}: ${absent}`).not.toContain(absent);
+      }
+    }
+    const formulas = math as Record<string, string>;
+    const derivations = deriv as Record<string, string>;
+    for (const id of ['E4', 'E7', 'E6', 'E11', 'X2']) {
+      for (const absent of [
+        'X_k\\subseteq X_k^{\\mathrm{ng}}',
+        '\\cap X_k',
+        '\\frac{1}{C}',
+        'Both are affine in',
+        'Proposition 4c',
+      ]) {
+        expect(derivations[id], `${id}: ${absent}`).not.toContain(absent);
+      }
+    }
+    expect(formulas.X2).toContain('m=\\lvert');
+    for (const locale of ['en', 'zh-TW'] as const) {
+      for (const step of getModule('m04', locale)!.filter((s) => s.kind === 'math')) {
+        const { container, unmount } = render(<>{step.node}</>);
+        expect(container.querySelector('.katex-error'), `${locale} ${step.id}`).toBeNull();
+        unmount();
+      }
+    }
+  });
+
   it('M3 qualifies its verdict table and defines the inclusion it states', () => {
     // Branch review (D98): the table holds against a ground truth no earlier prediction has matched,
     // since the engine calls a repeat of a matched triplet localization; and the inclusion holds

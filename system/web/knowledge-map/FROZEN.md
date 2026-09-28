@@ -233,3 +233,50 @@ calls the recall ordering observed rather than implied, the frozen E10 still pri
 The readout is relabelled "ordering on this toy", its values "holds" and "reversed", and the `ZH`
 table carries the two new strings in place of the two it no longer uses. The bars are unchanged.
 No option, control or knowledge point was added.
+
+### 2026-09-28 — M4's statements about constraints, blends and VRD's per-pair count
+
+Opened for the M4 playgrounds (`docs/superpowers/specs/2026-09-28-playgrounds-m4-design.md` §2),
+read against the built engine (`packages/sgg-metrics/src/`).
+
+**1 · M4 s3's Worked step derived `R@k ≤ ngR@k` from `X_k ⊆ X_k^ng`.** `X_k` is the top `k` of the
+constrained pool, not a subset of the unconstrained top `k`. What holds is the nesting of the
+pools, `X ⊆ X^ng`, and so `R@k ≤ ngR@k` once `k` covers the unconstrained pool; at a fixed `k`
+either side can be larger. A counterexample, run on the built engine: three predictions,
+`(1,2,on,.9)`, `(1,2,near,.8)` and `(3,4,on,.7)`, against the one ground truth `(3,4,on)`: at
+`K = 2`, `graph` gives `R@2 = 1` and `ngR@2 = 0`; `semi` with a cap of 1 gives `R@2 = 1`, with a cap
+of 2 `R@2 = 0`. The Implications line "the inequality is strict whenever a ground-truth predicate
+is any pair's runner-up" failed for the same reason and now states the strictness condition for
+the whole pool.
+
+**2 · M4 s5's Worked step derived `ngR(m) ≤ ngR(m′)` for `m′ ≥ m`, by the same intersection with
+`X_k`.** Its Implications said "the gap keeps widening to m = 50"; the map's E7 note repeated the
+widening. The pool grows with `m`; recall at a fixed `k` need not. Both now say the pool grows and
+saturates at the largest number of predicates any pair carries.
+
+**3 · M4 s4 spoke of "the slider" for α**, which exists on the map only, and its Worked step
+divided by `C`, which the symbol table glossed as the number of predicate classes, where the
+Formal line and the engine average over the classes present in the ground truth, `|P′|`. The
+Worked step now divides by `|P′|` throughout, and the symbol table's `C` entry is replaced by
+`|P′|`; the Implications line now says that as α moves from 1 to 0 the weighted mean moves from `R`
+to `mR`.
+
+**4 · M4 s6 called `R` and `mR` "both affine in λ".** The blended score is affine in λ; recall over
+the blended ranking changes only where two blended scores cross, so it is piecewise constant in λ,
+as L3 computes it. The Implications now say so.
+
+**5 · M4 s8 used `k` for VRD's predicates per pair**, where the module's symbol table defines `k`
+as the rank cutoff; cited "Proposition 4c", which the course defines nowhere; said that at `k = 70`
+the metric "measures pair detection" and `R@k → PR@k`, although the cut at `K` still ranks every
+candidate of every pair by score; and said `R ≤ PR` "holds for the same reason the protocol
+ordering holds", which M3 s3 records as observed, not implied (D98). The count is now written `m`,
+as in s5 (the ids Task 10 gives after renumbering); the "Proposition 4c" reference is removed; and
+the top-of-range and `R ≤ PR` statements are rewritten to make no ordering or inclusion claim
+beyond what the cut at `K` does. M4 s10 said "L3 runs the frequency baseline against the learned
+models on the same slice"; L3 runs a synthetic long-tailed corpus and a hand-written visual scorer,
+and s10 now says so.
+
+`npm run harvest` carries the corrected MATH.X2 and DERIV.E4, E6, E7, E11 and X2 into
+`data/content/`. The brief (`web/brief/index.html`) was searched for `ngR`, `affine`,
+`Proposition 4` and `same slice`; it states none of them. No option, control or knowledge point was
+added. The map's toy playgrounds are unchanged.

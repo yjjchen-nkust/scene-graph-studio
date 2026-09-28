@@ -33,9 +33,9 @@ symbols:
   - sym: "\\mathcal{P}"
     gloss_en: "predicate class set"
     gloss_zh: "predicate 類別集合"
-  - sym: "C"
-    gloss_en: "number of predicate classes"
-    gloss_zh: "predicate 類別數"
+  - sym: "\\lvert\\mathcal{P}^{\\prime}\\rvert"
+    gloss_en: "number of predicate classes present in the ground truth"
+    gloss_zh: "標準答案中出現之 predicate 類別數"
   - sym: "n_p"
     gloss_en: "number of ground-truth triplets carrying predicate p"
     gloss_zh: "標準答案中 predicate p 的三元組數量"
@@ -97,7 +97,7 @@ steps:
   - id: s5
     kind: math
     seconds_budget: 240
-    presenter_notes_zh: "四分鐘。ng-R@k 將 s3 的約束由開關改為程度：每一配對容許 m 個 predicate。提高 m 僅能增加候選，故指標隨之上升，並於 m 超過模型實際能區分的次順位數量時停止。若 s3 已充分說明，此處可壓縮。"
+    presenter_notes_zh: "四分鐘。ng-R@k 將 s5 之約束由開關改為程度：每一配對容許 m 個 predicate。提高 m 僅能增加候選，故候選池隨之增長，直至 m 超過模型對任一配對所評分之 predicate 數量為止；固定 k 時 recall 未必隨之上升，因每一新納入之次順位均占去前 k 名之一席。下一步驟呈現其於 k = 2 時下降之情形。若 s5 已充分說明，此處可壓縮。"
   - id: s6
     kind: math
     seconds_budget: 420
@@ -109,7 +109,7 @@ steps:
   - id: s8
     kind: math
     seconds_budget: 240
-    presenter_notes_zh: "四分鐘。VRD 於另一位置承載同樣的風險：其 recall 容許每一有序配對具備多個 predicate，該數量為自由參數且論文通常未載明。k = 1 等同 graph constraint，k = 70 則等同完全無約束。本專案不使用 VRD，其授權閘門亦為關閉，可一併說明。"
+    presenter_notes_zh: "四分鐘。VRD 於另一位置承載同樣的風險：其 recall 容許每一有序配對具備多個 predicate，該數量為自由參數且論文通常未載明。此數量於此記為 m，與 s9 相同，因 k 已表示排序截斷位置；VRD 論文稱之為 k。m = 1 等同 graph constraint，m = 70 則等同完全無約束。本專案不使用 VRD，其授權閘門亦為關閉，可一併說明。"
   - id: s9
     kind: prose
     seconds_budget: 240
@@ -197,9 +197,10 @@ $$
 
 $$
 \begin{aligned}
-X_k &= \{t\in X_k^{\mathrm{ng}} : \sigma(t)=\max_{p}\sigma(\langle s,p,o\rangle)\} &&\text{constraint keeps the arg-max per pair}\\
-&\Rightarrow X_k\subseteq X_k^{\mathrm{ng}}\\
-&\Rightarrow \mu(G,X_k)\le\mu(G,X_k^{\mathrm{ng}}) \;\Rightarrow\; R@k\le \mathrm{ngR}@k
+X &= \{t\in X^{\mathrm{ng}} : \sigma(t)=\max_{p}\sigma(\langle s,p,o\rangle)\} &&\text{the constraint keeps the arg-max per pair}\\
+&\Rightarrow X\subseteq X^{\mathrm{ng}} \Rightarrow \mu(G,X)\le\mu(G,X^{\mathrm{ng}}) &&\text{the pools nest}\\
+X_k &= \text{top-}k(X),\qquad X_k^{\mathrm{ng}}=\text{top-}k(X^{\mathrm{ng}}) &&\text{each cut from its own pool}\\
+k\ge\lvert X^{\mathrm{ng}}\rvert &\Rightarrow R@k\le \mathrm{ngR}@k &&\text{at a smaller } k \text{ either side can be larger}
 \end{aligned}
 $$
 
@@ -208,7 +209,8 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{The inequality is strict whenever a ground-truth predicate is any pair's runner-up.}
+\begin{gathered}\text{Over the whole pool the gap is strict whenever a ground-truth predicate is some pair's runner-up.}
+\\ \text{At } k=2\text{: } (1,2,\text{on},.9),\ (1,2,\text{near},.8),\ (3,4,\text{on},.7) \text{ against } (3,4,\text{on}) \text{ give } R@2=1,\ \mathrm{ngR}@2=0.
 \\ \text{STTran on Action Genome: PredCls } R@50 = 71.8 \text{ constrained}, \; 99.1 \text{ unconstrained.}\end{gathered}
 $$
 
@@ -238,10 +240,10 @@ $$
 
 $$
 \begin{aligned}
-R@k-mR@k &= \sum_p \frac{n_p}{N}R_p - \frac{1}{C}\sum_p R_p &&\text{Definition 9}\\
-&= \frac{1}{N}\sum_p\Bigl(n_p-\frac{N}{C}\Bigr)R_p = \frac{1}{N}\sum_p (n_p-\bar n)R_p &&\bar n=N/C\\
+R@k-mR@k &= \sum_p \frac{n_p}{N}R_p - \frac{1}{\lvert\mathcal{P}^{\prime}\rvert}\sum_p R_p &&\text{Definition 9, } p\in\mathcal{P}^{\prime}\\
+&= \frac{1}{N}\sum_p\Bigl(n_p-\frac{N}{\lvert\mathcal{P}^{\prime}\rvert}\Bigr)R_p = \frac{1}{N}\sum_p (n_p-\bar n)R_p &&\bar n=N/\lvert\mathcal{P}^{\prime}\rvert\\
 &= \frac{1}{N}\sum_p (n_p-\bar n)(R_p-\bar R) &&\textstyle\sum_p(n_p-\bar n)=0\\
-&= \frac{C}{N}\operatorname{Cov}(n,R) = \frac{\operatorname{Cov}(n,R)}{\bar n}
+&= \frac{\lvert\mathcal{P}^{\prime}\rvert}{N}\operatorname{Cov}(n,R) = \frac{\operatorname{Cov}(n,R)}{\bar n}
 \end{aligned}
 $$
 
@@ -250,7 +252,7 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{The slider moves } \alpha \text{ in } w_p(\alpha)\propto n_p^{\alpha}. \;\; \alpha=1 \text{ gives } R, \;\; \alpha=0 \text{ gives } mR.
+\begin{gathered}\text{As } \alpha \text{ moves from 1 to 0 in } w_p(\alpha)\propto n_p^{\alpha}, \text{ the weighted mean moves from } R \text{ to } mR.
 \\ \text{The whole bias problem is the sign of one covariance.}\end{gathered}
 $$
 
@@ -266,7 +268,7 @@ $$
 
 <Intuition>
 
-no-graph recall 係將第三節的約束以程度而非開關方式放寬：每一配對容許 $m$ 個 predicate 而非一個。提高 $m$ 僅能增加候選，故指標隨之上升；當 $m$ 超過模型實際能區分的次順位 predicate 數量時，即停止上升。
+no-graph recall 係將第五節之約束以程度而非開關方式放寬：每一配對容許 $m$ 個 predicate 而非一個。提高 $m$ 僅能增加候選池之內容，且當 $m$ 超過模型對任一配對所評分之 predicate 數量時，候選池即停止增長。然於固定之 $k$，recall 未必隨之上升：每一新納入之次順位 predicate，均占去前 $k$ 名中原屬其他候選之位置。
 
 </Intuition>
 
@@ -282,8 +284,9 @@ $$
 
 $$
 \begin{aligned}
-X_k^{\mathrm{ng}}(m) &= \bigcup_{(s,o)}\bigl\{\text{top-}m\text{ predicates for }(s,o)\bigr\}\cap X_k\\
-m'\ge m &\Rightarrow X_k^{\mathrm{ng}}(m)\subseteq X_k^{\mathrm{ng}}(m') \Rightarrow \mathrm{ngR}(m)\le \mathrm{ngR}(m')
+X^{\mathrm{ng}}(m) &= \bigcup_{(s,o)}\bigl\{\text{top-}m\text{ predicates for }(s,o)\bigr\} &&\text{the pool with } m \text{ per pair}\\
+m'\ge m &\Rightarrow X^{\mathrm{ng}}(m)\subseteq X^{\mathrm{ng}}(m') &&\text{the pool grows with } m\\
+k\ge\lvert X^{\mathrm{ng}}(m')\rvert &\Rightarrow \mathrm{ngR}_m@k\le \mathrm{ngR}_{m'}@k &&\text{at a smaller } k \text{ it need not}
 \end{aligned}
 $$
 
@@ -292,8 +295,8 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{Saturates once } m \text{ exceeds the number of runner-up predicates the model actually carries.}
-\\ \text{A real model carries } \lvert\mathcal{P}\rvert=50, \text{ so the gap keeps widening to } m=50.\end{gathered}
+\begin{gathered}\text{The pool stops growing once } m \text{ reaches the most predicates any pair carries.}
+\\ \text{A model scoring all } \lvert\mathcal{P}\rvert=50 \text{ predicates per pair grows its pool until } m=50.\end{gathered}
 $$
 
 本應用的第三種模式 `semi` 位於兩者之間：每一有序物件配對至多保留 $m$ 個 predicate，$m = 2$。此為一上限，並非 STTran 為 Action Genome 所提出之 semi constraint；後者對每一物件配對保留分數最高之 attention predicate，以及分數高於 0.9 之全部 spatial 與 contacting predicate（M12 載明其出處）。本應用僅以此上限近似該規則，並未實際計算之。
@@ -333,7 +336,8 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{Both are affine in } \lambda. \text{ At } \lambda=0 \text{ the predictor reads no pixels, yet}
+\begin{gathered}\text{The blended score is affine in } \lambda\text{; recall over its ranking is piecewise constant.}
+\\ \text{At } \lambda=0 \text{ the predictor reads no pixels, yet}
 \\ \operatorname{Cov}(n,\pi)\gg 0 \text{ by construction, so } R \text{ is high and } mR \text{ is near zero.}
 \\[4pt]
 \text{VG150, PredCls } mR@100: \ \text{FREQ } 16.0 \; > \; \text{MOTIFS } 15.3 \; > \; \text{IMP}^{+}\ 10.5.\end{gathered}
@@ -405,7 +409,7 @@ VRD 於另一位置承載同樣的風險。其 recall 容許每一有序配對�
 <Formal>
 
 $$
-R@k \text{ on VRD depends on } k=\lvert\{p:\langle s,p,o\rangle\in X\}\rvert\in\{1,10,70\},\ \text{usually undeclared}
+R@K \text{ on VRD depends on } m=\lvert\{p:\langle s,p,o\rangle\in X\}\rvert\in\{1,10,70\},\ \text{usually undeclared}
 $$
 
 </Formal>
@@ -414,9 +418,9 @@ $$
 
 $$
 \begin{aligned}
-R@k \text{ on VRD admits } k \text{ predicates per ordered pair}, \ k\in\{1,10,70\}\\
-k=1 &\equiv \text{graph constraint} \qquad k=\lvert\mathcal{P}\rvert=70 \equiv \text{no constraint at all}\\
-k=70 &\Rightarrow \text{every predicate enters for every pair} \Rightarrow R@k \to PR@k
+&R@K \text{ on VRD admits } m \text{ predicates per ordered pair}, \ m\in\{1,10,70\} &&\text{VRD papers call it } k\\
+m=1 &\equiv \text{graph constraint} \qquad m=\lvert\mathcal{P}\rvert=70 \equiv \text{no constraint at all}\\
+m=70 &\Rightarrow \text{every predicate of every pair is a candidate; the cut at } K \text{ still ranks them}
 \end{aligned}
 $$
 
@@ -425,11 +429,11 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{At } k=70 \text{ the metric measures pair detection, not relation classification (Proposition 4c).}
-\\ \text{Papers routinely omit } k, \text{ so VRD numbers are not comparable across papers by default.}\end{gathered}
+\begin{gathered}\text{At } m=70 \text{ no predicate is excluded for its pair; only the cut at } K \text{ excludes a candidate.}
+\\ \text{Papers routinely omit } m, \text{ so VRD numbers are not comparable across papers by default.}\end{gathered}
 $$
 
-於該範圍的上限，指標已悄然轉為另一項指標。每一配對均納入全部 predicate，故模型是否將正確關係排於首位已不影響分數，所餘者僅為是否找出該配對。此一極限即為 $PR@k$，即 phrase recall；而 $R \le PR$ 之界限成立的理由，與協定大小關係成立的理由相同：較易之問題為較難之問題的鬆弛。
+於該範圍之上限，原先排除配對內次順位 predicate 之規則已不復存在：每一配對之每一 predicate 均為候選，僅由 $K$ 之截斷決定何者計入分數，而此截斷係跨配對比較各候選。因此模型若將正確關係評分較高，仍可獲益，僅不再要求其於配對內排於首位。phrase detection（$PR@K$）屬另一種放寬：其以涵蓋整個配對之單一框，取代每一物件各自之框進行定位檢驗。此處並未推導兩項指標之大小關係；如同 M3 之協定大小關係，二者之差距為量測所得，而非推導所得。
 
 </Implications>
 
@@ -455,7 +459,7 @@ $$
 
 L2 將 $k$、協定、約束模式與 $\tau$ 置於控制項上，並於同一座標軸繪製 $R$ 與 $mR$ 對 $K$ 的曲線。請找出兩條曲線相距最遠的設定，並說明該落差所量測者為何——其所量測者並非模型品質。
 
-L3 則於同一切片上，以頻率基線對照學習式模型，使上述最後一項推導成為可親自觀察之現象，而非被告知之結論。
+L3 則於合成之長尾語料上擬合頻率先驗，並與人工撰寫之視覺評分器混合，使上述最後一項推導成為可親自觀察之現象，而非被告知之結論。
 
 </Step>
 
