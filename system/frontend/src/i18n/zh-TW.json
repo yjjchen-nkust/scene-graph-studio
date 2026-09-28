@@ -329,5 +329,15 @@
   "playground.e10.boxes_note": "B = C({w}, 2) · C({h}, 2) = {b} 個整數像素框",
   "playground.e10.to_l2": "各協定下之 recall 由 L2 評分。",
   "playground.e10.picture": "影格 {frame}，依所選協定提供之內容",
-  "playground.e10.inclusion_if": "前提為所給之框為相片內互異之整數像素框，且所給之標籤屬於 𝒞"
+  "playground.e10.inclusion_if": "前提為所給之框為相片內互異之整數像素框，且所給之標籤屬於 𝒞",
+  "playground.m4.k": "截斷位置 k",
+  "playground.m4.row": "顯示之列",
+  "playground.m4.list": "ph-001 之排序清單（PredCls，依分數遞減）",
+  "playground.m4.cut": "前 {k} 名",
+  "playground.m4.legend": "刪除線：遭約束排除。✓：前 k 名中命中之標準答案。",
+  "playground.m4.picture": "ph-001 第 {row} 列之主詞與受詞",
+  "playground.m4.truths": "前 k 名命中之標準答案數",
+  "playground.m4.truths_note": "共 6 筆標註：{ids}",
+  "playground.m4.none": "無",
+  "playground.m4.to_l2": "recall 即此數除以 6，其計分屬 L2。"
 }
