@@ -466,10 +466,19 @@ describe('the playground step kind', () => {
     atLeast(claude, /all (\d+) logged deviations/, 105, 'CLAUDE.md deviations');
     expect(claude).toContain('§28 the empty training split');
     expect(index).toContain('the empty training split (§28)');
-    // The ruling, where each reader of the definition, the contract and the vectors meets it.
+    // The ruling, where each reader of the definition, the contract and the vectors meets it, by
+    // what it says and not only by its bracket (D105's branch review).
+    const spec = (name: string) =>
+      source(`../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-${name}.md`).replace(/\s+/g, ' ');
     const ruling = '[**Amended 2026-09-28 (D105):**';
-    expect(source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-SRS.md')).toContain(ruling);
-    expect(source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-contracts.md')).toContain(ruling);
+    for (const name of ['SRS', 'design']) {
+      expect(spec(name), name).toContain(`${ruling} a training split that is not supplied, or is supplied empty,`);
+    }
+    const contracts = spec('contracts');
+    expect(contracts).toContain('`zero_shot_train_triplets: []` is read as omitted');
+    expect(contracts).toContain('Omitted or `[]` (D105) → every zR MetricValue has value null.');
+    expect(contracts).toContain('a prediction without a score shares no score');
+    expect(source('../../../../../docs/INDEX.md').replace(/\s+/g, ' ')).toContain('[Settled by D105.]');
     const golden = source('../../../../../data/golden/README.md');
     expect(golden).toContain('| `gv-021` |');
     expect(golden).not.toContain('One condition has no case');

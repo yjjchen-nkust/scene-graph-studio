@@ -383,7 +383,7 @@ drop `masks_ignored` or SGCls's `gt_boxes_not_pairs` and every harness passed. g
 raise them, and two tests require the vectors to raise every warning and run every protocol;
 gv-020 holds the tie rule on predictions without a score. An empty training split has no vector:
 the engines treat it as none supplied, SRS §4.3's definition gives zR = R, and the choice is the
-author's. `i18n_parity.mjs` refuses a braced name outside `\w+` and a brace outside any
+author's. [Settled by D105.] `i18n_parity.mjs` refuses a braced name outside `\w+` and a brace outside any
 placeholder, neither of which its comparison could read; the missing-key check is tested in both
 directions; each records test reads its own record alone, and the count of golden vectors is
 taken from the file.
@@ -392,7 +392,7 @@ still waiting for a runner. See D104 and VERIFICATION §27.
 
 **The empty training split, 2026-09-28.** The author ruled that `zero_shot_train_triplets: []` is
 no split: zR is null and `zero_shot_unavailable` is raised, as both engines already did, where SRS
-§4.3 read literally gave zR = R. SRS §4.3 and contracts §1.5 are amended in place, the contract
+§4.3 read literally gave zR = R. SRS §4.3, design.md §4.3 and contracts §1.5 are amended in place, the contract
 also stating that an unscored prediction never ties, and gv-021 pins the ruling. No engine code
 changed. See D105 and VERIFICATION §28.
 

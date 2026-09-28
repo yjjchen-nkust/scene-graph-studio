@@ -1472,6 +1472,17 @@ The D105 records test failed on its missing heading first. With gv-021 written a
 still at 20, the test that takes the count of golden vectors from `vectors.json` failed on INDEX's
 NFR-3 row, 20 against 21.
 
+### After the branch review
+
+The D105 records test, now requiring what each amendment says, failed first on design.md §4.3,
+before its note existed. Two record mutations that the branch review found passing the earlier
+test, each restored afterwards, now fail it:
+
+| Mutation | Result |
+|---|---|
+| the contract's sentence on `zero_shot_train_triplets: []` deleted | 1 failed |
+| the SRS note rewritten to "leaves every triplet absent, so zR@K = R@K" | 1 failed |
+
 ### The runner
 
 The commit statuses of `ba87229`, read through the Gitea API on 2026-09-28 at 11:14: `CI /

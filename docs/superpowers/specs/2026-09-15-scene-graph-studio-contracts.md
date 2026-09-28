@@ -148,7 +148,7 @@ interface EvalRequest {
   mask_pairing: 'single_mpo' | 'multi_mpo';   // ignored when neither graph carries masks
   zero_shot_train_triplets?: Array<[string, string, string]>;
                                         // ⟨subject class, predicate, object class⟩ seen in training.
-                                        // Omitted → every zR MetricValue has value null.
+                                        // Omitted or `[]` (D105) → every zR MetricValue has value null.
   semi_constraint_max_per_pair?: number;      // per ordered object pair; required when constraint === 'semi'; default 2
 }
 

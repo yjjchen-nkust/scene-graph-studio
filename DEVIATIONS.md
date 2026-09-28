@@ -3885,6 +3885,22 @@ engine code changes.
 takes the count of golden vectors from the file failed on INDEX's 20 once gv-021 was written,
 before INDEX and README were brought to 21.
 
+**The branch review** found no Critical issue, one Important issue and four minors. All five were
+acted on.
+- *design.md §4.3 kept the literal definition* (Important). INDEX names it as the home of zR@K,
+  so a reader who followed INDEX met the reading the author rejected. It now carries the same
+  bracketed amendment, as D99 amended it beside the SRS.
+- *The records test checked each amendment's bracket, not its content.* Two record mutations
+  passed it: deleting the contract's sentence on `[]`, and rewriting the SRS note to say zR@K =
+  R@K. The test now requires what each amendment says, and both mutations fail it. It failed
+  first on design.md, before that note existed.
+- *The branch's first commit failed its own suite.* The vector count rose to 21 there, while
+  INDEX and README still stated 20 until the second commit. The two commits are squashed into one
+  before the merge.
+- *The contract's field comment read "Omitted →".* It reads "Omitted or `[]` (D105) →" now, so a
+  reader of the interface does not have to find the note 45 lines further down.
+- *INDEX's D104 paragraph still stated the question as open.* It now ends "[Settled by D105.]".
+
 **Continuous integration, not changed.** The three commit statuses of `ba87229` read "Waiting to
 run" on 2026-09-28 at 11:14, queued since its push at 11:11.
 
