@@ -361,6 +361,7 @@
   "playground.e13.kept": "graph constraint 保留之數",
   "playground.e13.kept_note": "每一複本各為一組物件編號配對",
   "playground.e13.g4": "person holding wrench 是否命中",
+  "playground.e13.g4_note": "保留：{predicates}；g4 為 person holding wrench",
   "playground.e13.yes": "是",
   "playground.e13.no": "否",
   "playground.e13.masks": "此處遮罩以識別碼表示：每一複本沿用原物件之遮罩。"

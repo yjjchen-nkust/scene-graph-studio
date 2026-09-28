@@ -29,7 +29,7 @@ const G4_ID = 4;
  * here is a photograph plus a list, so there is nothing D96 would split.
  */
 export function MaskPairing(_: PlaygroundProps = {}) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [params, setParams] = useLabParams({ 'E13.multi': 0, 'E13.d': D_DEFAULT });
 
   const multi = flag(params['E13.multi'], false);
@@ -43,6 +43,10 @@ export function MaskPairing(_: PlaygroundProps = {}) {
   const frame = frameById(M4_FRAME)!;
   const matchedIds = matchedByMask(kept, frame.relationships);
   const g4 = matchedIds.includes(G4_ID);
+  // What the yes/no rests on: the predicates the graph constraint actually kept, in score order,
+  // so the note varies with the value rather than repeating the label's own words.
+  const separator = locale === 'zh-TW' ? '、' : ', ';
+  const g4Note = t('playground.e13.g4_note').replace('{predicates}', kept.map((row) => row.predicate).join(separator));
 
   const controls = (
     <>
@@ -109,7 +113,7 @@ export function MaskPairing(_: PlaygroundProps = {}) {
             id="E13.g4"
             label={t('playground.e13.g4')}
             value={t(g4 ? 'playground.e13.yes' : 'playground.e13.no')}
-            note="g4"
+            note={g4Note}
           />
         </div>
         <p className="text-[0.875em] text-slate-700">{t('playground.e13.masks')}</p>

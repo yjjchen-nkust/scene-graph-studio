@@ -14,6 +14,9 @@ const renderAt = (url: string, props: PlaygroundProps = {}) =>
     </MemoryRouter>,
   );
 
+/** The `E13.g4` readout's note: the third `<span>` of its container, which carries no test id of its own. */
+const g4Note = () => screen.getByTestId('readout-E13.g4').querySelector('span:last-child')?.textContent;
+
 describe('E13', () => {
   it('opens at SingleMPO, d = 3: 3 emitted, 1 admitted, 1 kept, not matched', () => {
     renderAt('/m/m04');
@@ -21,6 +24,7 @@ describe('E13', () => {
     expect(screen.getByTestId('readout-E13.admitted-value')).toHaveTextContent('1');
     expect(screen.getByTestId('readout-E13.kept-value')).toHaveTextContent('1');
     expect(screen.getByTestId('readout-E13.g4-value')).toHaveTextContent('no');
+    expect(g4Note()).toBe('kept: next to; g4 is person holding wrench');
   });
 
   it('MultiMPO at d = 3 admits and keeps 3 and matches g4', () => {
@@ -29,6 +33,7 @@ describe('E13', () => {
     expect(screen.getByTestId('readout-E13.admitted-value')).toHaveTextContent('3');
     expect(screen.getByTestId('readout-E13.kept-value')).toHaveTextContent('3');
     expect(screen.getByTestId('readout-E13.g4-value')).toHaveTextContent('yes');
+    expect(g4Note()).toContain('next to, holding, near');
   });
 
   it('at d = 1 neither pairing matches g4', () => {
@@ -82,6 +87,7 @@ describe('E13', () => {
     expect(screen.getByTestId('readout-E13.admitted')).toHaveTextContent('SingleMPO 每一遮罩配對保留 1 筆；MultiMPO 全數保留');
     expect(screen.getByTestId('readout-E13.kept')).toHaveTextContent('每一複本各為一組物件編號配對');
     expect(screen.getByTestId('readout-E13.g4-value')).toHaveTextContent('否');
+    expect(g4Note()).toBe('保留：next to；g4 為 person holding wrench');
     expect(screen.getByTestId('e13-copies')).toHaveTextContent('person–wrench 遮罩配對之複本（依分數遞減）');
     expect(screen.getByText('此處遮罩以識別碼表示：每一複本沿用原物件之遮罩。')).toBeInTheDocument();
   });

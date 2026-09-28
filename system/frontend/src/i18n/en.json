@@ -361,6 +361,7 @@
   "playground.e13.kept": "Kept by the graph constraint",
   "playground.e13.kept_note": "each copy is its own pair of object ids",
   "playground.e13.g4": "person holding wrench matched",
+  "playground.e13.g4_note": "kept: {predicates}; g4 is person holding wrench",
   "playground.e13.yes": "yes",
   "playground.e13.no": "no",
   "playground.e13.masks": "Masks are identities here: each copy carries its original's mask."
