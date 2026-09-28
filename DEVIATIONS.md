@@ -4192,3 +4192,24 @@ found five items and triaged the deferred minors; each is settled here except M7
   modules (785 before). `npm run test:e2e` 79, 1.4 min. `npm run check:perf` 28; E3 32.8 ms, E4
   32.9 ms, E7 34.5 ms, E13 33.9 ms and X2 31.3 ms, where E7 is 1.3 ms above its 33.2 ms
   two-frame floor and the other four are below theirs. See VERIFICATION §29.
+
+## D107 — the static UI mockup removed, at the author's request
+
+**Plan:** none. **Decisions:** the author's, on 2026-09-29: "remove the mockup in this project".
+Branch `chore/sgs-remove-mockup`, from `main` at `420cb57`.
+
+**What was removed.** `docs/mockup/index.html`, the static UI mockup of plan 01 (58,263 bytes, a
+page with no toolchain), and `system/tools/test/mockup.check.mjs`, the jsdom check D15 wrote after
+the page rendered blank; with it the `lint:mockup` script and its step in `npm run ci`, which now
+runs eleven steps: harvest, pytest, the metrics build, vitest, ruff, parity, i18n, content, frozen,
+standalone, frontend build. `jsdom` stays a dependency: vitest's frontend project runs on it.
+
+**What was not.** The dated records that name the mockup keep their text, since each describes
+the tree as it was: D15, D85's scroll-stub finding and INDEX's lesson row about `lint:mockup`
+printing a jsdom stack trace, and the relocation plan's step list. The design document's layout
+tree carries a bracketed note at its `mockup/` line. Nothing in the application, the brief, the
+map or the tests read the page; the only reader was its own check.
+
+**Verification.** `npm run ci` exit 0 in eleven steps: 287 pytest and 7 skipped, 1017 vitest in 74 files (1016 before; the one added is this record's test), parity 21, i18n 380 keys, content lint clean, 786 modules built. The new records test failed on the missing
+heading before this record was written, and requires that `lint:mockup` is gone from the scripts
+and from `ci`, that CLAUDE.md names eleven steps, and that neither file exists.

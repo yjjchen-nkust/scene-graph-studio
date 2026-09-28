@@ -226,7 +226,7 @@ scene-graph-studio/                Reorganised 2026-09-16. Machinery under syste
 │   └── slices/                    ~200 curated images + annotations (committed)
 ├── docs/
 │   ├── PLAYBOOK.md                how this was built, as reusable prompts
-│   ├── mockup/                    static UI mockup (no toolchain)
+│   ├── mockup/                    static UI mockup (no toolchain) [**Removed 2026-09-29 (D107).**]
 │   └── superpowers/               specs, decisions, contracts, plans
 ├── start.ps1                      Windows front door: set up, then run
 ├── fetch-data.ps1                 report and obtain slice data (D-08)

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import deriv from '../../../../../data/content/deriv.json';
 import kp from '../../../../../data/content/kp.json';
 import math from '../../../../../data/content/math.json';
@@ -654,6 +654,26 @@ describe('the playground step kind', () => {
       expect(name, cited).toBeDefined();
       expect(projector, cited).toContain(name);
     }
+  });
+
+  it('the records carry D107, and the mockup is gone from the gate and the tree', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const pkg = JSON.parse(source('../../../../package.json')) as { scripts: Record<string, string> };
+    expect(deviations).toContain('## D107 — the static UI mockup removed, at the author\'s request');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 107, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 107, 'CLAUDE.md deviations');
+    // The gate no longer runs a check over a page that no longer exists.
+    expect(pkg.scripts['lint:mockup']).toBeUndefined();
+    expect(pkg.scripts.ci).not.toContain('mockup');
+    expect(claude).toContain('eleven steps');
+    // Through a parameter, as `source` resolves its paths: Vite rewrites a literal `new URL`.
+    const at = (path: string) => new URL(path, import.meta.url);
+    expect(existsSync(at('../../../../../docs/mockup/index.html'))).toBe(false);
+    expect(existsSync(at('../../../../tools/test/mockup.check.mjs'))).toBe(false);
   });
 
   it('the records state as many playgrounds, uncovered live points and steps as the code holds', () => {

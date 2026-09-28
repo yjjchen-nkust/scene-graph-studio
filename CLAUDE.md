@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split and §29 the M4 playgrounds), and all 106 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split and §29 the M4 playgrounds), and all 107 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -39,8 +39,9 @@ cd scene-graph-studio\system ; npm run ci
 - **Python is `py12`, never the bare `python` on PATH.** `system/tools/Resolve-Python.ps1`
   (PowerShell) and `system/tools/py.mjs` (Node) resolve it; `SGS_PYTHON` overrides both, which is
   what CI sets. The track is self-contained and reads no environment script from outside itself.
-- **`npm run ci` is the gate**, twelve steps: harvest, pytest, the metrics build, vitest, ruff,
-  parity, i18n, content, frozen, mockup, standalone, frontend build.
+- **`npm run ci` is the gate**, eleven steps: harvest, pytest, the metrics build, vitest, ruff,
+  parity, i18n, content, frozen, standalone, frontend build. The static UI mockup and its
+  `lint:mockup` check were removed on 2026-09-29 (D107).
 - **Four checks `ci` does not run**, each for a reason: `npm run test:e2e` (check 8, the keyboard
   walkthrough at three projector resolutions, 79 tests, over the production build with no backend
   running), `npm run check:offline` (check 6, a torch-free interpreter with every outward request
@@ -50,7 +51,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D106` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D107` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
   `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
