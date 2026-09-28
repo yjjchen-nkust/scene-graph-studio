@@ -98,7 +98,8 @@ and re-harvested, and `FROZEN.md` recording it, as D98 did. The brief is searche
 - **s5.** The Worked step derives that the pool grows with m and saturates at the largest number
   of predicates any pair carries; at k beyond the pool, ngR is monotone in m; at a fixed k it need
   not be. The widening sentence becomes the pool's growth to m = |P|.
-- **s4.** "The slider" names L3's λ and the identity's two endpoints; C becomes |P′| in the Worked
+- **s4.** The line naming "the slider" says instead that as α moves from 1 to 0 the weighted mean
+  moves from R to mR, L3 computing both ends and their gap; C becomes |P′| in the Worked
   step, with n̄ = N/|P′|, and the symbol table gains |P′|.
 - **s6.** "Both are affine in λ" becomes: the blended score is affine in λ, and recall over its
   ranking is piecewise constant, changing where two blended scores cross.
