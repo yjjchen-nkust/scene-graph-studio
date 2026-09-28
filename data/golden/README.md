@@ -43,6 +43,7 @@ deliberately changed.
 | `gv-018` | SGCls: a wrong label is `spurious`, never `localization`, and SGCls raises `gt_boxes_not_pairs` too |
 | `gv-019` | Masks in one graph only: boxes are compared, and `masks_ignored` is the reader's only sign of it |
 | `gv-020` | Unscored predictions: ranked after the scored, in input order, and never a tie |
+| `gv-021` | An empty training split read as none: `zR` null, not `R`, and `zero_shot_unavailable` raised |
 
 Tolerance is `1e-9` absolute. `zR` is `null` wherever a case declares no training split.
 
@@ -51,8 +52,6 @@ the six conditions in `engine.py`, and both harnesses compare that set exactly: 
 missing and a warning extra fail alike (D103). That holds only for a warning some case raises,
 so some case raises each of the six and some case runs each of the three protocols;
 `test_some_case_raises_every_warning` and `test_some_case_runs_every_protocol` in
-`test_golden.py` require both (D104). gv-020 holds the tie rule on predictions without a score.
-One condition has no case: `zero_shot_train_triplets: []`. Both engines treat an empty split as
-none supplied, return a null zR and raise `zero_shot_unavailable`, while SRS §4.3's definition
-leaves every ground-truth triplet outside it and gives zR = R. Which is intended is the author's
-to decide, so no expectation for it has been written (D104).
+`test_golden.py` require both (D104). gv-020 holds the tie rule on predictions without a score,
+and gv-021 the empty training split, which counts as none supplied: SRS §4.3's definition, read
+literally, gives zR = R there, and the author ruled for null on 2026-09-28 (D105).

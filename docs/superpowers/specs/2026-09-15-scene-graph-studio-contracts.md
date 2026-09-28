@@ -148,7 +148,7 @@ interface EvalRequest {
   mask_pairing: 'single_mpo' | 'multi_mpo';   // ignored when neither graph carries masks
   zero_shot_train_triplets?: Array<[string, string, string]>;
                                         // ⟨subject class, predicate, object class⟩ seen in training.
-                                        // Omitted → every zR MetricValue has value null.
+                                        // Omitted or `[]` (D105) → every zR MetricValue has value null.
   semi_constraint_max_per_pair?: number;      // per ordered object pair; required when constraint === 'semi'; default 2
 }
 
@@ -192,6 +192,8 @@ interface Warning {
 **`gt_boxes_not_pairs` is emitted on every `predcls` and `sgcls` response without exception.** SRS §4.4 names this the most common misreading in the field and requires the warning field; making it unconditional means a student cannot see a PredCls number without seeing it.
 
 **`ties_broken_by_index` is emitted whenever two predictions share a score.** NFR-4 requires deterministic tie-breaks; the rule is `sorted(preds, key=lambda p: (-p.score, p.relationship_id))`, stable, and the warning says so in words.
+
+[**Amended 2026-09-28 (D105):** a prediction without a score shares no score. Unscored predictions rank after every scored one, in input order, and never raise `ties_broken_by_index`; golden vector gv-020 pins it (D104). `zero_shot_train_triplets: []` is read as omitted: every zR value is null and `zero_shot_unavailable` is emitted, as SRS §4.3 now states; golden vector gv-021 pins it.]
 
 ### 1.6 `GET /api/models`
 

@@ -1437,3 +1437,54 @@ gives zR = R for that input; no vector pins either reading (D104).
 The commit statuses of `5eabab6`, read through the Gitea API on 2026-09-28 at 10:13: `CI /
 backend`, `CI / frontend` and `scene-graph-studio / ci`, each "Waiting to run" since 09:08.
 `9b678af`'s three, read at 09:46, were still waiting after being queued at 00:27.
+
+## 28. The empty training split — measured, 2026-09-28
+
+D105. Every number below is from the run that produced it, on branch `fix/sgs-empty-split`, from
+`main` at `ba87229`. No engine or frontend production code changed, so `npm run test:e2e` and
+`npm run check:perf` were not run; §27 records both on `5eabab6`.
+
+| Step | Result |
+|---|---|
+| pytest | **287 passed**, 7 skipped (286 before) |
+| vitest | **911 passed in 67 files** (909 before) |
+| parity | **21 cases agree** (20 before) |
+| i18n parity | 331 keys, both locales complete; 13 carry a placeholder, all agreeing |
+| content lint | 21 golden cases, 42 playground cases, 25 release figures, clean |
+
+### The ruling by mutation
+
+Each engine mutated to read `zero_shot_train_triplets: []` as a split, computing zR and raising
+`zero_shot_unavailable` only when the field is absent, restored afterwards:
+
+| Mutant | Result |
+|---|---|
+| Python | pytest 1 failed (gv-021), 286 passed |
+| TypeScript | metrics 1 failed (gv-021), 42 passed |
+| TypeScript, built into `dist` | `parity.mjs`: gv-021 "zR@20: python=null typescript=1", and the warnings differ |
+
+Built back from the source, 21 agree. gv-021's expectation is the amended definition's; both
+engines met it with no change to either.
+
+### The records tests
+
+The D105 records test failed on its missing heading first. With gv-021 written and the records
+still at 20, the test that takes the count of golden vectors from `vectors.json` failed on INDEX's
+NFR-3 row, 20 against 21.
+
+### After the branch review
+
+The D105 records test, now requiring what each amendment says, failed first on design.md §4.3,
+before its note existed. Two record mutations that the branch review found passing the earlier
+test, each restored afterwards, now fail it:
+
+| Mutation | Result |
+|---|---|
+| the contract's sentence on `zero_shot_train_triplets: []` deleted | 1 failed |
+| the SRS note rewritten to "leaves every triplet absent, so zR@K = R@K" | 1 failed |
+
+### The runner
+
+The commit statuses of `ba87229`, read through the Gitea API on 2026-09-28 at 11:14: `CI /
+backend`, `CI / frontend` and `scene-graph-studio / ci`, each "Waiting to run" since its push at
+11:11.

@@ -308,7 +308,7 @@ Authority: [arXiv 2404.09616](https://arxiv.org/abs/2404.09616) and `Scene-Graph
 - `R@K` — top-K predictions by score, `|matched GT| / |GT|`, K ∈ {20, 50, 100}.
 - `mR@K` — R@K computed per predicate class independently, then averaged unweighted over classes **present in the GT of that split**.
 - `ng-R@K` — all predicates per (s,o) pair enter the ranking, not just the top-scoring one.
-- `zR@K` — GT restricted to ⟨s,p,o⟩ combinations absent from the training split.
+- `zR@K` — GT restricted to ⟨s,p,o⟩ combinations absent from the training split. [**Amended 2026-09-28 (D105):** a training split that is not supplied, or is supplied empty, leaves zR@K undefined: the value is null and the response carries `zero_shot_unavailable`. Read literally, this definition would count every triplet as absent from an empty split and give zR@K = R@K; the author ruled that an empty split is no split. Golden vector gv-021 pins it; SRS §4.3 carries the same note.]
 
 **Protocols.** `PredCls` (GT boxes + GT labels given; predict predicates) · `SGCls` (GT boxes; predict labels + predicates) · `SGDet` (predict everything). The API response carries an explicit warning field restating that PredCls/SGCls supply ground-truth **boxes, not pairs**.
 

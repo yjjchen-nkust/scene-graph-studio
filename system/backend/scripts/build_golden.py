@@ -837,6 +837,35 @@ cases.append({
 })
 
 
+# ---------------------------------------------------------------- gv-021
+# The engines read an empty split as none; SRS 4.3 read literally gives zR = R. The author ruled
+# for the engines on 2026-09-28, and this case pins the ruling (D105).
+cases.append({
+    "id": "gv-021-empty-training-split",
+    "why": (
+        "The scene of gv-001, with zero_shot_train_triplets supplied as an empty list. An empty "
+        "split is no split (SRS section 4.3 as amended, D105), so zR@20 is null, as when none "
+        "is supplied. Read literally, the definition would count person-on-table as absent from "
+        "the split and give zR@20 = R@20 = 1; a build that did so fails here, and so does one "
+        "that returned 0. As in gv-001, R@20 = mR@20 = ngR@20 = 1. Warnings: PredCls hands over "
+        "boxes, not pairs, so gt_boxes_not_pairs; the split is empty, which counts as none "
+        "supplied, so zero_shot_unavailable; one score cannot tie, neither graph carries masks, "
+        "and neither is empty, so no other."
+    ),
+    "hand_checked": True,
+    "gt": graph("gv21", [obj(1, "person", PERSON), obj(2, "table", TABLE)],
+                [rel(1, 1, "on", 2)], "gt"),
+    "pred": graph("gv21", [obj(1, "person", PERSON), obj(2, "table", TABLE)],
+                  [rel(1, 1, "on", 2, 0.9)], "pred"),
+    "params": {**P_GRAPH, "zero_shot_train_triplets": []},
+    "expect": {
+        "R": {"20": 1.0}, "mR": {"20": 1.0}, "ngR": {"20": 1.0}, "zR": {"20": None},
+        "verdicts": [{"pred_index": 0, "verdict": "match"}],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
+    },
+})
+
+
 out = DATA_DIR / "golden" / "vectors.json"
 out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text(

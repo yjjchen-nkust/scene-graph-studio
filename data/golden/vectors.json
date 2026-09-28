@@ -3664,6 +3664,135 @@
           "zero_shot_unavailable"
         ]
       }
+    },
+    {
+      "id": "gv-021-empty-training-split",
+      "why": "The scene of gv-001, with zero_shot_train_triplets supplied as an empty list. An empty split is no split (SRS section 4.3 as amended, D105), so zR@20 is null, as when none is supplied. Read literally, the definition would count person-on-table as absent from the split and give zR@20 = R@20 = 1; a build that did so fails here, and so does one that returned 0. As in gv-001, R@20 = mR@20 = ngR@20 = 1. Warnings: PredCls hands over boxes, not pairs, so gt_boxes_not_pairs; the split is empty, which counts as none supplied, so zero_shot_unavailable; one score cannot tie, neither graph carries masks, and neither is empty, so no other.",
+      "hand_checked": true,
+      "gt": {
+        "image_id": "gv21",
+        "dataset": "vg150-sgb",
+        "width": 200,
+        "height": 200,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 20.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on"
+          }
+        ],
+        "provenance": {
+          "kind": "ground_truth",
+          "fidelity": "measured"
+        }
+      },
+      "pred": {
+        "image_id": "gv21",
+        "dataset": "vg150-sgb",
+        "width": 200,
+        "height": 200,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 20.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on",
+            "score": 0.9
+          }
+        ],
+        "provenance": {
+          "kind": "model",
+          "fidelity": "measured",
+          "model": "fixture"
+        }
+      },
+      "params": {
+        "protocol": "predcls",
+        "constraint": "graph",
+        "k": [
+          20
+        ],
+        "iou_thresh": 0.5,
+        "mask_pairing": "single_mpo",
+        "zero_shot_train_triplets": []
+      },
+      "expect": {
+        "R": {
+          "20": 1.0
+        },
+        "mR": {
+          "20": 1.0
+        },
+        "ngR": {
+          "20": 1.0
+        },
+        "zR": {
+          "20": null
+        },
+        "verdicts": [
+          {
+            "pred_index": 0,
+            "verdict": "match"
+          }
+        ],
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
+        ]
+      }
     }
   ]
 }

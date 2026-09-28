@@ -453,6 +453,38 @@ describe('the playground step kind', () => {
     atLeast(index, /\*\*(\d+) pytest\*\*/, 285, 'INDEX pytest');
   });
 
+  it('the records carry D105 and the ruling on an empty training split', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const d105 = record(deviations, 'D105').replace(/\s+/g, ' ');
+    expect(deviations).toContain('## D105 — ');
+    expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 28. ');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 105, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 105, 'CLAUDE.md deviations');
+    expect(claude).toContain('§28 the empty training split');
+    expect(index).toContain('the empty training split (§28)');
+    // The ruling, where each reader of the definition, the contract and the vectors meets it, by
+    // what it says and not only by its bracket (D105's branch review).
+    const spec = (name: string) =>
+      source(`../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-${name}.md`).replace(/\s+/g, ' ');
+    const ruling = '[**Amended 2026-09-28 (D105):**';
+    for (const name of ['SRS', 'design']) {
+      expect(spec(name), name).toContain(`${ruling} a training split that is not supplied, or is supplied empty,`);
+    }
+    const contracts = spec('contracts');
+    expect(contracts).toContain('`zero_shot_train_triplets: []` is read as omitted');
+    expect(contracts).toContain('Omitted or `[]` (D105) → every zR MetricValue has value null.');
+    expect(contracts).toContain('a prediction without a score shares no score');
+    expect(source('../../../../../docs/INDEX.md').replace(/\s+/g, ' ')).toContain('[Settled by D105.]');
+    const golden = source('../../../../../data/golden/README.md');
+    expect(golden).toContain('| `gv-021` |');
+    expect(golden).not.toContain('One condition has no case');
+    for (const item of ['gv-021', 'zR = R', 'Treat as none', 'ba87229']) expect(d105, item).toContain(item);
+  });
+
   it('the records state as many golden vectors as the file holds', () => {
     // Taken from the file, not bounded from below: a bound passes a count left stale, and a pinned
     // count turns every earlier records test red when a vector is added (D104's branch review).

@@ -117,7 +117,7 @@ Greedy one-to-one assignment over the prediction list sorted by descending score
 - **R@K** — take the top K predictions by score; report matched ground truth over total ground truth. K ranges over {20, 50, 100}.
 - **mR@K** — compute R@K independently for each predicate class, then average without weighting over the classes present in the ground truth of that split.
 - **ng-R@K** — no graph constraint: every predicate for each subject-object pair enters the ranking, not only the highest-scoring one.
-- **zR@K** — restrict ground truth to subject-predicate-object combinations absent from the training split.
+- **zR@K** — restrict ground truth to subject-predicate-object combinations absent from the training split. [**Amended 2026-09-28 (D105):** a training split that is not supplied, or is supplied empty, leaves zR@K undefined: the value is null and the response carries `zero_shot_unavailable`. Read literally, this definition would count every triplet as absent from an empty split and give zR@K = R@K; the author ruled that an empty split is no split. Golden vector gv-021 pins it.]
 
 ### 4.4 Protocols
 
