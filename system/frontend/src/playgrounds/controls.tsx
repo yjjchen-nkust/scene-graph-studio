@@ -37,6 +37,23 @@ function useDomId(id: string): string {
 }
 const FIELD = 'rounded border border-slate-300 bg-white px-2 py-1 text-[1em]';
 
+/**
+ * Whether the frame around a playground and its `Readout`s use the tighter spacing M4 needs.
+ *
+ * `PlaygroundFrame`'s `dense` prop sets this; `Readout` reads it. The two components live apart,
+ * and a prop cannot cross that gap on its own, so it is carried the same way `PartContext` carries
+ * a part number across the same distance.
+ *
+ * Default `false`: F1, F2, F3, F6, F7, F8 and X1 (M0–M2) and E1 and E10 (M3) were already
+ * measured at the spacing below with `dense` absent (D95–D102, `docs/VERIFICATION.md` §17–§25),
+ * and nothing here may move a number those records already state. M4's E3, E4 and E7 always
+ * render spec §4.1's full twelve-row list regardless of k, and E13 and X2 sit beside three-line
+ * readouts that wrap onto a second row at 1024×768 — dense is how they fit the panel without a
+ * third part, and it is opt-in rather than the default precisely so the other nine keep the
+ * layout their own records measured.
+ */
+export const DensityContext = createContext<boolean>(false);
+
 export function Toggle({
   id, label, checked, onChange,
 }: { id: string; label: string; checked: boolean; onChange: (next: boolean) => void }) {
@@ -127,20 +144,41 @@ export function Choice({
 export function Readout({
   id, label, value, note,
 }: { id: string; label: string; value: string; note: string }) {
+  const dense = useContext(DensityContext);
   return (
     <div data-testid={`readout-${id}`} className="flex flex-col">
-      <span className="text-[0.75em] uppercase leading-tight tracking-wide text-slate-700">{label}</span>
+      <span
+        className={
+          dense
+            ? 'text-[0.75em] uppercase leading-tight tracking-wide text-slate-700'
+            : 'text-[0.875em] uppercase tracking-wide text-slate-700'
+        }
+      >
+        {label}
+      </span>
       {/* The value carries its own test id. `toHaveTextContent` is a substring match over the
           whole container, so an assertion on a number could be satisfied by a digit in the note
           or the label instead -- `note="|E| / 6"` made `toHaveTextContent('6')` pass for any
           value at all. Assertions on the number address this element. */}
       <span
         data-testid={`readout-${id}-value`}
-        className="font-mono text-[1.5em] leading-none tabular-nums text-slate-900"
+        className={
+          dense
+            ? 'font-mono text-[1.5em] leading-none tabular-nums text-slate-900'
+            : 'font-mono text-[1.5em] tabular-nums text-slate-900'
+        }
       >
         {value}
       </span>
-      <span className="font-mono text-[0.75em] leading-tight text-slate-700">{note}</span>
+      <span
+        className={
+          dense
+            ? 'font-mono text-[0.75em] leading-tight text-slate-700'
+            : 'font-mono text-[0.875em] text-slate-700'
+        }
+      >
+        {note}
+      </span>
     </div>
   );
 }
@@ -158,25 +196,52 @@ export function Readout({
  * and the key, and no scroll could reach them, because the clip sits inside the step that
  * scrolls (D93). Unclipped, the text runs past the panel like any long slide (D71) and the step's
  * own scroll reaches it; the controls are still above it and still in view.
+ *
+ * `dense` (default `false`) is M4's opt-in: `my-6`/`p-4`/`gap-y-3`/`mt-4` become `my-1`/`p-2`/
+ * `gap-y-2`/`mt-1`, and every `Readout` inside reads the same choice from `DensityContext`. Left
+ * `false`, this section renders byte-for-byte what it rendered at commit 2976fdb, which is the
+ * spacing F1, F2, F3, F6, F7, F8, X1, E1 and E10 are already measured and recorded at
+ * (D95–D102, `docs/VERIFICATION.md` §17–§25); turning it on for one of those nine would move a
+ * number those records state without re-measuring it. E3, E4, E7, E13 and X2 pass `dense` because
+ * their longest states do not fit 1024×768 at the spacing above: E3/E4/E7 always draw spec §4.1's
+ * full twelve-row list beside three readouts, and E13/X2 sit beside readouts that wrap onto a
+ * second row at that width.
  */
 export function PlaygroundFrame({
-  title, controls, children, clip = true,
-}: { title: string; controls: ReactNode; children: ReactNode; clip?: boolean }) {
+  title, controls, children, clip = true, dense = false,
+}: { title: string; controls: ReactNode; children: ReactNode; clip?: boolean; dense?: boolean }) {
   return (
-    <section
-      data-testid="playground-frame"
-      className="my-1 rounded-lg border border-slate-200 bg-slate-50 p-2"
-      aria-label={title}
-    >
-      <div data-testid="playground-controls" className="flex flex-wrap items-center gap-x-6 gap-y-2">
-        {controls}
-      </div>
-      <div
-        data-testid="playground-visual"
-        className={clip ? 'mt-1 max-h-[46vh] overflow-hidden' : 'mt-1'}
+    <DensityContext.Provider value={dense}>
+      <section
+        data-testid="playground-frame"
+        className={
+          dense
+            ? 'my-1 rounded-lg border border-slate-200 bg-slate-50 p-2'
+            : 'my-6 rounded-lg border border-slate-200 bg-slate-50 p-4'
+        }
+        aria-label={title}
       >
-        {children}
-      </div>
-    </section>
+        <div
+          data-testid="playground-controls"
+          className={
+            dense
+              ? 'flex flex-wrap items-center gap-x-6 gap-y-2'
+              : 'flex flex-wrap items-center gap-x-6 gap-y-3'
+          }
+        >
+          {controls}
+        </div>
+        <div
+          data-testid="playground-visual"
+          className={
+            dense
+              ? clip ? 'mt-1 max-h-[46vh] overflow-hidden' : 'mt-1'
+              : clip ? 'mt-4 max-h-[46vh] overflow-hidden' : 'mt-4'
+          }
+        >
+          {children}
+        </div>
+      </section>
+    </DensityContext.Provider>
   );
 }

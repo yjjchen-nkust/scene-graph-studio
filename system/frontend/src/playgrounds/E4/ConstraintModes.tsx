@@ -88,7 +88,7 @@ export function ConstraintModes({ part }: PlaygroundProps = {}) {
   );
 
   return (
-    <PlaygroundFrame title="E4" controls={controls} clip={false}>
+    <PlaygroundFrame title="E4" controls={controls} clip={false} dense>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {rowView && <PairPhoto row={chosenRow} testid="e4-pair" />}
         {listView && (

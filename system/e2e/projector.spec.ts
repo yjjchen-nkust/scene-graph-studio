@@ -504,6 +504,7 @@ for (const size of SIZES) {
         'm00/1', 'm00/2', 'm00/4', 'm00/5',
         'm01/2', 'm01/3', 'm01/5', 'm01/6', 'm01/8', 'm01/9', 'm01/10',
         'm02/2', 'm02/3', 'm03/2', 'm03/3', 'm03/5', 'm03/6',
+        'm04/2', 'm04/3', 'm04/5', 'm04/6', 'm04/9', 'm04/10', 'm04/13', 'm04/15',
       ]) {
         await page.goto(`/lecture/m/${where}`);
         const controls = page.getByTestId('playground-controls');
@@ -530,15 +531,21 @@ for (const size of SIZES) {
       }
     });
 
-    test('F1 and F3 show their photographs, whole and on the screen', async ({ page }) => {
+    test('F1, F3, E3, E4 and E7 show their photographs, whole and on the screen', async ({ page }) => {
       // The overlay's children are all absolutely positioned, so the box around it has no width
       // of its own; in a row at 1024 px and wider it was given none, and the photograph F1 opens
       // on rendered 0×0 on every projector from the day it landed. Its step "fit" because the
       // picture was missing (D96). F3 draws its own overlay over the same kind of photograph,
-      // so it is held to the same measure.
-      for (const where of ['m00/1', 'm02/2', 'm03/2', 'm03/5']) {
+      // so it is held to the same measure. E3, E4 and E7's first part draws `PairPhoto` through
+      // the same `PhotoMarks`, and spec §6 names none of the nine playgrounds this check predates
+      // as exempt from it.
+      for (const [where, picture] of [
+        ['m00/1', 'playground-frame'], ['m02/2', 'playground-frame'],
+        ['m03/2', 'playground-frame'], ['m03/5', 'playground-frame'],
+        ['m04/2', 'e3-pair'], ['m04/5', 'e4-pair'], ['m04/9', 'e7-pair'],
+      ] as const) {
         await page.goto(`/lecture/m/${where}`);
-        const image = page.getByTestId('playground-frame').locator('img');
+        const image = page.getByTestId(picture).locator('img');
         await expect(image, where).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
         const box = await image.boundingBox();

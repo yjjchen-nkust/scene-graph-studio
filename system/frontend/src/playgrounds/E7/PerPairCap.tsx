@@ -86,7 +86,7 @@ export function PerPairCap({ part }: PlaygroundProps = {}) {
   );
 
   return (
-    <PlaygroundFrame title="E7" controls={controls} clip={false}>
+    <PlaygroundFrame title="E7" controls={controls} clip={false} dense>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {rowView && <PairPhoto row={chosenRow} testid="e7-pair" />}
         {listView && (

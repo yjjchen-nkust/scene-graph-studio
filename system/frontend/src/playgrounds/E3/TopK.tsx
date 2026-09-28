@@ -67,7 +67,7 @@ export function TopK({ part }: PlaygroundProps = {}) {
   );
 
   return (
-    <PlaygroundFrame title="E3" controls={controls} clip={false}>
+    <PlaygroundFrame title="E3" controls={controls} clip={false} dense>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {rowView && <PairPhoto row={chosenRow} testid="e3-pair" />}
         {listView && (

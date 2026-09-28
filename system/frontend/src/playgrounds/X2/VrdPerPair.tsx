@@ -54,7 +54,7 @@ export function VrdPerPair(_: PlaygroundProps = {}) {
   );
 
   return (
-    <PlaygroundFrame title="X2" controls={controls} clip={false}>
+    <PlaygroundFrame title="X2" controls={controls} clip={false} dense>
       <div className="flex flex-wrap items-baseline gap-x-6 gap-y-3">
         <Readout
           id="X2.pairs"

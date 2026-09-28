@@ -70,7 +70,7 @@ export function MaskPairing(_: PlaygroundProps = {}) {
   );
 
   return (
-    <PlaygroundFrame title="E13" controls={controls} clip={false}>
+    <PlaygroundFrame title="E13" controls={controls} clip={false} dense>
       <div className="flex flex-col gap-2">
         <table data-testid="e13-copies" className="w-full font-mono text-[0.75em] leading-none">
           <caption className="text-left font-sans text-[1em] leading-none text-slate-700">
