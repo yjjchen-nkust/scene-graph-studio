@@ -83,7 +83,9 @@ ids, so d duplicate objects carrying one mask pair are d object pairs to it (gv-
    rank cutoff (`:9-11`); cites "Proposition 4c" (`:472`, `pg.js:406`), which the course defines
    nowhere; says that at k = 70 the metric "measures pair detection" and R@k → PR@k, although the
    cut at K still ranks every candidate of every pair by score; and says R ≤ PR "holds for the same
-   reason the protocol ordering holds", which M3 s3 records as observed, not implied (D98). And
+   reason the protocol ordering holds", which M3 s3 records as observed, not implied (D98).
+   [**Corrected 2026-09-28 (D106):** M3 records it at s5, `m03.en.mdx:177` and `:207`; s3 was its
+   id before M3's playgrounds, and has been E1's first part since D98.] And
    *M4 s10* says "L3 runs the frequency baseline against the learned models on the same slice"
    (`:517`); L3 runs a synthetic corpus and a hand-written visual scorer.
 

@@ -3941,7 +3941,7 @@ top k ranks below k. On the built engine, three predictions (1,2,on,.9), (1,2,ne
 5. *M4 s8 wrote k for VRD's predicates per pair*, where the module defines k as the rank cutoff;
    cited "Proposition 4c", which the course defines nowhere; said that at k = 70 the metric
    measures pair detection, although the cut at K still ranks every candidate of every pair; and
-   said that R ≤ PR holds for the reason the protocol ordering holds, which M3 s3 records as
+   said that R ≤ PR holds for the reason the protocol ordering holds, which M3 s5 records as
    observed, not implied (D98). *M4 s10* said that L3 runs the frequency baseline against the
    learned models on the same slice; L3 fits a frequency prior to a synthetic long-tailed corpus
    and blends it with a hand-written visual scorer.
@@ -4063,8 +4063,9 @@ k = 12, with E4 under `none` and E7 at m = 10; E13 at d = 5 under MultiMPO; X2 a
   145.9 px, E13 90.8 px and X2 135.0 px; every margin is larger at 1280 × 800 and 1920 × 1080
   (VERIFICATION §29).
 - *English,* which the suite does not hold to the panel, measured on `9b5fd86` for this record: at
-  1024 × 768 E3's and E7's second parts run 16 px past, E4's second 102 px and E13 37 px; every M4
-  step fits in English at 1280 × 800 and 1920 × 1080.
+  1024 × 768 E3's and E7's second parts run 16 px past, E4's second 102 px and E13 37 px, and the
+  other four of the eight longest states measured fit; at 1280 × 800 and 1920 × 1080 all eight fit
+  in English. M4's other steps were not measured in English.
 
 **The browser** (`d207b1f`, `9b5fd86`). `lecture.spec.ts` gains four tests: M4's playgrounds compute
 with no backend, a knob set on a first part reaches the second, every knob works from the keyboard
@@ -4119,5 +4120,6 @@ in 67 before), parity 21, **i18n 376 keys** (331 before), 19 of them with a plac
 before), content lint clean over 21 golden cases, **64 playground cases** and 25 release figures
 with 45 symbols, standalone current at 254 equations, frontend builds 785 modules.
 `npm run test:e2e` **79** (75 before). `npm run check:perf` **28** (23 before); E3 32.4 ms, E4
-34.6 ms, E7 33.6 ms, E13 33.2 ms and X2 33.1 ms, each within 1 ms of its two-frame floor. See
+34.6 ms, E7 33.6 ms, E13 33.2 ms and X2 33.1 ms. E3, E7 and X2 fall below their two-frame
+floors, and none is more than 1 ms above its floor: E4 is 0.9 ms above and E13 0.6 ms. See
 VERIFICATION §29.

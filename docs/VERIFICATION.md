@@ -1605,7 +1605,8 @@ three sizes, and each photograph has a size and lies on the screen.
 | E13 | MultiMPO on | 33.2 ms | 32.6 ms |
 | X2 | m to 70 | 33.1 ms | 34.3 ms |
 
-Each is within 1 ms of its floor. Cold starts read 211 to 309 ms. The two runs of the branch before
+E3, E7 and X2 read below their floors, and none is more than 1 ms above its floor: E4 is 0.9 ms
+above and E13 0.6 ms, as the run printed the work above each floor. Cold starts read 211 to 309 ms. The two runs of the branch before
 this one gave E3 33.8 and 32.8 ms, E4 33.5 and 32.9 ms, E7 34.8 and 32.9 ms, E13 33.4 and 33.1 ms,
 and X2 33.5 and 33.1 ms.
 
