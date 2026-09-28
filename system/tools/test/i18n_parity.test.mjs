@@ -54,6 +54,13 @@ describe('i18n parity', () => {
     expect(run.out).toContain('a.only: present in en, missing from zh-TW');
   });
 
+  it('refuses a key present in 繁體中文 only', () => {
+    // The check runs in both directions; a test of one would pass a check of one (D104).
+    const run = parity(tables({}, { 'a.only': '僅此' }));
+    expect(run.ok).toBe(false);
+    expect(run.out).toContain('a.only: present in zh-TW, missing from en');
+  });
+
   it('refuses an empty value', () => {
     const run = parity(tables({ 'a.empty': 'Empty' }, { 'a.empty': ' ' }));
     expect(run.ok).toBe(false);
@@ -86,6 +93,35 @@ describe('i18n parity', () => {
     expect(run.ok).toBe(false);
     expect(run.out).toContain('a.range: {n} occurs more than once in en');
     expect(run.out).toContain('a.range: {n} occurs more than once in zh-TW');
+  });
+
+  it('refuses a braced name the placeholder comparison cannot read', () => {
+    // A placeholder is {letters, digits, underscores}. Any other braced name escaped the
+    // comparison, so a translation that dropped it passed (D104).
+    const run = parity(tables(
+      { 'a.kp': 'Point {kp-id}', 'a.frame': 'Frame { frame }', 'a.zh': 'Frame {frame}' },
+      { 'a.kp': '知識點', 'a.frame': '影格 { frame }', 'a.zh': '影格 {幀}' },
+    ));
+    expect(run.ok).toBe(false);
+    expect(run.out).toContain('a.kp: {kp-id} in en is not a placeholder name');
+    expect(run.out).toContain('a.frame: { frame } in en is not a placeholder name');
+    expect(run.out).toContain('a.frame: { frame } in zh-TW is not a placeholder name');
+    expect(run.out).toContain('a.zh: {幀} in zh-TW is not a placeholder name');
+  });
+
+  it('refuses a brace outside any placeholder', () => {
+    // {{n}} holds a placeholder the comparison reads, and prints its outer braces; a lone brace
+    // encloses no name at all (D104's branch review).
+    const run = parity(tables(
+      { 'a.count': 'Count {{n}}', 'a.open': 'Point {kp', 'a.nest': 'A {x {n} y}' },
+      { 'a.count': '數量 {n}', 'a.open': '知識點 {kp', 'a.nest': '甲 {n}' },
+    ));
+    expect(run.ok).toBe(false);
+    expect(run.out).toContain('a.count: a brace outside a placeholder in en');
+    expect(run.out).not.toContain('a.count: a brace outside a placeholder in zh-TW');
+    expect(run.out).toContain('a.open: a brace outside a placeholder in en');
+    expect(run.out).toContain('a.open: a brace outside a placeholder in zh-TW');
+    expect(run.out).toContain('a.nest: a brace outside a placeholder in en');
   });
 
   it('counts the keys that carry a placeholder', () => {

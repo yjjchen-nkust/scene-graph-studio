@@ -3161,6 +3161,509 @@
           "zero_shot_unavailable"
         ]
       }
+    },
+    {
+      "id": "gv-018-sgcls-label-error",
+      "why": "SGCls hands over the ground truth's boxes and asks for the labels (SRS section 4.4). GT: person#1 on table#2 and cup#3 on table#2. The prediction keeps the three boxes, labels object 3 a bowl, and scores person on table 0.9 and bowl on table 0.8. The graph constraint keeps both, since 1->2 and 3->2 are two ordered object pairs. The first matches on all five conjuncts. The second has both IoUs at 1.0, but its classes (bowl, on, table) agree with no ground truth, and a localization verdict requires subject class, object class and predicate to agree, so it is spurious: under SGCls a wrong label costs the triplet, never the box. GT cup on table is missed. R@20 = 1/2 = 0.5. One predicate class 'on' with 2 GT and 1 hit, so mR@20 = 1/2 = 0.5. No prediction is filtered, so ngR@20 = R = 0.5. zR is null. Warnings: SGCls, like PredCls, hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable; the two scores are distinct, neither graph carries masks, and neither is empty, so no other.",
+      "hand_checked": true,
+      "gt": {
+        "image_id": "gv18",
+        "dataset": "vg150-sgb",
+        "width": 200,
+        "height": 200,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 20.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 3,
+            "names": [
+              "cup"
+            ],
+            "bbox": {
+              "x": 60.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on"
+          },
+          {
+            "relationship_id": 2,
+            "subject_id": 3,
+            "object_id": 2,
+            "predicate": "on"
+          }
+        ],
+        "provenance": {
+          "kind": "ground_truth",
+          "fidelity": "measured"
+        }
+      },
+      "pred": {
+        "image_id": "gv18",
+        "dataset": "vg150-sgb",
+        "width": 200,
+        "height": 200,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 20.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 3,
+            "names": [
+              "bowl"
+            ],
+            "bbox": {
+              "x": 60.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on",
+            "score": 0.9
+          },
+          {
+            "relationship_id": 2,
+            "subject_id": 3,
+            "object_id": 2,
+            "predicate": "on",
+            "score": 0.8
+          }
+        ],
+        "provenance": {
+          "kind": "model",
+          "fidelity": "measured",
+          "model": "fixture"
+        }
+      },
+      "params": {
+        "protocol": "sgcls",
+        "constraint": "graph",
+        "k": [
+          20
+        ],
+        "iou_thresh": 0.5,
+        "mask_pairing": "single_mpo"
+      },
+      "expect": {
+        "R": {
+          "20": 0.5
+        },
+        "mR": {
+          "20": 0.5
+        },
+        "ngR": {
+          "20": 0.5
+        },
+        "zR": {
+          "20": null
+        },
+        "verdicts": [
+          {
+            "pred_index": 0,
+            "verdict": "match"
+          },
+          {
+            "pred_index": 1,
+            "verdict": "spurious"
+          },
+          {
+            "pred_index": -1,
+            "verdict": "missed"
+          }
+        ],
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
+        ]
+      }
+    },
+    {
+      "id": "gv-019-masks-in-one-graph-only",
+      "why": "The ground truth carries COCO RLE masks, as a panoptic annotation does; the prediction carries boxes only, as a box detector's does. Mask IoU needs a mask on both sides, so the engine compares boxes. Subject: GT box (0,0,10,10), predicted (2,0,10,10); intersection 8 x 10 = 80, union 100 + 100 - 80 = 120, IoU = 2/3 >= 0.5. Object: identical boxes, IoU 1.0. Classes and predicate agree, so the verdict is match, and R@20 = mR@20 = ngR@20 = 1/1 = 1. zR is null. Mask pairing is a no-op, since the prediction carries no masks. A build that read the absent masks as empty would find IoU 0 and call this localization, R = 0; one that fell back to boxes in silence would score it right and leave the reader believing masks were compared, which is why the warning is part of the expectation. Warnings: one graph carries masks and the other does not, so masks_ignored; no training split is supplied, so zero_shot_unavailable. SGDet hands over neither boxes nor labels, so gt_boxes_not_pairs does not apply; one score cannot tie, and neither graph is empty, so no other.",
+      "hand_checked": true,
+      "gt": {
+        "image_id": "gv19",
+        "dataset": "vg150-sgb",
+        "width": 200,
+        "height": 200,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            },
+            "mask": {
+              "counts": "088",
+              "size": [
+                4,
+                4
+              ]
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 20.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            },
+            "mask": {
+              "counts": "23;",
+              "size": [
+                4,
+                4
+              ]
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on"
+          }
+        ],
+        "provenance": {
+          "kind": "ground_truth",
+          "fidelity": "measured"
+        }
+      },
+      "pred": {
+        "image_id": "gv19",
+        "dataset": "vg150-sgb",
+        "width": 200,
+        "height": 200,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 2.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 20.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on",
+            "score": 0.9
+          }
+        ],
+        "provenance": {
+          "kind": "model",
+          "fidelity": "measured",
+          "model": "fixture"
+        }
+      },
+      "params": {
+        "protocol": "sgdet",
+        "constraint": "none",
+        "k": [
+          20
+        ],
+        "iou_thresh": 0.5,
+        "mask_pairing": "single_mpo"
+      },
+      "expect": {
+        "R": {
+          "20": 1.0
+        },
+        "mR": {
+          "20": 1.0
+        },
+        "ngR": {
+          "20": 1.0
+        },
+        "zR": {
+          "20": null
+        },
+        "verdicts": [
+          {
+            "pred_index": 0,
+            "verdict": "match"
+          }
+        ],
+        "warnings": [
+          "masks_ignored",
+          "zero_shot_unavailable"
+        ]
+      }
+    },
+    {
+      "id": "gv-020-unscored-predictions-do-not-tie",
+      "why": "Three of the four predictions carry no score, which the schema permits. A prediction with no score sorts after every scored one and keeps its input order (NFR-4), so the ranking is cup on table 0.4 (index 3), then cup on table (index 0), person on table (index 1) and person on table (index 2). Index 3 matches GT cup on table. Index 0 finds its only candidate consumed and is localization, as in gv-005. Index 1 matches GT person on table, and index 2 finds it consumed: localization. R@20 = 2/2 = 1. One predicate class 'on' with 2 GT and 2 hits, so mR@20 = 1. The constraint is none, so ngR@20 = R = 1. zR is null. Ordering the unscored predictions by relationship_id would put index 2 (id 1) before index 1 (id 2) and swap their verdicts; ranking them before the scored one would give index 0 the cup and index 3 localization. Warnings: PredCls hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and zero_shot_unavailable. A tie needs two equal scores and three predictions have none, so the one score cannot tie and ties_broken_by_index does not apply; neither graph carries masks, and neither is empty, so no other.",
+      "hand_checked": true,
+      "gt": {
+        "image_id": "gv20",
+        "dataset": "vg150-sgb",
+        "width": 200,
+        "height": 200,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 20.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 3,
+            "names": [
+              "cup"
+            ],
+            "bbox": {
+              "x": 60.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on"
+          },
+          {
+            "relationship_id": 2,
+            "subject_id": 3,
+            "object_id": 2,
+            "predicate": "on"
+          }
+        ],
+        "provenance": {
+          "kind": "ground_truth",
+          "fidelity": "measured"
+        }
+      },
+      "pred": {
+        "image_id": "gv20",
+        "dataset": "vg150-sgb",
+        "width": 200,
+        "height": 200,
+        "objects": [
+          {
+            "object_id": 1,
+            "names": [
+              "person"
+            ],
+            "bbox": {
+              "x": 0.0,
+              "y": 0.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 2,
+            "names": [
+              "table"
+            ],
+            "bbox": {
+              "x": 20.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "object_id": 3,
+            "names": [
+              "cup"
+            ],
+            "bbox": {
+              "x": 60.0,
+              "y": 20.0,
+              "w": 10.0,
+              "h": 10.0
+            }
+          }
+        ],
+        "relationships": [
+          {
+            "relationship_id": 3,
+            "subject_id": 3,
+            "object_id": 2,
+            "predicate": "on"
+          },
+          {
+            "relationship_id": 2,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on"
+          },
+          {
+            "relationship_id": 1,
+            "subject_id": 1,
+            "object_id": 2,
+            "predicate": "on"
+          },
+          {
+            "relationship_id": 4,
+            "subject_id": 3,
+            "object_id": 2,
+            "predicate": "on",
+            "score": 0.4
+          }
+        ],
+        "provenance": {
+          "kind": "model",
+          "fidelity": "measured",
+          "model": "fixture"
+        }
+      },
+      "params": {
+        "protocol": "predcls",
+        "constraint": "none",
+        "k": [
+          20
+        ],
+        "iou_thresh": 0.5,
+        "mask_pairing": "single_mpo"
+      },
+      "expect": {
+        "R": {
+          "20": 1.0
+        },
+        "mR": {
+          "20": 1.0
+        },
+        "ngR": {
+          "20": 1.0
+        },
+        "zR": {
+          "20": null
+        },
+        "verdicts": [
+          {
+            "pred_index": 3,
+            "verdict": "match"
+          },
+          {
+            "pred_index": 0,
+            "verdict": "localization"
+          },
+          {
+            "pred_index": 1,
+            "verdict": "match"
+          },
+          {
+            "pred_index": 2,
+            "verdict": "localization"
+          }
+        ],
+        "warnings": [
+          "gt_boxes_not_pairs",
+          "zero_shot_unavailable"
+        ]
+      }
     }
   ]
 }

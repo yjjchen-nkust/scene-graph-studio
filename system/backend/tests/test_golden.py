@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+from typing import get_args
 
 import pytest
 
-from app.eval.engine import EvalRequest, evaluate
+from app.eval.engine import WARNINGS, EvalRequest, evaluate
+from app.schema import Protocol
 from app.settings import DATA_DIR
 
 CASES = json.loads(
@@ -51,6 +53,17 @@ def test_every_case_derives_its_warnings_in_why():
         for c in CASES
         if "Warnings:" not in c["why"] or any(w not in c["why"] for w in c["expect"]["warnings"])
     ] == []
+
+
+def test_some_case_raises_every_warning():
+    # An exact comparison checks only the warnings some case raises; one no case raises could be
+    # dropped or mistimed in either engine and every harness would pass (D104).
+    assert sorted(WARNINGS) == sorted({w for c in CASES for w in c["expect"]["warnings"]})
+
+
+def test_some_case_runs_every_protocol():
+    # gt_boxes_not_pairs is raised under two protocols; a case under each holds both (D104).
+    assert sorted(get_args(Protocol)) == sorted({c["params"]["protocol"] for c in CASES})
 
 
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c["id"])

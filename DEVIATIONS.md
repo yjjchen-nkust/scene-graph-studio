@@ -3642,7 +3642,9 @@ fix problems". Branch `fix/sgs-d102-open`, from `main` at `9b678af`.
   `engine.py`: `gt_boxes_not_pairs` under PredCls or SGCls, `empty_ground_truth` and
   `empty_prediction` when a side has no relationship, `ties_broken_by_index` when two scores are
   equal, `masks_ignored` when one graph carries masks and the other does not, and
-  `zero_shot_unavailable` when no training split is supplied. Eleven vectors listed fewer than the
+  `zero_shot_unavailable` when no training split is supplied. [**Corrected 2026-09-28 (D104):**
+  `ties_broken_by_index` compares non-null scores only, and `zero_shot_unavailable` is raised as
+  well when the split supplied is empty; the two engines agree on both.] Eleven vectors listed fewer than the
   engine raises for them: gv-005 to gv-011 and gv-014 none, gv-002 to gv-004 one of three. Each
   case's `why` now derives its complete set from the six conditions and says why the others do not
   apply. Thirteen vectors are PredCls, so thirteen list `gt_boxes_not_pairs`; gv-011 is the only
@@ -3651,7 +3653,9 @@ fix problems". Branch `fix/sgs-d102-open`, from `main` at `9b678af`.
 - *The harnesses.* Both required only that each listed warning be raised, so a warning raised in
   error passed. Both now require every case to list its warnings, pytest in a test of its own, and
   compare the list with the engine's as a sorted list, so a missing and an extra warning fail
-  alike and the order is not pinned. The regenerated `vectors.json` differs from the committed one
+  alike and the order is not pinned. [**Corrected 2026-09-28 (D104):** alike for a warning some
+  case raises. No case ran SGCls or raised `masks_ignored`, so either engine could drop either
+  condition and every harness passed; gv-018 and gv-019 now raise them.] The regenerated `vectors.json` differs from the committed one
   in those eleven cases' `why` and `warnings` alone, compared case by case.
 - *Watched failing first.* Before the vectors changed, pytest's golden file failed 12 tests and
   passed 9, the eleven cases and the new listing test, and vitest's engine file failed the same
@@ -3706,3 +3710,136 @@ acted on.
 **Verification.** `npm run ci` exit 0: **281 pytest** and 7 skipped (279 before), **901 vitest in
 67 files** (893 in 66 before), parity 17, i18n 331 keys, content lint clean over 17 golden cases.
 No frontend production code changed, so `npm run test:e2e` was not run on the branch. See VERIFICATION §26.
+
+## D104 — the review of the open checks: two warnings no vector raised, and five minors
+
+**Plan:** none. A review of `7754926..5eabab6` on 2026-09-28, the day's two merges (D102 and
+D103), by one reviewer over the code, the tests, the data and the records. Every figure below was
+re-measured here before it was acted on. **Decisions:** the author's, on 2026-09-28: "resume,
+review, fix problems". Branch `fix/sgs-d103-review`, from `main` at `5eabab6`.
+
+**What the review confirmed.** `build_golden.py` reproduces the committed `vectors.json` byte for
+byte. Both engines raise the six warnings on the same conditions, line for line, and each of the
+17 vectors lists the set those conditions give its inputs, checked by a script of the reviewer's
+that applies the conditions without running either engine. D103's counts (281 pytest, 901 vitest
+in 67 files, 13 keys with a placeholder) and both of its mutation tables reproduce. The review
+found no Critical issue, one Important issue and six minors. Five minors are acted on: D103's
+wording of two conditions, corrected in place under the Important finding, and the four below.
+One is declined.
+
+**Two warnings no vector raised** (Important).
+- D103 made both harnesses compare each case's warnings exactly, and `data/golden/README.md`
+  said that a missing warning and an extra one fail alike. That holds only for a warning some
+  case raises. No vector ran SGCls, so nothing held the half of `gt_boxes_not_pairs` that SGCls
+  raises. No vector carried masks in one graph only, so no vector raised `masks_ignored`.
+  `parity.mjs` runs only the vectors, so it could not see the two engines disagree on either.
+- *Measured.* The committed vectors and harness were tested against four mutants: each engine
+  with `masks_ignored` never raised, and each engine with `gt_boxes_not_pairs` under PredCls
+  alone. All four passed: pytest 281, and vitest's metrics project 39.
+- *Two coverage tests.* `test_some_case_raises_every_warning` requires the warnings the cases list
+  to cover the engine's `WARNINGS`. `test_some_case_runs_every_protocol` requires the cases'
+  protocols to cover `Protocol`. Without these tests, removing gv-018 or gv-019 later would
+  reopen the gap in silence. Both tests failed first, on `masks_ignored` and on `sgcls`.
+- *Two vectors.* In **gv-018-sgcls-label-error**, SGCls labels a cup a bowl on the ground
+  truth's own box. Both IoUs are 1.0, yet the prediction is `spurious`, not `localization`: that
+  verdict requires the three classes to agree, so under SGCls a wrong label costs the triplet,
+  never the box. R@20 = mR@20 = ngR@20 = 0.5. **gv-019-masks-in-one-graph-only** puts masks on
+  the ground truth and none on the prediction, under SGDet. The subject box is shifted by 2 px,
+  so box IoU is 2/3 and the pair matches. A build that read the absent masks as empty would score
+  the pair 0. Each `why` derives its warnings, and the expectations were computed on paper before
+  the engine ran. `vectors.json` gains the two cases and changes no other.
+- *Watched to fail.* On the branch, each of the four mutants fails one test in its own harness:
+  gv-019 for `masks_ignored`, gv-018 for SGCls. pytest has 1 failed and 284 passed; vitest has 1
+  failed and 40 passed. With the TypeScript engine mutated, `parity.mjs` names the same vector.
+- *In place.* D103's two sentences are corrected in brackets: the one about a warning missing or
+  extra, and the one on the six conditions. On the conditions, `ties_broken_by_index` compares
+  non-null scores only, and `zero_shot_unavailable` is raised as well for an empty split. The
+  golden README now lists gv-012 to gv-020 in its table of what each case pins; its rows had
+  stopped at gv-011.
+
+**Four minors acted on.**
+- *The missing-key check had a test in one direction only.* With the check reduced to
+  `for (const a of ['en'])`, all seven tests passed. A key present in 繁體中文 only now has its
+  own test, which that mutant fails.
+- *A braced name outside `\w+` escaped the comparison.* `{kp-id}` in English with nothing in
+  繁體中文 exited 0, and the script printed that no key carried a placeholder; `{幀}` and
+  `{ frame }` did the same. Every `{…}` token whose name is not `\w+` is now refused as "not a
+  placeholder name" in its locale. No current string carries one; the test failed before the
+  rule existed.
+- *The records tests read each record to the end of the file.* `slice(indexOf('## D102 — '))`
+  included D103 and every later record, so an item named only in a later record satisfied an
+  earlier record's check; D104 names three of D103's five items. `record(deviations, id)` in
+  `registry.test.tsx` now ends at the next heading, and D102's and D103's tests use it.
+- *The date of `test:e2e`.* README and INDEX dated it 2026-09-27, §25's heading date. §25's run
+  at the merge was on 2026-09-28, since it ran on a tree holding `761b571`, committed that day at
+  00:04. `npm run test:e2e` and `npm run check:perf` were run again on `main` at `5eabab6` on
+  2026-09-28, and both documents now cite those runs.
+
+**D100's records tests pinned the vectors' count.** They required "The 17 golden vectors" in INDEX,
+and "parity 17/17" and "seventeen cases" in README, so this branch's two vectors turned both red:
+2 failed of 906. They were first bounded from below, as D103 bounded D102's; the branch review
+showed that a bound passes a count left stale, and the count is now taken from the file (below).
+
+**The branch review** found no Critical issue, one Important one and five minors. Four minors and
+the Important finding are acted on, the latter in part; one minor is accepted as it stands.
+- *Two conditions this record writes were held by no vector* (Important). No vector carried a
+  prediction without a score, and none supplied an empty training split. Each engine could count
+  a null score toward a tie, or treat `[]` as a split, and every harness passed.
+  **gv-020-unscored-predictions-do-not-tie** gives three of four predictions no score. An unscored
+  prediction ranks after every scored one and keeps its input order, and none of them ties. Its
+  expectations were computed on paper, and both engines agree with them.
+  - *Watched to fail.* Each of five mutants fails gv-020 in its own harness: a null score counted
+    toward a tie, in each engine; unscored predictions ordered by `relationship_id`, in each
+    engine; and unscored predictions ranked first, in Python.
+  - *Caught by gv-020 alone.* Ordering by `relationship_id` failed nothing else. Only the last
+    mutant also fails `test_missing_scores_sort_last_and_keep_input_order`.
+- *The empty split, left open.* Both engines treat `zero_shot_train_triplets: []` as a split not
+  supplied: zR is null and `zero_shot_unavailable` is raised, whose text reads "No training split
+  was supplied". SRS §4.3 defines zR on ground truth "absent from the training split"; an empty
+  split leaves every triplet absent, which gives zR = R. Contracts §1.5 makes the field optional
+  and says nothing of an empty one. A vector's expectation is computed from the definitions, and
+  here the definitions and both engines disagree. No vector is written until the author decides
+  which is intended, and the golden README names it as the one condition without a case.
+- *The count of minors.* The first review's six minors were counted as five acted on without
+  naming the fifth; the sentence above now names it.
+- *Braces outside an innermost pair.* `{{n}}` in English beside `{n}` in 繁體中文 exited 0,
+  and English would print `{5}`; so did `A {x {n} y}` and a lone `{kp`. A brace left once the
+  innermost pairs are removed is now refused as "a brace outside a placeholder". No current string
+  carries one; the test failed before the rule existed.
+- *§25 was not corrected in place.* Its heading dates the run at the merge 2026-09-27; a bracketed
+  correction now says it ran on 2026-09-28.
+- *The count of golden vectors, stale under a bound.* A lower bound would pass INDEX's 19 once a
+  twentieth vector exists. One records test now takes the count from `vectors.json` and compares
+  the six places INDEX and README state it, the README's in words. D100's and this record's
+  tests no longer state it. The test failed on INDEX's 19 when gv-020 made twenty.
+- *Accepted as it stands: gv-019's IoU of 2/3 is held by no test.* Neither harness compares a
+  verdict's IoUs, so gv-019's shifted box is illustrative. The verdict, `match` where a mask read
+  as empty would give `localization`, is what the harnesses hold.
+- *Recorded, as the reviewer measured and as re-measured here.* A `classify` that ignores the
+  subject class fails gv-018 alone and passes all 17 of `5eabab6`'s vectors: gv-018 is the only
+  vector that needs the subject class to agree.
+- *Set aside by the reviewer.* INDEX called `gt_boxes_not_pairs` unconditional, which contracts
+  §1.5 limits to `predcls` and `sgcls`; the row now says so. The harness finds a verdict row by
+  its first matching `pred_index`, so a `-1` row matches any missed one and an extra row is never
+  refused; this predates the range and is left.
+
+**Declined.**
+- *A `why` may name a warning it does not list.* `test_every_case_derives_its_warnings_in_why`
+  requires each listed warning to be named. It does not refuse a warning that is named and not
+  listed. The prose must name a warning in order to say why it does not apply: gv-009 names
+  `masks_ignored` for that purpose, and gv-019 names `gt_boxes_not_pairs`. A mention therefore
+  cannot be read as a claim. The exact engine comparison holds the list itself. The agreement
+  between prose and list is a reader's check, like the rest of the arithmetic in a `why`.
+- *Set aside by the reviewer, and left so.* All three predate the range. The TypeScript
+  `toTriplets` does not check dangling references (D102 says so). `String.replace` reads `$`
+  patterns in a fill value, and every current fill value is a number or a constant. `parity.mjs`
+  and `engine.test.ts` would pass over zero cases; the two coverage tests now fail on zero cases
+  in pytest.
+
+**Continuous integration, not changed.** The three commit statuses of `5eabab6` read "Waiting to
+run" on 2026-09-28 at 10:13, queued since 09:08. Registering a runner remains
+`scripts/deploy/setup_cicd.sh` on a Docker host, with a token from the repository's settings.
+
+**Verification.** `npm run ci` exit 0: **286 pytest** and 7 skipped (281 before), **909 vitest in
+67 files** (901 before), parity 20, i18n 331 keys, content lint clean over 20 golden cases. No
+frontend production code changed on the branch. See VERIFICATION §27.

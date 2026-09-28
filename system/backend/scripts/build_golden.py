@@ -699,6 +699,144 @@ cases.append({
 })
 
 
+# ---------------------------------------------------------------- gv-018
+# No vector ran SGCls, so the half of gt_boxes_not_pairs it raises was held by nothing (D104).
+CUP = (60.0, 20.0, 10.0, 10.0)
+
+cases.append({
+    "id": "gv-018-sgcls-label-error",
+    "why": (
+        "SGCls hands over the ground truth's boxes and asks for the labels (SRS section 4.4). GT: "
+        "person#1 on table#2 and cup#3 on table#2. The prediction keeps the three boxes, labels "
+        "object 3 a bowl, and scores person on table 0.9 and bowl on table 0.8. The graph "
+        "constraint keeps both, since 1->2 and 3->2 are two ordered object pairs. The first "
+        "matches on all five conjuncts. The second has both IoUs at 1.0, but its classes (bowl, "
+        "on, table) agree with no ground truth, and a localization verdict requires subject "
+        "class, object class and predicate to agree, so it is spurious: under SGCls a wrong "
+        "label costs the triplet, never the box. GT cup on table is missed. R@20 = 1/2 = 0.5. "
+        "One predicate class 'on' with 2 GT and 1 hit, so mR@20 = 1/2 = 0.5. No prediction is "
+        "filtered, so ngR@20 = R = 0.5. zR is null. Warnings: SGCls, like PredCls, hands over "
+        "boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs and "
+        "zero_shot_unavailable; the two scores are distinct, neither graph carries masks, and "
+        "neither is empty, so no other."
+    ),
+    "hand_checked": True,
+    "gt": graph(
+        "gv18",
+        [obj(1, "person", PERSON), obj(2, "table", TABLE), obj(3, "cup", CUP)],
+        [rel(1, 1, "on", 2), rel(2, 3, "on", 2)],
+        "gt",
+    ),
+    "pred": graph(
+        "gv18",
+        [obj(1, "person", PERSON), obj(2, "table", TABLE), obj(3, "bowl", CUP)],
+        [rel(1, 1, "on", 2, 0.9), rel(2, 3, "on", 2, 0.8)],
+        "pred",
+    ),
+    "params": {**P_GRAPH, "protocol": "sgcls"},
+    "expect": {
+        "R": {"20": 0.5}, "mR": {"20": 0.5}, "ngR": {"20": 0.5}, "zR": {"20": None},
+        "verdicts": [
+            {"pred_index": 0, "verdict": "match"},
+            {"pred_index": 1, "verdict": "spurious"},
+            {"pred_index": -1, "verdict": "missed"},
+        ],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
+    },
+})
+
+
+# ---------------------------------------------------------------- gv-019
+# No vector carried masks in one graph only, so masks_ignored was raised by none (D104).
+SHIFTED_PERSON = (2.0, 0.0, 10.0, 10.0)
+
+cases.append({
+    "id": "gv-019-masks-in-one-graph-only",
+    "why": (
+        "The ground truth carries COCO RLE masks, as a panoptic annotation does; the prediction "
+        "carries boxes only, as a box detector's does. Mask IoU needs a mask on both sides, so "
+        "the engine compares boxes. Subject: GT box (0,0,10,10), predicted (2,0,10,10); "
+        "intersection 8 x 10 = 80, union 100 + 100 - 80 = 120, IoU = 2/3 >= 0.5. Object: "
+        "identical boxes, IoU 1.0. Classes and predicate agree, so the verdict is match, and "
+        "R@20 = mR@20 = ngR@20 = 1/1 = 1. zR is null. Mask pairing is a no-op, since the "
+        "prediction carries no masks. A build that read the absent masks as empty would find "
+        "IoU 0 and call this localization, R = 0; one that fell back to boxes in silence would "
+        "score it right and leave the reader believing masks were compared, which is why the "
+        "warning is part of the expectation. Warnings: one graph carries masks and the other "
+        "does not, so masks_ignored; no training split is supplied, so zero_shot_unavailable. "
+        "SGDet hands over neither boxes nor labels, so gt_boxes_not_pairs does not apply; one "
+        "score cannot tie, and neither graph is empty, so no other."
+    ),
+    "hand_checked": True,
+    "gt": graph(
+        "gv19",
+        [obj(1, "person", PERSON, [0, 8, 8]), obj(2, "table", TABLE, [2, 3, 11])],
+        [rel(1, 1, "on", 2)],
+        "gt",
+    ),
+    "pred": graph(
+        "gv19",
+        [obj(1, "person", SHIFTED_PERSON), obj(2, "table", TABLE)],
+        [rel(1, 1, "on", 2, 0.9)],
+        "pred",
+    ),
+    "params": {**P_NONE, "protocol": "sgdet"},
+    "expect": {
+        "R": {"20": 1.0}, "mR": {"20": 1.0}, "ngR": {"20": 1.0}, "zR": {"20": None},
+        "verdicts": [{"pred_index": 0, "verdict": "match"}],
+        "warnings": ["masks_ignored", "zero_shot_unavailable"],
+    },
+})
+
+
+# ---------------------------------------------------------------- gv-020
+# No vector carried a prediction without a score, so the tie rule's null case and the ranking of
+# unscored predictions were held by nothing (D104's review).
+cases.append({
+    "id": "gv-020-unscored-predictions-do-not-tie",
+    "why": (
+        "Three of the four predictions carry no score, which the schema permits. A prediction "
+        "with no score sorts after every scored one and keeps its input order (NFR-4), so the "
+        "ranking is cup on table 0.4 (index 3), then cup on table (index 0), person on table "
+        "(index 1) and person on table (index 2). Index 3 matches GT cup on table. Index 0 finds "
+        "its only candidate consumed and is localization, as in gv-005. Index 1 matches GT "
+        "person on table, and index 2 finds it consumed: localization. R@20 = 2/2 = 1. One "
+        "predicate class 'on' with 2 GT and 2 hits, so mR@20 = 1. The constraint is none, so "
+        "ngR@20 = R = 1. zR is null. Ordering the unscored predictions by relationship_id would "
+        "put index 2 (id 1) before index 1 (id 2) and swap their verdicts; ranking them before "
+        "the scored one would give index 0 the cup and index 3 localization. Warnings: PredCls "
+        "hands over boxes, not pairs, and no training split is supplied, so gt_boxes_not_pairs "
+        "and zero_shot_unavailable. A tie needs two equal scores and three predictions have "
+        "none, so the one score cannot tie and ties_broken_by_index does not apply; neither "
+        "graph carries masks, and neither is empty, so no other."
+    ),
+    "hand_checked": True,
+    "gt": graph(
+        "gv20",
+        [obj(1, "person", PERSON), obj(2, "table", TABLE), obj(3, "cup", CUP)],
+        [rel(1, 1, "on", 2), rel(2, 3, "on", 2)],
+        "gt",
+    ),
+    "pred": graph(
+        "gv20",
+        [obj(1, "person", PERSON), obj(2, "table", TABLE), obj(3, "cup", CUP)],
+        [rel(3, 3, "on", 2), rel(2, 1, "on", 2), rel(1, 1, "on", 2), rel(4, 3, "on", 2, 0.4)],
+        "pred",
+    ),
+    "params": dict(P_NONE),
+    "expect": {
+        "R": {"20": 1.0}, "mR": {"20": 1.0}, "ngR": {"20": 1.0}, "zR": {"20": None},
+        "verdicts": [
+            {"pred_index": 3, "verdict": "match"},
+            {"pred_index": 0, "verdict": "localization"},
+            {"pred_index": 1, "verdict": "match"},
+            {"pred_index": 2, "verdict": "localization"},
+        ],
+        "warnings": ["gt_boxes_not_pairs", "zero_shot_unavailable"],
+    },
+})
+
+
 out = DATA_DIR / "golden" / "vectors.json"
 out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text(
