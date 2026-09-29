@@ -4852,3 +4852,25 @@ of `data/demos/m0/` say which frames these are.
 **Consequence.** A reader that joins on `dataset == "mini-isg"` and then looks the `image_id` up in the slice's
 manifest will find no row for these ten. Nothing in the tree does that today; the demonstrations read their own
 manifest.
+
+## D114 — D-V is recorded on the author's own server, through an OpenAI-compatible provider
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Task 4a. **Decisions:** none new. Branch `feat/m0-demos`.
+
+**Why.** The author chose to record D-V on their own vLLM server (pro6000, reached over Tailscale)
+instead of the Anthropic API: no API spend, no key, and the weights are known.
+
+**What differs from the spec (§3.3).** (1) The recording model is `stamping-vlm`, which the server reports
+as `Qwen/Qwen3.8-27B`, not `claude-opus-5-5`. (2) The recorder has a provider choice,
+`--provider {claude,openai-compat}`, default `openai-compat`, and builds its provenance block with
+`provenance_for(provider)`; the note names the served weights as the server reports them. (3) A new
+provider, `app/vlm/openai_compat.py`, standard library only, is selected by `get_provider("openai-compat")`,
+with the address and model id in `SGS_VLM_BASE_URL` and `SGS_VLM_MODEL`; it has no fallback to any other
+provider. The `ClaudeProvider` fix of D112 stands and remains L5's live path.
+
+**The settings, and why thinking is off.** `temperature` 0, `max_tokens` 8192, the frame as a base64
+`image_url` block before the text, and `chat_template_kwargs: {"enable_thinking": false}`. With thinking on,
+the server returns the reasoning inside `message.content`, ending in `</think>`, ahead of the answer (9.6 s
+per call against 3.9 s measured), and that text would reach the triplet parser as if it were the answer.
+The provider also removes any text up to a first `</think>`. `finish_reason: "length"`, a non-null
+`message.refusal`, an empty answer, an unreachable server and an HTTP error each raise; none is recorded.

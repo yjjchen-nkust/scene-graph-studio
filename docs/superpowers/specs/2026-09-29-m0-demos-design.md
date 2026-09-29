@@ -123,6 +123,11 @@ is present and precedes the text. The recorder passes `claude-opus-5-5`, the mos
 available on 2026-09-29, and the id is confirmed against the `claude-api` reference before the
 first call.
 
+[Amended 2026-09-29 (D114): the recording model is `stamping-vlm`, the weights `Qwen/Qwen3.8-27B` served by
+vLLM on the author's pro6000 over Tailscale, through the new OpenAI-compatible provider
+(`app/vlm/openai_compat.py`) with thinking off and temperature 0, and not `claude-opus-5-5`; the recorder
+takes `--provider`. The `ClaudeProvider` fix above stands for L5.]
+
 `system/backend/scripts/record_demo_indvissgg.py` runs `indvissgg.step1`, `step2` with N = 3 and
 `step3` on each of the ten frames under `O_ISG`, `P_ISG` and `EXAMPLES_ISG`: 50 calls. Every
 exchange (prompt, `image_ref`, context, key, completion) is appended to

@@ -2,8 +2,9 @@
 
 Per frame: step 1 (the draft), three experts over that draft, step 3 (the summary), in the order and
 with the inputs of `app.vlm.indvissgg.run`. The calls go through the application's own
-`ClaudeProvider`, so the frame is attached and the recording is what the application would have
-sent. A refusal or a truncation raises and stops the run; it is never recorded and never retried.
+provider (`--provider`: the OpenAI-compatible one by default, or `ClaudeProvider`), so the frame
+is attached and the recording is what the application would have sent. A refusal or a truncation
+raises and stops the run; it is never recorded and never retried.
 
 `anthropic` is imported by `ClaudeProvider` only when a call is made, and `main` builds the provider
 only after it has decided to record, so importing this module needs nothing beyond the backend.
@@ -14,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -22,10 +24,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.settings import DATA_DIR  # noqa: E402
 from app.vlm import indvissgg  # noqa: E402
+from app.vlm.openai_compat import MAX_TOKENS  # noqa: E402
 from app.vlm.prompts import EXAMPLES_ISG, O_ISG, P_ISG  # noqa: E402
 from app.vlm.provider import VLMProvider, exchange_key  # noqa: E402
 
-MODEL = "claude-opus-5-5"
+MODEL = "claude-opus-5-5"  # the `claude` provider's model; `openai-compat` names its own
 N_EXPERTS = 3
 TRANSCRIPT = DATA_DIR / "vlm" / "transcripts" / "m0-demo.json"
 MANIFEST = DATA_DIR / "demos" / "m0" / "MANIFEST.json"
@@ -33,14 +36,12 @@ MANIFEST = DATA_DIR / "demos" / "m0" / "MANIFEST.json"
 #: The five calls of one frame, in the order the pipeline makes them.
 CASES = ("step1", "expert1", "expert2", "expert3", "step3")
 
-PROVENANCE: dict[str, Any] = {
-    "recorded": True,
-    "model": MODEL,
-    "generated_at": "",  # filled with the date of the run by `main`
-    "source": (
-        "the ten frames of 01_assy_0_1.mp4 at 88 to 106 s, drafted under O_ISG, P_ISG and "
-        "EXAMPLES_ISG, five calls per frame (step 1, three experts, step 3)"
-    ),
+SOURCE = (
+    "the ten frames of 01_assy_0_1.mp4 at 88 to 106 s, drafted under O_ISG, P_ISG and "
+    "EXAMPLES_ISG, five calls per frame (step 1, three experts, step 3)"
+)
+
+_CLAUDE_NOTES = {
     "note_en": (
         "Claude Opus 5.5 was shown each frame with the prompt recorded beside it, and its "
         "completion is recorded here verbatim. The calls were made by the application's own "
@@ -55,6 +56,43 @@ PROVENANCE: dict[str, Any] = {
         "任何模型提問。"
     ),
 }
+
+
+def _compat_notes(model: str, root: str | None) -> dict[str, str]:
+    weights = root or "weights not reported by the server"
+    return {
+        "note_en": (
+            f"The model `{model}`, the weights {weights} served by vLLM on the author's pro6000 "
+            f"server and reached over Tailscale, was shown each frame with the prompt recorded "
+            f"beside it, and its completion is recorded here verbatim. The calls were made by the "
+            f"application's own provider, `app/vlm/openai_compat.py`, with the frame attached, "
+            f"thinking disabled, temperature 0 and max_tokens {MAX_TOKENS}. A graph replayed from "
+            f"this file is nevertheless `reconstructed`, because the replay is not the call: the "
+            f"application did not ask a model anything when it read this file."
+        ),
+        "note_zh": (
+            f"本檔各筆 completion 係將各影格連同其旁所錄之提示送入模型 `{model}`（權重 {weights}，"
+            f"由作者之 pro6000 伺服器以 vLLM 提供，經 Tailscale 連線）後之輸出，逐字記錄。呼叫由"
+            f"本應用程式自身之 provider（`app/vlm/openai_compat.py`）發出，並附上該影格，"
+            f"關閉 thinking，temperature 為 0，max_tokens 為 {MAX_TOKENS}。然而由本檔重播所得之圖"
+            f"仍屬 `reconstructed`，因重播並非呼叫：讀取本檔時，應用程式並未向任何模型提問。"
+        ),
+    }
+
+
+def provenance_for(provider: Any) -> dict[str, Any]:
+    """The transcript's provenance block for the provider that made the calls."""
+    if provider.name == "openai-compat":
+        notes = _compat_notes(provider.model, provider.served_root())
+    else:
+        notes = _CLAUDE_NOTES
+    return {
+        "recorded": True,
+        "model": provider.model,
+        "generated_at": datetime.now(UTC).date().isoformat(),
+        "source": SOURCE,
+        **notes,
+    }
 
 
 class RecordingProvider:
@@ -111,21 +149,36 @@ def record_frame(image_ref: str, provider: RecordingProvider) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--force", action="store_true", help="overwrite an existing transcript")
+    parser.add_argument(
+        "--provider", choices=("claude", "openai-compat"), default="openai-compat",
+        help="claude needs ANTHROPIC_API_KEY; openai-compat needs SGS_VLM_BASE_URL, SGS_VLM_MODEL",
+    )
     args = parser.parse_args(argv)
 
     if TRANSCRIPT.exists() and not args.force:
         print(f"{TRANSCRIPT} exists; pass --force to overwrite it", file=sys.stderr)
         return 1
 
-    from app.vlm.claude import ClaudeProvider  # noqa: PLC0415 - imports `anthropic` on first call
+    inner: Any
+    if args.provider == "claude":
+        from app.vlm.claude import ClaudeProvider  # noqa: PLC0415 - imports `anthropic` on a call
+
+        inner = ClaudeProvider(model=MODEL)
+    else:
+        from app.vlm.openai_compat import OpenAICompatibleProvider  # noqa: PLC0415
+
+        inner = OpenAICompatibleProvider()
+        print(f"server {inner.base_url}, model {inner.model}, served root {inner.served_root()}")
 
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    provider = RecordingProvider(ClaudeProvider(model=MODEL))
+    provider = RecordingProvider(inner)
+    started = time.monotonic()
     for frame in manifest["frames"]:
         record_frame(frame["image_id"], provider)
         print(f"{frame['image_id']}: {len(provider.exchanges)} exchanges so far")
+    print(f"wall time {time.monotonic() - started:.1f} s")
 
-    provenance = {**PROVENANCE, "generated_at": datetime.now(UTC).date().isoformat()}
+    provenance = provenance_for(inner)
     payload = {"$schema_version": 1, "provenance": provenance, "exchanges": provider.exchanges}
     TRANSCRIPT.parent.mkdir(parents=True, exist_ok=True)
     TRANSCRIPT.write_text(

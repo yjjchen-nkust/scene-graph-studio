@@ -39,6 +39,26 @@ class FakeProvider:
         return completion_n(self.calls)
 
 
+class StampingFake(FakeProvider):
+    name = "openai-compat"
+    model = "stamping-vlm"
+
+    def served_root(self) -> str | None:
+        return "Qwen/Qwen3.8-27B"
+
+
+def test_the_provenance_names_the_served_weights_and_the_settings() -> None:
+    block = rec.provenance_for(StampingFake())
+    assert block["recorded"] is True
+    assert block["model"] == "stamping-vlm"
+    assert block["generated_at"]
+    for note in (block["note_en"], block["note_zh"]):
+        assert "Qwen/Qwen3.8-27B" in note
+        assert "vLLM" in note
+        assert "pro6000" in note
+        assert "8192" in note
+
+
 def test_a_frame_is_five_exchanges_in_the_paper_s_order() -> None:
     provider = rec.RecordingProvider(FakeProvider())
     rec.record_frame(FRAME, provider)
@@ -75,7 +95,10 @@ def test_a_recorded_frame_replays_through_the_application_s_own_run(
     first = rec.RecordingProvider(FakeProvider())
     rec.record_frame(FRAME, first)
     assert [ex["completion"] for ex in first.exchanges] == [completion_n(n) for n in range(1, 6)]
-    blob = {"$schema_version": 1, "provenance": rec.PROVENANCE, "exchanges": first.exchanges}
+    blob = {
+        "$schema_version": 1, "provenance": rec.provenance_for(StampingFake()),
+        "exchanges": first.exchanges,
+    }
     (tmp_path / "m0-demo.json").write_text(json.dumps(blob, ensure_ascii=False), encoding="utf-8")
     monkeypatch.setattr(transcript, "ROOT", tmp_path)
     transcript.reload()
