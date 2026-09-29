@@ -467,7 +467,8 @@ for (const size of SIZES) {
       // mechanism with its own test above; its struts and spacers carry 1 px text that is not
       // read by anyone.
       for (const [module, step] of [
-        ...[0, 1, 2, 3, 4, 5, 6].map((s) => ['m00', s] as const),
+        // Index 6 was the L1 lab until M0's nine demo steps took indices 6 to 14; the lab is 15.
+        ...[0, 1, 2, 3, 4, 5, 15].map((s) => ['m00', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((s) => ['m01', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7].map((s) => ['m02', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => ['m03', s] as const),

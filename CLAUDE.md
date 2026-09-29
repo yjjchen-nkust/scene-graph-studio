@@ -83,7 +83,7 @@ cd scene-graph-studio\system ; npm run ci
   longest state, 96.5 px at Δx = 18, with every readout correct (D97), and
   `F3, E1, E10, E3, E4 and E7 draw their marks on their photographs` now measures that (D98, D106).
 - **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
-  in both locales (**D76**). All 120 steps carry theirs; 240 notes.
+  in both locales (**D76**). All 129 steps carry theirs; 258 notes.
 - **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and
   `npm run lint:standalone` asserts they agree. Edit the source, then run
   `npm run build:standalone` in the same commit.

@@ -177,9 +177,11 @@ test('the study shell renders every playground of M0 to M3 in one column', async
   // Spec §4.1 says the study shell needs no special provision, which is a claim about the
   // product rather than an absence of work: it is true only if a playground renders outside the
   // lecture shell at all. M0 has three, and the student reading alone sees every one of them.
-  // A playground split across steps is a frame a part here, F1 two and X1 three (D96).
+  // A playground split across steps is a frame a part here, F1 two and X1 three (D96). M0's
+  // two demos are nine frames more, one a part (D-T four, D-V five), and none is a playground's.
   await page.goto('/m/m00');
   await expect(page.getByTestId('playground-frame')).toHaveCount(4);
+  await expect(page.getByTestId('demo-frame')).toHaveCount(9);
   await expect(page.getByTestId('readout-F1.candidates')).toContainText('480');
   await page.goto('/m/m01');
   await expect(page.getByTestId('playground-frame')).toHaveCount(7);

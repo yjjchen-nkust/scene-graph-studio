@@ -5,6 +5,11 @@ import math from '../../../../../data/content/math.json';
 import { render, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { KEYFRAME_IDS, TRADITIONAL, VLM } from '../../demos/data';
+import {
+  candidateTriplets, churn, countText, distinct, fallbackCauses, orderedPairs, rowChange, traditionalTriplets,
+  uncoveredClasses,
+} from '../../demos/logic';
 import { setLocale } from '../../i18n/useLocale';
 import { PLAYGROUND_MOUNTS, PLAYGROUND_PARTS } from '../../playgrounds/mounts';
 import { getMeta, getModule, moduleIds } from '../registry';
@@ -55,7 +60,7 @@ describe('the module registry', () => {
   it('reads the frontmatter the content lint validates', () => {
     const meta = getMeta('m00', 'en')!;
     expect(meta.id).toBe('m00');
-    expect(meta.steps.map((s) => s.id)).toEqual(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8']);
+    expect(meta.steps.map((s) => s.id)).toEqual(Array.from({ length: 17 }, (_, i) => `s${i + 1}`));
     expect(meta.steps.find((s) => s.kind === 'lab')?.lab).toBe('L1');
     expect(meta.knowledge_points).toContain('F1');
   });
@@ -1049,6 +1054,115 @@ describe('the playground step kind', () => {
         expect(mounted.container.querySelector('[data-testid="playground-unknown"]')).toBeNull();
       }
       mounted.unmount();
+    }
+  });
+});
+
+describe('the demo step kind', () => {
+  it('M0 carries D-T in four parts and D-V in five, between F8 and the lab', () => {
+    // Spec 2026-09-29-m0-demos-design §4: after s6 (F8), before the L1 lab, both locales alike.
+    for (const locale of ['en', 'zh-TW'] as const) {
+      const meta = getMeta('m00', locale)!;
+      expect(
+        meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}` : ''}${s.demo ? `/${s.demo}.${s.part}` : ''}`),
+        locale,
+      ).toEqual([
+        's1:prose', 's2:playground/F1', 's3:playground/F1', 's4:math', 's5:playground/F2', 's6:playground/F8',
+        's7:demo/DT.1', 's8:demo/DT.2', 's9:demo/DT.3', 's10:demo/DT.4',
+        's11:demo/DV.1', 's12:demo/DV.2', 's13:demo/DV.3', 's14:demo/DV.4', 's15:demo/DV.5',
+        's16:lab', 's17:checkpoint',
+      ]);
+      expect(meta.steps.filter((s) => s.kind === 'demo').map((s) => s.seconds_budget), locale)
+        .toEqual([60, 60, 60, 90, 60, 60, 120, 60, 120]);
+    }
+    setLocale('zh-TW');
+    const demos = getModule('m00', 'zh-TW')!.filter((s) => s.kind === 'demo');
+    expect(demos).toHaveLength(9);
+    for (const step of demos) {
+      const mounted = render(<MemoryRouter initialEntries={['/lecture/m/m00']}>{step.node}</MemoryRouter>);
+      expect(within(mounted.container).getByTestId('demo-frame'), step.id).toBeInTheDocument();
+      expect(mounted.container.querySelector('[data-testid="demo-unknown"]'), step.id).toBeNull();
+      mounted.unmount();
+    }
+  }, 20_000);
+
+  it("M0's demo prose states only figures the recordings hold", () => {
+    // Spec §4: the prose and the notes are written from the recorded artefacts, and no figure in
+    // them is fixed before the run. So every Arabic number in the nine steps, body and presenter
+    // notes, in both locales, is one this test computes from the two recordings through
+    // `logic.ts`, or one of the references below, which are removed before the numbers are read.
+    const P = TRADITIONAL.vg150_predicate_count;
+    const frames = TRADITIONAL.frames;
+    const n = frames.map((f) => f.detections.length);
+    const relations = frames.map((f) => distinct(traditionalTriplets(f)));
+    const summaries = VLM.frames.map((f) => distinct(f.summary));
+    const between = relations.slice(1).map((_, i) => ({
+      dt: churn(relations[i]!, relations[i + 1]!),
+      dv: churn(summaries[i]!, summaries[i + 1]!),
+    }));
+    const keyframes = KEYFRAME_IDS.map((id) => distinct(VLM.frames.find((f) => f.image_id === id)!.summary));
+    const causes = frames.map((f) => fallbackCauses(f, TRADITIONAL.class_map));
+    const revisions = VLM.frames.flatMap((f) => f.experts.map((e) => rowChange(f.draft, e.revision)));
+    const total = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+    const counts = (c: ReturnType<typeof churn>) =>
+      [c.delta, c.union, c.kept.length, c.added.length, c.removed.length];
+    const figures = [
+      // Each frame's time in the source video: 88 to 106 s, the keyframes 90, 96 and 102 s among them.
+      ...frames.map((f) => f.t),
+      // D-T: detections, ordered pairs and candidate triplets, per frame and over the ten frames.
+      ...n, ...n.map(orderedPairs), ...n.map((k) => candidateTriplets(k, P)),
+      total(n), total(n.map(orderedPairs)), total(n.map((k) => candidateTriplets(k, P))),
+      // |P| = 50, the prior's 80 frames and 892 rows, the detector's threshold.
+      P, TRADITIONAL.prior.frames, TRADITIONAL.prior.rows, TRADITIONAL.detector.threshold,
+      // O_ISG's classes and those COCO cannot name; the vocabularies the prompt carries.
+      Object.keys(TRADITIONAL.o_isg_coco).length, uncoveredClasses(TRADITIONAL.o_isg_coco).length,
+      VLM.O.length, VLM.P.length,
+      // Why D-T's pairs fell back, over the ten frames.
+      total(causes.map((c) => c.unmapped)), total(causes.map((c) => c.unseen)),
+      // Churn between neighbouring frames, both pipelines; the steps, and those where D-V's exceeds D-T's.
+      ...between.flatMap(({ dt, dv }) => [...counts(dt), ...counts(dv)]),
+      between.length, between.filter(({ dt, dv }) => dv.delta > dt.delta).length,
+      // From keyframe to keyframe, as D-V's part 5 marks them.
+      ...keyframes.slice(1).flatMap((k, i) => counts(churn(keyframes[i]!, k))),
+      // D-V: rows each draft emitted and each summary holds; calls per frame, experts, frames, calls.
+      ...VLM.frames.flatMap((f) => [f.draft.length, f.summary.length, f.experts.length]),
+      VLM.calls_per_frame, VLM.frames.length, VLM.calls_per_frame * VLM.frames.length,
+      // The experts' revisions, and those that returned the draft's rows unchanged.
+      revisions.length, revisions.filter((r) => r === 'identical').length,
+    ];
+    const allowed = new Set(figures.map(countText));
+    // Not figures: each is removed, with its reason, before the numbers are read.
+    const references: [RegExp, string][] = [
+      [/<Step id="s\d+">|<Demo [^>]*\/>/g, 'markup: the step and its demo tag'],
+      [/\bs\d+\b/g, 'a step of this module, cited by id'],
+      [/\bM\d+\b/g, 'a module, cited by id'],
+      [/\b[Ss]tep[- ]\d\b|步驟 ?\d/g, "one of the method's three steps"],
+      [/\b[Ee]xpert \d\b|專家 ?\d/g, "an expert's index"],
+      [/Eqs?\. \(\d\)(?: to \(\d\))?|式 ?\(\d\)(?: ?至 ?\(\d\))?/g, "the paper's equation numbers"],
+      [/Figure \d\b|圖 ?\d/g, "the paper's figure number"],
+      [/n\(n − 1\)/g, 'the formula for the ordered pairs'],
+      [/VG-150/g, "the dataset's name"],
+      [/GPT-4V|Qwen\/Qwen3\.8-27B/g, "a model's name"],
+    ];
+    for (const locale of ['en', 'zh-TW'] as const) {
+      const text = source(`../m00.${locale}.mdx`);
+      const steps = getMeta('m00', locale)!.steps.filter((s) => s.kind === 'demo');
+      expect(steps, locale).toHaveLength(9);
+      let read = 0;
+      for (const step of steps) {
+        const start = text.indexOf(`<Step id="${step.id}">`);
+        expect(start, `${locale} ${step.id}`).toBeGreaterThan(-1);
+        const body = text.slice(start, text.indexOf('</Step>', start));
+        const notes = (locale === 'en' ? step.presenter_notes_en : step.presenter_notes_zh) ?? '';
+        for (const [where, prose] of [['body', body], ['notes', notes]] as const) {
+          const rest = references.reduce((t, [pattern]) => t.replace(pattern, ' '), prose);
+          const numbers = rest.match(/\d+(?:,\d{3})*(?:\.\d+)?/g) ?? [];
+          read += numbers.length;
+          expect(numbers.filter((x) => !allowed.has(x)), `${locale} ${step.id} ${where}`).toEqual([]);
+        }
+      }
+      // The check reads figures, not an empty string: the steps state what the recordings hold.
+      expect(read, locale).toBeGreaterThan(40);
     }
   });
 });
