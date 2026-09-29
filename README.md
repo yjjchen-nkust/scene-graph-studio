@@ -347,7 +347,7 @@ M11, so authoring that module was transcription rather than a fresh reading.
 
 * The measured prediction tier, blocked on licences (`data/predictions/PROVENANCE.md`).
 * Slides that run past the bottom of a 1024×768 projector. 25 of the then 92 were reviewed and
-  accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). The ten
+  accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). The eleven
   playgrounds too tall for one panel are split across steps (D96 to D98, D106), and every part fits
   1024×768 in 繁體中文 in every state measured (§20 to §22, §29). In English some parts, and E13's one
   step, still run past it, by up to 163 px, and F2 and F8, one step each, by 24 and 27 px in 繁體中文. The step region scrolls inside

@@ -224,6 +224,7 @@ test('no playground takes focus when its step opens', async ({ page }) => {
     ['m00', 1], ['m00', 2], ['m00', 4], ['m00', 5],
     ['m01', 2], ['m01', 3], ['m01', 5], ['m01', 6], ['m01', 8], ['m01', 9], ['m01', 10],
     ['m02', 2], ['m02', 3], ['m03', 2], ['m03', 3], ['m03', 5], ['m03', 6],
+    ['m05', 2], ['m05', 4], ['m05', 5],
   ] as const) {
     await page.goto(`/lecture/m/${module}/${index}`);
     await expect(page.getByTestId('playground-frame')).toBeVisible();
@@ -432,6 +433,56 @@ test('M4\'s knobs write the address bar', async ({ page }) => {
   await page.goto('/lecture/m/m04/5');
   await page.getByTestId('E4.mode').selectOption('none');
   await expect(page).toHaveURL(/E4\.mode=none/);
+});
+
+test('M5\'s playgrounds compute with no backend running', async ({ page }) => {
+  await page.goto('/lecture/m/m05/2');
+  await expect(page.getByTestId('readout-T1.pairs-value')).toHaveText('240');
+  await expect(page.getByTestId('readout-T1.related-value')).toHaveText('5');
+  await expect(page.getByTestId('readout-T1.slice-value')).toHaveText('651 / 26,282');
+  await page.goto('/lecture/m/m05/4');
+  await expect(page.getByTestId('t2-belief-1-bt')).toHaveText('0.90');
+  // T2's readouts are its second part (D96, D111): the table alone sits on the first.
+  await page.goto('/lecture/m/m05/5');
+  await expect(page.getByTestId('readout-T2.spread-value')).toHaveText('0.8000');
+  await expect(page.getByTestId('readout-T2.bound-value')).toHaveText('0.2065');
+});
+
+test('M5\'s knobs work from the keyboard and never advance the deck', async ({ page }) => {
+  const cases = [
+    { step: 2, knob: 'T1.frame', key: 'ArrowRight', watch: 'readout-T1.rows-value' },
+    { step: 4, knob: 'T2.t', key: 'ArrowRight', watch: 't2-belief-1-bt' },
+    { step: 4, at: '?T2.t=1', knob: 'T2.w', key: 'ArrowRight', watch: 't2-belief-1-bt' },
+    { step: 4, knob: 'T2.graph', key: 'ArrowDown', watch: 't2-belief-1-nb' },
+  ];
+  for (const c of cases) {
+    await page.goto(`/lecture/m/m05/${c.step}${c.at ?? ''}`);
+    const position = page.getByTestId('position');
+    const before = await position.textContent();
+    const watched = page.getByTestId(c.watch);
+    const was = await watched.textContent();
+    await page.getByTestId(c.knob).focus();
+    await page.keyboard.press(c.key);
+    await expect(watched, `${c.knob} moved nothing`).not.toHaveText(was ?? '');
+    await expect(position, `${c.knob} advanced the deck`).toHaveText(before ?? '');
+  }
+});
+
+test('M5\'s knobs write the address bar', async ({ page }) => {
+  await page.goto('/lecture/m/m05/4');
+  await page.getByTestId('T2.graph').selectOption('every');
+  await expect(page).toHaveURL(/T2\.graph=every/);
+  const shared = page.url();
+  await page.goto('about:blank');
+  await page.goto(shared);
+  await expect(page.getByTestId('t2-belief-1-nb')).toHaveText('the other five');
+});
+
+test('M5\'s knobs cross from T2\'s first part to its second', async ({ page }) => {
+  // Review Focus 8: a knob set on T2's first part reaches its second (D96).
+  await page.goto('/lecture/m/m05/4?T2.w=1');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('readout-T2.limit-value')).toHaveText('0.5083');
 });
 
 test('the knobs cross from one part of a playground to the next, and stop at its end', async ({ page }) => {

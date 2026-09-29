@@ -492,7 +492,8 @@ const PLAYGROUND_CASES: {
   {
     module: 'm05',
     kp: 'T2',
-    step: 4,
+    // The readouts are T2's second part (D96, D111); its table alone sits on the first.
+    step: 5,
     act: { kind: 'set', testid: 'T2.t', value: '5' },
     readout: '[data-testid^="t2-belief-"], [data-testid="playground-frame"] [data-testid^="readout-"]',
     why: 'five rounds of the rule re-average every belief and re-measure the distance to b*',

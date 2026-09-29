@@ -39,18 +39,25 @@ steps:
   - id: s5
     kind: playground
     kp: T2
+    part: 1
+    seconds_budget: 90
+    presenter_notes_zh: "九十秒。六個信念各與其鄰居並列。w = 0.5 時將 t 由 0 調至 5：table 有四個鄰居，由 0.90 降至 0.70；box 僅有一個鄰居，於 t = 1 升至 0.80 後回到 0.70。改選每一物件配對，則每一物件對其餘五個物件取平均。下一步驟說明信念之收斂位置。"
+  - id: s6
+    kind: playground
+    kp: T2
+    part: 2
     seconds_budget: 90
     presenter_notes_zh: "九十秒。以標註之關係、w = 0.5 開啟，將 t 由 0 調至 5：全距由 0.8000 降至 0.3941，並趨近 b* 之全距 0.3924，並非共識；每一 t 與 b* 之距離均不超過其界限。w = 0.9 時 b* 之全距為 0.1105。唯有 w = 1 時信念方趨於一致，其值為 0.5083，即依分支度加權之平均，而非算術平均 0.4833：table 有四個鄰居，box 僅有一個。改選每一物件配對並令 w = 1，兩種平均均為 0.4833，因此時每一物件皆有五個鄰居。"
-  - id: s6
+  - id: s7
     kind: prose
     seconds_budget: 300
     presenter_notes_zh: "五分鐘，五項並列，不宜逐一展開。重點有二：使該領域難堪的 FREQ 基線即發表於 Neural Motifs 論文之內；mean recall 遲至 2019 年方由 KERN 與 VCTree 各自獨立提出，在此之前全部工作均以一項看不見長尾的指標排名。第二點宜作為本頁收束，並直接接往 M06。"
-  - id: s7
+  - id: s8
     kind: lab
     lab: L4
     seconds_budget: 420
     presenter_notes_zh: "L4 七分鐘。觀察順序須嚴格：先看各模型一致之處，即僅憑頻率先驗即可取得的頭部 predicate；再看長尾。四年架構演進之間的差距何等有限，唯有依此順序觀察方能顯現，順序顛倒則失去效果。"
-  - id: s8
+  - id: s9
     kind: checkpoint
     presenter_notes_zh: "檢核點，對應 w = 1 時之趨同。可接受的答案包括 GPS-Net 的節點優先序損失（使高信心物件不致被低信心鄰居覆寫）與 VCTree 的動態樹（限制訊息流動的結構）。代價方面：前者需額外的信心估計且引入新的超參數，後者需逐影像建構結構故成本上升。若現場僅答出設計而未答代價，請追問代價。"
 ---
@@ -178,13 +185,21 @@ IMP 之後的全部工作皆為對此的回應。Neural Motifs 以固定物件�
 
 <Step id="s5">
 
-## 平均運算下之信念
+## 六個信念之逐輪變化
 
-<Playground kp="T2" />
+<Playground kp="T2" part="1" />
 
 </Step>
 
 <Step id="s6">
+
+## 信念之收斂位置
+
+<Playground kp="T2" part="2" />
+
+</Step>
+
+<Step id="s7">
 
 ## 各方法的實際貢獻
 
@@ -200,7 +215,7 @@ mean recall 於 2019 年出現，由 KERN 與 VCTree 各自獨立提出。在此
 
 </Step>
 
-<Step id="s7">
+<Step id="s8">
 
 ## 實作單元的內容
 
@@ -208,7 +223,7 @@ L4 將上述各模型之預測（存於 `data/predictions/`）於同一影像上
 
 </Step>
 
-<Step id="s8">
+<Step id="s9">
 
 ## 檢核點
 

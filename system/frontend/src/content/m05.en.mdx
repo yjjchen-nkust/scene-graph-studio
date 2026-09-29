@@ -39,18 +39,25 @@ steps:
   - id: s5
     kind: playground
     kp: T2
+    part: 1
+    seconds_budget: 90
+    presenter_notes_en: "Ninety seconds. Six beliefs, each beside its neighbours. At w = 0.5 step t from 0 to 5: the table, with four neighbours, falls from 0.90 to 0.70; the box, with one, rises to 0.80 at t = 1 and returns to 0.70. Switch to every pair and each object averages the other five. The next step reads where they settle."
+  - id: s6
+    kind: playground
+    kp: T2
+    part: 2
     seconds_budget: 90
     presenter_notes_en: "Ninety seconds. Open on the annotated relations at w = 0.5 and step t from 0 to 5: the spread falls from 0.8000 to 0.3941 and settles near 0.3924, the spread at b*, which is no consensus; the distance to b* stays under its bound at every t. At w = 0.9 the spread at b* is 0.1105. Only at w = 1 do the beliefs meet, at 0.5083, the degree-weighted mean, not the plain mean 0.4833: the table has four neighbours and the box one. Switch to every pair at w = 1 and the two means agree, 0.4833, since every object then has five neighbours."
-  - id: s6
+  - id: s7
     kind: prose
     seconds_budget: 300
     presenter_notes_en: "Five minutes across five methods, none of them opened up. Two things carry the page. The FREQ baseline that humiliated the field was published inside the Neural Motifs paper itself. And mean recall did not arrive until 2019, from KERN and VCTree independently, so everything before it was ranked by a metric that could not see the long tail. Close on the second and walk straight into M06."
-  - id: s7
+  - id: s8
     kind: lab
     lab: L4
     seconds_budget: 420
     presenter_notes_en: "Seven minutes on L4, and the order of looking matters. First where the models agree — the head predicates, the ones the frequency prior alone already gets. Then the tail. How little four years of architecture moved only shows up in that order; reversed, the point is lost."
-  - id: s8
+  - id: s9
     kind: checkpoint
     presenter_notes_en: "Checkpoint, on the collapse at w = 1. Acceptable answers include GPS-Net's node-priority loss, which stops a confident object being overwritten by an unconfident neighbour, and VCTree's dynamic tree, which restricts where messages can flow at all. The costs: the first needs a confidence estimate and a new hyperparameter, the second builds a structure per image and pays for it. If only the design comes back, ask for the cost."
 ---
@@ -206,13 +213,21 @@ Read them as four attempts to keep the context without averaging away each node'
 
 <Step id="s5">
 
-## Beliefs under averaging
+## Six beliefs, round by round
 
-<Playground kp="T2" />
+<Playground kp="T2" part="1" />
 
 </Step>
 
 <Step id="s6">
+
+## Where the beliefs settle
+
+<Playground kp="T2" part="2" />
+
+</Step>
+
+<Step id="s7">
 
 ## What each one actually contributed
 
@@ -235,7 +250,7 @@ was ranked on a metric that could not see the tail.
 
 </Step>
 
-<Step id="s7">
+<Step id="s8">
 
 ## In the lab
 
@@ -245,7 +260,7 @@ Then look at the tail, and at how little separates four years of architecture.
 
 </Step>
 
-<Step id="s8">
+<Step id="s9">
 
 ## Checkpoint
 

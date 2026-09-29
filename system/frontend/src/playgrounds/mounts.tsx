@@ -52,7 +52,7 @@ export const PLAYGROUND_IDS: string[] = Object.keys(PLAYGROUND_MOUNTS).sort();
 /**
  * The playgrounds too long for one panel, and how many consecutive steps each spans.
  *
- * At 1024×768 a step shows 561 px, and each of these ten is taller than that by its frame alone
+ * At 1024×768 a step shows 561 px, and each of these eleven is taller than that by its frame alone
  * (D96). A point absent here is one step. `content_lint.mjs` reads this table as it reads the one
  * above, and refuses a step naming a part the table does not give.
  */
@@ -66,5 +66,6 @@ export const PLAYGROUND_PARTS: Record<string, number> = {
   F3: 2,
   F6: 2,
   F7: 2,
+  T2: 2,
   X1: 3,
 };

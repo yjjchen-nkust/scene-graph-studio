@@ -944,12 +944,12 @@ describe('the playground step kind', () => {
     ]);
   });
 
-  it('M5 carries T1 and T2 directly after the steps that teach them', () => {
+  it('M5 carries T1, and T2 in two parts, directly after the steps that teach them', () => {
     const meta = getMeta('m05', 'en')!;
     const part = (n?: number) => (n === undefined ? '' : `.${n}`);
     expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}${part(s.part)}` : ''}`)).toEqual([
-      's1:prose', 's2:math', 's3:playground/T1', 's4:math', 's5:playground/T2', 's6:prose', 's7:lab',
-      's8:checkpoint',
+      's1:prose', 's2:math', 's3:playground/T1', 's4:math', 's5:playground/T2.1', 's6:playground/T2.2',
+      's7:prose', 's8:lab', 's9:checkpoint',
     ]);
     for (const step of getModule('m05', 'zh-TW')!.filter((s) => s.kind === 'playground')) {
       const mounted = render(<MemoryRouter initialEntries={['/m/m05']}>{step.node}</MemoryRouter>);

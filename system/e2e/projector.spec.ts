@@ -29,7 +29,10 @@ import { expect, test, type Page } from '@playwright/test';
  * knob's largest, mode `none` and m = 10, which is the pool each grows to), the state where the
  * ranked list shows every row and the readouts' notes list the most matched ground truths. E13 at
  * d = 5 under MultiMPO and X2 at m = 70 are not split, but carry the same longest-state fit and
- * clip checks as the parts above.
+ * clip checks as the parts above. T1 at rank 80, where the numbers are widest, is not split
+ * either. T2's second part at w < 1 and w = 1 is, since its readouts differ: distance and bound
+ * show below 1, the limit and the mean at 1, and `every` at w = 1 widens the neighbour list to
+ * "the other five" on every row of the first part.
  */
 const PARTS_LONGEST = [
   'm00/1', 'm00/2',
@@ -44,6 +47,9 @@ const PARTS_LONGEST = [
   'm04/5?E4.mode=graph&E4.k=12&E4.row=2', 'm04/6?E4.mode=none&E4.k=12',
   'm04/9?E7.m=1&E7.k=12&E7.row=2', 'm04/10?E7.m=10&E7.k=12',
   'm04/13?E13.multi=1&E13.d=5', 'm04/15?X2.m=70',
+  'm05/2?T1.frame=80',
+  'm05/4?T2.w=0.95&T2.t=40', 'm05/4?T2.w=1&T2.t=40', 'm05/4?T2.graph=every&T2.w=1&T2.t=5',
+  'm05/5?T2.w=0.95&T2.t=40', 'm05/5?T2.w=1&T2.t=40', 'm05/5?T2.graph=every&T2.w=1&T2.t=5',
 ];
 
 const SIZES = [
@@ -382,7 +388,7 @@ for (const size of SIZES) {
       // and 20 on F7's, and 34, 18 and 19 on X1's, at every panel size (2026-09-26, D96); and 26 and 16 on
       // F3's (2026-09-27, D97); 25 and 19 on E1's and 10 and 22 on E10's (2026-09-27, D98); and
       // 12 and 82 on E3's, 11 and 85 on E4's, 12 and 83 on E7's, 32 on E13's and 19 on X2's
-      // (2026-09-28, D106).
+      // (2026-09-28, D106). And 27 on T1's and 41 and 22 on T2's two parts (2026-09-29, D111).
       // `toBeGreaterThan(3)` was kept here after the oklch finding with a comment explaining why it had failed to catch it,
       // which is a floor known to be inadequate left in place. These are set below the
       // measured counts so ordinary content edits do not trip them, and far enough above zero
@@ -414,6 +420,9 @@ for (const size of SIZES) {
         { module: 'm04', step: 10, floor: 70 },
         { module: 'm04', step: 13, floor: 25 },
         { module: 'm04', step: 15, floor: 14 },
+        { module: 'm05', step: 2, floor: 21 },
+        { module: 'm05', step: 4, floor: 32 },
+        { module: 'm05', step: 5, floor: 17 },
       ];
       for (const { module, step, floor } of pages) {
         await page.goto(`/lecture/m/${module}/${step}`);
@@ -463,6 +472,7 @@ for (const size of SIZES) {
         ...[0, 1, 2, 3, 4, 5, 6, 7].map((s) => ['m02', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => ['m03', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map((s) => ['m04', s] as const),
+        ...[2, 4, 5].map((s) => ['m05', s] as const),
       ]) {
         await page.goto(`/lecture/m/${module}/${step}`);
         await expect(page.getByTestId('lecture-root')).toBeVisible();
@@ -506,6 +516,7 @@ for (const size of SIZES) {
         'm01/2', 'm01/3', 'm01/5', 'm01/6', 'm01/8', 'm01/9', 'm01/10',
         'm02/2', 'm02/3', 'm03/2', 'm03/3', 'm03/5', 'm03/6',
         'm04/2', 'm04/3', 'm04/5', 'm04/6', 'm04/9', 'm04/10', 'm04/13', 'm04/15',
+        'm05/2', 'm05/4', 'm05/5',
       ]) {
         await page.goto(`/lecture/m/${where}`);
         const controls = page.getByTestId('playground-controls');

@@ -83,7 +83,7 @@ cd scene-graph-studio\system ; npm run ci
   longest state, 96.5 px at Δx = 18, with every readout correct (D97), and
   `F3, E1, E10, E3, E4 and E7 draw their marks on their photographs` now measures that (D98, D106).
 - **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
-  in both locales (**D76**). All 119 steps carry theirs; 238 notes.
+  in both locales (**D76**). All 120 steps carry theirs; 240 notes.
 - **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and
   `npm run lint:standalone` asserts they agree. Edit the source, then run
   `npm run build:standalone` in the same commit.
@@ -134,7 +134,7 @@ cd scene-graph-studio\system ; npm run ci
   playgrounds keep the measured default, and their records (D95 to D102) measure it (D106);
   `playgrounds/test/Playground.test.tsx` requires the dense frame of exactly E3, E4, E7, E13 and X2.
   **A playground too tall for one panel spans consecutive steps as parts** (D96): `part: n` on
-  each step and its tag, the count in `PLAYGROUND_PARTS` in `mounts.tsx`, E1, E10, E3, E4, E7, F1, F3, F6 and F7 in two
+  each step and its tag, the count in `PLAYGROUND_PARTS` in `mounts.tsx`, E1, E10, E3, E4, E7, F1, F3, F6, F7 and T2 in two
   and X1 in three. The stepper carries the knobs between the parts of one playground and nowhere
   else, and the projector suite asserts that every part fits 1024×768 in 繁體中文 in its longest
   state. **F6 and F7 count distinct triplets** (D96): E is a set, and 208 of the slice's 892

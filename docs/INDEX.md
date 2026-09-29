@@ -224,7 +224,7 @@ jsdom for the rule and in Chromium for the hit testing jsdom does not have.
 **Presenter notes are complete, 2026-09-19.** All 95 steps carry them in both locales, 190 in
 total [**corrected 2026-09-26:** 92 steps and 184 notes on this date, as first written and as this
 paragraph's last sentence says; 95 and 190 replaced them on 2026-09-20, after M0's playgrounds,
-the corpus held 98 steps and 196 notes after M1's playgrounds, held 103 and 206 after D96, 105 and 210 after D97, 109 and 218 after D98, 117 and 234 after D106, and holds 119 and 238 since D111], written against each step's own content: what
+the corpus held 98 steps and 196 notes after M1's playgrounds, held 103 and 206 after D96, 105 and 210 after D97, 109 and 218 after D98, 117 and 234 after D106, and holds 120 and 240 since D111], written against each step's own content: what
 has to land, what to put on the board before
 the slide does, what the room usually gets wrong, what to compress when the clock is short. They
 are procedural rather than expository — none introduces a claim its module does not already make.
