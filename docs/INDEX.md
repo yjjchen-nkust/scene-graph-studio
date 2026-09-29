@@ -28,6 +28,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/specs/2026-09-27-playgrounds-m3-design.md` | E1, E10, and four statements about matching and protocols the engine and sources contradict | **executed** |
 | `superpowers/specs/2026-09-27-graph-constraint-key-design.md` | The graph and semi constraints keyed on object pairs, as the reference keys them | **executed** |
 | `superpowers/specs/2026-09-28-playgrounds-m4-design.md` | E3, E4, E7, E13, X2, and five statements about constraints, blends and VRD's per-pair count the engine contradicts | **executed** |
+| `superpowers/specs/2026-09-29-playgrounds-m5-design.md` | T1, T2, and the pair and averaging statements the corpus and M5's derivation contradict | **executed** |
 | `superpowers/plans/…-00-master.md` | Index, dependency graph, global constraints | live |
 | `superpowers/plans/…-01-skeleton-and-eval-engine.md` | Phases 1–2 | **executed** |
 | `superpowers/plans/…-02-graph-labs-and-content.md` | Phases 3–4: graph, L1, L2, harvest, corpus | **executed** |
@@ -39,9 +40,10 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-27-playgrounds-m3.md` | M3's corrections, `PhotoMarks`, E1 and E10, their golden cases, M3 s3 to s7 | **executed** |
 | `superpowers/plans/2026-09-27-graph-constraint-key.md` | Both engines re-keyed, gv-014, `semi` described, D51 corrected | **executed** |
 | `superpowers/plans/2026-09-28-playgrounds-m4.md` | M4's corrections, the ranked list and its arithmetic, E3, E4, E7, E13 and X2, their golden cases, M4 s3 to s16 | **executed** |
+| `superpowers/plans/2026-09-29-playgrounds-m5.md` | M5's corrections, the slice ordered and the six beliefs, T1 and T2, their golden cases, M5 s3, s5 and s6 | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D110. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28) and the M4 playgrounds (§29)** | live |
+| `../DEVIATIONS.md` | **D1…D111. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28), the M4 playgrounds (§29) and the M5 playgrounds (§30)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | The freeze, its release by D-23, and every correction made under it | live |
 
@@ -420,15 +422,35 @@ modules citing M4's steps by their old ids; the first parts now name the chosen 
 and E7, the pool, the citations name s13, s8 and s17, s12's blend is the score σ_p(λ), and the
 brief's unconditioned R@k ≤ PR@k is left open. See D106 and VERIFICATION §29.
 
-**Verification.** `npm run ci` green, 2026-09-28, after D106's final review: **287 pytest** and 7 skipped, parity 21 agree, i18n 380 keys both locales,
-**1016 vitest** in 74 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
-assigned, 48 symbols, 64 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
+**M5's playgrounds, T1 and T2, 2026-09-29.** T1 sets a frame's ordered pairs, N(N − 1), and its
+N(N − 1) · 50 decisions over VG150's 50 predicates against the relationship rows and the related
+ordered pairs the frame annotates, over the 80 frames of the vg150-sgb slice ordered by object
+count: 5 of 240 pairs are related at the median frame, and 651 of 26,282 over the slice. T2 runs
+the course's averaging rule, b⁽ᵗ⁺¹⁾ = (1 − w)b⁽⁰⁾ + wSb⁽ᵗ⁾, on `ph-001`'s six objects over their
+annotated relations or every pair, and shows the six beliefs, their spread, for w < 1 the distance
+to the fixed point beside its bound wᵗ‖b⁽⁰⁾ − b*‖∞, and at w = 1 the degree-weighted mean they
+converge to, 0.5083 against the plain mean 0.4833. Each follows the math step that teaches it, T2 in two
+parts, M5 going from 6 steps to 9. Two statements were corrected first (M5's step ids before the
+insertion): s2 set GQA's 310 predicates against Visual Genome's relation rate, where the course's
+corpus is VG150 with 50, and s3 claimed consensus for every w > 0, reached its fixed point in one
+round under a whole-graph mean and wrote a per-step contraction that the checkpoint repeated. For
+w < 1 the beliefs settle at a fixed point that keeps each node's own evidence, at a spread of
+0.3924 when w = 0.5, and only at w = 1, on a connected graph with an odd cycle, do they meet. M7,
+which quoted M5's old rate, and the map's Proposition 6 were corrected with them. The averaging
+matrix is written S, since M2's A is area; CLAUDE.md's rule for what a playground computes now
+admits a value of the rule its step teaches; and both frames take M4's `dense`. Two M4 tests of
+`registry.test.tsx`, which contention ran past vitest's 5000 ms default in four of the branch's
+tasks, carry a measured timeout of 20,000 ms. See D111 and VERIFICATION §30.
+
+**Verification.** `npm run ci` green, 2026-09-29, on branch `feat/playgrounds-m5` with D111's records: **287 pytest** and 7 skipped, parity 21 agree, i18n 418 keys both locales,
+**1079 vitest** in 76 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+assigned, 50 symbols, 75 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (254 equations), frontend builds. `npm run test:e2e`,
-2026-09-28, on branch `feat/playgrounds-m4` at `b57328b`:
-79 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
+2026-09-29, on branch `feat/playgrounds-m5` at `b3013b9`:
+83 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
-check:perf`, 2026-09-28, on branch `feat/playgrounds-m4` at `b57328b`: 28 passed, NFR-8 measured over five labs and the fourteen playgrounds of M0 to M4, plus the D75 selection guard; since D111 it measures five labs and sixteen playgrounds.
+check:perf`, 2026-09-29, on branch `feat/playgrounds-m5` at `b3013b9`: 30 passed, NFR-8 measured over five labs and sixteen playgrounds, plus the D75 selection guard.
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in

@@ -844,6 +844,30 @@ describe('the playground step kind', () => {
     }
   });
 
+  it("the records carry D111 and M5's playgrounds", () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    const d111 = record(deviations, 'D111').replace(/\s+/g, ' ');
+    expect(deviations).toContain(
+      "## D111 — M5's playgrounds, T1 and T2, and the pair and averaging statements the corpus and the derivation contradicted",
+    );
+    expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 30. ');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 111, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 111, 'CLAUDE.md deviations');
+    expect(claude).toContain('§30 the M5 playgrounds');
+    expect(index).toContain('the M5 playgrounds (§30)');
+    atLeast(readme, /`npm run test:e2e` is (\d+)/, 82, 'README e2e');
+    atLeast(readme, /`npm run check:perf` is (\d+)/, 30, 'README perf');
+    // The corpus figures, the averaging values, where the branch was cut, and the data no commit shows.
+    for (const item of ['651', '26,282', '0.3924', '0.5083', '0.4833', 'dfe4dc4', 'D109', 'playground_golden.json', 'M7']) {
+      expect(d111, item).toContain(item);
+    }
+  });
+
   it('the records state as many playgrounds, uncovered live points and steps as the code holds', () => {
     // Taken from the mount table, the harvest and the modules, as the vectors' count is taken from
     // their file: a bound passes a count left stale (D104's branch review, D106).

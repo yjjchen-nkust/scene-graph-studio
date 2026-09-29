@@ -30,6 +30,12 @@ each with the alternative it rejects, and stand for the author's review before t
 | T2's graph | **ph-001's six objects**, with a two-way choice of neighbourhood: the annotated relations, or every other object, as IMP connects every pair. Rejected: the map's eight invented objects and its whole-graph mean, under which its iteration slider changes nothing after the first round (§2). |
 | T2's rule | **The course's linear rule, corrected** (§3), and stated as a model of repeated averaging, not as IMP's update, which is learned. |
 
+[**As built (D111):** the reason the "T1's data" row gives for rejecting GQA's 310 is wrong. 310 is
+sourced: it is GQA's predicate count in the anchor paper's Table 1, which the map reproduces
+(`index.html:293`). The choice stands for the reason §2's correction gives: the course's corpus is
+VG150, with 50 predicates, and the old line set GQA's predicates against Visual Genome's relation
+rate.]
+
 ---
 
 ## 2. What the sources say
@@ -115,6 +121,12 @@ these claims (searched 2026-09-29).
   line and T2's every pair do, the error shrinks by w/(n − 1) per round and alternates in sign, and
   b* is not reached in one round (every pair, w = 0.5, t = 1: distance 0.0227). The Implications
   name the node included.]
+  [**As built (D111):** s3's Implications say "i included" and write the update as
+  b ↦ (1 − w)b⁽⁰⁾ + w b̄ 𝟏, not as S = 𝟏𝟏ᵀ/n, so that S names one matrix, the neighbourhood
+  average. The w = 1 statements carry their hypothesis, a connected graph with an odd cycle,
+  wherever they are made, since a tree is bipartite and can oscillate (Task 1's review). A test
+  holds both sides: the rule with the node included reaches b* in one round, and every pair at
+  w = 0.5 stands 0.0227 from b* after one.]
 - **s6.** The checkpoint asks about the collapse at w = 1 rather than a per-step contraction; its
   presenter note keeps its acceptable answers.
 - **s5.** "the committed predictions" becomes "the predictions in `data/predictions/`": nothing under
@@ -123,6 +135,10 @@ these claims (searched 2026-09-29).
 - [**Added (plan review):**] **M7.** Its s1 body and presenter note quote M5's old rate, "about one
   candidate pair in a hundred thousand" (`m07.en.mdx:19`, `:45`, and the same lines in 繁體中文).
   Once s2 is corrected that rate is stated nowhere, so M7 carries the corrected one.
+  [**As built (D111):** M7's s1 body and presenter note, in both locales, state that at VG150's
+  50 predicates about one decision in a thousand is positive for an image of twelve objects, and
+  about one in forty-five thousand (四萬五千) once a detector keeps 80 boxes. Nothing else in M7
+  changed.]
 
 ---
 
@@ -160,12 +176,21 @@ row-normalised neighbourhood of a graph; one round of the rule; t rounds; the fi
 elimination on (I − wA) b = (1 − w) b⁽⁰⁾; the max-norm distance; the spread; and the degree-weighted
 mean. Nothing here touches `sgg-metrics`: no metric is computed.
 
+[**As built (D111):** eleven functions, with the neighbour lists, the plain mean and `decimals`,
+which prints a tie the same whichever side of it the arithmetic lands. T2's review added `sum` and
+`degreeWeightedParts`, so that the limit and its note read one computation.]
+
 ---
 
 ## 5. The playgrounds
 
 Parts follow D96, the count set in `PLAYGROUND_PARTS` by measurement at 1024 × 768 in 繁體中文 in the
 longest state.
+
+[**As built (D111):** both frames are `clip={false}` and `dense`. Neither draws a picture (D93);
+neither has an earlier measurement that `dense` would move, which is why `dense` was M4's opt-in
+(D106); and T1 carries six readouts and T2 a six-row table beside three, where X2's four ran 74 px
+past 1024 × 768 at the base spacing (D106).]
 
 ### 5.1 T1, after s2: pairs against relations
 
@@ -182,6 +207,13 @@ named with its neighbours; their spread; for w < 1, ‖b⁽ᵗ⁾ − b*‖∞ b
 w = 1, the value the beliefs converge to, Σⱼ dⱼ b⁽⁰⁾ⱼ / Σⱼ dⱼ, beside the plain mean. Beliefs to two
 decimals, spread, distance and bound to four.
 
+[**As built (D111):** T2 also carries a line naming the regime (w = 0, 0 < w < 1 or w = 1) and a
+line saying that the rule models averaging and is not IMP's update. As one step, in its longest
+states at 1024 × 768, it ran 44 to 67 px past the panel in 繁體中文 (91 to 114 px in English), and
+it was split in two: part 1, s5, the regime line and the table; part 2, s6, the regime line, the
+readouts and the line on IMP; the three knobs on both. Each part then fit in both locales. T1 fit
+at ranks 1 and 80 in both locales and stays one step.]
+
 ---
 
 ## 6. Testing
@@ -192,6 +224,11 @@ the rule, and the bound at every t from 0 to 40 for every w on the knob and both
 **Golden cases** in `data/content/playground_golden.json`, each `why` writing out its arithmetic: T1 at
 ranks 1, 40 and 80 and the slice totals; T2 at (relations, 0.5, t = 0, 1, 5), (relations, 0.9, 10),
 (relations, 1, 40), (every pair, 0.9, 1) and (every pair, 1, 5).
+[**As built (D111):** the golden cases were written after the steps were inserted and T1 and T2
+registered, as M4's were (D106): `content_lint.mjs` refuses a golden case for an unregistered
+playground, and `KnowledgeIndex.test.tsx` fails for a registered playground with no lecture step.
+With the cases written and no block to run them, the golden test failed 1 of 68; with the blocks it
+passed 80.]
 
 **Structure, in jsdom.** Each component in both locales; no focus on mount; `registry.test.tsx` pins
 M5's new step ids.
@@ -208,6 +245,9 @@ new steps join the contrast walk and the 18 px floor at all three sizes; each pa
 One deviation, with §2's findings and the corrections; one VERIFICATION section; `FROZEN.md` entries;
 CLAUDE.md, INDEX and README updated in the same commit as the run they quote: 16 playgrounds, 12 live
 points without one, the step and note counts, the test counts.
+[**As built (D111):** the counts the records test reads at every `npm run ci` were updated in the
+commits that changed them, the registration's and the split's; the test counts in the records
+commit, with the run they quote.]
 
 Branch `feat/playgrounds-m5`, from `main` at `dfe4dc4`. Before merge: `npm run ci`,
 `npm run test:e2e` and `npm run check:perf`, all exit 0, then a review pass.
@@ -222,6 +262,10 @@ Branch `feat/playgrounds-m5`, from `main` at `dfe4dc4`. Before merge: `npm run c
   [**Amended (plan review):** T1's toy therefore keeps its readout "real relations ~20, per image,
   VG150"; its corrected note attributes the 20 to the original Visual Genome. T2's toy keeps its
   whole-graph mean; its corrected note says the iteration slider changes nothing after one round.]
+  [**As built (D111):** the map's Proposition 6 (`index.html` §2.10), which carried s2's old
+  figures, was corrected too, in both languages (Task 1's review). M7, which this spec does not
+  otherwise touch, changed in its s1 body and presenter note only, for the rate it quotes from M5
+  (§3); none of its points gained a playground.]
 * Any recall, mean recall or score in a playground.
 * The other twelve live points.
 

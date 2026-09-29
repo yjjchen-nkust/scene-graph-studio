@@ -1694,3 +1694,181 @@ theirs. Cold starts read 209 to 317 ms.
 **Open.** M7 is recorded in D106: the brief's R@k ≤ PR@k for pair recall needs the graph
 constraint, and a counterexample run on the engine for that record gives R@2 = 2/3 under `none`
 with 1 of 2 annotated pairs covered.
+
+## 30. The M5 playgrounds — measured, 2026-09-29
+
+D111. Every number below is from the run that produced it, on branch `feat/playgrounds-m5`, from
+`main` at `dfe4dc4`. `npm run test:e2e` and `npm run check:perf` were run on `b3013b9`, the
+branch's last commit before its records, with this record's test added, and read none of the
+records; `npm run ci` was run on the records commit's tree. Apart from the records themselves the
+tree was clean after each run, and nothing under `data/` appeared in `git status`.
+
+| Step | Result |
+|---|---|
+| harvest | 93 knowledge points, 27 live; 26 formulas and 23 derivations, unchanged in number after M5's corrections |
+| pytest | 287 passed, 7 skipped |
+| vitest | **1079 passed in 76 files** (1020 in 74 before) |
+| parity | 21 cases agree |
+| i18n parity | **418 keys**, both locales complete (380 before); **27** carry a placeholder (20 before), all agreeing |
+| content lint | 21 golden cases, **75 playground cases** (64 before), 25 release figures, 7 licence rows, 15 of 15 modules × 2 locales, 93 points assigned, **50 symbols** (48 before), clean |
+| frozen lints | no problems; 26 playgrounds, 26 formulas, 23 derivations |
+| standalone | up to date, 254 equations, 1063 KB |
+| frontend build | **790 modules** (786 before) |
+| `npm run test:e2e` | **83 passed** (79 before), 2.0 min |
+| `npm run check:perf` | **30 passed** (28 before), 36.3 s |
+
+The "before" column is `main` at `dfe4dc4`, as D110 and D106's final review measured it. The corpus
+holds 120 steps a locale and 240 presenter notes (117 and 234 before); content lint does not print
+the number, and the records test counts it from the modules.
+
+**vitest's 5000 ms timeout.** Before the change below, six runs of `npm run ci` on this tree failed
+at vitest, each only on a timeout in M4 tests of `registry.test.tsx`: "M4 derives only what the
+engine and the definitions force" and "M4 carries E3, E4, E7, E13 and X2 directly after the steps
+that teach them" at 8,009 and 8,941 ms in the first, and one of them at 5,555, 6,201, 6,278, 5,767
+and 5,917 ms in the next five, while another session's Python jobs held the machine's processors.
+Alone the two take 1,299 and 639 ms, and within their file alone 4 to 8 s. The failure reproduced
+on `b3013b9` with this record's changes stashed (5,696 ms), so the records did not cause it.
+`npx vitest run --testTimeout=20000` passed 1079 of 1079, the two at 2,077 and 187 ms.
+
+On the controller's ruling (D111, R10) the two tests carry an explicit timeout of 20,000 ms,
+vitest's third argument to `it`, each with a one-line comment stating its measurement (`62c76d2`);
+the global timeout and every other test are unchanged. The bound is more than twice the slowest
+time measured. After it:
+
+| Run | Tree | Result | M4 derives | M4 carries |
+|---|---|---|---|---|
+| `npm run ci`, first run | `62c76d2` | exit 0, 1078 tests | 3,064 ms | 6,050 ms |
+| `npm run ci`, first run | this record's | exit 0, 1079 tests | 5,173 ms | 5,991 ms |
+
+Three of the four times exceed vitest's default; the table at the head of this section is the
+second run, and `npm run ci` passed again on the commit's final text. The build hit the same
+timeout in Tasks 1, 6 and 7 (D111).
+
+### The corrections
+
+A test reads both M5 locale files, the harvested `math.json` and `deriv.json`, the map's `pg.js`
+and `index.html`, and both M7 files. Each M5 file carries `\lvert\mathcal{P}\rvert=50\ (\text{VG150})`,
+`6{,}320\cdot 50=316{,}000`, `651 \text{ of } 26{,}282`, `(1-w)(I-wS)^{-1}\,b^{(0)}`,
+`(I-wS)\,b^{\ast}=(1-w)\,b^{(0)}`, the contraction bound
+`\lVert b^{(t)}-b^{\ast}\rVert_\infty\le w^{t}\,\lVert b^{(0)}-b^{\ast}\rVert_\infty`,
+`d^{\top}S &= d^{\top}`, `i \text{ included}`, `w\,\overline{b}\,\mathbf{1}` and
+`data/predictions/`, and none carries `\lvert\mathcal{P}\rvert=310`, `1{,}958{,}800`, `\approx 20`,
+`(1-w^t)`, "per step", "information destroyed", "committed predictions", `{w>0}`, `(I-wA)`,
+`w\,A\,b`, `d^{\top}A` or `\pi`. The English file says "odd cycle" and not "hundred thousand"; the
+繁體中文 file says 奇數長度迴路 and none of 每十萬, 每步收縮 and 既存預測. Both symbol tables hold S
+and 𝒩(i). M7 says "forty-five thousand" and 四萬五千, and neither "hundred thousand" nor 十萬.
+`math.T2` carries `(I-wS)^{-1}`, `deriv.T1` carries `316{,}000` and not `310`, and `deriv.T2`
+carries `d^{\top}S &= d^{\top}` and neither `(1-w^t)` nor "per step". The map's T1 notes carry
+316,000 and neither 310 nor GQA; its T2 notes carry "degree-weighted mean" and 依分支度加權之平均;
+Proposition 6 carries `80\cdot 79\cdot 50=316{,}000` and not `1{,}958{,}800`. Before the change the
+test failed on its first required string. It also renders every M5 math step in both locales and
+finds no KaTeX error.
+
+### The arithmetic
+
+T1, the 80 frames of the vg150-sgb slice by object count and then by image id as a number, with
+|P| = 50:
+
+| Rank | Frame | N | Ordered pairs | Decisions | Rows | Related pairs |
+|---|---|---|---|---|---|---|
+| 1 | 2045 | 4 | 12 | 600 | 4 | 2 |
+| 2 | 4176 | 4 | 12 | 600 | 18 | 7 |
+| 40 | 547 | 16 | 240 | 12,000 | 5 | 5 |
+| 41 | 1246 | 16 | 240 | 12,000 | 8 | 8 |
+| 80 | 3182 | 39 | 1,482 | 74,100 | 45 | 29 |
+| all 80 | — | 1,348 | 26,282 | — | 892 | 651 |
+
+T2, `ph-001`'s six objects with b⁽⁰⁾ = (0.9, 0.2, 0.7, 0.4, 0.1, 0.6) for table, person, box,
+glove, wrench and panel; b⁽ᵗ⁾ in that order, the rest to four decimals:
+
+| Graph | w | t | b⁽ᵗ⁾ | Spread | Distance | Bound | At b* or the limit |
+|---|---|---|---|---|---|---|---|
+| relations | 0.5 | 0 | 0.9000, 0.2000, 0.7000, 0.4000, 0.1000, 0.6000 | 0.8000 | 0.2065 | 0.2065 | spread 0.3924 |
+| relations | 0.5 | 1 | 0.6500, 0.3333, 0.8000, 0.3000, 0.3250, 0.7500 | 0.5000 | 0.1011 | 0.1032 | spread 0.3924 |
+| relations | 0.5 | 5 | 0.6962, 0.3288, 0.7011, 0.3629, 0.3070, 0.6511 | 0.3941 | 0.0022 | 0.0065 | spread 0.3924 |
+| relations | 0.9 | 10 | 0.5614, 0.4561, 0.5539, 0.4623, 0.4631, 0.5439 | 0.1053 | 0.0122 | 0.1276 | spread 0.1105 |
+| relations | 1 | 40 | 0.5084, 0.5083, 0.5082, 0.5084, 0.5083, 0.5082 | 0.0002 | — | — | limit 0.5083, mean 0.4833 |
+| every pair | 0.9 | 1 | 0.4500, 0.5060, 0.4660, 0.4900, 0.5140, 0.4740 | 0.0640 | 0.0686 | 0.3432 | spread 0.0678 |
+| every pair | 1 | 5 | 0.4832, 0.4834, 0.4833, 0.4834, 0.4835, 0.4833 | 0.0003 | — | — | limit 0.4833, mean 0.4833 |
+
+At w = 1 no fixed point is solved: `fixedPoint` returns null, and the playground shows the limit
+and the mean in place of the distance and the bound. On every pair at w = 0.9 the spread after one
+round, 0.0640, is below the spread at b*, 0.0678, so the spread is not monotone in t, and no text
+says it is. Spec §2's values, which the logic suite holds to four decimals: the spread at b* is
+0.3924 and 0.1105 on the relations at w = 0.5 and 0.9, and 0.0678 on every pair at w = 0.9;
+‖b⁽⁰⁾ − b*‖∞ is 0.3659 on the relations at w = 0.9; at w = 1 the spread is 0.0094 after 20 rounds
+and 0.0002 after 40; the degree-weighted mean is 0.5083, from 6.1 / 12, against the plain mean
+0.4833, from 2.9 / 6, and on every pair both are 0.4833, from 14.5 / 30; and every pair at w = 0.5
+stands 0.0227 from b* after one round, where the rule with each node included reaches b* in one
+round with its spread at 0.5 × 0.8. The fixed point agrees with 2,000 rounds of the rule to within
+10⁻¹² at each of the twenty settings of w below 1, on both graphs, and the distance stays within
+wᵗ‖b⁽⁰⁾ − b*‖∞ at every t from 0 to 40 at each of them, on both graphs: 1,640 checks, with equality
+at t = 0. Every value agreed with the spec on its first run.
+
+### Golden cases
+
+Eleven cases pin the two tables above: T1 at ranks 1, 40 and 80 and the slice's totals, and T2 at
+its seven rows. With the cases written and no block to run them, the golden test failed 1 of 68,
+on "every case is run by exactly one block", first at `pg-T1-rank1`; with the three blocks and a
+test pinning four T1 cases and seven T2 cases it passed 80. Content lint counts 75 playground cases
+(64 before). The cases are on the NAS (D109, D110); the eleven there equal the plan's Task 6 Step 1
+as parsed JSON, compared for this record, and the file has no CR.
+
+### Fit
+
+`step.scrollHeight − step.clientHeight`, in px, on the production build at 1024 × 768 with the
+webfonts decoded; 0 fits. The first two columns were measured with T2 one step, at `m05/4`, before
+any change; the last two after T2 was split, with each T2 state repeated at `m05/5`, its second
+part.
+
+| State | 繁體中文, one step | English, one step | 繁體中文, parts | English, parts |
+|---|---|---|---|---|
+| `m05/2?T1.frame=80` | 0 | 0 | 0 | 0 |
+| `m05/2?T1.frame=1` | 0 | 0 | 0 | 0 |
+| `m05/4` | 44 | 91 | 0 | 0 |
+| `m05/4?T2.w=0.95&T2.t=40` | 44 | 91 | 0 | 0 |
+| `m05/4?T2.w=1&T2.t=40` | 44 | 91 | 0 | 0 |
+| `m05/4?T2.graph=every&T2.w=1&T2.t=5` | 67 | 114 | 0 | 0 |
+| `m05/4?T2.w=0&T2.t=40` | 44 | 91 | 0 | 0 |
+| `m05/5`, the same five states | — | — | 0 | 0 |
+
+T1 fits at both ends of its slider and stays one step. T2 ran past in 繁體中文 and was split, by
+D96, into the table (s5) and the readouts (s6), the regime line and the three knobs on both. In this
+record's `npm run test:e2e`, "every part of a split playground fits the panel in its longest state"
+and "a playground step fits the panel, with its controls reachable" passed at all three sizes with
+M5's seven longest states and its three playground steps among them.
+
+### In the browser
+
+`lecture.spec.ts` gains four tests, all passing in this run: M5's playgrounds compute with no
+backend running (`readout-T1.pairs-value` 240, `readout-T1.related-value` 5 and
+`readout-T1.slice-value` 651 / 26,282 at `m05/2`; `t2-belief-1-bt` 0.90 at `m05/4`;
+`readout-T2.spread-value` 0.8000 and `readout-T2.bound-value` 0.2065 at `m05/5`); M5's knobs work
+from the keyboard and never advance the deck (`T1.frame` moves the rows from 5 to 8, `T2.t` the
+table's b⁽ᵗ⁾ from 0.90 to 0.65, `T2.w` at t = 1 from 0.65 to 0.63, and `T2.graph` its neighbours);
+M5's knobs write the address bar (`T2.graph=every`, which, opened cold, reads "the other five");
+and M5's knobs cross from T2's first part to its second (`m05/4?T2.w=1`, ArrowRight,
+`readout-T2.limit-value` 0.5083). "No playground takes focus when its step opens" gains `m05` steps
+2, 4 and 5.
+
+`projector.spec.ts`: `PARTS_LONGEST` gains `m05/2?T1.frame=80` and, at both `m05/4` and `m05/5`,
+`T2.w=0.95&T2.t=40`, `T2.w=1&T2.t=40` and `T2.graph=every&T2.w=1&T2.t=5`; the check that a
+playground step fits with its controls reachable and the 18 px floor gain `m05` steps 2, 4 and 5;
+the contrast walk read 27 rows on T1, and 41 and 22 on T2's two parts, at 1024 × 768 when its
+floors were set, at 21, 32 and 17, four fifths rounded down. In this run, at all three sizes, the
+walk and the 18 px floor passed.
+
+**NFR-8.** `npm run check:perf`, exit 0, 30 tests. One knob each, on the step that shows its count:
+
+| Playground | Knob | Input to paint | Two-frame floor |
+|---|---|---|---|
+| T1 | frame to rank 80 | 33.7 ms | 31.9 ms |
+| T2 | t to 5, at `m05/5` | 33.6 ms | 33.3 ms |
+
+T1 is 1.8 ms above its floor and T2 0.3 ms, as the run printed the work above each floor. Task 7's
+run gave T1 34.9 ms and T2 33.1 ms, against floors of 32.9 ms. Every lab and playground interaction
+of this run is inside the 100 ms budget, the slowest F2 at 56.9 ms; cold starts read 265 to 381 ms.
+
+### The records test
+
+Run alone before the records were written, this record's test failed on its missing heading.
