@@ -4925,3 +4925,14 @@ one they were authored in, and the criteria block the prompt gained is the O, P 
 against. The authored prompt was the defective one, not the authored completions. `mini-isg-step1.json` has no
 step-2 exchange and is unchanged. The script prints each old and new key, has `--check`, and refuses
 `m0-demo.json`.
+
+**The re-recording.** D-V was recorded again on `stamping-vlm` (`Qwen/Qwen3.8-27B`, D114's settings and
+per-call seed), 50 calls in 457.2 s, `m0-demo.json` 139,646 bytes. All 30 expert completions yield a non-empty
+`analysis_en` and a non-empty `analysis_zh` through `parse_analysis` (0 of 30 did before), so step 3 now
+receives the analyses. No predicate outside `P_ISG` appears in any of the 50 completions; the only
+out-of-vocabulary objects are `left_hand` and `right_hand` on `m0-demo-096` (twelve mentions, in the draft,
+the three revisions and the summary). Of the ten frames, the three revisions are pairwise different on three,
+exactly one pair coincides on six, and all three coincide on one (`m0-demo-092`). Two summaries repeat lines
+(`m0-demo-096`: 24 rows, 11 distinct; `m0-demo-102`: 41 rows, 10 distinct); `parse_triplets` keeps
+duplicates, and the demonstrations count rows and distinct triplets separately (Review Focus 5), so the
+recording is kept as the model produced it.
