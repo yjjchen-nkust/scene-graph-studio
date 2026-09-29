@@ -4803,6 +4803,13 @@ therefore described an image the model never saw, and the answer read as a descr
 live answers change with the fix, since the model now receives the frame; recorded transcripts are
 unchanged, because none was produced by this path.
 
+**A live L5 run on the paper's Figure 2 now fails, by intent.** A live L5 run (provider `claude`) on
+`isg-fig2-t1`, `isg-fig2-t2` or `isg-fig2-t3` now answers 503 `vlm_unavailable`, because no frame for
+those ids exists under either directory of `FRAME_DIRS`. The endpoint's default `image_id` is
+`isg-fig2-t1` (`app/api/vlm.py:48`), so the default live request fails. This is intended: a live
+answer about an image the model never saw is the defect this record fixes. The offline transcript
+replay of those ids is unaffected: it reads no frame, and the default provider is still the replay.
+
 **What the fix does, and what the tests pin.**
 - *The frame is sent, before the prompt.* The request carries a base64 `image/jpeg` block and then
   the text block. The model is `ClaudeProvider(model=...)`, default `claude-sonnet-5`, so L5's live
