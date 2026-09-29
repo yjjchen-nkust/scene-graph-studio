@@ -5,19 +5,10 @@ import { MARK_PREDICTED, PhotoMarks } from '../../playgrounds/PhotoMarks';
 import { ClipPlayer } from '../ClipPlayer';
 import { CLIP_SIZE, TRADITIONAL, frameLabel, frameUrl, type TraditionalFrame } from '../data';
 import { badgePlaces, uncoveredClasses } from '../logic';
+import { badgeSize } from './badges';
 
 /** The clip's and the photograph's height at most, in viewport heights. */
 const PICTURE_VH = 28;
-
-/**
- * A `#n` badge's size as a fraction of the photograph at 1024×768, where the photograph is at its
- * narrowest, 374 × 210 px (measured): 10.8 px a character of 0.75em mono, 8 px of padding and the
- * 1 px ring each side, and one 22.5 px line with its ring. A wider panel draws the photograph
- * larger and the badge the same, so there the fractions overstate the badge and err towards room.
- */
-const BADGE_CHAR = 10.8 / 374;
-const BADGE_PAD = 10 / 374;
-const BADGE_LINE = 24.5 / 210;
 
 /** A detection's number on the photograph and in the legend: its object id counted from 1. */
 const badgeText = (objectId: number) => `#${objectId + 1}`;
@@ -32,9 +23,11 @@ const badgeText = (objectId: number) => `#${objectId + 1}`;
  *
  * The badges are short and the names are in the legend, as E10 numbers its boxes (D100): at a
  * 374 px photograph a `label score` badge was a third of its width, and at the default frame eight
- * pairs of them overlapped. Each sits above its box, or above and to its left where it would cross
- * the right edge or overlap another (`badgePlaces`), never inside the box. A band one badge tall
- * above the photograph holds the badges of boxes that start at its top edge.
+ * pairs of them overlapped. `badgePlaces` sets each above its box, from the box's left corner or
+ * towards it from either side, and slides one along its row where two would still meet; none sits
+ * inside its box and none overlaps another. A badge lies on the photograph, or, only for a box
+ * whose top is within one badge height of the frame's top, in the band directly above the
+ * photograph and within its width: the band is this part's top padding, one badge tall.
  *
  * Three columns from 1024 px, so the part fits a 1024×768 panel with no row below the pictures:
  * the clip narrow up to 1280 px, since its ticks are the knob and the photograph carries the part;
@@ -49,10 +42,8 @@ export function Part1({ frame, onPick }: { frame: TraditionalFrame; onPick: (id:
   const colon = locale === 'zh-TW' ? '：' : ': ';
 
   const chars = Math.max(0, ...frame.detections.map((d) => badgeText(d.object_id).length));
-  const places = badgePlaces(frame.detections.map((d) => d.bbox), frame.width, {
-    w: (chars * BADGE_CHAR + BADGE_PAD) * frame.width,
-    h: BADGE_LINE * frame.height,
-  });
+  const badge = badgeSize(frame.width, chars);
+  const spots = badgePlaces(frame.detections.map((d) => d.bbox), frame.width, badge);
   const photoWidth = `calc(${PICTURE_VH}vh * ${frame.width} / ${frame.height})`;
 
   return (
@@ -76,12 +67,20 @@ export function Part1({ frame, onPick }: { frame: TraditionalFrame; onPick: (id:
             stroke: MARK_PREDICTED,
             testid: `dt-det-${d.object_id}`,
           }))}
-          badges={frame.detections.map((d, i) => ({
-            box: d.bbox,
-            text: badgeText(d.object_id),
-            testid: `dt-badge-${d.object_id}`,
-            place: places[i],
-          }))}
+          badges={frame.detections.map((d, i) => {
+            // PhotoMarks anchors a badge at a point: `above` by its left edge, `above-left` by its
+            // right. A badge placed towards its box from the right is drawn by its right edge, so
+            // it meets the box's corner exactly; either way it lies within the room `badge` gives
+            // it, which is at least what it takes.
+            const spot = spots[i]!;
+            const byRight = spot.side !== 'above';
+            return {
+              box: { ...d.bbox, x: byRight ? spot.left + badge.w : spot.left },
+              text: badgeText(d.object_id),
+              testid: `dt-badge-${d.object_id}`,
+              place: byRight ? 'above-left' as const : 'above' as const,
+            };
+          })}
           maxVh={PICTURE_VH}
           alt={t('demo.dt.picture').replace('{frame}', frameLabel(frame.image_id))}
           testid="dt-photo"
@@ -89,7 +88,9 @@ export function Part1({ frame, onPick }: { frame: TraditionalFrame; onPick: (id:
           {frame.detections.length > 0 && (
             <ul
               data-testid="dt-legend"
-              className="mt-1 grid grid-cols-2 gap-x-4 text-[0.75em] leading-tight tabular-nums text-slate-900"
+              // One line to a row, so a leading a little under `leading-tight` costs no legibility
+              // and keeps the English part, whose header wraps, inside 1024×768.
+              className="mt-0.5 grid grid-cols-2 gap-x-4 text-[0.75em] leading-[1.15] tabular-nums text-slate-900"
             >
               {frame.detections.map((d) => (
                 <li key={d.object_id} data-testid={`dt-legend-${d.object_id}`}>
@@ -101,7 +102,7 @@ export function Part1({ frame, onPick }: { frame: TraditionalFrame; onPick: (id:
           )}
         </PhotoMarks>
       </div>
-      <div className="flex min-w-0 flex-col gap-2 lg:w-72 lg:shrink-0">
+      <div className="flex min-w-0 flex-col gap-1 lg:w-72 lg:shrink-0">
         <Readout
           id="DT.detections"
           label={t('demo.dt.detections')}

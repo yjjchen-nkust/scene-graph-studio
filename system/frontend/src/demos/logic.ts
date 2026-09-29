@@ -175,73 +175,118 @@ export function fallbackCauses(
   return { unmapped, unseen, classes };
 }
 
-/** Where a box's badge sits against the box's top-left corner: above it, or above and to its left. */
-export type BadgeSide = 'above' | 'above-left';
+/**
+ * Where a box's badge sits, its bottom on the box's top edge: from the box's top-left corner
+ * rightwards (`above`), leftwards from it (`above-left`), or leftwards from the box's top-right
+ * corner (`above-end`).
+ */
+export type BadgeSide = 'above' | 'above-left' | 'above-end';
 
-/** Past this many boxes the placement is not searched; each badge sits above unless it cannot. */
-export const BADGE_SEARCH_MAX = 10;
+/** A badge's side and its left edge, in the frame's own pixels. */
+export interface BadgeSpot {
+  side: BadgeSide;
+  left: number;
+}
+
+const BADGE_SIDES: readonly BadgeSide[] = ['above', 'above-left', 'above-end'];
+
+/** Past this many boxes the sides are not searched: each takes the first side that fits. */
+export const BADGE_SEARCH_MAX = 8;
 
 /**
- * Where each box's `#n` badge sits: above the box's top-left corner, or above and to the left of
- * it, never inside the box (D100). A badge must not cross the frame's right or left edge, so a
- * box whose badge would cross the right edge takes above-left. Among the placements that respect
- * the edges, the one with the fewest pairs of overlapping badges, then the least overlapping area,
- * then the fewest badges moved left; the first such in order, so the result is deterministic.
+ * Where each box's `#n` badge sits, never inside its box (D100), and no two overlapping.
  *
- * `badge` is a badge's size in the frame's own pixels. Every placement is searched up to
- * `BADGE_SEARCH_MAX` boxes, 2¹⁰ of them at most; past it, each badge sits above unless that
- * crosses the right edge.
+ * Horizontally a badge always lies on the frame: its left edge within [0, frameWidth − badge.w].
+ * Vertically it lies on the frame, except for a box whose top is within one badge height of the
+ * frame's top: that badge lies in a band one badge tall directly above the frame, which the part
+ * drawing it must reserve (D-T part 1 does). Nothing else leaves the photograph.
+ *
+ * First the sides. `above` fits where the badge ends by the right edge, `above-left` where it
+ * starts by the left edge, and `above-end` always, its left edge x + w − badge.w clamped to the
+ * frame. Among all combinations of fitting sides (3ⁿ, searched up to `BADGE_SEARCH_MAX` boxes),
+ * the one with the fewest overlapping pairs, then the least overlapping area, then the fewest
+ * sides other than `above`; the first such in order, so the result is deterministic.
+ *
+ * Then, if two still overlap, the slide: in input order (object id order for every recorded
+ * frame), each badge that overlaps an earlier one moves right along its own row, past the badges
+ * it meets, to the nearest free place; where the frame's right edge leaves none, to the nearest
+ * free place on its left instead. An earlier badge never moves again, so no pair overlaps at the
+ * end, unless the badges in one row fill the frame's whole width.
+ *
+ * `badge` is a badge's size in the frame's own pixels; overlap means a shared area above zero.
  */
 export function badgePlaces(
-  boxes: readonly { x: number; y: number }[],
+  boxes: readonly { x: number; y: number; w: number }[],
   frameWidth: number,
   badge: { w: number; h: number },
-): BadgeSide[] {
-  const fits = (b: { x: number }, side: BadgeSide) =>
-    side === 'above' ? b.x + badge.w <= frameWidth : b.x - badge.w >= 0;
-  const options: BadgeSide[][] = boxes.map((b) => {
-    const allowed = (['above', 'above-left'] as const).filter((side) => fits(b, side));
-    return allowed.length > 0 ? allowed : ['above'];
-  });
-  if (boxes.length > BADGE_SEARCH_MAX) return options.map((o) => o[0]!);
-
-  const rect = (b: { x: number; y: number }, side: BadgeSide) => {
-    const left = side === 'above' ? b.x : b.x - badge.w;
-    return { left, right: left + badge.w, top: b.y - badge.h, bottom: b.y };
+): BadgeSpot[] {
+  const maxLeft = Math.max(0, frameWidth - badge.w);
+  const leftOf = (b: { x: number; w: number }, side: BadgeSide): number => {
+    if (side === 'above') return b.x;
+    if (side === 'above-left') return b.x - badge.w;
+    return Math.min(Math.max(b.x + b.w - badge.w, 0), maxLeft);
   };
+  const options = boxes.map((b) => BADGE_SIDES.filter((side) => {
+    const left = leftOf(b, side);
+    return left >= 0 && left <= maxLeft;
+  }));
+  const rect = (i: number, left: number) => ({
+    left, right: left + badge.w, top: boxes[i]!.y - badge.h, bottom: boxes[i]!.y,
+  });
   type Rect = ReturnType<typeof rect>;
   const shared = (a: Rect, c: Rect) =>
     Math.max(0, Math.min(a.right, c.right) - Math.max(a.left, c.left))
     * Math.max(0, Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top));
 
-  let best: { key: [number, number, number]; sides: BadgeSide[] } | undefined;
-  const sides: BadgeSide[] = [];
-  const walk = (i: number) => {
-    if (i === boxes.length) {
-      const rects = boxes.map((b, k) => rect(b, sides[k]!));
-      let pairs = 0;
-      let area = 0;
-      for (let a = 0; a < rects.length; a += 1) {
-        for (let c = a + 1; c < rects.length; c += 1) {
-          const s = shared(rects[a]!, rects[c]!);
-          if (s > 0) {
-            pairs += 1;
-            area += s;
+  let sides: BadgeSide[];
+  if (boxes.length > BADGE_SEARCH_MAX) {
+    sides = options.map((o) => o[0]!);
+  } else {
+    let best: { key: [number, number, number]; sides: BadgeSide[] } | undefined;
+    const chosen: BadgeSide[] = [];
+    const walk = (i: number) => {
+      if (i === boxes.length) {
+        const rects = chosen.map((side, k) => rect(k, leftOf(boxes[k]!, side)));
+        let pairs = 0;
+        let area = 0;
+        for (let a = 0; a < rects.length; a += 1) {
+          for (let c = a + 1; c < rects.length; c += 1) {
+            const s = shared(rects[a]!, rects[c]!);
+            if (s > 0) {
+              pairs += 1;
+              area += s;
+            }
           }
         }
+        const key: [number, number, number] = [pairs, area, chosen.filter((s) => s !== 'above').length];
+        const better = !best || key[0] < best.key[0]
+          || (key[0] === best.key[0] && (key[1] < best.key[1] || (key[1] === best.key[1] && key[2] < best.key[2])));
+        if (better) best = { key, sides: [...chosen] };
+        return;
       }
-      const key: [number, number, number] = [pairs, area, sides.filter((s) => s === 'above-left').length];
-      const better = !best || key[0] < best.key[0]
-        || (key[0] === best.key[0] && (key[1] < best.key[1] || (key[1] === best.key[1] && key[2] < best.key[2])));
-      if (better) best = { key, sides: [...sides] };
-      return;
-    }
-    for (const side of options[i]!) {
-      sides.push(side);
-      walk(i + 1);
-      sides.pop();
-    }
-  };
-  walk(0);
-  return best!.sides;
+      for (const side of options[i]!) {
+        chosen.push(side);
+        walk(i + 1);
+        chosen.pop();
+      }
+    };
+    walk(0);
+    sides = best!.sides;
+  }
+
+  const spots: BadgeSpot[] = sides.map((side, i) => ({ side, left: leftOf(boxes[i]!, side) }));
+  for (let j = 1; j < spots.length; j += 1) {
+    const row = rect(j, spots[j]!.left);
+    // The earlier badges this one's row meets; only they can overlap it, wherever it slides.
+    const met = spots.slice(0, j).map((s, i) => rect(i, s.left)).filter((r) => r.top < row.bottom && row.top < r.bottom);
+    const free = (left: number) => met.every((r) => left + badge.w <= r.left || r.right <= left);
+    const current = row.left;
+    if (free(current)) continue;
+    const rightwards = met.map((r) => r.right).filter((l) => l > current && l <= maxLeft && free(l));
+    const leftwards = met.map((r) => r.left - badge.w).filter((l) => l < current && l >= 0 && free(l));
+    const next = rightwards.length > 0 ? Math.min(...rightwards) : leftwards.length > 0 ? Math.max(...leftwards) : undefined;
+    if (next !== undefined) spots[j] = { side: spots[j]!.side, left: next };
+  }
+  return spots;
 }
+

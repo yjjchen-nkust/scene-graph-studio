@@ -5,6 +5,8 @@ import { setLocale, type Locale } from '../../i18n/useLocale';
 import { MARK_PREDICTED } from '../../playgrounds/PhotoMarks';
 import { Demo } from '../Demo';
 import { FRAME_IDS, TRADITIONAL, VLM, frameUrl, type TraditionalFrame } from '../data';
+import { NARROWEST_PHOTO_PX, badgeSize } from '../DT/badges';
+import { badgePlaces } from '../logic';
 
 /**
  * D-T in its four parts, each mounted through `Demo` as a step mounts it, in both locales.
@@ -62,6 +64,33 @@ const cut = (id: string, n: number): TraditionalFrame => {
 };
 
 const LOCALES: Locale[] = ['en', 'zh-TW'];
+
+describe('D-T part 1\'s badges over the recording', () => {
+  // The photograph's measured width at 1024×768, 1280×800 and 1920×1080.
+  it.each([NARROWEST_PHOTO_PX, 398, 538])('overlap nowhere, on a photograph %i px wide', (photoPx) => {
+    for (const f of TRADITIONAL.frames) {
+      const chars = Math.max(...f.detections.map((d) => `#${d.object_id + 1}`.length));
+      const badge = badgeSize(f.width, chars, photoPx);
+      const spots = badgePlaces(f.detections.map((d) => d.bbox), f.width, badge);
+      const rects = spots.map((s, i) => {
+        const box = f.detections[i]!.bbox;
+        return { left: s.left, right: s.left + badge.w, top: box.y - badge.h, bottom: box.y, boxTop: box.y };
+      });
+      for (const [i, a] of rects.entries()) {
+        const where = `${f.image_id} #${i + 1} at ${photoPx} px`;
+        // On the photograph across; above its top only for a box within a badge height of it.
+        expect(a.left, where).toBeGreaterThanOrEqual(0);
+        expect(a.right, where).toBeLessThanOrEqual(f.width);
+        if (a.top < 0) expect(a.boxTop, where).toBeLessThan(badge.h);
+        for (const b of rects.slice(i + 1)) {
+          const shared = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
+            * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+          expect(shared, where).toBe(0);
+        }
+      }
+    }
+  });
+});
 
 describe.each(LOCALES)('D-T in %s', (locale) => {
   it('part 1 draws one dashed mark per detection, on the frame it names', () => {

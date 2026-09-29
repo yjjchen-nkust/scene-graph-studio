@@ -162,32 +162,59 @@ describe("D-T's counts", () => {
 
 describe('where a box\'s badge sits', () => {
   const badge = { w: 100, h: 80 };
+  const W = 1280;
 
-  it('sits above a lone box, and never inside one', () => {
-    expect(badgePlaces([{ x: 200, y: 300 }], 1280, badge)).toEqual(['above']);
-    expect(badgePlaces([], 1280, badge)).toEqual([]);
+  it('sits above a lone box, from its left corner, and never inside it', () => {
+    expect(badgePlaces([{ x: 200, y: 300, w: 50 }], W, badge)).toEqual([{ side: 'above', left: 200 }]);
+    expect(badgePlaces([], W, badge)).toEqual([]);
   });
 
   it('sits above and to the left where above would cross the right edge', () => {
-    expect(badgePlaces([{ x: 1200, y: 300 }], 1280, badge)).toEqual(['above-left']);
+    expect(badgePlaces([{ x: 1200, y: 300, w: 50 }], W, badge)).toEqual([{ side: 'above-left', left: 1100 }]);
   });
 
   it('moves one of two close badges to the left rather than overlap them', () => {
-    // 090's remote and donut: corners 32 px apart, one badge wide or more.
-    expect(badgePlaces([{ x: 1005, y: 347 }, { x: 1037, y: 349 }], 1280, badge)).toEqual(['above-left', 'above']);
+    // 090's person and donut: corners 32 px apart, less than a badge.
+    expect(badgePlaces([{ x: 1005, y: 347, w: 30 }, { x: 1037, y: 349, w: 30 }], W, badge)).toEqual([
+      { side: 'above-left', left: 905 }, { side: 'above', left: 1037 },
+    ]);
     // Far enough apart, neither moves.
-    expect(badgePlaces([{ x: 100, y: 300 }, { x: 400, y: 300 }], 1280, badge)).toEqual(['above', 'above']);
+    expect(badgePlaces([{ x: 100, y: 300, w: 50 }, { x: 400, y: 300, w: 50 }], W, badge)).toEqual([
+      { side: 'above', left: 100 }, { side: 'above', left: 400 },
+    ]);
   });
 
-  it('keeps a badge on the frame at its left edge even where it overlaps', () => {
-    expect(badgePlaces([{ x: 0, y: 69 }, { x: 0, y: 129 }], 1280, badge)).toEqual(['above', 'above']);
+  it('ends a badge at its box\'s right edge where both boxes start at the frame\'s left edge', () => {
+    // 092's two persons, both at x = 0: neither can go left, so the second ends at its right edge.
+    expect(badgePlaces([{ x: 0, y: 69, w: 972 }, { x: 0, y: 129, w: 376 }], W, badge)).toEqual([
+      { side: 'above', left: 0 }, { side: 'above-end', left: 276 },
+    ]);
   });
 
-  it('does not search past BADGE_SEARCH_MAX boxes', () => {
-    const many = Array.from({ length: BADGE_SEARCH_MAX + 1 }, (_, i) => ({ x: i === 0 ? 1250 : 10 * i, y: 300 }));
-    const places = badgePlaces(many, 1280, badge);
-    expect(places[0]).toBe('above-left');
-    expect(places.slice(1)).toEqual(many.slice(1).map(() => 'above'));
+  it('slides the later badge right past the one it still overlaps', () => {
+    // Three boxes on one corner: no choice of sides keeps three badges apart, so the second slides.
+    const three = [0, 1, 2].map(() => ({ x: 500, y: 300, w: 10 }));
+    expect(badgePlaces(three, W, badge)).toEqual([
+      { side: 'above', left: 500 }, { side: 'above', left: 600 }, { side: 'above-left', left: 400 },
+    ]);
+  });
+
+  it('slides left instead where the right edge leaves no room', () => {
+    const three = [0, 1, 2].map(() => ({ x: 1170, y: 300, w: 10 }));
+    expect(badgePlaces(three, W, badge)).toEqual([
+      { side: 'above', left: 1170 }, { side: 'above', left: 1070 }, { side: 'above-left', left: 970 },
+    ]);
+  });
+
+  it('takes the first side that fits past BADGE_SEARCH_MAX boxes', () => {
+    // One row each, so the slide has nothing to do.
+    const many = Array.from(
+      { length: BADGE_SEARCH_MAX + 1 },
+      (_, i) => ({ x: i === 0 ? 1250 : 10 * i, y: 100 * (i + 1), w: 10 }),
+    );
+    expect(badgePlaces(many, W, badge)).toEqual(
+      many.map((b, i) => (i === 0 ? { side: 'above-left', left: 1150 } : { side: 'above', left: b.x })),
+    );
   });
 });
 
