@@ -1,44 +1,59 @@
 import { Fragment } from 'react';
 import { useLocale } from '../../i18n/useLocale';
 import { Readout } from '../../playgrounds/controls';
-import { MARK_PREDICTED, PhotoMarks, type BadgePlace } from '../../playgrounds/PhotoMarks';
+import { MARK_PREDICTED, PhotoMarks } from '../../playgrounds/PhotoMarks';
 import { ClipPlayer } from '../ClipPlayer';
-import { CLIP_SIZE, TRADITIONAL, frameUrl, type Detection, type TraditionalFrame } from '../data';
+import { CLIP_SIZE, TRADITIONAL, frameLabel, frameUrl, type TraditionalFrame } from '../data';
+import { badgePlaces, uncoveredClasses } from '../logic';
 
 /** The clip's and the photograph's height at most, in viewport heights. */
 const PICTURE_VH = 28;
 
 /**
- * A badge sits above its box (D100), except where the box starts within this fraction of the
- * frame's height from its top edge: there a badge above would leave the photograph, so it sits
- * inside the corner instead. One badge line is about a tenth of the photograph's height at the
- * projector sizes.
+ * A `#n` badge's size as a fraction of the photograph at 1024×768, where the photograph is at its
+ * narrowest, 374 × 210 px (measured): 10.8 px a character of 0.75em mono, 8 px of padding and the
+ * 1 px ring each side, and one 22.5 px line with its ring. A wider panel draws the photograph
+ * larger and the badge the same, so there the fractions overstate the badge and err towards room.
  */
-const TOP_BAND = 0.12;
+const BADGE_CHAR = 10.8 / 374;
+const BADGE_PAD = 10 / 374;
+const BADGE_LINE = 24.5 / 210;
 
-function badgePlace(d: Detection, height: number): BadgePlace {
-  return d.bbox.y < height * TOP_BAND ? 'inside' : 'above';
-}
+/** A detection's number on the photograph and in the legend: its object id counted from 1. */
+const badgeText = (objectId: number) => `#${objectId + 1}`;
 
 /**
  * D-T, part 1: closed vocabulary.
  *
- * The clip beside the chosen frame, each detection a dashed box (a detection is a prediction) with
- * its COCO label and score as an HTML badge; then the twelve `O_ISG` classes under the class map,
- * `✓` and the COCO category for a class COCO names, and the rest under `— no COCO class`.
+ * The clip beside the chosen frame, each detection a dashed box (a detection is a prediction)
+ * numbered by an HTML badge `#n`, with a legend beneath naming each number's COCO label and score;
+ * then the twelve `O_ISG` classes under the class map, `✓` and the COCO category for a class COCO
+ * names, and the rest under `— no COCO class`.
+ *
+ * The badges are short and the names are in the legend, as E10 numbers its boxes (D100): at a
+ * 374 px photograph a `label score` badge was a third of its width, and at the default frame eight
+ * pairs of them overlapped. Each sits above its box, or above and to its left where it would cross
+ * the right edge or overlap another (`badgePlaces`), never inside the box. A band one badge tall
+ * above the photograph holds the badges of boxes that start at its top edge.
  *
  * Three columns from 1024 px, so the part fits a 1024×768 panel with no row below the pictures:
- * the clip narrow up to 1280 px, since its ticks are the knob and the photograph carries the
- * part; the photograph with the detection count beneath it; the vocabulary with the count of
- * classes COCO cannot name above it.
+ * the clip narrow up to 1280 px, since its ticks are the knob and the photograph carries the part;
+ * the photograph and its legend; the two counts and the vocabulary.
  */
 export function Part1({ frame, onPick }: { frame: TraditionalFrame; onPick: (id: string) => void }) {
   const { t, locale } = useLocale();
   const classes = Object.entries(TRADITIONAL.o_isg_coco);
   const covered = classes.filter((entry): entry is [string, string] => entry[1] !== null);
-  const uncovered = classes.filter(([, coco]) => coco === null).map(([cls]) => cls);
+  const uncovered = uncoveredClasses(TRADITIONAL.o_isg_coco);
   const separator = locale === 'zh-TW' ? '、' : ', ';
   const colon = locale === 'zh-TW' ? '：' : ': ';
+
+  const chars = Math.max(0, ...frame.detections.map((d) => badgeText(d.object_id).length));
+  const places = badgePlaces(frame.detections.map((d) => d.bbox), frame.width, {
+    w: (chars * BADGE_CHAR + BADGE_PAD) * frame.width,
+    h: BADGE_LINE * frame.height,
+  });
+  const photoWidth = `calc(${PICTURE_VH}vh * ${frame.width} / ${frame.height})`;
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
@@ -50,35 +65,49 @@ export function Part1({ frame, onPick }: { frame: TraditionalFrame; onPick: (id:
       >
         <ClipPlayer value={frame.image_id} onPick={onPick} maxVh={PICTURE_VH} />
       </div>
-      <PhotoMarks
-        frame={frame}
-        imageUrl={frameUrl(frame.image_id)}
-        marks={frame.detections.map((d) => ({
-          box: d.bbox,
-          line: 'dashed',
-          stroke: MARK_PREDICTED,
-          testid: `dt-det-${d.object_id}`,
-        }))}
-        badges={frame.detections.map((d) => ({
-          box: d.bbox,
-          text: `${d.label} ${d.score.toFixed(2)}`,
-          testid: `dt-badge-${d.object_id}`,
-          place: badgePlace(d, frame.height),
-        }))}
-        maxVh={PICTURE_VH}
-        alt={t('demo.dt.picture').replace('{frame}', frame.image_id)}
-        testid="dt-photo"
-      >
-        <div className="mt-1">
-          <Readout
-            id="DT.detections"
-            label={t('demo.dt.detections')}
-            value={String(frame.detections.length)}
-            note={t('demo.dt.detections_note').replace('{threshold}', String(TRADITIONAL.detector.threshold))}
-          />
-        </div>
-      </PhotoMarks>
+      {/* The top padding is the band: one badge line, 0.75em at leading-tight, and its ring. */}
+      <div data-testid="dt-photo-band" className="min-w-0 flex-1 pt-[1em]" style={{ maxWidth: photoWidth }}>
+        <PhotoMarks
+          frame={frame}
+          imageUrl={frameUrl(frame.image_id)}
+          marks={frame.detections.map((d) => ({
+            box: d.bbox,
+            line: 'dashed',
+            stroke: MARK_PREDICTED,
+            testid: `dt-det-${d.object_id}`,
+          }))}
+          badges={frame.detections.map((d, i) => ({
+            box: d.bbox,
+            text: badgeText(d.object_id),
+            testid: `dt-badge-${d.object_id}`,
+            place: places[i],
+          }))}
+          maxVh={PICTURE_VH}
+          alt={t('demo.dt.picture').replace('{frame}', frameLabel(frame.image_id))}
+          testid="dt-photo"
+        >
+          {frame.detections.length > 0 && (
+            <ul
+              data-testid="dt-legend"
+              className="mt-1 grid grid-cols-2 gap-x-4 text-[0.75em] leading-tight tabular-nums text-slate-900"
+            >
+              {frame.detections.map((d) => (
+                <li key={d.object_id} data-testid={`dt-legend-${d.object_id}`}>
+                  <span className="font-mono">{badgeText(d.object_id)}</span>
+                  {` ${d.label} ${d.score.toFixed(2)}`}
+                </li>
+              ))}
+            </ul>
+          )}
+        </PhotoMarks>
+      </div>
       <div className="flex min-w-0 flex-col gap-2 lg:w-72 lg:shrink-0">
+        <Readout
+          id="DT.detections"
+          label={t('demo.dt.detections')}
+          value={String(frame.detections.length)}
+          note={t('demo.dt.detections_note').replace('{threshold}', String(TRADITIONAL.detector.threshold))}
+        />
         <Readout
           id="DT.uncovered"
           label={t('demo.dt.uncovered')}

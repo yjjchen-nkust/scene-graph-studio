@@ -1,9 +1,7 @@
 import { useLocale } from '../../i18n/useLocale';
 import { Readout } from '../../playgrounds/controls';
 import { TRADITIONAL, frameLabel, type TraditionalFrame } from '../data';
-import { candidateTriplets, orderedPairs } from '../logic';
-
-const COUNT = new Intl.NumberFormat('en-US');
+import { candidateTriplets, countText, orderedPairs } from '../logic';
 
 /** The most objects whose grid of ordered pairs is drawn; past it, a sentence states its size. */
 const GRID_MAX = 8;
@@ -14,7 +12,8 @@ const GRID_MAX = 8;
  * The chosen frame's n detections, its n(n − 1) ordered pairs and the n(n − 1)·|P| candidate
  * triplets with VG150's |P| = 50, beside the same count summed over the ten frames; then the
  * ordered pairs themselves as an n × n grid, a `✓` for each pair and `—` on the diagonal, where an
- * object would be paired with itself. Zero or one detection has no pair and no grid, and says so;
+ * object would be paired with itself; its rows and columns carry part 1's badge numbers, #1 for
+ * the first detection. Zero or one detection has no pair and no grid, and says so;
  * more than `GRID_MAX` objects is stated rather than drawn.
  */
 export function Part2({ frame }: { frame: TraditionalFrame }) {
@@ -33,7 +32,7 @@ export function Part2({ frame }: { frame: TraditionalFrame }) {
   } else if (n > GRID_MAX) {
     grid = (
       <p data-testid="dt-grid-large" className="text-[0.75em] leading-tight text-slate-900">
-        {t('demo.dt.grid_large').replace('{n}', String(n)).replace('{cells}', COUNT.format(n * n))}
+        {t('demo.dt.grid_large').replace('{n}', String(n)).replace('{cells}', countText(n * n))}
       </p>
     );
   } else {
@@ -45,7 +44,7 @@ export function Part2({ frame }: { frame: TraditionalFrame }) {
             <tr className="border-b border-slate-300">
               <td />
               {frame.detections.map((o) => (
-                <th key={o.object_id} scope="col" className="px-2 font-semibold tabular-nums">{`#${o.object_id}`}</th>
+                <th key={o.object_id} scope="col" className="px-2 font-semibold tabular-nums">{`#${o.object_id + 1}`}</th>
               ))}
             </tr>
           </thead>
@@ -53,7 +52,7 @@ export function Part2({ frame }: { frame: TraditionalFrame }) {
             {frame.detections.map((s) => (
               <tr key={s.object_id}>
                 <th scope="row" className="whitespace-nowrap pr-3 text-left font-normal">
-                  {`#${s.object_id} ${s.label}`}
+                  {`#${s.object_id + 1} ${s.label}`}
                 </th>
                 {frame.detections.map((o) => (
                   <td
@@ -78,20 +77,20 @@ export function Part2({ frame }: { frame: TraditionalFrame }) {
         <Readout
           id="DT.objects"
           label={t('demo.dt.objects')}
-          value={COUNT.format(n)}
+          value={countText(n)}
           note={t('demo.dt.objects_note').replace('{time}', frameLabel(frame.image_id))}
         />
-        <Readout id="DT.pairs" label={t('demo.dt.pairs')} value={COUNT.format(orderedPairs(n))} note="n(n−1)" />
+        <Readout id="DT.pairs" label={t('demo.dt.pairs')} value={countText(orderedPairs(n))} note="n(n−1)" />
         <Readout
           id="DT.candidates"
           label={t('demo.dt.candidates')}
-          value={COUNT.format(candidateTriplets(n, P))}
+          value={countText(candidateTriplets(n, P))}
           note={`n(n−1)·|P|, |P| = ${P}`}
         />
         <Readout
           id="DT.candidates_all"
           label={t('demo.dt.candidates_all')}
-          value={COUNT.format(all)}
+          value={countText(all)}
           note={t('demo.dt.candidates_all_note').replace('{frames}', String(TRADITIONAL.frames.length))}
         />
       </div>

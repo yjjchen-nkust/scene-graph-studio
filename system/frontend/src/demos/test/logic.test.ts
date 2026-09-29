@@ -1,16 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import type { Triplet, TraditionalFrame } from '../data';
 import {
+  BADGE_SEARCH_MAX,
+  badgePlaces,
   candidateTriplets,
   churn,
   churnFraction,
+  countText,
   distinct,
+  fallbackCauses,
   orderedPairs,
   outsideVocabulary,
   predicateHistogram,
+  relationSources,
   revisionDiff,
   traditionalTriplets,
   tripletKey,
+  uncoveredClasses,
 } from '../logic';
 
 /** `app/vlm/prompts.py`'s two vocabularies, written out so these cases do not read the recording. */
@@ -110,6 +116,78 @@ describe('the predicate histogram', () => {
 
   it('is empty over no rows', () => {
     expect(predicateHistogram([])).toEqual([]);
+  });
+});
+
+describe("D-T's counts", () => {
+  const box = { x: 0, y: 0, w: 1, h: 1 };
+  const frame: TraditionalFrame = {
+    image_id: 'f', t: 90, keyframe: true, width: 10, height: 10,
+    detections: [
+      { object_id: 0, label: 'person', score: 0.9, bbox: box },
+      { object_id: 1, label: 'remote', score: 0.8, bbox: box },
+      { object_id: 2, label: 'book', score: 0.7, bbox: box },
+      { object_id: 3, label: 'remote', score: 0.6, bbox: box },
+    ],
+    relations: [
+      { subject_id: 0, object_id: 2, predicate: 'near', from: 'prior' },
+      { subject_id: 2, object_id: 0, predicate: 'on', from: 'fallback' },
+      { subject_id: 0, object_id: 1, predicate: 'on', from: 'fallback' },
+      { subject_id: 3, object_id: 1, predicate: 'on', from: 'fallback' },
+    ],
+  };
+  const classMap = { person: 'person', book: 'book', remote: null };
+
+  it('prints a count with its thousands grouped', () => {
+    expect(countText(11200)).toBe('11,200');
+    expect(countText(0)).toBe('0');
+  });
+
+  it('lists the O_ISG classes COCO has no category for, in order', () => {
+    expect(uncoveredClasses({ hand: null, workbench: 'dining table', nut: null })).toEqual(['hand', 'nut']);
+    expect(uncoveredClasses({})).toEqual([]);
+  });
+
+  it('counts the pairs the prior classified and the pairs that fell back', () => {
+    expect(relationSources(frame)).toEqual({ prior: 1, fallback: 3 });
+    expect(relationSources({ ...frame, relations: [] })).toEqual({ prior: 0, fallback: 0 });
+  });
+
+  it('tells a fallback over an unmapped class from a mapped pair the prior never saw', () => {
+    expect(fallbackCauses(frame, classMap)).toEqual({ unmapped: 2, unseen: 1, classes: ['remote'] });
+    // A label the map does not list is as unmapped as one it maps to null.
+    expect(fallbackCauses(frame, { person: 'person', book: 'book' }).unmapped).toBe(2);
+  });
+});
+
+describe('where a box\'s badge sits', () => {
+  const badge = { w: 100, h: 80 };
+
+  it('sits above a lone box, and never inside one', () => {
+    expect(badgePlaces([{ x: 200, y: 300 }], 1280, badge)).toEqual(['above']);
+    expect(badgePlaces([], 1280, badge)).toEqual([]);
+  });
+
+  it('sits above and to the left where above would cross the right edge', () => {
+    expect(badgePlaces([{ x: 1200, y: 300 }], 1280, badge)).toEqual(['above-left']);
+  });
+
+  it('moves one of two close badges to the left rather than overlap them', () => {
+    // 090's remote and donut: corners 32 px apart, one badge wide or more.
+    expect(badgePlaces([{ x: 1005, y: 347 }, { x: 1037, y: 349 }], 1280, badge)).toEqual(['above-left', 'above']);
+    // Far enough apart, neither moves.
+    expect(badgePlaces([{ x: 100, y: 300 }, { x: 400, y: 300 }], 1280, badge)).toEqual(['above', 'above']);
+  });
+
+  it('keeps a badge on the frame at its left edge even where it overlaps', () => {
+    expect(badgePlaces([{ x: 0, y: 69 }, { x: 0, y: 129 }], 1280, badge)).toEqual(['above', 'above']);
+  });
+
+  it('does not search past BADGE_SEARCH_MAX boxes', () => {
+    const many = Array.from({ length: BADGE_SEARCH_MAX + 1 }, (_, i) => ({ x: i === 0 ? 1250 : 10 * i, y: 300 }));
+    const places = badgePlaces(many, 1280, badge);
+    expect(places[0]).toBe('above-left');
+    expect(places.slice(1)).toEqual(many.slice(1).map(() => 'above'));
   });
 });
 

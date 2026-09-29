@@ -78,16 +78,59 @@ describe.each(LOCALES)('D-T in %s', (locale) => {
       expect(mark.getAttribute('stroke')).toBe(MARK_PREDICTED);
       expect(mark.getAttribute('stroke-dasharray')).toBeTruthy();
       expect(Number(mark.getAttribute('x'))).toBe(d.bbox.x);
+      expect(Number(mark.getAttribute('y'))).toBe(d.bbox.y);
       expect(Number(mark.getAttribute('width'))).toBe(d.bbox.w);
-      // The badge is HTML over the photograph, never SVG text (D98).
-      const badge = within(photo).getByTestId(`dt-badge-${d.object_id}`);
-      expect(badge.tagName).toBe('SPAN');
-      expect(badge.textContent).toBe(`${d.label} ${d.score.toFixed(2)}`);
+      expect(Number(mark.getAttribute('height'))).toBe(d.bbox.h);
     }
     expect(photo.querySelector('svg text')).toBeNull();
     expect(photo.querySelector('img')!.getAttribute('src')).toBe(frameUrl('m0-demo-096'));
     expect(value('DT.detections')).toBe(String(frame.detections.length));
     expect(screen.getByTestId('demo-tick-m0-demo-096')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('part 1 numbers each box #n and names every number in the legend', () => {
+    setLocale(locale);
+    for (const id of FRAME_IDS) {
+      renderPart(1, `?DT.frame=${id}`);
+      const frame = frameOf(id);
+      const photo = screen.getByTestId('dt-photo');
+      const legend = screen.getByTestId('dt-legend');
+      expect(legend.querySelectorAll('li'), id).toHaveLength(frame.detections.length);
+      for (const d of frame.detections) {
+        // The badge is HTML over the photograph, never SVG text (D98), and only a number (D100).
+        const badge = within(photo).getByTestId(`dt-badge-${d.object_id}`);
+        expect(badge.tagName).toBe('SPAN');
+        expect(badge.textContent, id).toBe(`#${d.object_id + 1}`);
+        expect(within(legend).getByTestId(`dt-legend-${d.object_id}`).textContent, id).toBe(
+          `#${d.object_id + 1} ${d.label} ${d.score.toFixed(2)}`,
+        );
+      }
+      cleanup();
+    }
+  });
+
+  it('part 1 sets no badge inside its box, and one near the right edge above and to its left', () => {
+    setLocale(locale);
+    const ABOVE = 'translateY(-100%)';
+    const ABOVE_LEFT = 'translate(-100%, -100%)';
+    for (const id of FRAME_IDS) {
+      renderPart(1, `?DT.frame=${id}`);
+      for (const d of frameOf(id).detections) {
+        // PhotoMarks draws `inside` with no transform at all.
+        expect([ABOVE, ABOVE_LEFT], `${id} #${d.object_id + 1}`).toContain(
+          screen.getByTestId(`dt-badge-${d.object_id}`).style.transform,
+        );
+      }
+      cleanup();
+    }
+    const f = frameOf('m0-demo-094');
+    const [first, ...rest] = f.detections;
+    fixture.frames.set('m0-demo-094', {
+      ...f,
+      detections: [{ ...first!, bbox: { ...first!.bbox, x: f.width - 20, w: 20 } }, ...rest],
+    });
+    renderPart(1, '?DT.frame=m0-demo-094');
+    expect(screen.getByTestId(`dt-badge-${first!.object_id}`).style.transform).toBe(ABOVE_LEFT);
   });
 
   it('part 1 counts the O_ISG classes COCO cannot name', () => {
@@ -139,6 +182,10 @@ describe.each(LOCALES)('D-T in %s', (locale) => {
         }
       }
       expect(grid.querySelectorAll('[data-testid^="dt-pair-"]')).toHaveLength(n * n);
+      // Rows carry part 1's badge numbers, #1 for the first detection.
+      expect([...grid.querySelectorAll('tbody th')].map((th) => th.textContent)).toEqual(
+        frameOf(id).detections.map((d) => `#${d.object_id + 1} ${d.label}`),
+      );
       cleanup();
     }
   });
@@ -199,6 +246,31 @@ describe.each(LOCALES)('D-T in %s', (locale) => {
     }
   });
 
+  it('part 3 tells the pairs over a class the slice lacks from the pairs its frames never show', () => {
+    setLocale(locale);
+    for (const id of FRAME_IDS) {
+      renderPart(3, `?DT.frame=${id}`);
+      const f = frameOf(id);
+      const label = new Map(f.detections.map((d) => [d.object_id, d.label]));
+      const lacks = (oid: number) => TRADITIONAL.class_map[label.get(oid)!] == null;
+      const fallback = f.relations.filter((r) => r.from === 'fallback');
+      const unmapped = fallback.filter((r) => lacks(r.subject_id) || lacks(r.object_id)).length;
+      const unseen = fallback.length - unmapped;
+      for (const [testid, n] of [['dt-fallback-unmapped', unmapped], ['dt-fallback-unseen', unseen]] as const) {
+        if (n === 0) expect(screen.queryByTestId(testid), `${id} ${testid}`).toBeNull();
+        else expect(screen.getByTestId(`${testid}-count`).textContent, `${id} ${testid}`).toBe(count(n));
+      }
+      const classes = [...new Set(f.detections.map((d) => d.label))].filter((l) => TRADITIONAL.class_map[l] == null);
+      if (unmapped > 0) {
+        for (const c of classes) expect(screen.getByTestId('dt-fallback-unmapped'), `${id} ${c}`).toHaveTextContent(c);
+      }
+      // The predicate is quoted, never a bare word in the sentence.
+      const quoted = locale === 'en' ? `“${TRADITIONAL.prior.fallback}”` : `「${TRADITIONAL.prior.fallback}」`;
+      expect(screen.getByTestId('dt-prior-none'), id).toHaveTextContent(quoted);
+      cleanup();
+    }
+  });
+
   it('part 3 counts the pairs each source classified, and says so when the prior classified none', () => {
     setLocale(locale);
     renderPart(3, '?DT.frame=m0-demo-094');
@@ -220,6 +292,7 @@ describe.each(LOCALES)('D-T in %s', (locale) => {
     expect(value('DT.prior')).toBe('1');
     expect(value('DT.fallback')).toBe(String(by('fallback') - 1));
     expect(screen.queryByTestId('dt-prior-none')).toBeNull();
+    expect(screen.getByTestId('dt-fallback-some')).toBeInTheDocument();
     expect(screen.getByTestId('dt-pisg-near')).toHaveAttribute('data-present', 'true');
     cleanup();
 

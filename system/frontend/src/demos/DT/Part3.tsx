@@ -1,9 +1,7 @@
 import { useLocale } from '../../i18n/useLocale';
 import { Readout } from '../../playgrounds/controls';
 import { TRADITIONAL, VLM, frameLabel, type TraditionalFrame } from '../data';
-import { predicateHistogram, traditionalTriplets } from '../logic';
-
-const COUNT = new Intl.NumberFormat('en-US');
+import { countText, fallbackCauses, predicateHistogram, relationSources, traditionalTriplets } from '../logic';
 
 const CELL = 'py-0.5 pr-4';
 
@@ -30,7 +28,7 @@ function Histogram({ testid, caption, rows }: { testid: string; caption: string;
           rows.map(([p, n]) => (
             <tr key={p}>
               <th scope="row" className={`${CELL} text-left font-normal`}>{p}</th>
-              <td data-testid={`${testid}-${p}`} className="py-0.5 text-right tabular-nums">{COUNT.format(n)}</td>
+              <td data-testid={`${testid}-${p}`} className="py-0.5 text-right tabular-nums">{countText(n)}</td>
             </tr>
           ))
         )}
@@ -48,32 +46,63 @@ function Histogram({ testid, caption, rows }: { testid: string; caption: string;
  * the seven `P_ISG` predicates marked present or absent in D-T's output over the ten frames.
  *
  * Where the prior classified no pair the part says so in words, since a readout of 0 beside a
- * one-bar histogram would otherwise read as a fault of the part rather than of the pipeline.
+ * one-bar histogram would otherwise read as a fault of the part rather than of the pipeline; and
+ * it counts the pairs that fell back under each of the recorder's two reasons (`fallbackCauses`):
+ * a detected class with no counterpart in the slice, or two slice classes whose pair the prior's
+ * frames never show.
  */
 export function Part3({ frame }: { frame: TraditionalFrame }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const frames = TRADITIONAL.frames;
-  const { prior } = TRADITIONAL;
+  const { prior, class_map: classMap } = TRADITIONAL;
   const here = predicateHistogram(traditionalTriplets(frame));
   const everywhere = predicateHistogram(frames.flatMap(traditionalTriplets));
   const produced = new Set(everywhere.map(([p]) => p));
-  const byPrior = frame.relations.filter((r) => r.from === 'prior').length;
-  const byFallback = frame.relations.filter((r) => r.from === 'fallback').length;
+  const sources = relationSources(frame);
+  const causes = fallbackCauses(frame, classMap);
   const tenFrames = String(frames.length);
+  const separator = locale === 'zh-TW' ? '、' : ', ';
 
   let finding = null;
   if (frame.relations.length === 0) {
     finding = (
       <p data-testid="dt-no-pairs" className="text-[0.75em] leading-tight text-slate-900">{t('demo.dt.no_pairs')}</p>
     );
-  } else if (byPrior === 0) {
-    finding = (
-      <p data-testid="dt-prior-none" className="text-[0.75em] leading-tight text-slate-900">
-        {t('demo.dt.prior_none')
-          .replace('{frames}', String(prior.frames))
+  } else if (sources.fallback > 0) {
+    const reasons = [
+      {
+        testid: 'dt-fallback-unmapped',
+        n: causes.unmapped,
+        text: t('demo.dt.cause_unmapped')
           .replace('{dataset}', prior.dataset)
-          .replace('{predicate}', prior.fallback)}
-      </p>
+          .replace('{classes}', causes.classes.join(separator)),
+      },
+      {
+        testid: 'dt-fallback-unseen',
+        n: causes.unseen,
+        text: t('demo.dt.cause_unseen').replace('{dataset}', prior.dataset).replace('{frames}', String(prior.frames)),
+      },
+    ].filter((r) => r.n > 0);
+    finding = (
+      <div className="text-[0.75em] leading-tight text-slate-900">
+        {sources.prior === 0 ? (
+          <p data-testid="dt-prior-none">{t('demo.dt.prior_none').replace('{predicate}', prior.fallback)}</p>
+        ) : (
+          <p data-testid="dt-fallback-some">{t('demo.dt.fallback_some').replace('{predicate}', prior.fallback)}</p>
+        )}
+        <table data-testid="dt-causes" className="mt-0.5 border-collapse">
+          <tbody>
+            {reasons.map((r) => (
+              <tr key={r.testid} data-testid={r.testid}>
+                <td data-testid={`${r.testid}-count`} className="py-0.5 pr-3 text-right align-top tabular-nums">
+                  {countText(r.n)}
+                </td>
+                <td className="py-0.5">{r.text}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   }
 
@@ -92,13 +121,13 @@ export function Part3({ frame }: { frame: TraditionalFrame }) {
           <Readout
             id="DT.prior"
             label={t('demo.dt.prior')}
-            value={COUNT.format(byPrior)}
+            value={countText(sources.prior)}
             note={t('demo.dt.prior_note').replace('{frames}', String(prior.frames))}
           />
           <Readout
             id="DT.fallback"
             label={t('demo.dt.fallback')}
-            value={COUNT.format(byFallback)}
+            value={countText(sources.fallback)}
             note={t('demo.dt.fallback_note').replace('{predicate}', prior.fallback)}
           />
         </div>
