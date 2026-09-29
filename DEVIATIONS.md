@@ -4911,8 +4911,23 @@ the dictionary" without giving it the dictionary.
 through `_criteria_parts`, the helper `step1_prompt` now also calls, so the two cannot drift and step 1's text
 is byte-for-byte what it was (a test holds it to the literal). Its OUTPUT section asks for the revised triplets
 one per line, then `ANALYSIS_EN` and `ANALYSIS_ZH` on lines of their own. `indvissgg.step2` takes O, P and E,
-`run` passes the ones it gave step 1, and the recorder passes `O_ISG`, `P_ISG` and `EXAMPLES_ISG`. `run` does
-not pass `ablate` to step 2, as before: ablation is a step-1 experiment.
+`run` passes the O, P and E it gave step 1 before any ablation, and the recorder passes `O_ISG`, `P_ISG` and
+`EXAMPLES_ISG`.
+
+**Under a step-1 ablation the experts still receive the full O, P and E.** `run` does not pass `ablate` to
+step 2, because L5's authored step-2 exchanges are keyed on the full criteria and Table 3 ablates step 1 only.
+The consequence is stated plainly: a Table-3 row run through steps 2 and 3 no longer withholds the ablated
+block from the final graph, since the experts see the block the draft was made without and may restore what it
+would have supplied. Before D115 the experts saw no criteria at all, so an ablated block was withheld from
+them by accident; that is not a property to keep. `test_under_ablation_the_experts_still_get_the_full_criteria`
+holds the behaviour.
+
+**A second defect, found in review: quoted triplets became revision rows.** `step2` parsed the whole expert
+completion, so a triplet the model quotes inside its analysis (a deleted `<block, attached to, assembly>`, say)
+became a row of the revision, and the same rows reached step 3. `indvissgg.revision_text` now returns the text
+before the first line starting `ANALYSIS_` (the whole text when there is none), and `step2` builds its graph
+from that. The authored L5 exchanges had the same defect: `step3-n1` showed `<worker, holding, wrench>` twice
+under EXPERT 1 REVISION.
 
 **The authored transcripts.** The eight hand-authored step-2 exchanges (five in `fig2-pipeline.json`, three in
 `fig2-corrections.json`) were keyed on the old prompt. `backend/scripts/rekey_step2_transcripts.py` recovers
@@ -4922,8 +4937,12 @@ against) and recomputes `key`. Only `prompt` and `key` of those eight exchanges 
 stand: each already carries the `ANALYSIS_EN` and `ANALYSIS_ZH` sections (all eight parse to a non-empty English
 and Chinese analysis through `parse_analysis`, measured), so the labelled format the new prompt asks for is the
 one they were authored in, and the criteria block the prompt gained is the O, P and E they were authored
-against. The authored prompt was the defective one, not the authored completions. `mini-isg-step1.json` has no
-step-2 exchange and is unchanged. The script prints each old and new key, has `--check`, and refuses
+against. The authored prompt was the defective one, not the authored completions. The four authored step-3
+exchanges of `fig2-pipeline.json` (`step3-n1`, `n2`, `n3`, `n5`) are rebuilt as well, from the same file's
+step-2 completions for that frame (experts 1 to N, revisions through `revision_text`, analyses through
+`parse_analysis`) and rekeyed; the script checks that each stored prompt equals the old or the new build
+before it writes, and stops otherwise. `fig2-corrections.json` has no step-3 exchange. `mini-isg-step1.json`
+has no step-2 exchange and is unchanged. The script prints each old and new key, has `--check`, and refuses
 `m0-demo.json`.
 
 **The re-recording.** D-V was recorded again on `stamping-vlm` (`Qwen/Qwen3.8-27B`, D114's settings and

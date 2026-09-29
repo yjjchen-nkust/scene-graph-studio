@@ -48,6 +48,16 @@ def parse_triplets(completion: str) -> list[tuple[str, str, str]]:
     return [(m.group(1), m.group(2), m.group(3)) for m in TRIPLET_RE.finditer(completion)]
 
 
+def revision_text(completion: str) -> str:
+    """The revised triplet set of an expert completion: the text before the first `ANALYSIS_` line.
+
+    An analysis quotes the triplets it deletes and recovers, and parsing the whole completion made
+    those quotations rows of the revision (D115). A completion with no label is read whole.
+    """
+    match = re.search(r"^ANALYSIS_", completion, re.M)
+    return completion[: match.start()] if match else completion
+
+
 def parse_analysis(completion: str) -> tuple[str, str]:
     """The `ANALYSIS_EN` and `ANALYSIS_ZH` sections, or empty strings when absent."""
     def section(tag: str) -> str:
@@ -186,8 +196,8 @@ def step2(
         analysis_en, analysis_zh = parse_analysis(completion)
         out.append({
             "expert_index": i,
-            "graph": to_graph(parse_triplets(completion), image_ref=image_ref, dataset=dataset,
-                              live=_is_live(provider)),
+            "graph": to_graph(parse_triplets(revision_text(completion)), image_ref=image_ref,
+                              dataset=dataset, live=_is_live(provider)),
             "analysis_en": analysis_en,
             "analysis_zh": analysis_zh,
             "prompt_shown": prompt,

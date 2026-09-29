@@ -7,6 +7,12 @@ prompt starts `TRIPLE-CHECKING` this recovers the draft and the expert index fro
 prompt, rebuilds the prompt with `step2_prompt(draft, expert, *criteria_for(image_ref))`, and
 recomputes `key`. Completions, cases, provenance and every other exchange are left as they are.
 
+It also rebuilds each authored step-3 exchange (prompt starting `SUMMARIZATION`, case `step3-nN`)
+from the same file's step-2 completions for that frame: the revisions of experts 1 to N are read
+through `revision_text` (a triplet an analysis quotes is not a row of the revision) and the
+analyses through `parse_analysis`. The stored prompt must equal the old build (whole-completion
+parse) or the new one, or the script stops: it never guesses which experts a summary saw.
+
 `--check` writes nothing and exits 1 when a rewrite would change anything. `m0-demo.json` is a
 recording and is refused: its prompts are what the recorder sent, not something to rebuild.
 """
@@ -23,8 +29,13 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.settings import DATA_DIR  # noqa: E402
-from app.vlm.indvissgg import criteria_for, parse_triplets  # noqa: E402
-from app.vlm.prompts import step2_prompt  # noqa: E402
+from app.vlm.indvissgg import (  # noqa: E402
+    criteria_for,
+    parse_analysis,
+    parse_triplets,
+    revision_text,
+)
+from app.vlm.prompts import step2_prompt, step3_prompt  # noqa: E402
 from app.vlm.provider import exchange_key  # noqa: E402
 
 TRANSCRIPTS = DATA_DIR / "vlm" / "transcripts"
@@ -50,6 +61,34 @@ def rekeyed(exchange: dict[str, Any]) -> dict[str, Any]:
     return {**exchange, "prompt": prompt, "key": key}
 
 
+STEP3_CASE_RE = re.compile(r"\Astep3-n(\d+)\Z")
+
+
+def _step3(exchange: dict[str, Any], step2: list[dict[str, Any]]) -> dict[str, Any]:
+    """The step-3 exchange rebuilt from the step-2 exchanges (already rekeyed) of its frame."""
+    case = STEP3_CASE_RE.match(exchange["case"])
+    if case is None:
+        raise ValueError(f"{exchange['case']}: a step-3 case that names no expert count")
+    n = int(case.group(1))
+    experts = sorted(
+        (e for e in step2 if e["image_ref"] == exchange["image_ref"]),
+        key=lambda e: int(HEADING_RE.match(e["prompt"]).group(1)),  # type: ignore[union-attr]
+    )[:n]
+    if len(experts) != n or [
+        int(HEADING_RE.match(e["prompt"]).group(1)) for e in experts  # type: ignore[union-attr]
+    ] != list(range(1, n + 1)):
+        raise ValueError(f"{exchange['case']}: cannot tie it to experts 1 to {n}")
+    analyses = [parse_analysis(e["completion"])[0] for e in experts]
+    old = step3_prompt([parse_triplets(e["completion"]) for e in experts], analyses)
+    new = step3_prompt(
+        [parse_triplets(revision_text(e["completion"])) for e in experts], analyses
+    )
+    if exchange["prompt"] not in (old, new):
+        raise ValueError(f"{exchange['case']}: the stored prompt matches neither build")
+    key = exchange_key(prompt=new, image_ref=exchange["image_ref"], context=exchange["context"])
+    return {**exchange, "prompt": new, "key": key}
+
+
 def render(payload: dict[str, Any]) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
 
@@ -68,7 +107,11 @@ def main(argv: list[str] | None = None) -> int:
     changed = False
     for path in paths:
         payload = json.loads(path.read_text(encoding="utf-8"))
-        payload["exchanges"] = [rekeyed(e) for e in payload["exchanges"]]
+        step2 = [rekeyed(e) for e in payload["exchanges"]]
+        step2_only = [e for e in step2 if HEADING_RE.match(e["prompt"])]
+        payload["exchanges"] = [
+            _step3(e, step2_only) if e["prompt"].startswith("SUMMARIZATION") else e for e in step2
+        ]
         before = json.loads(path.read_text(encoding="utf-8"))["exchanges"]
         for old, new in zip(before, payload["exchanges"], strict=True):
             if old["key"] != new["key"]:

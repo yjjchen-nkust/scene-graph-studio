@@ -267,11 +267,15 @@ class Capturing:
         self.prompts.append(prompt)
         if prompt.startswith("TRIPLE-CHECKING"):
             i = prompt.split("expert ")[1].split(" ")[0]
-            return f"<hand, holding, beam>\nANALYSIS_EN\nen-{i}\nANALYSIS_ZH\nzh-{i}"
+            return (
+                "<hand, holding, beam>\n"
+                f"ANALYSIS_EN\nen-{i}, dropping <hand, near, wrench>\n"
+                f"ANALYSIS_ZH\nzh-{i}"
+            )
         return "<hand, holding, beam>"
 
 
-def test_run_gives_the_experts_the_criteria_step_one_had(monkeypatch):
+def test_run_gives_the_experts_the_criteria_of_step_one(monkeypatch):
     fake = Capturing()
     monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
     run(image_ref="isg-fig2-t1", steps=[1, 2])
@@ -287,5 +291,41 @@ def test_the_labelled_analyses_reach_the_summary(monkeypatch):
     body = run(image_ref="isg-fig2-t1", steps=[1, 2, 3])
     step3 = fake.prompts[-1]
     for i in (1, 2, 3):
-        assert f"EXPERT {i} ANALYSIS\nen-{i}\n" in step3
+        assert f"EXPERT {i} ANALYSIS\nen-{i}, dropping <hand, near, wrench>\n" in step3
+        assert f"EXPERT {i} REVISION\n<hand, holding, beam>\nEXPERT {i} ANALYSIS" in step3
         assert body["step2"][i - 1]["analysis_zh"] == f"zh-{i}"
+
+
+def test_a_triplet_quoted_in_the_analysis_is_not_a_revision_row():
+    completion = (
+        "<hand, holding, beam>\nANALYSIS_EN\nDeleted <hand, near, wrench>.\n"
+        "ANALYSIS_ZH\n刪除 <hand, near, wrench>。"
+    )
+    assert indvissgg.revision_text(completion) == "<hand, holding, beam>\n"
+    assert indvissgg.parse_triplets(indvissgg.revision_text(completion)) == [
+        ("hand", "holding", "beam")
+    ]
+
+
+def test_a_completion_without_labels_is_read_whole():
+    completion = "<hand, holding, beam>\n<beam, on, workbench>"
+    assert indvissgg.revision_text(completion) == completion
+
+
+def test_step_two_builds_its_graph_from_the_revision_only(monkeypatch):
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    body = run(image_ref="isg-fig2-t1", steps=[1, 2])
+    for expert in body["step2"]:
+        assert len(expert["graph"]["relationships"]) == 1
+
+
+def test_under_ablation_the_experts_still_get_the_full_criteria(monkeypatch):
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    run(image_ref="isg-fig2-t1", ablate=["O"], steps=[1, 2])
+    step1, *experts = fake.prompts
+    heading = "TRIPLETS EXTRACTION CRITERIA -- object categories"
+    assert heading not in step1
+    assert len(experts) == 3
+    assert all(heading in e for e in experts)
