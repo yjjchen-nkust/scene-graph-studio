@@ -4792,3 +4792,36 @@ the averaging matrix (R1), and the correction of the three items the final revie
 years of architecture, since s8 names two methods, Neural Motifs (2018) and VCTree (2019); the
 bipartite statement here reads "can oscillate"; and the note on the new files' line endings is
 in the past tense.
+
+## D112 — the live VLM provider sent no frame
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Task 1. **Decisions:** none new. Branch `feat/m0-demos`.
+
+**The defect.** `ClaudeProvider.complete` sent the prompt text alone (`claude.py:39-43` before this
+commit): `image_ref` was accepted and never read. Every exchange recorded through the live path
+therefore described an image the model never saw, and the answer read as a description of it. L5's
+live answers change with the fix, since the model now receives the frame; recorded transcripts are
+unchanged, because none was produced by this path.
+
+**What the fix does, and what the tests pin.**
+- *The frame is sent, before the prompt.* The request carries a base64 `image/jpeg` block and then
+  the text block. The model is `ClaudeProvider(model=...)`, default `claude-sonnet-5`, so L5's live
+  default is unchanged; the request states `max_tokens=16000` and `output_config={"effort":
+  "high"}`, and carries neither `fallbacks` nor `thinking`. A server-side fallback would put text
+  under a model's name that another model produced, which `get_provider` forbids.
+- *A frame that cannot be found is an error.* `app/vlm/frames.py` resolves an id in the mini-ISG
+  slice's images and then in `data/demos/m0/frames`; an id found in neither raises
+  `ProviderUnavailable` naming the id, and no request is made.
+- *The id is validated.* `image_ref` reaches `frame_path` from the request body of
+  `POST /api/vlm/indvissgg`, so `frame_path` looks up only an id that fully matches
+  `[A-Za-z0-9_-]+` (every real id does: `isg-001`, `m0-demo-088`, `isg-fig2-t1`) and skips a
+  candidate whose resolved path is not inside its directory's resolved path. `../x`, `..\x`,
+  `a/b`, the empty string and an absolute path return None, with a real `x.jpg` one level above
+  the frame directory so that the refusal is not a mere absence; the provider then raises the
+  error above.
+- *A refusal is raised.* `stop_reason == "refusal"` raises `ModelRefused`, which carries
+  `stop_details.category` when present.
+- *A truncation is raised.* `stop_reason == "max_tokens"` raises `ProviderUnavailable` naming it.
+
+**Not checked.** The request shape follows the Claude API reference and is exercised against a
+fake `anthropic` module; the package is not installed on py12 and no live call was made.
