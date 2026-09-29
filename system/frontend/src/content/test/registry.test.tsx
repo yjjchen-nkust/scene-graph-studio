@@ -323,7 +323,7 @@ describe('the playground step kind', () => {
     expect(text('../m05.zh-TW.mdx')).not.toMatch(/每十萬|每步收縮|既存預測/);
     expect(text('../m05.zh-TW.mdx')).toContain('奇數長度迴路');
     // The final review: s4's two w = 1 sentences made exact (equal degrees suffice and are not
-    // necessary; a bipartite component oscillates), s5's and s6's notes read the table's dip and the
+    // necessary; a bipartite component can oscillate), s5's and s6's notes read the table's dip and the
     // bound's equality at t = 0, s8 names the files reconstructions (PROVENANCE.md), and s3's note
     // is written register.
     const finalReview = {
@@ -898,7 +898,7 @@ describe('the playground step kind', () => {
     const contracts = source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-contracts.md')
       .replace(/\s+/g, ' ');
     expect(contracts).toContain(
-      "[**Amended 2026-09-29 (D111), awaiting the author's review:** a playground may also show a value of the rule its step teaches",
+      "[**Amended 2026-09-29 (D111), accepted by the author the same day:** a playground may also show a value of the rule its step teaches",
     );
     expect(contracts).toContain('It still computes no metric.]');
     // The NAS is one copy for every branch: what this branch's data does to `main`, and a revert.
