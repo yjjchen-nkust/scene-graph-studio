@@ -1,4 +1,4 @@
-"""Check an unpacked slice bundle against the committed manifests.
+"""Check an unpacked slice bundle against the slices' manifests.
 
 A student whose lab will not load runs this first. Missing, extra and hash-mismatched files are
 reported separately, because the three have different causes: an interrupted unzip, a stale

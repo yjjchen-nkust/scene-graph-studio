@@ -4220,6 +4220,9 @@ and from `ci`, that CLAUDE.md names eleven steps, and that neither file exists.
 should not go to github. Please use NAS: C:\DataRaw\scene-graph to sync the untracked data."
 Branch `chore/sgs-data-nas-sync`, from `main` at `eb68d64`.
 
+[**Superseded 2026-09-29 (D109):** the author then moved all of `data/` to the NAS; the committed
+part this paragraph keeps in git is no longer committed.]
+
 **How the request was read.** The remote is Gitea (`gitea.cillab.me`), not GitHub, so "github" is
 read as the git remote. What git carries stays in git: the slice annotations and manifests,
 `data/content/`, the golden vectors, the predictions, `data/vlm/` and the placeholder frames, 65
@@ -4269,3 +4272,57 @@ skipped, 1018 vitest in 74 files (1017 before; the one added is this record's te
 i18n 380 keys, 786 modules built. The new records test failed on the missing heading before this
 record was written. The gate runs no PowerShell, so the script's behaviour rests on the runs
 above; the test holds its text: the NAS path, the two git calls, `/XO`, and no deleting switch.
+
+## D109 — all of `data/` on the NAS, and none of it in git
+
+**Plan:** none. **Decisions:** the author's, on 2026-09-29, after D108: "move all data into NAS
+for the sync mechanism. Also gitignore all data in the remote." Branch `chore/sgs-data-nas-sync`,
+continued from `85ea580`, D108's last commit.
+
+**What changed in git.** The 65 files D108 left committed under `data/` (the slices' annotations
+and manifests, the six placeholder frames, `data/content/`, the golden vectors and their README,
+`data/mini-isg/`, the predictions and `PROVENANCE.md`, `data/vlm/` and `data/LICENCES.md`) were
+removed from the index with `git rm -r --cached`, so each machine's working copy keeps them.
+`.gitignore` replaces its five `data/` rules, the `!data/slices/placeholder/images/` negation
+among them, with one: `/data/`, anchored because in course-lab a bare `data` rule caught other
+directories of that name. `.gitattributes` loses the six `data/` rules of D89 and D91, which
+governed files git no longer tracks, and with them a stray line reading `" to`: the backslash-n of
+that block's comment had been written as a line break, and git read the fragment as a pattern.
+
+**What changed on the NAS.** `sync-data.ps1` needed two changes for a directory git ignores whole.
+`git ls-files --directory` now answers with the single entry `data/`, which the script read as
+the empty path and dropped; it now stands for `data/` itself. And the machine-local
+`data/predictions/.latency.json`, which `.gitignore` no longer names on its own, is excluded by
+robocopy `/XF` by full path on both sides. With a probe timings file in place, a push listed
+65 new files and not the probe, and the NAS did not receive it. The NAS now holds all 257 files
+of `data/`, 4.646 GB, and every one matches its local copy by SHA-256. A third change came from
+the first gate run after the push: the harvest rewrites `deriv.json`, `kp.json` and `math.json`
+unchanged on every run, and `-Status`, which compared times alone, reported them to push. It now
+compares the bytes when only the times differ; the three read in step, and a one-byte probe in
+`data/golden/README.md` read "1 to push" until the NAS copy was put back.
+
+**What a fresh clone needs now.** `start.ps1` stops before any install when `data/LICENCES.md`
+is absent and names `.\sync-data.ps1 -Pull`. README, CLAUDE.md and INDEX say so;
+`fetch-data.ps1`, `cut_slice.py`, `fetch_images.py`, `make_placeholders.py`, `verify_bundle.py`
+and `playgrounds/slice.ts` no longer call a file under `data/` committed. Test names and
+docstrings that say "committed" (`test_every_committed_annotation_validates` and others) and the
+dated records keep their text, and now read "present in `data/`".
+
+**What this costs, stated for the author's review before the merge.**
+
+- **NFR-1.** "A fresh clone works with no data of any kind" no longer holds: a clone without the
+  NAS has no placeholder slice, no content and no golden vectors, and neither the application
+  nor the gate runs. Once `data/` is pulled, NFR-1's offline requirement holds as before.
+- **CI.** `.gitea/workflows/scene-graph-studio.yml` checks out the repository and runs
+  `npm run ci`; with no `data/` the gate fails at its first read of it, and a runner in Docker
+  cannot reach `C:\DataRaw`. The workflow has no runner yet, so nothing is red today. It is left
+  as it was: whether CI gets its data another way or is retired is the author's decision.
+- **The other machine.** A `git pull` that brings this commit deletes the 65 files from that
+  working tree, because git removes what a merged commit removes; `.\sync-data.ps1 -Pull`
+  restores them, if that machine reaches the NAS.
+- **History.** The 65 files remain in the remote's history, in every commit before this one.
+  Removing them from history needs a rewrite and a force push, which was not done.
+- **Versioning.** From here the content, the golden vectors and the licence gates change without
+  a diff or a review, and the NAS copy keeps no earlier version and propagates no deletion.
+- **Students.** README's student route begins from a clone; a student without the NAS has no
+  `data/`.

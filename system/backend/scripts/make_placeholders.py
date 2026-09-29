@@ -1,9 +1,9 @@
 """Generate the placeholder slice: six synthetic frames plus their ground-truth graphs.
 
-This is the one slice whose IMAGES are committed, because they are this project's own generated
-output and NFR-1 depends on every lab being demonstrable on a bare clone -- one with no corpora
-under SGS_CORPUS_ROOT and no slice bundle unpacked. Every other slice commits annotations and a
-manifest only (decision D-08).
+This is the one slice whose IMAGES this repository makes, because they are this project's own
+generated output and NFR-1 depends on every lab being demonstrable with no corpora under
+SGS_CORPUS_ROOT and no slice bundle unpacked. Every other slice holds annotations and a manifest
+only (decision D-08). None of it is committed since D109: data/ comes from the NAS.
 
 Each frame satisfies D-10's selection rule: at least 4 objects, at least 3 relationships, and at
 least one relationship whose predicate falls outside the slice's ten most frequent. The last

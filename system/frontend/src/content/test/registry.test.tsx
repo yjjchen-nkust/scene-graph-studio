@@ -706,6 +706,37 @@ describe('the playground step kind', () => {
     }
   });
 
+  it('the records carry D109, and git carries nothing under data/', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    const ignore = source('../../../../../.gitignore').split(/\r?\n/);
+    const attributes = source('../../../../../.gitattributes').split(/\r?\n/);
+    const start = source('../../../../../start.ps1');
+    const d109 = record(deviations, 'D109').replace(/\s+/g, ' ');
+    expect(deviations).toContain('## D109 — all of `data/` on the NAS, and none of it in git');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 109, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 109, 'CLAUDE.md deviations');
+    // The whole directory, anchored, and no negation that would let a file of it back in.
+    expect(ignore).toContain('/data/');
+    expect(ignore.filter((line) => line.startsWith('!') && line.includes('data'))).toEqual([]);
+    // No attribute rule over a directory git no longer tracks, and no line that is not a rule.
+    const rules = attributes.filter((line) => line.trim() && !line.startsWith('#'));
+    expect(rules.filter((line) => line.startsWith('data/'))).toEqual([]);
+    for (const line of rules) expect(line, line).toMatch(/^\S+\s+\S+=\S+$/);
+    // A fresh clone is told where data/ comes from before anything is installed.
+    expect(start.indexOf('sync-data.ps1 -Pull')).toBeGreaterThan(-1);
+    expect(start.indexOf('sync-data.ps1 -Pull')).toBeLessThan(start.indexOf('npm install'));
+    expect(readme).not.toContain('Committed: `annotations.json`');
+    expect(readme).toContain('Nothing under `data/` is committed (D109)');
+    for (const item of ['85ea580', '257 files', 'NFR-1', 'CI', 'git pull', 'history']) {
+      expect(d109, item).toContain(item);
+    }
+  });
+
   it('the records state as many playgrounds, uncovered live points and steps as the code holds', () => {
     // Taken from the mount table, the harvest and the modules, as the vectors' count is taken from
     // their file: a bound passes a count left stale (D104's branch review, D106).

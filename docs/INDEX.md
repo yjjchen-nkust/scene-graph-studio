@@ -40,7 +40,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-27-graph-constraint-key.md` | Both engines re-keyed, gv-014, `semi` described, D51 corrected | **executed** |
 | `superpowers/plans/2026-09-28-playgrounds-m4.md` | M4's corrections, the ranked list and its arithmetic, E3, E4, E7, E13 and X2, their golden cases, M4 s3 to s16 | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D108. Every departure from plan, with its reason.** | live |
+| `../DEVIATIONS.md` | **D1…D109. Every departure from plan, with its reason.** | live |
 | `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28) and the M4 playgrounds (§29)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | The freeze, its release by D-23, and every correction made under it | live |
@@ -85,7 +85,7 @@ drifts.
 
 | | | Enforced by |
 |---|---|---|
-| **NFR-1** | Offline-complete; every P0 feature works with the network down and `torch` absent | the committed placeholder slice |
+| **NFR-1** | Offline-complete; every P0 feature works with the network down and `torch` absent | the placeholder slice, in `data/`, which comes from the NAS (D109) |
 | **NFR-2** | Honest numbers: every figure carries a source and a `verified` flag | `content_lint.mjs` |
 | **NFR-3** | Two implementations, one truth | `parity.mjs`, 21 golden vectors |
 | **NFR-4** | Determinism, including tie-break order | `sorted(key=(-score, relationship_id))` |
@@ -108,7 +108,7 @@ drifts.
 | Mask pairing `single_mpo` / `multi_mpo` | `design.md` §4.3; L6 runs both |
 | The 21 golden vectors | `system/backend/scripts/build_golden.py`, each with a `why` |
 | Corpus layouts, per dataset | `system/backend/app/datasets/adapters/__init__.py` — `LAYOUTS` |
-| Which datasets may be committed or distributed | `data/LICENCES.md` |
+| Which datasets may be cut or distributed (nothing under `data/` is committed, D109) | `data/LICENCES.md`, on the NAS |
 | The slice selection rule | `system/backend/app/datasets/loader.py` — `SELECTION_RULE` |
 | What may change on the knowledge-map page, and what may not | D-23, `FROZEN.md`, and D-14 |
 | The eight labs L1–L8 | `PRD.md` §6.2; per-lab tasks in plans 02–04 |
@@ -127,7 +127,8 @@ by golden vectors (13 at plan 01's close, 16 after D99, 17 since D100, 20 after 
 
 **Data.** Corpora at `C:\DataRaw` (`SGS_CORPUS_ROOT`). Three slices cut with seed 20260915:
 `vg150-sgb` 80 images, `indoorvg` 20, `psg` 50. Annotations and manifests committed; images
-ignored, as the gate requires. `psg` took a manual download on three paths — `psg.json` from an
+ignored, as the gate requires. [Since D109 nothing under `data/` is committed; the NAS at
+`C:\DataRaw\scene-graph` carries all of it, by `sync-data.ps1`.] `psg` took a manual download on three paths — `psg.json` from an
 interactive link, then COCO `val2017` and the panoptic annotations, both of which this network
 serves only in ranged chunks. All 622 objects in the `psg` slice carry a mask, and the masks were
 checked pixel-for-pixel against the source panoptic PNGs after the round trip.

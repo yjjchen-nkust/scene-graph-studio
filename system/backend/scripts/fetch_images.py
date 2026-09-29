@@ -9,7 +9,7 @@ PSG is the case that forces this to exist: OpenPSG is MIT, but it annotates COCO
 COCO does not relicense the Flickr photographs it indexes. An MIT licence on an annotation set
 does not reach through to photographs its authors never owned.
 
-Every download is checked against the SHA-256 in the committed MANIFEST.json, so a truncated or
+Every download is checked against the SHA-256 in the slice's MANIFEST.json, so a truncated or
 substituted file fails loudly rather than teaching from the wrong pixels.
 """
 
@@ -64,7 +64,7 @@ def main() -> int:
     if not manifest_path.is_file():
         raise SystemExit(
             f"no manifest at {manifest_path}\n"
-            f"  Nothing has been cut for {args.dataset!r} yet. Every lab runs on the committed\n"
+            f"  Nothing has been cut for {args.dataset!r} yet. Every lab runs on the\n"
             f"  placeholder slice until a slice exists."
         )
 
@@ -96,7 +96,7 @@ def main() -> int:
     if failed:
         print(
             "  A failure here is usually a dead source URL rather than a local problem.\n"
-            "  Report it: the manifest is committed, so the same URL fails for everyone."
+            "  Report it: the manifest is shared, so the same URL fails for everyone."
         )
         return 1
     return 0

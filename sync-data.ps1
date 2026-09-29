@@ -1,23 +1,22 @@
 <#
 .SYNOPSIS
-    Copy the data git does not carry between this checkout and the NAS.
+    Copy data/ between this checkout and the NAS; git carries none of it.
 
 .DESCRIPTION
-    The data under data/ falls into two parts, and each travels by one route only (D108).
-
-      Committed   annotations, manifests, content, golden vectors, predictions, the placeholder
-                  frames. Git carries these, because the licence gates in data/LICENCES.md
-                  cleared them and the gate reads them.
-      Ignored     data/_raw/ (the hand-downloaded corpora), every real slice's images/, and
-                  data/checkpoints/. Git never carries these. This script copies them to the
-                  NAS and back, so a second machine obtains them without the remote.
+    Nothing under data/ travels through git (D109): .gitignore ignores the whole directory and
+    the remote holds none of it. The NAS holds it instead, and this script copies it there and
+    back. A fresh clone therefore has no data/ at all: run .\sync-data.ps1 -Pull before
+    .\start.ps1 or npm run ci.
 
     The set this script copies is not a list written here: it is what git reports as ignored
-    under data/, so a new ignore rule in .gitignore extends it with no edit to this file. Two
-    guards follow from that. A push copies only what git ignores. A pull refuses to start when
-    any file on the NAS would land on a path git does not ignore, because such a file would
-    either overwrite a committed one or show up as untracked and be committed by the next
-    careless 'git add'.
+    under data/, which since D109 is the whole directory (D108 began with the part git already
+    ignored). Two guards follow from that. A push copies only what git ignores. A pull refuses
+    to start when any file on the NAS would land on a path git does not ignore, because such a
+    file would either overwrite a committed one or show up as untracked and be committed by the
+    next careless 'git add'.
+
+    One file stays on each machine: data/predictions/.latency.json, the timings each machine
+    reports for itself in PROVENANCE.md.
 
     Copies are additive. A file newer on the destination is never overwritten, and a file
     deleted on one side is not deleted on the other; remove it on both by hand.
@@ -27,10 +26,10 @@
     and it is NO for psg, vg150-sgb and indoorvg.
 
 .PARAMETER Status
-    Compare the ignored data here with the NAS, group by group, and exit. The default.
+    Compare data/ here with the NAS, group by group, and exit. The default.
 
 .PARAMETER Push
-    Copy the ignored data from this checkout to the NAS.
+    Copy data/ from this checkout to the NAS.
 
 .PARAMETER Pull
     Copy the NAS copy into data/, after checking every file lands on an ignored path.
@@ -47,11 +46,11 @@
 
 .EXAMPLE
     .\sync-data.ps1 -Push
-    Copy data/_raw/, the slice images and any checkpoints to the NAS.
+    Copy data/ to the NAS after changing anything in it: a harvest, a cut, a new checkpoint.
 
 .EXAMPLE
-    .\sync-data.ps1 -Pull -DryRun
-    On a fresh clone, list what a pull would bring from the NAS.
+    .\sync-data.ps1 -Pull
+    On a fresh clone, or after another machine pushed, bring data/ from the NAS.
 #>
 [CmdletBinding(DefaultParameterSetName = 'Status')]
 param(
@@ -70,8 +69,8 @@ $data  = Join-Path $track 'data'
 if (-not $Nas) { $Nas = if ($env:SGS_DATA_NAS) { $env:SGS_DATA_NAS } else { 'C:\DataRaw\scene-graph' } }
 $Nas = $Nas.TrimEnd('\', '/')
 
-# Ignored, but written per machine and reported per machine in PROVENANCE.md (.gitignore says so).
-# Copying it would make one machine report another machine's timings.
+# Written per machine and reported per machine in PROVENANCE.md. Copying it would make one
+# machine report another machine's timings.
 $machineLocal = @('predictions/.latency.json')
 
 # Paths go to git and come back as UTF-8 text; without this a non-ASCII name arrives mangled.
@@ -103,23 +102,40 @@ function Get-Files {
 }
 
 function Get-IgnoredEntries {
-    <# What git ignores under data/, relative to data/: a directory ends in '/', a file does not. #>
+    <# What git ignores under data/, relative to data/: a directory ends in '/', a file does not,
+       and '' is data/ itself, which is the whole answer since D109. #>
     $entries = & git -C $track -c core.quotePath=false ls-files --others --ignored --exclude-standard --directory -- data
     if ($LASTEXITCODE -ne 0) { throw 'git ls-files failed; is this a checkout of the repository?' }
     # A $null piped on still runs the block once, so an empty answer returns here.
     if (-not $entries) { return @() }
     return @($entries | ForEach-Object { $_.Substring('data/'.Length) } |
-        Where-Object { $_ -and $machineLocal -notcontains $_ })
+        Where-Object { $machineLocal -notcontains $_ })
+}
+
+function Test-Directory {
+    param([string]$Entry)
+    return ($Entry -eq '' -or $Entry.EndsWith('/'))
+}
+
+function Join-Entry {
+    <# $Root joined with an entry; '' is $Root itself. Robocopy reads a trailing backslash before a
+       quote as an escape, so no trailing slash survives. #>
+    param([string]$Root, [string]$Entry)
+    $rel = $Entry.TrimEnd('/').Replace('/', '\')
+    if ($rel) { return (Join-Path $Root $rel) }
+    return $Root
 }
 
 function Get-LocalFiles {
-    <# The files of the ignored entries, keyed as Get-Files keys them. #>
+    <# The files of the ignored entries, keyed as Get-Files keys them, machine-local ones left out. #>
     $files = @{}
     foreach ($entry in Get-IgnoredEntries) {
-        $path = Join-Path $data $entry
-        if ($entry.EndsWith('/')) {
+        $path = Join-Entry $data $entry
+        if (Test-Directory $entry) {
             $inner = Get-Files $path
-            foreach ($k in $inner.Keys) { $files[$entry + $k] = $inner[$k] }
+            foreach ($k in $inner.Keys) {
+                if ($machineLocal -notcontains ($entry + $k)) { $files[$entry + $k] = $inner[$k] }
+            }
         } elseif (Test-Path -LiteralPath $path -PathType Leaf) {
             $files[$entry] = Get-Item -LiteralPath $path -Force
         }
@@ -153,19 +169,24 @@ function Get-Group {
     return ($dirs | Select-Object -First 2) -join '/'
 }
 
-function Test-Newer {
-    <# $A is newer than $B beyond the two-second resolution some NAS file systems keep. #>
+function Test-Ahead {
+    <# $A is newer than $B, beyond the two-second resolution some NAS file systems keep, and holds
+       different bytes. Equal content is never ahead whatever the times say: the gate's harvest
+       rewrites three files of data/content/ unchanged on every run. #>
     param($A, $B)
-    return ($A.LastWriteTimeUtc - $B.LastWriteTimeUtc).TotalSeconds -gt 2
+    if (($A.LastWriteTimeUtc - $B.LastWriteTimeUtc).TotalSeconds -le 2) { return $false }
+    if ($A.Length -ne $B.Length) { return $true }
+    return (Get-FileHash -LiteralPath $A.FullName).Hash -ne (Get-FileHash -LiteralPath $B.FullName).Hash
 }
 
 function Invoke-Robocopy {
     param([string]$From, [string]$To, [string[]]$Only)
     # /E subdirectories, /XO never overwrite a newer destination file, /FFT two-second times,
     # /MT:8 eight threads for the many small images, /XX no listing of files only the destination
-    # holds (a pull into data/ would list every committed file). No /MIR, no /PURGE: nothing is
-    # deleted.
+    # holds, /XF the machine-local files by full path on either side. No /MIR, no /PURGE:
+    # nothing is deleted.
     $argv = @($From, $To) + $Only + @('/E', '/XO', '/XX', '/FFT', '/MT:8', '/R:2', '/W:5', '/NP', '/NDL', '/NJH')
+    $argv += @('/XF') + @($machineLocal | ForEach-Object { Join-Entry $data $_; Join-Entry $Nas $_ })
     if ($DryRun) { $argv += '/L' } else { $argv += '/NFL' }
     # To the host, not the pipeline: otherwise its lines join the returned value.
     & robocopy @argv | Out-Host
@@ -192,19 +213,19 @@ function Show-Status {
     foreach ($k in $local.Keys) {
         $row = $groups[(Get-Group $k)]; $l = $local[$k]
         $row.Local++; $row.LocalBytes += $l.Length
-        if (-not $remote.ContainsKey($k) -or (Test-Newer $l $remote[$k])) { $row.Push++ }
+        if (-not $remote.ContainsKey($k) -or (Test-Ahead $l $remote[$k])) { $row.Push++ }
     }
     foreach ($k in $remote.Keys) {
         $row = $groups[(Get-Group $k)]; $r = $remote[$k]
         $row.Nas++; $row.NasBytes += $r.Length
-        if (-not $local.ContainsKey($k) -or (Test-Newer $r $local[$k])) { $row.Pull++ }
+        if (-not $local.ContainsKey($k) -or (Test-Ahead $r $local[$k])) { $row.Pull++ }
     }
 
     Write-Host ''
     if ($groups.Count -eq 0) { Write-Dim 'nothing ignored under data/ here, and nothing on the NAS' }
     foreach ($g in $groups.Keys | Sort-Object) {
         $row = $groups[$g]
-        $text = '{0} here {1,5} files {2,9}   NAS {3,5} files {4,9}' -f $g.PadRight(22),
+        $text = '{0} here {1,5} files {2,9}   NAS {3,5} files {4,9}' -f $g.PadRight(24),
             $row.Local, (Format-Size $row.LocalBytes), $row.Nas, (Format-Size $row.NasBytes)
         if ($row.Push -eq 0 -and $row.Pull -eq 0) { Write-Ok "$text   in step"; continue }
         $todo = @()
@@ -219,7 +240,7 @@ function Show-Status {
         $refused | Select-Object -First 10 | ForEach-Object { Write-Bad "  $_" }
     }
     Write-Host ''
-    Write-Dim 'Copies are additive: a newer file is never overwritten and nothing is deleted (D108).'
+    Write-Dim 'Copies are additive: a newer file is never overwritten and nothing is deleted (D108, D109).'
     Write-Host ''
     return 0
 }
@@ -232,11 +253,9 @@ function Invoke-Push {
     foreach ($entry in $entries) {
         Write-Host ''
         Write-Host "  push data/$entry" -ForegroundColor Cyan
-        # Robocopy reads a trailing backslash before a quote as an escape, so neither slash stays.
-        $rel = $entry.TrimEnd('/').Replace('/', '\')
-        $from = Join-Path $data $rel
-        $to = Join-Path $Nas $rel
-        $ok = if ($entry.EndsWith('/')) { Invoke-Robocopy $from $to @() }
+        $from = Join-Entry $data $entry
+        $to = Join-Entry $Nas $entry
+        $ok = if (Test-Directory $entry) { Invoke-Robocopy $from $to @() }
               else { Invoke-Robocopy (Split-Path $from) (Split-Path $to) @(Split-Path -Leaf $from) }
         if (-not $ok) { $failed++ }
     }
@@ -256,7 +275,7 @@ function Invoke-Pull {
     }
     Write-Host ''
     Write-Host "  pull $Nas into data/" -ForegroundColor Cyan
-    # Machine-local names are refused above, so the NAS tree can be copied whole.
+    # Every file passed the check above, so the NAS tree can be copied whole.
     return [int](-not (Invoke-Robocopy $Nas $data @()))
 }
 

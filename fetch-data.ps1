@@ -13,7 +13,7 @@
                 images are present, and which route applies. This is the default.
       -Fetch    run backend/scripts/fetch_images.py for a cut slice whose images must be
                 downloaded per-image from the source rather than redistributed. Every file is
-                checked against the SHA-256 in the committed MANIFEST.json.
+                checked against the SHA-256 in the slice's MANIFEST.json.
       -Verify   run backend/scripts/verify_bundle.py over unpacked slice images.
       -Unpack   unpack a slice bundle zip received out of band, then verify it.
 
@@ -35,7 +35,7 @@
     Download images for a cut slice from the source, verifying each hash.
 
 .PARAMETER Verify
-    Check unpacked images against their committed manifests.
+    Check unpacked images against their slices' manifests.
 
 .PARAMETER Unpack
     Path to a slice bundle zip to unpack into data/slices/, then verify.

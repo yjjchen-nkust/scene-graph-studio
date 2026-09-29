@@ -12,7 +12,8 @@
 
     NFR-1: the application runs with no corpora and no bundle. The placeholder slice is
     generated locally and every lab is demonstrable on it. Real slices are a separate,
-    optional step -- see .\fetch-data.ps1.
+    optional step -- see .\fetch-data.ps1. It does need data/, which git no longer carries
+    (D109): on a fresh clone, run .\sync-data.ps1 -Pull first, and this script says so.
 
 .PARAMETER Setup
     Force the install steps even if they appear done. Use after pulling changes that touch
@@ -78,6 +79,15 @@ function Stop-With {
 Write-Host ''
 Write-Host '  Scene Graph Studio' -ForegroundColor White
 Write-Host ''
+
+# ---- data/ comes from the NAS, not from git (D109) ----------------------------------------
+# A fresh clone has no data/ at all, and saying so before any install saves a wasted one.
+# data/LICENCES.md is the file every later step needs: the placeholder slice is refused
+# without its gate row.
+if (-not (Test-Path 'data/LICENCES.md')) {
+    Stop-With 'data/ is absent: git carries none of it since D109, the NAS does.' `
+              'Run .\sync-data.ps1 -Pull (or -Pull -Nas <dir>), then .\start.ps1 again.'
+}
 
 # ---- Node (D-03: >= 22.12 is a hard prerequisite; Vite 8 refuses anything older) ----------
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
