@@ -1,3 +1,4 @@
+import type { SceneGraph } from 'sgg-metrics';
 import { describe, expect, it } from 'vitest';
 import golden from '../../../../../data/content/playground_golden.json';
 import { VG150_CLASSES, VG150_PREDICATES } from '../E10/setup';
@@ -6,12 +7,15 @@ import { VRD_CUT, VRD_PREDICATES, e13Copies } from '../E13/setup';
 import { F3_FRAME, F3_OBJECT } from '../F3/setup';
 import { OBJECT_GROUP, PREDICATE_GROUP } from '../F6/groups';
 import {
-  admitByMask, annotatedTriplet, area, byScore, candidateSpace, capPerPair, classCounts, conjuncts, failureMode, frameVerdict, hypothesisSpace, iouCounts,
-  densityCut, explain, headShare, intersection, isInE, isInMergedE, matchedByMask, matchedTruths, measuredHeadShare, mergeMap,
-  objectLabels, predicateLabels, ranked, ratio, scaleBound, scaledBox, splitDifference, tailToHead, topK, unionArea,
+  admitByMask, annotatedTriplet, area, averagingRounds, byScore, candidateSpace, capPerPair, classCounts, conjuncts,
+  degreeWeightedMean, failureMode, fixedPoint, frameVerdict, hypothesisSpace, iouCounts,
+  densityCut, explain, headShare, intersection, isInE, isInMergedE, matchedByMask, matchedTruths, maxDistance, mean, measuredHeadShare, mergeMap,
+  objectLabels, predicateLabels, ranked, ratio, relatedPairs, scaleBound, scaledBox, splitDifference, spread, tailToHead, topK, unionArea,
   wholePixelBoxes, withDefects, type Protocol,
 } from '../logic';
 import { M4_CAPS, M4_RANKING } from '../M4/ranking';
+import { beliefGraph, type BeliefGraphName } from '../M5/beliefs';
+import { PAIR_ROWS, SLICE_TOTALS } from '../M5/pairs';
 import { SLICE_CLASS_COUNT, SLICE_PREDICATE_COUNT, VG_FRAMES, frameById, vgFrameById } from '../slice';
 import { releaseById, type Split } from '../splits';
 
@@ -48,6 +52,9 @@ const RUNS: Record<string, (c: Case) => boolean> = {
   E7: (c) => c.kp === 'E7',
   E13: (c) => c.kp === 'E13',
   X2: (c) => c.kp === 'X2',
+  'T1 frame': (c) => c.kp === 'T1' && Boolean(c.image_id),
+  'T1 slice': (c) => c.kp === 'T1' && c.scope === 'slice',
+  T2: (c) => c.kp === 'T2',
 };
 const run = (block: string) => cases.filter(RUNS[block]!);
 
@@ -259,5 +266,55 @@ describe('playground golden cases', () => {
     expect(pool).toBe(c.expect.pool);
     expect(share).toBe(c.expect.share);
     expect(cut).toBe(c.expect.cut);
+  });
+
+  it.each(run('T1 frame'))('$id', (c) => {
+    const row = PAIR_ROWS[(c.knobs.frame as number) - 1]!;
+    expect(row.imageId).toBe(c.image_id);
+    const frame = vgFrameById(c.image_id!)!;
+    const n = frame.objects.length;
+    expect(n).toBe(c.expect.objects);
+    expect(candidateSpace(n, 1, true)).toBe(c.expect.pairs);
+    expect(candidateSpace(n, VG150_PREDICATES, true)).toBe(c.expect.decisions);
+    expect(frame.relationships).toHaveLength(c.expect.rows as number);
+    expect(relatedPairs(frame.relationships)).toBe(c.expect.related);
+    expect([row.objects, row.pairs, row.rows, row.related])
+      .toEqual([c.expect.objects, c.expect.pairs, c.expect.rows, c.expect.related]);
+  });
+
+  it.each(run('T1 slice'))('$id', (c) => {
+    const sum = (f: (g: SceneGraph) => number) => VG_FRAMES.reduce((total, g) => total + f(g), 0);
+    expect(VG_FRAMES).toHaveLength(c.expect.frames as number);
+    expect(sum((g) => g.objects.length)).toBe(c.expect.objects);
+    expect(sum((g) => candidateSpace(g.objects.length, 1, true))).toBe(c.expect.pairs);
+    expect(sum((g) => g.relationships.length)).toBe(c.expect.rows);
+    expect(sum((g) => relatedPairs(g.relationships))).toBe(c.expect.related);
+    expect(SLICE_TOTALS).toEqual(c.expect);
+  });
+
+  it.each(run('T2'))('$id', (c) => {
+    const { graph, w, t } = c.knobs as { graph: BeliefGraphName; w: number; t: number };
+    const g = beliefGraph(graph);
+    expect(frameById(c.image_id!)!.objects.map((o) => o.object_id).sort((a, b) => a - b)).toEqual(g.ids);
+    const b = averagingRounds(g.a, w, g.b0, t);
+    const expected = (c.expect.beliefs as string).split(',').map(Number);
+    b.forEach((value, i) => expect(value, `belief ${i + 1}`).toBeCloseTo(expected[i]!, 4));
+    expect(spread(b)).toBeCloseTo(c.expect.spread as number, 4);
+    const star = fixedPoint(g.a, w, g.b0);
+    if (c.expect.distance === null) {
+      expect(star).toBeNull();
+      expect(degreeWeightedMean(g.lists, g.b0)).toBeCloseTo(c.expect.limit as number, 4);
+      expect(mean(g.b0)).toBeCloseTo(c.expect.mean as number, 4);
+    } else {
+      expect(maxDistance(b, star!)).toBeCloseTo(c.expect.distance as number, 4);
+      expect(w ** t * maxDistance(g.b0, star!)).toBeCloseTo(c.expect.bound as number, 4);
+      expect(spread(star!)).toBeCloseTo(c.expect.spread_fixed as number, 4);
+    }
+  });
+
+  it("pins T1's four cases and T2's seven, so no block passes by running none", () => {
+    expect(run('T1 frame')).toHaveLength(3);
+    expect(run('T1 slice')).toHaveLength(1);
+    expect(run('T2')).toHaveLength(7);
   });
 });
