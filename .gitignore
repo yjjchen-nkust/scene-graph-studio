@@ -6,10 +6,11 @@ __pycache__/
 .env
 .DS_Store
 .pytest_cache/
-# All of data/, at the author's request (D109): the NAS carries it, by sync-data.ps1, and the
-# remote carries none of it. Anchored with the leading slash, because in course-lab a bare
-# `data` rule swallowed other directories named data twice. WekaExt's root .gitignore has no
-# rule over this tree at all, so every exclusion the track needs has to be stated here.
+# All of data/, at the author's request (D109): the remote carries none of it, and data/ is a
+# link to the NAS (D110), which this rule also keeps out of every commit. Anchored with the
+# leading slash, because in course-lab a bare `data` rule swallowed other directories named data
+# twice. WekaExt's root .gitignore has no rule over this tree at all, so every exclusion the
+# track needs has to be stated here.
 /data/
 
 # Playwright (check 8 of docs/VERIFICATION.md) writes both on every run.

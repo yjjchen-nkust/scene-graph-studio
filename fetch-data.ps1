@@ -98,6 +98,14 @@ if (-not $Python) {
     exit 1
 }
 
+# data/ is a link to the NAS (D110); everything below reads and writes through it.
+. (Join-Path $system 'tools/Connect-DataDirectory.ps1')
+$dataProblem = Connect-DataDirectory -Track $track
+if ($dataProblem) {
+    Write-Bad $dataProblem
+    exit 1
+}
+
 # Where the author's hand-downloaded corpora live. Never a committed path.
 $corpusRoot = if ($env:SGS_CORPUS_ROOT) { $env:SGS_CORPUS_ROOT } else { 'data/_raw' }
 

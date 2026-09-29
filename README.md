@@ -73,10 +73,11 @@ substitute there — this is why the script takes the ports as parameters.
 SGS_BACKEND_PORT=8010 SGS_FRONTEND_PORT=5180 npm start
 ```
 
-**A fresh clone needs `data/` from the NAS, and nothing more (D109).** Git carries nothing
-under `data/`: run `.\sync-data.ps1 -Pull` first, and `start.ps1` stops and says so when
-`data/` is absent. Beyond that no data of any kind is needed: the placeholder slice, six
-synthetic frames, is enough to run every lab. Nothing is downloaded, and nothing needs a GPU.
+**A fresh clone needs the NAS, and nothing more (D109, D110).** Git carries nothing under
+`data/`, and no data file lives in the checkout: `start.ps1` makes `data/` a link to
+`C:\DataRaw\scene-graph` (or to `SGS_DATA_DIR`), and stops and says so when that directory is
+unreachable. Beyond that no data of any kind is needed: the placeholder slice, six synthetic
+frames, is enough to run every lab. Nothing is downloaded, and nothing needs a GPU.
 
 ### If you are a student
 
@@ -155,8 +156,6 @@ decision D-14.
 .\fetch-data.ps1                          # what exists, what each dataset still needs
 .\fetch-data.ps1 -Fetch -Dataset psg      # per-image download from source, hash-checked
 .\fetch-data.ps1 -Unpack <bundle.zip>     # unpack a slice bundle, then verify it
-.\sync-data.ps1                           # compare data/ with the NAS copy
-.\sync-data.ps1 -Push                     # copy data/ to the NAS; -Pull copies it back
 ```
 
 `fetch-data.ps1` does **not** download a corpus, and neither does anything else here — D-08
@@ -168,13 +167,15 @@ dataset.**
 
 Nothing under `data/` is committed (D109): not the corpora or slice images, and not the
 slices' annotations and manifests, the placeholder frames, `data/content/`, the golden vectors,
-the predictions or `data/LICENCES.md` either. `.gitignore` ignores the whole directory, and the
-NAS carries it between machines, never the remote (D108, D109). `sync-data.ps1` copies `data/`
-to `C:\DataRaw\scene-graph` and back; `SGS_DATA_NAS` or `-Nas` names another directory. A pull
-refuses any file that would land on a path git does not ignore, and neither direction
-overwrites a newer file or deletes one, so push after every harvest, cut or other change under
-`data/`. The NAS copy is private storage, not a route to students: `bundle_distribute` in
-`data/LICENCES.md` still governs that.
+the predictions or `data/LICENCES.md` either. `.gitignore` ignores the whole directory, and
+`data/` is a directory junction to `C:\DataRaw\scene-graph` on the NAS, the one copy every
+reader reaches (D110). `SGS_DATA_DIR` names another target; `start.ps1` and `fetch-data.ps1`
+make the link. A harvest, a cut or a fetch writes straight to the NAS, so there is nothing to
+copy afterwards. To remove the link, `rmdir data` or `rm -rf data`, never `rm -rf data/`: with
+the trailing slash Git Bash deletes the files on the NAS. The NAS copy is private storage, not
+a route to students: `bundle_distribute` in `data/LICENCES.md` still governs that.
+
+On macOS or Linux the link is `ln -s /path/to/scene-graph data`, made by hand at the track root.
 
 `data/LICENCES.md` carries two findings per dataset, because downloading for your own use and
 handing images to a class are different acts:
@@ -267,8 +268,8 @@ your own server, or a drag-and-drop host.
 
 It was **frozen on 2026-09-15** and harvested into `data/content/` as the seed corpus for the MDX
 modules. **The freeze was released on 2026-09-27 (D-23)**, so the page may be extended again. It is
-still the harvest's source: change the page, run `npm run harvest`, commit the page and push
-`data/` to the NAS (`.\sync-data.ps1 -Push`), which is where the harvest's output lives. It is kept
+still the harvest's source: change the page, run `npm run harvest`, whose output lands on the
+NAS through `data/`, and commit the page. It is kept
 because it is the only artefact here that runs with no toolchain at all, which makes it the
 last-resort offline fallback, so it must still open from disk with no build step. `npm run ci`
 still validates it so it cannot rot silently.
