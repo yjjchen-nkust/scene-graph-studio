@@ -1,7 +1,8 @@
 import { useLocale } from '../../i18n/useLocale';
 import { CLIP_FRAMES, FRAME_IDS, KEYFRAME_IDS, TRADITIONAL, VLM, keyframeMark, type Triplet } from '../data';
 import { churn, churnFraction, distinct, traditionalTriplets, tripletKey } from '../logic';
-import { MARK, SIGN, type Change } from './marks';
+import { MARK, SIGN, type Change } from '../marks';
+import { bySubjectText } from './terms';
 
 /** A frame's time in the source video, as its tick names it, without the keyframe's mark. */
 const seconds = (id: string) => `${CLIP_FRAMES.find((f) => f.image_id === id)?.t ?? id} s`;
@@ -10,9 +11,11 @@ const seconds = (id: string) => `${CLIP_FRAMES.find((f) => f.image_id === id)?.t
  * D-V, part 5: the frames over time.
  *
  * The three keyframes t₁, t₂ and t₃, each the distinct triplets of that frame's step-3 summary
- * (E_t is a set, D96). In t₂ and t₃ each triplet is kept, added (`+`, on a solid `blue-700` rule)
- * or removed (`−`, on a dotted `slate-700` rule) against the keyframe before; a removed triplet is
- * listed with the keyframe where it disappeared, as Figure 6 dots an edge in the later graph.
+ * (E_t is a set, D96), written `s: p → o` as part 4 writes a row under its subject. In t₂ and t₃
+ * each triplet is kept, added (`+`) or removed (`−`) against the keyframe before, in Figure 6's
+ * marks (`marks.ts`); a removed triplet is listed with the keyframe where it disappeared, as Figure
+ * 6 dots an edge in the later graph. A keyframe whose summary is empty says so, and still lists
+ * what it removed.
  * Below, the churn of both pipelines from each of the ten frames to the next, |E_{t−1} Δ E_t| over
  * |E_{t−1} ∪ E_t| and their ratio, `—` where both sets are empty; beside it the caption, which
  * states what the paper's equations fix: each frame is generated independently, since Eqs. (2) to
@@ -53,14 +56,18 @@ export function Part5() {
   }));
 
   return (
-    <div className="flex flex-col gap-2 text-[0.75em] leading-[1.15] text-slate-900">
-      <div className="flex flex-col gap-1">
+    // The tightest spacing that keeps a word apart from the next word's rule: at 1024×768 in zh-TW
+    // this part is the tallest of the nine, and its triplets are written `s: p → o` (D116).
+    <div className="flex flex-col gap-1 text-[0.75em] leading-[1.1] text-slate-900">
+      <div className="flex flex-col gap-0.5">
         {keyframes.map(({ id, items }) => (
-          <section key={id} className="flex flex-wrap gap-x-4 border-t border-slate-300 first:border-t-0">
+          <section key={id} className="flex flex-wrap gap-x-3 border-t border-slate-300 first:border-t-0">
             <span className="whitespace-nowrap font-mono font-semibold">{`${keyframeMark(id)} ${seconds(id)}`}</span>
-            {items.length === 0 ? (
+            {/* The keyframe's own set is stated when empty, even when it lists what it removed. */}
+            {items.every((item) => item.change === 'removed') && (
               <span data-testid={`dv-keyframe-${id}-none`}>{t('demo.dv.no_triplet')}</span>
-            ) : (
+            )}
+            {items.length > 0 && (
               <ul data-testid={`dv-keyframe-${id}`} className="contents">
                 {items.map(({ triplet, change }, k) => (
                   <li
@@ -70,8 +77,7 @@ export function Part5() {
                     data-triplet={triplet.join('|')}
                     className={`whitespace-nowrap ${MARK[change]}`}
                   >
-                    {SIGN[change] && <span className={change === 'added' ? 'text-blue-700' : undefined}>{SIGN[change]}</span>}
-                    {triplet.join(' ')}
+                    {`${SIGN[change]}${bySubjectText(triplet)}`}
                   </li>
                 ))}
               </ul>

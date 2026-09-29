@@ -113,6 +113,37 @@ export function revisionDiff(before: readonly Triplet[], after: readonly Triplet
   return { deleted, added: unpaired, rewritten };
 }
 
+/**
+ * What an expert's rows did to the draft's rows, as exactly as the rows allow.
+ *
+ * `identical`: the same rows, one for one, in the same order. `changed`: a triplet was deleted,
+ * added or rewritten (the distinct sets differ, and `revisionDiff` lists how). Otherwise the
+ * distinct triplets agree but the rows do not: `reordered` when each triplet occurs as often as in
+ * the draft, `repeats` when some triplet occurs more or less often.
+ */
+export type RowChange = 'identical' | 'reordered' | 'repeats' | 'changed';
+
+export function rowChange(before: readonly Triplet[], after: readonly Triplet[]): RowChange {
+  if (before.length === after.length && before.every((t, i) => tripletKey(t) === tripletKey(after[i]!))) {
+    return 'identical';
+  }
+  if (churn(before, after).delta > 0) return 'changed';
+  const counts = (ts: readonly Triplet[]) => {
+    const out = new Map<string, number>();
+    for (const t of ts) out.set(tripletKey(t), (out.get(tripletKey(t)) ?? 0) + 1);
+    return out;
+  };
+  const [a, b] = [counts(before), counts(after)];
+  return [...a].every(([k, n]) => b.get(k) === n) ? 'reordered' : 'repeats';
+}
+
+/** Rows grouped by subject: each subject once, in first-appearance order, its rows in order, repeats kept. */
+export function bySubject(ts: readonly Triplet[]): { subject: string; rows: Triplet[] }[] {
+  const groups = new Map<string, Triplet[]>();
+  for (const t of ts) groups.set(t[0], [...(groups.get(t[0]) ?? []), t]);
+  return [...groups].map(([subject, rows]) => ({ subject, rows }));
+}
+
 /** Rows per predicate, repeats included: most rows first, ties by name. */
 export function predicateHistogram(ts: readonly Triplet[]): [string, number][] {
   const counts = new Map<string, number>();

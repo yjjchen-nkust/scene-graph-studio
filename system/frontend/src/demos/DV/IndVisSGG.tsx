@@ -33,20 +33,23 @@ function servedBy(note: string, locale: Locale): string {
  *    the calls per frame and D-T's candidate count for the same frame.
  * 3. The experts: one expert's deletions, additions and rewrites against the draft, and its own
  *    analysis in the displayed locale.
- * 4. The summary: step 3's triplets as a graph, and the predicates of both pipelines.
+ * 4. The summary: step 3's triplets as text, each subject once above its rows, and the predicates
+ *    of both pipelines.
  * 5. Over time: the three keyframes in Figure 6's marks, and both pipelines' churn per step.
  *
  * Two knobs, both in the URL, so the stepper carries them from part to part (D96): `DV.frame`, as
  * `DT.frame` is (an id the clip does not have, or none, reads as `DEFAULT_FRAME`), and
  * `DV.expert`, through `snap` onto 1 to N, so `?DV.expert=7` reads as the last expert and `abc` as
- * the first. Part 1 picks the frame through the clip's ticks; parts 2 to 4 carry it as a list;
- * part 5 always shows the three keyframes and the ten frames, so it has no knob.
+ * the first. N is the highest expert index the recording holds (3, as spec §3.3 has it), not the
+ * chosen frame's count, so a frame that lacks one expert's record says so for that expert rather
+ * than moving the knob. Part 1 picks the frame through the clip's ticks; parts 2 to 4 carry it as a
+ * list; part 5 always shows the three keyframes and the ten frames, so it has no knob.
  *
  * The provenance line is the transcript's own: its model, the weights its note names, its date,
  * "recorded" and "replayed". A replay is not the call, so no label here says measured (to_graph's
- * rule, which `summaryGraph` keeps). Every figure is a count, a set membership or a set
- * difference over `VLM` and `TRADITIONAL`, computed through `logic.ts`; nothing is a metric and
- * nothing imports a value from `sgg-metrics`.
+ * rule for any replay). Every figure is a count, a set membership or a set difference over `VLM`
+ * and `TRADITIONAL`, computed through `logic.ts`; nothing is a metric and nothing imports a value
+ * from `sgg-metrics`.
  */
 export function IndVisSGG({ part }: DemoProps) {
   const { t, locale } = useLocale();
@@ -54,8 +57,9 @@ export function IndVisSGG({ part }: DemoProps) {
   const id = resolveFrame(params['DV.frame']);
   // `data.test.ts` holds the artefact's frames to the manifest's ids, which `resolveFrame` keeps to.
   const frame = VLM.frames.find((f) => f.image_id === id)!;
-  // N from the recording (3, as spec §3.3 has it); at least 1, so the snap has a range to land in.
-  const expert = snap(params['DV.expert'], 1, Math.max(1, frame.experts.length), 1);
+  // N from the recording; at least 1, so the snap has a range to land in.
+  const experts = Math.max(1, ...VLM.frames.flatMap((f) => f.experts.map((e) => e.index)));
+  const expert = snap(params['DV.expert'], 1, experts, 1);
   const pick = (next: string) => setParams({ 'DV.frame': next });
 
   const frameChoice = (
@@ -77,7 +81,7 @@ export function IndVisSGG({ part }: DemoProps) {
           id="DV.expert"
           label={t('demo.dv.expert')}
           value={String(expert)}
-          options={frame.experts.map((e) => ({ value: String(e.index), label: String(e.index) }))}
+          options={Array.from({ length: experts }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))}
           onChange={(next) => setParams({ 'DV.expert': Number(next) })}
         />
       </>

@@ -1,22 +1,10 @@
 import { useLocale } from '../../i18n/useLocale';
 import { TRADITIONAL, frameLabel, frameUrl, type TraditionalFrame, type Triplet } from '../data';
 import { churn, churnFraction, distinct, traditionalTriplets, tripletKey } from '../logic';
+import { MARK, SIGN, type Change } from '../marks';
 
 /** A thumbnail's height at most, in viewport heights. */
 const THUMB_VH = 9;
-
-type Change = 'kept' | 'added' | 'removed';
-
-/**
- * Figure 6's marks, by shape as well as colour (NFR-5): an added triplet on a solid `blue-700`
- * rule, a removed one on a dotted `slate-700` rule, a kept one on none.
- */
-const RULE: Record<Change, string> = {
-  kept: 'border-b-[3px] border-solid border-transparent text-slate-900',
-  added: 'border-b-[3px] border-solid border-blue-700 text-slate-900',
-  removed: 'border-b-[3px] border-dotted border-slate-700 text-slate-700',
-};
-const SIGN: Record<Change, string> = { kept: '', added: '+ ', removed: '− ' };
 
 /**
  * D-T, part 4: no temporal coherence.
@@ -24,7 +12,8 @@ const SIGN: Record<Change, string> = { kept: '', added: '+ ', removed: '− ' };
  * The ten frames as a strip of thumbnails, each a button choosing its frame, with |E_t| beneath
  * it and, between it and the frame before, |E_{t−1} Δ E_t| over |E_{t−1} ∪ E_t| and their ratio,
  * `—` where both sets are empty. Below, the chosen frame's distinct class-level triplets against
- * the frame before: kept, added (`+`) and removed (`−`).
+ * the frame before: kept, added (`+`) and removed (`−`), in Figure 6's marks (`marks.ts`), which
+ * D-V's parts 3 and 5 draw with too.
  *
  * E_t is a set of distinct class-level triplets, as spec §4 defines it for churn: the pipeline
  * tracks no identity across frames, so two detections of one class name one triplet (D96).
@@ -136,10 +125,9 @@ export function Part4({ frame, onPick }: { frame: TraditionalFrame; onPick: (id:
               data-testid={`dt-triplet-${k}`}
               data-change={change}
               data-triplet={triplet.join('|')}
-              className={RULE[change]}
+              className={MARK[change]}
             >
-              {SIGN[change] && <span className={change === 'added' ? 'text-blue-700' : undefined}>{SIGN[change]}</span>}
-              {triplet.join(' ')}
+              {`${SIGN[change]}${triplet.join(' ')}`}
             </li>
           ))}
         </ul>

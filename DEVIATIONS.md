@@ -4963,24 +4963,38 @@ ten frames the three revisions are pairwise different on two (094, 098), exactly
 
 **Plan:** `plans/2026-09-29-m0-demos.md`, Tasks 8 and 9. **Decisions:** none new. Branch `feat/m0-demos`.
 
-**Why.** Spec §4 names five renderings that do not fit a 1024×768 panel at the 18 px floor in 繁體中文, the
-state the projector suite holds every part to (D96). SVG text is scaled below the floor by its viewBox (D98),
-and a Cytoscape canvas takes a box of its own, so ten or three node-link drawings do not fit one panel. Each
-rendering below keeps what the spec's version shows, as counts, set memberships and set differences over the
-recording, and states it in DOM text at 18 px or more.
+**Why.** Spec §4 names six renderings that do not fit a 1024×768 panel at the 18 px floor in 繁體中文, the
+state the projector suite holds every part to (D96), or that cannot be held to the floor at all. SVG text is
+scaled below the floor by its viewBox (D98); a Cytoscape canvas takes a box of its own, so ten or three
+node-link drawings do not fit one panel, and it draws its labels on the canvas, where no sweep of the lecture
+can measure them. Each rendering below keeps what the spec's version shows, as counts, set memberships and set
+differences over the recording, and states it in DOM text at 18 px or more.
+
+Figure 6's marks are one definition, `frontend/src/demos/marks.ts`, which D-T part 4 and D-V parts 3 and 5 draw
+with: an added triplet on a solid `blue-700` rule, a removed one on a dotted `slate-700` rule, so the two differ
+by shape as well as colour (NFR-5), and a kept one on none. The rule is a 3 px text underline, which adds no
+height to a row; the colour is the rule's alone, and the sign and the words keep the text's ink.
 
 - **T4, "the ten per-frame graphs as a strip".** D-T part 4 draws the ten frames as thumbnails in a grid of five
   columns, each with |E_t| beneath it and, between neighbours, |Δ|, |∪| and their ratio (`—` where |∪| is 0).
-  Below, the chosen frame's distinct class-level triplets against the frame before: kept, `+` added on a solid
-  `blue-700` rule, `−` removed on a dotted `slate-700` rule.
-- **V5, "t1, t2 and t3 in Figure 6's style".** D-V part 5 lists the three keyframes' distinct summary triplets
-  in Figure 6's marks: in t₂ and t₃ each triplet is kept, `+` added on a solid `blue-700` rule or `−` removed on
-  a dotted `slate-700` rule, and a removed triplet is listed with the keyframe where it disappeared. The
-  keyframes are three bands, one above the other, each a flowing list as D-T part 4's is, **not three
-  columns**, which the plan's Task 9 names. At 18 px the t₂ column holds seventeen rows (its ten triplets and the
-  seven of t₁ it removed), 372 px tall, and the three columns take 742 px of the panel's 910 px. With the churn
-  table and the caption beneath them the part ran 193 px past 1024×768 in zh-TW; with the two beside them, the
-  table needed 232 px of a 156 px rail. Flowing, the three keyframes take twelve lines, and the churn of both
+  Below, the chosen frame's distinct class-level triplets against the frame before: kept, `+` added and `−`
+  removed, in Figure 6's marks.
+- **V4, "the summary graph, triplets only".** D-V part 4 lists the chosen frame's step-3 summary as text, not as
+  a graph through `SceneGraphView` (contracts §2.6): each subject once, in the order it first appears, above its
+  rows written `predicate → object`, beside the predicate table of both pipelines. The graph was drawn first,
+  and measured: `SceneGraphView`'s canvas sets node labels at 12 px and edge labels at 11 px and scales them by
+  its fit zoom, which at 1024×768 (a 556 × 290 px box) was 0.66 to 1.21 over the ten frames, so the labels were
+  about 8 to 15 px. The floor is the project's hard rule, and the lecture's sweeps measure DOM text only, so a
+  canvas label below it would pass every check unseen. Part 4 is where seven of the ten frames' summaries appear,
+  since part 5 lists only the three keyframes. `SceneGraphView` is unchanged, since L1 shares it.
+- **V5, "t1, t2 and t3 in Figure 6's style".** D-V part 5 lists the three keyframes' distinct summary triplets,
+  each written `s: p → o` as part 4 writes a row under its subject, in Figure 6's marks: in t₂ and t₃ each
+  triplet is kept, `+` added or `−` removed, and a removed triplet is listed with the keyframe where it
+  disappeared. The keyframes are three bands, one above the other, each a flowing list as D-T part 4's is,
+  **not three columns**, which the plan's Task 9 names. At 18 px the t₂ column holds seventeen rows (its ten
+  triplets and the seven of t₁ it removed), 372 px tall, and the three columns take 742 px of the panel's 910
+  px. With the churn table and the caption beneath them the part ran 193 px past 1024×768 in zh-TW; with the two
+  beside them, the table needed 232 px of a 156 px rail. Flowing, the three keyframes fit, and the churn of both
   pipelines per step stands beneath as a table (|Δ| / |∪| over the ratio), with the caption beside it.
 - **V3, "each expert's revision".** D-V part 3 shows one expert at a time, chosen by `DV.expert` (`snap` onto 1
   to 3). Three experts' lists and three analyses of up to 734 English characters each do not fit the panel
@@ -4999,11 +5013,3 @@ recording, and states it in DOM text at 18 px or more.
 **D-V part 1's whole prompt.** The TEC prompt's 27 lines are taller than the panel at 18 px. They sit behind a
 `<details>` below the prompt's parts; opened, the whole prompt takes the parts' place and scrolls within its
 own box, so the part stays inside the panel open or closed.
-
-**Not resolved: the labels of the summary graph.** D-V part 4 draws step 3's summary through `SceneGraphView`
-(contracts §2.6), whose Cytoscape canvas sets node labels at 12 px and edge labels at 11 px and scales them by
-its fit zoom. Measured at 1024×768 (a 556 × 290 px box), the zoom is 0.66 to 1.21 over the ten frames, so the
-labels are drawn at about 8 to 15 px; at 1920×1080 it is 1.00 to 2.36. The 18 px floor is measured on DOM text
-and does not see a canvas. The part's caption and its predicate table are DOM text at 18 px, and part 5 lists
-the three keyframes' summary triplets as text. A label that holds on the projector needs a change to
-`SceneGraphView`, which L1 shares, and is left to the author.

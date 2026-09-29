@@ -14,6 +14,8 @@ import {
   predicateHistogram,
   relationSources,
   revisionDiff,
+  rowChange,
+  bySubject,
   traditionalTriplets,
   tripletKey,
   uncoveredClasses,
@@ -103,6 +105,42 @@ describe('the vocabulary and the revisions', () => {
       added: [],
       rewritten: [{ from: first, to: only }],
     });
+  });
+});
+
+describe('a revision\'s rows against the draft\'s', () => {
+  const a: Triplet = ['hand', 'holding', 'wheel'];
+  const b: Triplet = ['wheel', 'on', 'workbench'];
+  const c: Triplet = ['axle', 'inserted into', 'wheel'];
+
+  it('is identical only when the rows agree one for one, in order', () => {
+    expect(rowChange([a, b], [a, b])).toBe('identical');
+    expect(rowChange([], [])).toBe('identical');
+  });
+
+  it('tells the same rows in another order from the same triplets repeated differently', () => {
+    expect(rowChange([a, b], [b, a])).toBe('reordered');
+    expect(rowChange([a, b], [a, b, a])).toBe('repeats');
+    expect(rowChange([a, a, b], [a, b])).toBe('repeats');
+  });
+
+  it('is changed when a triplet is deleted, added or rewritten', () => {
+    expect(rowChange([a, b], [a])).toBe('changed');
+    expect(rowChange([a], [a, c])).toBe('changed');
+    expect(rowChange([a, b], [a, ['wheel', 'near', 'workbench']])).toBe('changed');
+  });
+});
+
+describe('rows grouped by subject', () => {
+  it('names each subject once, in first-appearance order, with its rows in order, repeats kept', () => {
+    const a: Triplet = ['hand', 'holding', 'wheel'];
+    const b: Triplet = ['wheel', 'on', 'workbench'];
+    const c: Triplet = ['hand', 'near', 'assembly'];
+    expect(bySubject([a, b, c, a])).toEqual([
+      { subject: 'hand', rows: [a, c, a] },
+      { subject: 'wheel', rows: [b] },
+    ]);
+    expect(bySubject([])).toEqual([]);
   });
 });
 

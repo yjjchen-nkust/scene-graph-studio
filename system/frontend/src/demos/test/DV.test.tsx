@@ -1,23 +1,21 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
-import type { SceneGraph } from 'sgg-metrics';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setLocale, type Locale } from '../../i18n/useLocale';
 import { Demo } from '../Demo';
 import {
   DEFAULT_FRAME, FRAME_IDS, KEYFRAME_IDS, TRADITIONAL, VLM, type Triplet, type VlmArtefact, type VlmFrame,
 } from '../data';
-import { summaryGraph } from '../DV/graph';
 
 /**
  * D-V in its five parts, each mounted through `Demo` as a step mounts it, in both locales.
  *
  * Every expected figure is computed here from the recorded artefact by arithmetic and by string
  * sets, not through `logic.ts`, so a part that miscounted would disagree with the test rather than
- * with itself. The recording has no expert that rewrote or added a triplet, no predicate outside
- * P, no repeated draft row, no empty summary and no missing analysis; those states are reached by
- * replacing frames through `fixture`, which each test empties after it runs, so every other test
- * reads the recording as it is.
+ * with itself. The recording has no expert that rewrote, added, reordered or repeated a triplet,
+ * no missing expert, no predicate outside P, no repeated draft row, no empty draft or summary and
+ * no missing analysis; those states are reached by replacing frames through `fixture`, which each
+ * test empties after it runs, so every other test reads the recording as it is.
  */
 const fixture = vi.hoisted(() => ({
   frames: new Map<string, VlmFrame>(),
@@ -40,28 +38,6 @@ vi.mock('../data', async (importOriginal) => {
     },
   };
 });
-
-/**
- * Cytoscape draws to a canvas and jsdom has none, so the graph view is stubbed, as the L1 lab's
- * test stubs it. The stub writes the graph it was handed into the DOM, so the part is still held
- * to handing the view the right graph and the right layout.
- */
-vi.mock('../../graph/SceneGraphView', () => ({
-  SceneGraphView: (props: { graph: SceneGraph; layout: string }) => {
-    const name = new Map(props.graph.objects.map((o) => [o.object_id, o.names[0]]));
-    return (
-      <div
-        data-testid="graph-view"
-        data-layout={props.layout}
-        data-image={props.graph.image_id}
-        data-fidelity={props.graph.provenance.fidelity}
-        data-triplets={JSON.stringify(
-          props.graph.relationships.map((r) => [name.get(r.subject_id), r.predicate, name.get(r.object_id)]),
-        )}
-      />
-    );
-  },
-}));
 
 afterEach(() => {
   fixture.frames.clear();
@@ -100,38 +76,26 @@ const dtRows = (id: string) => {
 
 const LOCALES: Locale[] = ['en', 'zh-TW'];
 
-describe('summaryGraph', () => {
-  it('summaryGraph mirrors to_graph', () => {
-    for (const f of VLM.frames) {
-      const g = summaryGraph(f);
-      const order: string[] = [];
-      for (const t of f.summary) for (const name of [t[0], t[2]]) if (!order.includes(name)) order.push(name);
-      const id = (name: string) => order.indexOf(name) + 1;
-      expect(g.objects.map((o) => o.names), f.image_id).toEqual(order.map((name) => [name]));
-      expect(g.objects.map((o) => o.object_id), f.image_id).toEqual(order.map((_, i) => i + 1));
-      for (const o of g.objects) expect(o.bbox, f.image_id).toEqual({ x: o.object_id, y: o.object_id, w: 1, h: 1 });
-      expect(g.relationships, f.image_id).toEqual(
-        f.summary.map((t, i) => ({
-          relationship_id: i + 1, subject_id: id(t[0]), object_id: id(t[2]), predicate: t[1], score: null,
-        })),
-      );
-      expect(g, f.image_id).toMatchObject({
-        image_id: f.image_id,
-        dataset: 'mini-isg',
-        width: 1024,
-        height: 768,
-        provenance: { kind: 'vlm', fidelity: 'reconstructed', vlm: 'transcript' },
-      });
-      expect(g.provenance.note).toContain('returns triplets and no geometry');
-    }
-    // A repeated row is a second relationship between the same two objects, not a third object.
-    const f = frameOf('m0-demo-090');
-    const g = summaryGraph({ ...f, summary: [f.summary[0]!, f.summary[0]!] });
-    expect(g.objects).toHaveLength(2);
-    expect(g.relationships.map((r) => r.relationship_id)).toEqual([1, 2]);
-    expect(summaryGraph({ ...f, summary: [] })).toMatchObject({ objects: [], relationships: [] });
-  });
-});
+/** A triplet by its subject, as parts 4 and 5 write it: `s: p → o`. */
+const edge = (t: Triplet) => `${t[0]}: ${t[1]} → ${t[2]}`;
+
+/** Figure 6's marks, class by class, so a rule's colour cannot be mistaken for the text's ink. */
+const expectMark = (li: Element, change: string | null, where: string) => {
+  const has = (c: string) => li.classList.contains(c);
+  if (change === 'added') {
+    expect(li.textContent!.startsWith('+ '), where).toBe(true);
+    expect([has('decoration-solid'), has('decoration-blue-700'), has('underline')], where).toEqual([true, true, true]);
+    // The blue is the rule's alone: the sign and the words keep the text's ink.
+    expect(has('text-slate-900'), where).toBe(true);
+    expect(li.querySelector('[class*="text-blue"]'), where).toBeNull();
+  } else if (change === 'removed') {
+    expect(li.textContent!.startsWith('− '), where).toBe(true);
+    expect([has('decoration-dotted'), has('decoration-slate-700'), has('underline')], where).toEqual([true, true, true]);
+  } else {
+    expect(/^[+−]/.test(li.textContent!), where).toBe(false);
+    expect(has('underline'), where).toBe(false);
+  }
+};
 
 describe.each(LOCALES)('D-V in %s', (locale) => {
   it('part 1 lays out the prompt\'s parts from the recorded prompt, beside the clip', () => {
@@ -264,13 +228,41 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
     }
   });
 
+  it('part 2\'s D-T candidates are the figure D-T part 2 shows for the same frame', () => {
+    setLocale(locale);
+    for (const id of FRAME_IDS) {
+      render(
+        <MemoryRouter initialEntries={[`/lecture/m/m00/7?DT.frame=${id}&DV.frame=${id}`]}>
+          <Demo id="DT" part="2" />
+          <Demo id="DV" part="2" />
+        </MemoryRouter>,
+      );
+      expect(value('DV.dt_candidates'), id).toBe(value('DT.candidates'));
+      cleanup();
+    }
+  });
+
+  it('part 2 states an empty draft in words and counts it as nothing', () => {
+    setLocale(locale);
+    fixture.frames.set('m0-demo-090', { ...frameOf('m0-demo-090'), draft: [] });
+    renderPart(2);
+    expect(screen.queryByTestId('dv-draft')).toBeNull();
+    expect(screen.getByTestId('dv-draft-none')).toHaveTextContent(
+      locale === 'en' ? 'The draft holds no triplet.' : '草稿無三元組。',
+    );
+    expect(value('DV.emitted')).toBe('0');
+    expect(value('DV.outside')).toBe('0');
+    expect(screen.getByTestId('demo-frame').textContent).not.toMatch(/NaN|undefined/);
+  });
+
   it('part 3 shows the chosen expert\'s rewrites, deletions and additions against the draft', () => {
     setLocale(locale);
     const check = (id: string, n: number) => {
       renderPart(3, `?DV.frame=${id}&DV.expert=${n}`);
       const where = `${id} expert ${n}`;
       const f = frameOf(id);
-      const [draft, revision] = [new Set(f.draft.map(key)), new Set(f.experts[n - 1]!.revision.map(key))];
+      const record = f.experts.find((e) => e.index === n)!;
+      const [draft, revision] = [new Set(f.draft.map(key)), new Set(record.revision.map(key))];
       const gone = [...draft].filter((t) => !revision.has(t)).sort();
       const came = [...revision].filter((t) => !draft.has(t)).sort();
       const rewritten = items('dv-rewritten').map((li) => [li.getAttribute('data-from')!, li.getAttribute('data-to')!]);
@@ -282,19 +274,23 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
         const [a, b] = [from.split('|'), to.split('|')];
         expect([a[0], a[2]], where).toEqual([b[0], b[2]]);
       }
-      for (const li of items('dv-deleted')) expect(li.textContent!.startsWith('−'), where).toBe(true);
-      for (const li of items('dv-added')) expect(li.textContent!.startsWith('+'), where).toBe(true);
+      for (const li of items('dv-deleted')) expectMark(li, 'removed', where);
+      for (const li of items('dv-added')) expectMark(li, 'added', where);
       for (const li of items('dv-rewritten')) expect(li.textContent, where).toContain('→');
-      if (gone.length + came.length === 0) {
+      const identical = f.draft.map(key).join('\n') === record.revision.map(key).join('\n');
+      if (identical) {
         expect(screen.getByTestId('dv-no-change'), where).toBeInTheDocument();
+      } else if (gone.length + came.length === 0) {
+        expect(screen.getByTestId('dv-same-triplets'), where).toBeInTheDocument();
       } else {
         expect(screen.queryByTestId('dv-no-change'), where).toBeNull();
+        expect(screen.queryByTestId('dv-same-triplets'), where).toBeNull();
         expect(screen.getByTestId('dv-deleted-count').textContent, where).toBe(String(deleted.length));
         expect(screen.getByTestId('dv-added-count').textContent, where).toBe(String(added.length));
         expect(screen.getByTestId('dv-rewritten-count').textContent, where).toBe(String(rewritten.length));
       }
       // Each recorded analysis, verbatim, in the displayed locale's field.
-      expect(screen.getByTestId('dv-analysis').textContent, where).toBe(f.experts[n - 1]![field(locale)]);
+      expect(screen.getByTestId('dv-analysis').textContent, where).toBe(record[field(locale)]);
       cleanup();
     };
     for (const id of FRAME_IDS) for (const n of [1, 2, 3]) check(id, n);
@@ -347,25 +343,65 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
 
   it('part 3 states an expert that changed nothing', () => {
     setLocale(locale);
-    // Recorded: expert 1 at 88 s returned the draft as it was.
+    // Recorded: expert 1 at 88 s returned the draft's rows exactly.
     const recorded = frameOf('m0-demo-088');
     expect(recorded.experts[0]!.revision).toEqual(recorded.draft);
     renderPart(3, '?DV.frame=m0-demo-088&DV.expert=1');
     const sentence = locale === 'en' ? 'No change recorded' : '未錄得任何修訂';
     expect(screen.getByTestId('dv-no-change')).toHaveTextContent(sentence);
+    expect(screen.queryByTestId('dv-same-triplets')).toBeNull();
     expect(screen.queryByTestId('dv-deleted')).toBeNull();
     cleanup();
 
-    // By hand: an expert that deleted four rows now deletes none.
+    // By hand: an expert that deleted four rows now returns the draft's rows exactly.
     const f = frameOf('m0-demo-098');
-    fixture.frames.set('m0-demo-098', {
-      ...f,
-      experts: f.experts.map((e) => (e.index === 3 ? { ...e, revision: [...f.draft] } : e)),
-    });
+    const revise = (revision: Triplet[]) =>
+      fixture.frames.set('m0-demo-098', {
+        ...f,
+        experts: f.experts.map((e) => (e.index === 3 ? { ...e, revision } : e)),
+      });
+    revise([...f.draft]);
     renderPart(3, '?DV.frame=m0-demo-098&DV.expert=3');
     expect(screen.getByTestId('dv-no-change')).toHaveTextContent(sentence);
     for (const group of ['rewritten', 'deleted', 'added']) expect(screen.queryByTestId(`dv-${group}`)).toBeNull();
     // The analysis is still the model's own, shown whatever the revision did.
+    expect(screen.getByTestId('dv-analysis').textContent).toBe(f.experts[2]![field(locale)]);
+    cleanup();
+
+    // The same triplets in another order, or with a row repeated: no triplet changed, and the rows
+    // did, so the part says which rather than that the draft came back as it was.
+    for (const [revision, kind, words] of [
+      [[...f.draft].reverse(), 'reordered', locale === 'en' ? 'in another order' : '順序不同'],
+      [[...f.draft, f.draft[0]!], 'repeats', locale === 'en' ? 'repeated differently' : '重複之列不同'],
+    ] as const) {
+      revise([...revision]);
+      renderPart(3, '?DV.frame=m0-demo-098&DV.expert=3');
+      expect(screen.queryByTestId('dv-no-change'), kind).toBeNull();
+      const same = screen.getByTestId('dv-same-triplets');
+      expect(same, kind).toHaveAttribute('data-kind', kind);
+      expect(same, kind).toHaveTextContent(words);
+      expect(same, kind).toHaveTextContent(locale === 'en' ? 'No triplet deleted, added or rewritten' : '無三元組刪除、新增或改寫');
+      for (const group of ['rewritten', 'deleted', 'added']) expect(screen.queryByTestId(`dv-${group}`), kind).toBeNull();
+      cleanup();
+    }
+  });
+
+  it('part 3 states that no record exists for an expert the frame lacks', () => {
+    setLocale(locale);
+    const f = frameOf('m0-demo-098');
+    fixture.frames.set('m0-demo-098', { ...f, experts: f.experts.filter((e) => e.index !== 2) });
+    renderPart(3, '?DV.frame=m0-demo-098&DV.expert=2');
+    expect(screen.getByTestId('DV.expert')).toHaveValue('2');
+    expect(screen.getByTestId('dv-no-record')).toHaveTextContent(
+      locale === 'en' ? 'No record exists for expert 2' : '無專家 2 之紀錄',
+    );
+    for (const testid of ['dv-no-change', 'dv-same-triplets', 'dv-analysis', 'dv-analysis-none', 'dv-deleted']) {
+      expect(screen.queryByTestId(testid), testid).toBeNull();
+    }
+    expect(screen.getByTestId('demo-frame').textContent).not.toMatch(/NaN|undefined/);
+    cleanup();
+    // The frame's other experts are still there.
+    renderPart(3, '?DV.frame=m0-demo-098&DV.expert=3');
     expect(screen.getByTestId('dv-analysis').textContent).toBe(f.experts[2]![field(locale)]);
   });
 
@@ -391,24 +427,42 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
     expect(screen.getByTestId('address').textContent).toBe('?DV.expert=2');
   });
 
-  it('part 4 draws the summary graph and says so when it is empty', () => {
+  it('part 4 lists the summary as text, each subject once above its rows, and says so when it is empty', () => {
     setLocale(locale);
-    for (const id of FRAME_IDS) {
+    const check = (id: string, summary: readonly Triplet[]) => {
       renderPart(4, `?DV.frame=${id}`);
-      const view = screen.getByTestId('graph-view');
-      expect(view, id).toHaveAttribute('data-layout', 'dagre');
-      expect(view, id).toHaveAttribute('data-image', id);
-      expect(view, id).toHaveAttribute('data-fidelity', 'reconstructed');
-      expect(JSON.parse(view.getAttribute('data-triplets')!), id).toEqual(frameOf(id).summary);
-      expect(screen.queryByTestId('dv-graph-none'), id).toBeNull();
-      expect(screen.getByTestId('dv-no-geometry'), id).toBeInTheDocument();
+      // Subjects in the order they first appear; under each, its rows in the summary's order.
+      const subjects = [...new Set(summary.map((t) => t[0]))];
+      const list = screen.getByTestId('dv-summary');
+      const heads = [...list.querySelectorAll('[data-testid^="dv-summary-subject-"]')];
+      expect(heads.map((h) => h.textContent), id).toEqual(subjects.map((s) => `${s}:`));
+      subjects.forEach((s, k) => {
+        const rows = [...within(list).getByTestId(`dv-summary-rows-${k}`).querySelectorAll('li')];
+        const expected = summary.filter((t) => t[0] === s);
+        expect(rows.map((li) => li.getAttribute('data-triplet')), `${id} ${s}`).toEqual(expected.map(key));
+        // Terms delimited: the subject heads its rows, then `predicate → object`.
+        expect(rows.map((li) => li.textContent), `${id} ${s}`).toEqual(expected.map((t) => `${t[1]} → ${t[2]}`));
+      });
+      expect(list.querySelectorAll('li'), id).toHaveLength(summary.length);
+      // Every word is DOM text: no canvas, no SVG.
+      expect(screen.getByTestId('demo-frame').querySelector('canvas, svg'), id).toBeNull();
+      expect(screen.queryByTestId('dv-summary-none'), id).toBeNull();
+      expect(screen.getByTestId('dv-no-geometry'), id).toHaveTextContent(
+        locale === 'en' ? `${summary.length} rows` : `${summary.length} 列`,
+      );
       cleanup();
-    }
+    };
+    for (const id of FRAME_IDS) check(id, frameOf(id).summary);
+    // A repeated row is listed again under its subject, since the part counts rows.
+    const g = frameOf('m0-demo-090');
+    fixture.frames.set('m0-demo-090', { ...g, summary: [...g.summary, g.summary[0]!] });
+    check('m0-demo-090', [...g.summary, g.summary[0]!]);
+
     const f = frameOf('m0-demo-096');
     fixture.frames.set('m0-demo-096', { ...f, summary: [] });
     renderPart(4, '?DV.frame=m0-demo-096');
-    expect(screen.queryByTestId('graph-view')).toBeNull();
-    expect(screen.getByTestId('dv-graph-none')).toHaveTextContent(locale === 'en' ? 'no triplet' : '無三元組');
+    expect(screen.queryByTestId('dv-summary')).toBeNull();
+    expect(screen.getByTestId('dv-summary-none')).toHaveTextContent(locale === 'en' ? 'no triplet' : '無三元組');
     expect(screen.getByTestId('demo-frame').textContent).not.toMatch(/NaN|undefined/);
   });
 
@@ -459,21 +513,40 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
       expect(items(`dv-keyframe-${id}`).map((li) => li.getAttribute('data-triplet')), id).toEqual([
         ...sets[k]!, ...sets[k - 1]!.filter((t) => !after.has(t)),
       ]);
+      for (const li of items(`dv-keyframe-${id}`)) expectMark(li, li.getAttribute('data-change'), id);
+    }
+    // Each triplet's terms delimited as part 4 delimits them, `s: p → o`, after its sign.
+    for (const id of KEYFRAME_IDS) {
       for (const li of items(`dv-keyframe-${id}`)) {
-        const change = li.getAttribute('data-change');
-        if (change === 'added') {
-          expect(li.textContent!.startsWith('+'), id).toBe(true);
-          expect(li.className, id).toMatch(/solid/);
-          expect(li.className, id).toMatch(/blue-700/);
-        } else if (change === 'removed') {
-          expect(li.textContent!.startsWith('−'), id).toBe(true);
-          expect(li.className, id).toMatch(/dotted/);
-          expect(li.className, id).toMatch(/slate-700/);
-        } else {
-          expect(/^[+−]/.test(li.textContent!), id).toBe(false);
-        }
+        const t = li.getAttribute('data-triplet')!.split('|') as unknown as Triplet;
+        const sign = { added: '+ ', removed: '− ', kept: '' }[li.getAttribute('data-change')!];
+        expect(li.textContent, id).toBe(`${sign}${edge(t)}`);
       }
     }
+  });
+
+  it('part 5 states a keyframe with no triplet, and still lists what it removed', () => {
+    setLocale(locale);
+    const [t1, t2] = [frameOf(KEYFRAME_IDS[0]!), frameOf(KEYFRAME_IDS[1]!)];
+    fixture.frames.set(t2.image_id, { ...t2, summary: [] });
+    renderPart(5);
+    const none = locale === 'en' ? 'no triplet' : '無三元組';
+    expect(screen.getByTestId(`dv-keyframe-${t2.image_id}-none`)).toHaveTextContent(none);
+    // Everything t₁ held disappeared at t₂; t₃'s triplets all arrive new against an empty t₂.
+    expect(items(`dv-keyframe-${t2.image_id}`).map((li) => li.getAttribute('data-change'))).toEqual(
+      once(t1.summary).map(() => 'removed'),
+    );
+    expect(new Set(items(`dv-keyframe-${KEYFRAME_IDS[2]}`).map((li) => li.getAttribute('data-change')))).toEqual(
+      new Set(['added']),
+    );
+    expect(screen.queryByTestId(`dv-keyframe-${t1.image_id}-none`)).toBeNull();
+    cleanup();
+
+    fixture.frames.set(t1.image_id, { ...t1, summary: [] });
+    renderPart(5);
+    expect(screen.getByTestId(`dv-keyframe-${t1.image_id}-none`)).toHaveTextContent(none);
+    expect(screen.queryByTestId(`dv-keyframe-${t1.image_id}`)).toBeNull();
+    expect(screen.getByTestId('demo-frame').textContent).not.toMatch(/NaN|undefined/);
   });
 
   it('part 5 counts distinct triplets: a repeated summary row is listed once', () => {
@@ -555,6 +628,18 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
         expect(screen.getByTestId('demo-frame').textContent, where).not.toMatch(/NaN|undefined|⟦|\{/);
         cleanup();
       }
+    }
+  });
+
+  it('writes step and count numerals as figures in zh-TW, as 「第 1 部分」 does', () => {
+    setLocale(locale);
+    for (const [part, query] of [[1, ''], [2, ''], [3, '&DV.expert=3'], [4, ''], [5, '']] as const) {
+      renderPart(part, `?DV.frame=m0-demo-098${query}`);
+      const frame = screen.getByTestId('demo-frame').cloneNode(true) as HTMLElement;
+      // The experts' analyses are model output, shown verbatim, and not this rule's business.
+      frame.querySelector('[data-testid="dv-analysis"]')?.remove();
+      expect(frame.textContent, `part ${part}`).not.toMatch(/步驟[一二三四五]|[一二三四五六七八九十兩][位條個列項]/);
+      cleanup();
     }
   });
 

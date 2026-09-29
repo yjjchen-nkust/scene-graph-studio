@@ -1,31 +1,30 @@
-import { SceneGraphView } from '../../graph/SceneGraphView';
+import { Fragment } from 'react';
 import { useLocale } from '../../i18n/useLocale';
 import { TRADITIONAL, VLM, frameLabel, type VlmFrame } from '../data';
-import { countText, predicateHistogram, traditionalTriplets } from '../logic';
-import { summaryGraph } from './graph';
-
-/**
- * The graph's height, in viewport heights: as tall as the panel allows beside the table at
- * 1024×768. Most summaries fit their box by its height, so Cytoscape's zoom, and with it the size
- * its canvas draws the labels at, grows with this figure.
- */
-const GRAPH_VH = 38;
+import { bySubject, countText, predicateHistogram, traditionalTriplets } from '../logic';
+import { outgoing } from './terms';
 
 const CELL = 'py-0.5 pr-4';
 
 /**
  * D-V, part 4: the summary.
  *
- * Step 3's summary for the chosen frame as a scene graph (`summaryGraph`, the counterpart of
- * `to_graph`), laid out by `dagre` from its structure alone: the method returns no geometry, so the
- * graph's placeholder boxes are never drawn and the caption says so. Beside it one table of the
- * predicates both pipelines produced over the ten frames, counted in rows: D-T's relations and the
- * rows of D-V's summaries, repeats included, as a histogram counts rows. Predicates of P come in
- * the prompt's order, which part 1 showed, then any other by its count. A summary with no triplet
- * draws no graph and says so.
+ * Step 3's summary for the chosen frame, triplets only, as text: each subject once, in the order
+ * it first appears, above its rows written `predicate → object`, in the summary's order and with
+ * any repeat kept, since the part counts rows. The method returns no geometry, and the caption
+ * says so. Beside it one table of the predicates both pipelines produced over the ten frames,
+ * counted in rows: D-T's relations and the rows of D-V's summaries. Predicates of P come in the
+ * prompt's order, which part 1 showed, then any other by its count. A summary with no triplet says
+ * so.
+ *
+ * Not a node-link drawing (D116): `SceneGraphView` draws its labels on a canvas at 12 px times its
+ * fit zoom, about 8 to 15 px on a 1024×768 panel, below the 18 px floor, and the lecture's sweeps
+ * cannot measure text on a canvas. Grouped by subject, the list keeps what the drawing showed,
+ * which entity each relation leaves from, in text the floor holds.
  */
 export function Part4({ frame }: { frame: VlmFrame }) {
   const { t } = useLocale();
+  const groups = bySubject(frame.summary);
   const dt = new Map(predicateHistogram(TRADITIONAL.frames.flatMap(traditionalTriplets)));
   const dv = new Map(predicateHistogram(VLM.frames.flatMap((f) => f.summary)));
   const rank = (p: string) => (VLM.P.includes(p) ? VLM.P.indexOf(p) : VLM.P.length);
@@ -35,28 +34,34 @@ export function Part4({ frame }: { frame: VlmFrame }) {
   );
 
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+    <div className="flex flex-col gap-3 text-[0.75em] leading-tight text-slate-900 lg:flex-row lg:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <p data-testid="dv-no-geometry" className="text-[0.75em] leading-tight text-slate-700">
-          {t('demo.dv.graph_caption')
+        <p data-testid="dv-no-geometry" className="text-slate-700">
+          {t('demo.dv.summary_caption')
             .replace('{time}', frameLabel(frame.image_id))
             .replace('{rows}', countText(frame.summary.length))}
         </p>
-        {frame.summary.length === 0 ? (
-          <p data-testid="dv-graph-none" className="text-[0.75em] leading-tight text-slate-900">
-            {t('demo.dv.no_triplet')}
-          </p>
+        {groups.length === 0 ? (
+          <p data-testid="dv-summary-none">{t('demo.dv.no_triplet')}</p>
         ) : (
-          <div
-            data-testid="dv-graph"
-            className="rounded border border-slate-300 bg-white"
-            style={{ height: `${GRAPH_VH}vh` }}
-          >
-            <SceneGraphView graph={summaryGraph(frame)} layout="dagre" />
-          </div>
+          <dl data-testid="dv-summary" className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
+            {groups.map(({ subject, rows }, k) => (
+              <Fragment key={subject}>
+                <dt data-testid={`dv-summary-subject-${k}`} className="whitespace-nowrap font-semibold">{`${subject}:`}</dt>
+                <dd>
+                  <ul data-testid={`dv-summary-rows-${k}`}>
+                    {rows.map((row, i) => (
+                      // A row may repeat, so its place is part of its key.
+                      <li key={`${i}:${row.join('|')}`} data-triplet={row.join('|')}>{outgoing(row)}</li>
+                    ))}
+                  </ul>
+                </dd>
+              </Fragment>
+            ))}
+          </dl>
         )}
       </div>
-      <div className="flex flex-col gap-1 text-[0.75em] leading-tight text-slate-900 lg:shrink-0">
+      <div className="flex flex-col gap-1 lg:shrink-0">
         <table data-testid="dv-hist" className="border-collapse">
           <caption className="whitespace-nowrap text-left font-semibold">
             {t('demo.dv.hist_caption').replace('{frames}', String(VLM.frames.length))}

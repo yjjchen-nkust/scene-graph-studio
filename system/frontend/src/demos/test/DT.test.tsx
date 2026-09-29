@@ -378,14 +378,22 @@ describe.each(LOCALES)('D-T in %s', (locale) => {
     expect(read('removed')).toEqual([...before].filter((t) => !after.has(t)).sort());
     for (const li of items) {
       const change = li.getAttribute('data-change');
+      const has = (c: string) => li.classList.contains(c);
+      // The words are what D-T always showed: the sign, then the class-level triplet.
+      const words = li.getAttribute('data-triplet')!.split('|').join(' ');
       if (change === 'added') {
-        expect(li.textContent!.startsWith('+')).toBe(true);
-        expect(li).toHaveClass('border-solid', 'border-blue-700');
+        expect(li.textContent).toBe(`+ ${words}`);
+        // Figure 6's marks from `demos/marks.ts`: the blue is the rule's alone, the sign keeps the ink.
+        expect([has('underline'), has('decoration-solid'), has('decoration-blue-700'), has('text-slate-900')]).toEqual(
+          [true, true, true, true],
+        );
+        expect(li.querySelector('[class*="text-blue"]')).toBeNull();
       } else if (change === 'removed') {
-        expect(li.textContent!.startsWith('−')).toBe(true);
-        expect(li).toHaveClass('border-dotted', 'border-slate-700');
+        expect(li.textContent).toBe(`− ${words}`);
+        expect([has('underline'), has('decoration-dotted'), has('decoration-slate-700')]).toEqual([true, true, true]);
       } else {
-        expect(li.textContent!.startsWith('+') || li.textContent!.startsWith('−')).toBe(false);
+        expect(li.textContent).toBe(words);
+        expect(has('underline')).toBe(false);
       }
     }
     expect(screen.getByTestId('dt-thumb-m0-demo-092')).toHaveAttribute('aria-pressed', 'true');
