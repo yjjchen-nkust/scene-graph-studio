@@ -4327,6 +4327,9 @@ dated records keep their text, and now read "present in `data/`".
 - **Students.** README's student route begins from a clone; a student without the NAS has no
   `data/`.
 
+**The ruling.** The author accepted the six, CI and the student route included, on 2026-09-29:
+"yes. proceed." The branch was merged to `main` and pushed; the history was not rewritten.
+
 **Verification.** `git ls-files data` is empty at `cef5bf4`. A fresh worktree of that commit had
 no `data/`; `start.ps1 -SkipInstall` exited 1 naming `.\sync-data.ps1 -Pull`, before any install;
 the pull copied 257 files, 4.646 GB, every one identical by SHA-256 to this checkout's, with
