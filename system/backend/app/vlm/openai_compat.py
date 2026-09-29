@@ -142,6 +142,10 @@ class OpenAICompatibleProvider:
             raise ProviderUnavailable(
                 f"{url} returned an answer without choices, message or content"
             ) from error
+        if not isinstance(text, str):
+            raise ProviderUnavailable(
+                f"{url} returned message content of type {type(text).__name__}, not a string"
+            )
         if refusal:
             raise ModelRefused(f"{self.model} refused the request: {refusal}")
         if finish == "length":

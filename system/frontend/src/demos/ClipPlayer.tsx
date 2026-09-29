@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocale } from '../i18n/useLocale';
 import { CLIP_FRAMES, CLIP_SIZE, CLIP_URL, clipTime, frameLabel, keyframeMark } from './data';
 
@@ -15,7 +15,9 @@ const TICK_UNCHOSEN = 'bg-white';
  *
  * A native `<video>` with the browser's own controls: muted, as the clip has no audio track;
  * inline, so a phone does not take it full screen; and `preload="metadata"`, so a lecture that
- * never plays it fetches its header and nothing more. Nothing autoplays.
+ * never plays it fetches its header and the first frame the mount effect seeks to, and no more of
+ * the file than the browser needs for those. Nothing autoplays. If the file cannot be loaded, a
+ * sentence in the displayed locale names it, and the ticks keep working.
  *
  * A tick seeks the clip to its frame and picks that frame, which a part holds in the URL; the last
  * frame's seek is held just below the clip's end (`clipTime`); Chromium still sets `ended` for a
@@ -30,6 +32,7 @@ export function ClipPlayer({
 }: { value: string; onPick: (id: string) => void; maxVh: number }) {
   const { t } = useLocale();
   const video = useRef<HTMLVideoElement>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     const clip = video.current;
@@ -52,9 +55,15 @@ export function ClipPlayer({
         muted
         playsInline
         preload="metadata"
+        onError={() => setFailed(true)}
         className="block h-auto w-full bg-slate-900"
         style={{ maxHeight: `${maxVh}vh` }}
       />
+      {failed && (
+        <p role="alert" data-testid="demo-clip-error" className="mt-1 text-slate-900">
+          {t('demo.clip_error').replace('{file}', CLIP_URL.split(/[?#]/)[0]!.split('/').pop() ?? CLIP_URL)}
+        </p>
+      )}
       <div role="group" aria-label={t('demo.frame')} className="mt-1 flex flex-wrap gap-1">
         {CLIP_FRAMES.map((f) => {
           const mark = keyframeMark(f.image_id);

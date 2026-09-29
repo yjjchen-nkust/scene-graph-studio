@@ -668,7 +668,7 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
     expect(line).toBe(
       locale === 'en'
         ? `recorded ${VLM.provenance.generated_at.slice(0, 10)} by ${VLM.provenance.model}, replayed`
-        : `${VLM.provenance.generated_at.slice(0, 10)} 由 ${VLM.provenance.model} 錄製，重播`,
+        : `${VLM.provenance.generated_at.slice(0, 10)} 由 ${VLM.provenance.model}錄製，重播`,
     );
   });
 });

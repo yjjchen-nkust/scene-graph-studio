@@ -15,11 +15,11 @@ import { Part5 } from './Part5';
  * The served weights and the server, as the transcript's provenance note names them ("the weights
  * Qwen/Qwen3.8-27B served by vLLM"), formatted for the locale; nothing if the note names none, so
  * the line never states a model the recording does not. In zh-TW the full-width parentheses meet
- * the next word directly, and without them a space parts the model id from 錄製.
+ * the next word directly, and without them the model id meets 錄製 with no space between.
  */
 function servedBy(note: string, locale: Locale): string {
   const served = /weights (\S+) served by (\S+)/.exec(note);
-  if (locale === 'zh-TW') return served ? `（${served[1]}，${served[2]}）` : ' ';
+  if (locale === 'zh-TW') return served ? `（${served[1]}，${served[2]}）` : '';
   return served ? ` (${served[1]}, ${served[2]})` : '';
 }
 

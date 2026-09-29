@@ -119,6 +119,14 @@ def test_a_truncated_answer_is_raised(frame_dir, server):
         OpenAICompatibleProvider().complete(prompt="P", image_ref="x", context={})
 
 
+def test_content_that_is_not_a_string_is_raised_with_the_url(frame_dir, server):
+    server.reply = answer([{"type": "text", "text": "<hand, holding, beam>"}])
+    with pytest.raises(
+        ProviderUnavailable, match=r"/chat/completions returned message content of type list"
+    ):
+        OpenAICompatibleProvider().complete(prompt="P", image_ref="x", context={})
+
+
 def test_a_refusal_is_raised(frame_dir, server):
     server.reply = answer("text", refusal="no")
     with pytest.raises(ModelRefused):

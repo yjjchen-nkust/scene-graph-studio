@@ -197,6 +197,7 @@
   "demo.part": "part",
   "demo.frame": "Frame",
   "demo.keyframe": "Keyframe",
+  "demo.clip_error": "The clip could not be loaded ({file}). The frame buttons still choose frames.",
   "demo.provenance_measured": "measured",
   "demo.provenance_recorded": "recorded {date} by {model}{served}, replayed",
   "demo.model_output": "Model output, shown verbatim",

@@ -174,7 +174,7 @@ const END_MARGIN_SECONDS = 0.001;
  * leaves the clip at its end rather than on a frame. `duration` is the browser's, where it knows
  * one; before the clip's metadata arrives it knows none, and the manifest's length stands in.
  * The hold keeps `currentTime` inside the clip but not out of `ended`: Chromium sets `ended` for any
- * seek at or after the last frame's start (17.9 s at 10 fps), which the controller accepted.
+ * seek at or after the last frame's start (17.9 s at 10 fps), which D117 records.
  */
 export function clipTime(t: number, duration?: number): number {
   const end = duration !== undefined && Number.isFinite(duration) && duration > 0 ? duration : CLIP_SECONDS;

@@ -4959,6 +4959,21 @@ first recording's summaries, 24 rows on 096 and 41 on 102, came from the quoted 
 ten frames the three revisions are pairwise different on two (094, 098), exactly one pair coincides on six (088,
 090, 096, 102, 104, 106), and all three coincide on two (092, 100).
 
+**One copy for every branch.** The rekey changed `fig2-pipeline.json` and `fig2-corrections.json` on the
+NAS, which every branch reads. `main`'s `step2_prompt(draft, expert=1)` builds three step-2 keys
+(`hallucinated_wrench`, `missing_nodes`, `imprecise_taping`) that are no longer in those files, so until this
+branch merges `main` fails `npm run ci` against the NAS: `test_transcript_player_needs_no_network_and_no_key`
+and `test_the_three_corrections_the_paper_names_are_all_playable` fail, and L5's Figure 2 replay returns
+`TranscriptMiss`. No other branch's L5 tests or harvest should run before the merge. A revert needs the old
+`step2_prompt` text restored and `rekey_step2_transcripts.py` run against it, because the script rebuilds
+from the current prompt only. The pre-rekey files are kept in the workspace at
+`.superpowers/sdd/2026-09-29-m0-demos/backup-fig2-pipeline.json` and `backup-fig2-corrections.json`, which git
+ignores and which are scratch; a durable copy is at `C:\DataRaw\scene-graph\vlm\transcripts-pre-D115\`, a
+sibling of `transcripts/` that the transcript player does not load (SHA-256 of `fig2-pipeline.json`:
+`3d12d9432888f1d494622282e3fff6e18186af971f75d458eb94de512838844e`; of `fig2-corrections.json`:
+`1a47b087972e1c459d09a9542893b8eba7598606b88adc3826da76ec2eb4db03`). Keep that directory after the
+workspace is deleted.
+
 ## D116 — the demos draw lists, numbers and one expert at a time where spec §4 names graphs, labels and all three
 
 **Plan:** `plans/2026-09-29-m0-demos.md`, Tasks 8 and 9. **Decisions:** none new. Branch `feat/m0-demos`.

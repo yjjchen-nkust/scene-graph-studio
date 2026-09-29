@@ -1144,6 +1144,11 @@ describe('the demo step kind', () => {
       const o = outsideVocabulary(t, VLM.O, VLM.P);
       return [o.subject && t[0], o.predicate && t[1], o.object && t[2]].filter((x): x is string => Boolean(x));
     }));
+    // The same, per frame, over the drafts, which part 2 flags term by term.
+    const draftOutside = VLM.frames.map((f) => f.draft.flatMap((t) => {
+      const o = outsideVocabulary(t, VLM.O, VLM.P);
+      return [o.subject && t[0], o.predicate && t[1], o.object && t[2]].filter((x): x is string => Boolean(x));
+    }));
     // The recording's two terms outside O (held to be the only ones, below), read as the O term
     // they name, so the notes can state what the wording did to D-V's churn.
     const asHand = (ts: readonly Triplet[]) => distinct(ts.map((t) =>
@@ -1160,7 +1165,7 @@ describe('the demo step kind', () => {
     const single = VLM.frames.map((f) => distinct(f.draft)
       .filter((t) => f.experts.filter((e) => !e.revision.some((r) => tripletKey(r) === tripletKey(t))).length === 1)
       .map((t) => f.summary.some((r) => tripletKey(r) === tripletKey(t))));
-    return { P, frames, n, summaries, outside, between, keyframes, causes, revisions, single };
+    return { P, frames, n, summaries, outside, draftOutside, between, keyframes, causes, revisions, single };
   })();
   const total = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
@@ -1180,7 +1185,7 @@ describe('the demo step kind', () => {
     // to 22 is one, so a permuted or misattributed small figure passes it, and a number written
     // as a word is not read at all. Here each stated figure is read by its own sentence and held
     // to the value that sentence names, in both locales.
-    const { P, frames, n, summaries, outside, between, keyframes, causes, revisions, single } = recorded;
+    const { P, frames, n, summaries, outside, draftOutside, between, keyframes, causes, revisions, single } = recorded;
     const time = (i: number) => frames[i]!.t;
     const t1 = frames.findIndex((f) => f.image_id === KEYFRAME_IDS[0]);
     const first = between[0]!;
@@ -1190,6 +1195,10 @@ describe('the demo step kind', () => {
     const withOutside = outside.flatMap((terms, i) => (terms.length > 0 ? [i] : []));
     expect(withOutside).toHaveLength(1);
     const oov = withOutside[0]!;
+    // Part 2 flags the terms of each draft, so "only at 96 s" is held to the drafts too: every
+    // draft term outside O or P is on that frame, and on no other.
+    expect([...new Set(draftOutside.flat())].sort()).toEqual(['left_hand', 'right_hand']);
+    expect(draftOutside.flatMap((terms, i) => (terms.length > 0 ? [i] : []))).toEqual([oov]);
     const into = between[oov - 1]!;
     const out = between[oov]!;
     // "Either way": the step into that frame counts the same whichever word the model wrote.

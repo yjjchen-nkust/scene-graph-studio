@@ -197,6 +197,7 @@
   "demo.part": "部分",
   "demo.frame": "影格",
   "demo.keyframe": "關鍵影格",
+  "demo.clip_error": "無法載入影片（{file}）。仍可由影格按鈕選取影格。",
   "demo.provenance_measured": "量測所得",
   "demo.provenance_recorded": "{date} 由 {model}{served}錄製，重播",
   "demo.model_output": "模型輸出，逐字呈現",

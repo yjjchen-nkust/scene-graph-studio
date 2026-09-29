@@ -48,21 +48,32 @@ def parse_triplets(completion: str) -> list[tuple[str, str, str]]:
     return [(m.group(1), m.group(2), m.group(3)) for m in TRIPLET_RE.finditer(completion)]
 
 
+# A label line: `ANALYSIS_EN` or `ANALYSIS_ZH` alone on a line, with up to four non-word characters
+# around it (`### ANALYSIS_EN`, `**ANALYSIS_EN**`, `ANALYSIS_EN:`). `revision_text` and
+# `parse_analysis` share it, so the revision ends exactly where the first analysis begins.
+_ANALYSIS_LABEL_RE = re.compile(r"^[^\w\n]{0,4}ANALYSIS_([A-Z]{2})[^\w\n]{0,4}$", re.M)
+
+
 def revision_text(completion: str) -> str:
-    """The revised triplet set of an expert completion: the text before the first `ANALYSIS_` line.
+    """The revised triplet set of an expert completion: the text before the first analysis label.
 
     An analysis quotes the triplets it deletes and recovers, and parsing the whole completion made
     those quotations rows of the revision (D115). A completion with no label is read whole.
     """
-    match = re.search(r"^ANALYSIS_", completion, re.M)
+    match = _ANALYSIS_LABEL_RE.search(completion)
     return completion[: match.start()] if match else completion
 
 
 def parse_analysis(completion: str) -> tuple[str, str]:
     """The `ANALYSIS_EN` and `ANALYSIS_ZH` sections, or empty strings when absent."""
+    labels = list(_ANALYSIS_LABEL_RE.finditer(completion))
+
     def section(tag: str) -> str:
-        match = re.search(rf"ANALYSIS_{tag}\n(.*?)(?=\nANALYSIS_|\Z)", completion, re.S)
-        return match.group(1).strip() if match else ""
+        for i, label in enumerate(labels):
+            if label.group(1) == tag:
+                end = labels[i + 1].start() if i + 1 < len(labels) else len(completion)
+                return completion[label.end() : end].strip()
+        return ""
 
     return section("EN"), section("ZH")
 

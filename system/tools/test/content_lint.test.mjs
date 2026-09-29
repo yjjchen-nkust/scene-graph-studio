@@ -268,6 +268,18 @@ describe('content_lint demo rules', () => {
     expect(unlisted.out).toContain("demo 'DT': DEMO_ARTEFACTS names no artefact for it");
   });
 
+  it('refuses a demo whose artefact lies outside data/demos/', () => {
+    // The file exists and carries a provenance, so only the location check can refuse it.
+    for (const path of ['vlm/transcripts/m0-demo.json', 'demos/../vlm/m0-demo.json', '../elsewhere.json']) {
+      const r = lint(corpus({
+        ...DT,
+        demos: { ...DT.demos, artefacts: `  DT: '${path}',\n` },
+        demoData: { [path]: { provenance: {} } },
+      }));
+      expect(r.out, path).toContain(`demo 'DT': its artefact '${path}' does not lie under demos/ (relative to data/) (rule 4)`);
+    }
+  });
+
   it('refuses a demo step with no seconds_budget', () => {
     const r = lint(corpus({
       ...DT,

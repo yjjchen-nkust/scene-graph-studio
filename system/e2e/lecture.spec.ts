@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 
 /**
@@ -234,19 +235,45 @@ test('the stepper carries DT.frame across D-T\'s parts and not into D-V', async 
   await expect(page.getByTestId('demo-tick-m0-demo-096')).toHaveAttribute('aria-pressed', 'false');
 });
 
+/** One of M0's two recorded artefacts, read as the build reads it, from `data/demos/m0/`. */
+function recording<T>(name: string): T {
+  return JSON.parse(readFileSync(new URL(`../../data/demos/m0/${name}`, import.meta.url), 'utf-8')) as T;
+}
+
 test('a demo computes with no backend running', async ({ page }) => {
-  // A demo replays its recording from the build (NFR-1); this file starts no backend. The figures
-  // are D-T's and D-V's at t₁, 90 s, which both open on: six detections, 30 ordered pairs and
-  // 1,500 candidates, and a draft of ten rows from five calls.
+  // A demo replays its recording from the build (NFR-1); this file starts no backend, and the test
+  // also refuses every request to `/api/`, so a demo that reached for the API would show nothing.
+  // The figures are D-T's and D-V's at t₁, 90 s, which both open on, read from the two artefacts as
+  // the build reads them: the detections, their ordered pairs, the candidates over |P| predicates,
+  // and D-V's rows and calls per frame.
+  const aborted: string[] = [];
+  await page.route('**/api/**', async (route) => {
+    aborted.push(route.request().url());
+    await route.abort();
+  });
+  const dt = recording<{
+    vg150_predicate_count: number;
+    frames: { image_id: string; detections: unknown[] }[];
+  }>('traditional.json');
+  const dv = recording<{
+    calls_per_frame: number;
+    frames: { image_id: string; draft: unknown[] }[];
+  }>('indvissgg.json');
+  const objects = dt.frames.find((f) => f.image_id === 'm0-demo-090')!.detections.length;
+  const pairs = objects * (objects - 1);
+  const candidates = pairs * dt.vg150_predicate_count;
+  const draft = dv.frames.find((f) => f.image_id === 'm0-demo-090')!.draft.length;
+
   await page.goto('/lecture/m/m00/7');
-  await expect(page.getByTestId('readout-DT.objects-value')).toHaveText('6');
-  await expect(page.getByTestId('readout-DT.pairs-value')).toHaveText('30');
-  await expect(page.getByTestId('readout-DT.candidates-value')).toHaveText('1,500');
+  await expect(page.getByTestId('readout-DT.objects-value')).toHaveText(String(objects));
+  await expect(page.getByTestId('readout-DT.pairs-value')).toHaveText(String(pairs));
+  await expect(page.getByTestId('readout-DT.candidates-value')).toHaveText(candidates.toLocaleString('en-US'));
   await page.goto('/lecture/m/m00/11');
-  await expect(page.getByTestId('readout-DV.calls-value')).toHaveText('5');
-  await expect(page.getByTestId('readout-DV.emitted-value')).toHaveText('10');
+  await expect(page.getByTestId('readout-DV.calls-value')).toHaveText(String(dv.calls_per_frame));
+  await expect(page.getByTestId('readout-DV.emitted-value')).toHaveText(String(draft));
   await page.goto('/lecture/m/m00/12');
   await expect(page.getByTestId('dv-analysis')).not.toHaveText('');
+  expect(aborted).toEqual([]);
 });
 
 test('the study shell renders every playground of M0 to M3 in one column', async ({ page }) => {

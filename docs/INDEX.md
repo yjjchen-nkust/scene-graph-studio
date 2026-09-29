@@ -467,7 +467,7 @@ expert at a time, so that every part fits 1024×768 at 18 px in 繁體中文 (D1
 s7 and s8 to s16 and s17, which orphans stored quiz schedules keyed `m00:s8:*`, and the corpus went from 120 to
 129 steps a locale (D117). The live VLM provider had sent no frame, so a live L5 run on the paper's Figure 2
 now answers 503 (D112). Three parts run past the panel in English (D117). The recordings and derived files are
-on the NAS, in no commit. See D112 to D117 and VERIFICATION §31.
+on the NAS, in no commit. See D112 to D117 and VERIFICATION §31. The rekey of the two authored transcripts (D115) changed data every branch shares: until this branch merges, `main` fails `npm run ci` against the NAS (two backend tests, and L5's Figure 2 replay returns `TranscriptMiss`), no other branch's L5 tests or harvest should run in between, and a revert needs the old `step2_prompt` text and the rekey script run against it; the pre-rekey files are kept at `C:\DataRaw\scene-graph\vlm\transcripts-pre-D115\`.
 
 **Verification.** `npm run ci` green, 2026-09-30, on branch `feat/m0-demos` with D117's records: **356 pytest** and 7 skipped, parity 21 agree, i18n 505 keys both locales,
 **1234 vitest** in 83 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points

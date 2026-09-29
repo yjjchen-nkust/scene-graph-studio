@@ -131,7 +131,7 @@ the first call), and not `claude-opus-5-5`. The seed is derived from each exchan
 reproducible from the transcript and the three experts sample independently; each completion is one seeded
 sample. The recorder takes `--provider`. The `ClaudeProvider` fix above stands for L5.]
 [Amended 2026-09-30 (D115): the expert prompt carries the criteria O, P and E, as Eq. (3) has them,
-and asks for labelled `ANALYSIS_EN` and `ANALYSIS_ZH` sections, which `parse_analysis` reads; D-V is recorded again under it.]
+and asks for labelled `ANALYSIS_EN` and `ANALYSIS_ZH` sections, which `parse_analysis` reads; `revision_text` ends an expert's revision at the first analysis label, so a triplet quoted in an analysis is not a revision row; under a step-1 ablation the experts still receive the full criteria; D-V is recorded again under it.]
 
 `system/backend/scripts/record_demo_indvissgg.py` runs `indvissgg.step1`, `step2` with N = 3 and
 `step3` on each of the ten frames under `O_ISG`, `P_ISG` and `EXAMPLES_ISG`: 50 calls. Every

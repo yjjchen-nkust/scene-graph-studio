@@ -1992,7 +1992,7 @@ of frame and expert; part 5. The worst state of each part, in px:
 | DV.5 | **20** | 112 | 470 | **−43** | 112 | 470 |
 
 Every part fits in 繁體中文 at all three sizes, and no sideways scroll occurs in any state, size or locale. In
-English three parts run past 1024×768, by 25, 38 and 43 px of `scrollHeight − clientHeight`; the suite holds
+English three parts run past 1024×768, by 25, 37 and 43 px past the frame's bottom edge (the table's negative spare space; D117 also gives the `scrollHeight − clientHeight` reading, 25, 38 and 43 px); the suite holds
 繁體中文 only (D96), so no assertion fails, and D117 records them. No layout change was needed, and nothing was
 fixed by clipping.
 

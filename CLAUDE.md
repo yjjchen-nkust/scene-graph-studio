@@ -112,6 +112,10 @@ cd scene-graph-studio\system ; npm run ci
   fails `npm run ci` against the NAS, and running `main`'s harvest writes M5's old text back into
   `data/content/`; a revert after the merge needs a hand edit of `playground_golden.json` on the
   NAS and a fresh harvest (D111).
+  The M0 demos branch is the second: its rekey of `fig2-pipeline.json` and `fig2-corrections.json` (D115) leaves
+  `main` failing two backend tests and L5's Figure 2 replay against the NAS until it merges, and a revert needs the
+  old `step2_prompt` text and `rekey_step2_transcripts.py` run against it; the pre-rekey files are in
+  `C:\DataRaw\scene-graph\vlm\transcripts-pre-D115\`.
 - **Never `rm -rf data/` in Git Bash.** With the trailing slash it deletes the files on the NAS
   through the link (measured on a scratch junction, D110), and the NAS copy is the only copy.
   `rm -rf data`, `git clean -fdX` and PowerShell `Remove-Item -Recurse` remove the link alone.

@@ -22,6 +22,26 @@ describe('ClipPlayer', () => {
     expect(clip.style.maxHeight).toBe('28vh');
   });
 
+  it('names the file in the displayed locale when the video cannot be loaded, and the ticks keep working', () => {
+    const onPick = vi.fn();
+    for (const [locale, sentence] of [
+      ['en', 'The clip could not be loaded ('],
+      ['zh-TW', '無法載入影片（'],
+    ] as const) {
+      setLocale(locale);
+      const { unmount } = render(<ClipPlayer value="m0-demo-090" onPick={onPick} maxVh={28} />);
+      expect(screen.queryByTestId('demo-clip-error')).toBeNull();
+      fireEvent.error(video());
+      const message = screen.getByTestId('demo-clip-error').textContent ?? '';
+      expect(message).toContain(sentence);
+      expect(message).toMatch(/clip[^)）]*\.mp4[)）]/);
+      expect(message).not.toContain('{file}');
+      fireEvent.click(screen.getByTestId('demo-tick-m0-demo-102'));
+      expect(onPick).toHaveBeenLastCalledWith('m0-demo-102');
+      unmount();
+    }
+  });
+
   it('gives each of the ten frames a button labelled by its time, the keyframes t₁, t₂ and t₃', () => {
     render(<ClipPlayer value="m0-demo-090" onPick={() => {}} maxVh={28} />);
     const ticks = FRAME_IDS.map((id) => screen.getByTestId(`demo-tick-${id}`));

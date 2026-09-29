@@ -7,6 +7,7 @@
 // Written before the modules rather than retrofitted, so `npm run ci` was complete from the
 // first commit.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { posix } from 'node:path';
 
 const problems = [];
 
@@ -701,6 +702,9 @@ for (const [demo, uses] of [...demoUses].sort()) {
   let defect = null;
   if (!artefact) {
     defect = 'DEMO_ARTEFACTS names no artefact for it';
+  } else if (!posix.normalize(artefact).startsWith('demos/')) {
+    // Spec §5 rule 4: a recording lies under data/demos/, and `../` or an absolute path leaves it.
+    defect = `its artefact '${artefact}' does not lie under demos/ (relative to data/)`;
   } else if (!existsSync(`../data/${artefact}`)) {
     defect = `its artefact data/${artefact} does not exist`;
   } else {

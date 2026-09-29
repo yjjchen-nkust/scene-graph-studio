@@ -307,6 +307,22 @@ def test_a_triplet_quoted_in_the_analysis_is_not_a_revision_row():
     ]
 
 
+@pytest.mark.parametrize(
+    "en,zh",
+    [("### ANALYSIS_EN", "### ANALYSIS_ZH"), ("**ANALYSIS_EN**", "**ANALYSIS_ZH**")],
+)
+def test_decorated_labels_are_parsed_and_end_the_revision(en, zh):
+    completion = (
+        f"<hand, holding, beam>\n{en}\nDeleted <hand, near, wrench>.\n"
+        f"{zh}\n刪除 <hand, near, wrench>。"
+    )
+    assert indvissgg.revision_text(completion) == "<hand, holding, beam>\n"
+    assert indvissgg.parse_analysis(completion) == (
+        "Deleted <hand, near, wrench>.",
+        "刪除 <hand, near, wrench>。",
+    )
+
+
 def test_a_completion_without_labels_is_read_whole():
     completion = "<hand, holding, beam>\n<beam, on, workbench>"
     assert indvissgg.revision_text(completion) == completion
