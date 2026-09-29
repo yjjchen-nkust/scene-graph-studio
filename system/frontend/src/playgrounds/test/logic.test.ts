@@ -13,7 +13,8 @@ import { PAIR_ROWS, SLICE_TOTALS } from '../M5/pairs';
 import { beliefGraph, W_STEP } from '../M5/beliefs';
 import {
   admitByMask, annotatedTriplet, area, averagingRound, averagingRounds, byScore, candidateSpace, capPerPair,
-  conjuncts, decimals, degreeWeightedMean, failureMode, fixedPoint, frameVerdict, hypothesisSpace, iouCounts,
+  conjuncts, decimals, degreeWeightedMean, degreeWeightedParts, failureMode, fixedPoint, frameVerdict,
+  hypothesisSpace, iouCounts,
   canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic, headShare, idRun, intersection,
   isInE, isInMergedE, matchedByMask, matchedRanks, matchedTruths, maxDistance, mean, measuredHeadShare, mergeMap,
   pairsWithSeveral, predicateLabels, ranked, ratio, relatedPairs, rowNormalised, scaleBound, scaledBox,
@@ -933,6 +934,19 @@ describe('M5: beliefs under averaging', () => {
     expect(degreeWeightedMean(rel.lists, rel.b0)).toBeCloseTo(6.1 / 12, 12);
     expect(mean(rel.b0)).toBeCloseTo(2.9 / 6, 12);
     expect(degreeWeightedMean(every.lists, every.b0)).toBeCloseTo(mean(every.b0), 12);
+  });
+
+  it('degreeWeightedParts holds the numerator and denominator degreeWeightedMean divides', () => {
+    const relParts = degreeWeightedParts(rel.lists, rel.b0);
+    expect(relParts.weighted).toBeCloseTo(6.1, 12);
+    expect(relParts.degrees).toBe(12);
+    const everyParts = degreeWeightedParts(every.lists, every.b0);
+    expect(everyParts.weighted).toBeCloseTo(14.5, 12);
+    expect(everyParts.degrees).toBe(30);
+    for (const g of [rel, every]) {
+      const { weighted, degrees } = degreeWeightedParts(g.lists, g.b0);
+      expect(weighted / degrees).toBe(degreeWeightedMean(g.lists, g.b0));
+    }
   });
 
   it("gives spec §2's spreads and limits to four decimals", () => {

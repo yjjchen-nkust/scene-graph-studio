@@ -2,7 +2,10 @@ import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { BELIEF_GRAPHS, T_DEFAULT, T_MAX, W_DEFAULT, W_STEP, beliefGraph, type BeliefGraphName } from '../M5/beliefs';
 import { Choice, PlaygroundFrame, Readout, Slider } from '../controls';
-import { averagingRounds, decimals, degreeWeightedMean, fixedPoint, maxDistance, mean, snap, spread } from '../logic';
+import {
+  averagingRounds, decimals, degreeWeightedMean, degreeWeightedParts, fixedPoint, maxDistance, mean, snap, spread,
+  sum,
+} from '../logic';
 import type { PlaygroundProps } from '../mounts';
 
 /**
@@ -14,11 +17,13 @@ import type { PlaygroundProps } from '../mounts';
  * evidence, and `T2.t` walks `averagingRounds` forward from b⁽⁰⁾. The table shows each object's
  * neighbourhood and its belief at the start and after t rounds; the readouts below show how far
  * b⁽ᵗ⁾ has spread and, for w < 1, how far it still sits from the fixed point b* `fixedPoint`
- * solves for and the bound `wᵗ‖b⁽⁰⁾ − b*‖∞` that distance can never cross. At w = 1 no fixed
- * point exists to solve for (`fixedPoint` returns null and is never called), so the same row
- * shows instead the one value `degreeWeightedMean` says every belief converges to, and, beside
- * it, the plain mean of b⁽⁰⁾ — the two agree only when every object carries the same number of
- * neighbours, which `every` does and `relations` does not.
+ * solves for and the bound `wᵗ‖b⁽⁰⁾ − b*‖∞` that distance can never cross. At w = 1 every
+ * constant vector is a fixed point of b ↦ Sb, so what fails is uniqueness: I − S is singular
+ * (`fixedPoint` returns null and is never called), so the same row shows instead the one value
+ * `degreeWeightedMean` says every belief converges to, and, beside it, the plain mean of b⁽⁰⁾ —
+ * equal degrees are sufficient, not necessary, for the two to agree; they agree whenever
+ * Σⱼ (dⱼ − d̄) b⁽⁰⁾ⱼ = 0, which holds on the complete graph `every` and, here, does not on
+ * `relations`.
  *
  * A belief under a stated rule, never a metric: nothing here imports from `sgg-metrics`, and no
  * readout is a recall. No photograph and no SVG (D93): the visual is the regime line, the table
@@ -55,8 +60,14 @@ export function BeliefsUnderAveraging({ part }: PlaygroundProps = {}) {
   const tableView = part !== 2;
   const readoutsView = part !== 1;
 
-  // `‖b⁽⁰⁾ − b*‖∞`, the distance the bound decays from; undefined when `star` is null.
+  // `‖b⁽⁰⁾ − b*‖∞`, the distance the bound decays from; 0, not undefined, when `star` is null,
+  // since `d0` is only ever read from the `star`-guarded branch below, where it is never displayed.
   const d0 = star ? maxDistance(g.b0, star) : 0;
+  // One source each for the limit note's Σ dⱼ b⁽⁰⁾ⱼ / Σ dⱼ and the mean note's Σ b⁽⁰⁾ⱼ, so a note
+  // can never drift from the value beside it: `degreeWeightedMean` and `mean` divide these same
+  // two expressions rather than the component recomputing either sum for display.
+  const weightedParts = degreeWeightedParts(g.lists, g.b0);
+  const b0Sum = sum(g.b0);
 
   const separator = locale === 'zh-TW' ? '、' : ', ';
 
@@ -98,14 +109,16 @@ export function BeliefsUnderAveraging({ part }: PlaygroundProps = {}) {
         {t(`playground.t2.${regimeKey}`)}
       </p>
       {tableView && (
-        <table data-testid="t2-beliefs" className="mt-2 text-[0.75em] leading-tight">
-          <caption>{t('playground.t2.table')}</caption>
+        <table data-testid="t2-beliefs" className="mt-2 border-collapse text-[0.75em] leading-tight text-slate-700">
+          <caption className="text-left">{t('playground.t2.table')}</caption>
+          {/* The header row is set off by a bottom rule and semibold weight rather than a smaller
+              size, since the table is already at the shell's minimum 0.75em (18 px, D93). */}
           <thead>
-            <tr>
-              <th scope="col">{t('playground.t2.object')}</th>
-              <th scope="col">{t('playground.t2.neighbours')}</th>
-              <th scope="col">b⁽⁰⁾</th>
-              <th scope="col">b⁽ᵗ⁾</th>
+            <tr className="border-b border-slate-300 font-semibold">
+              <th scope="col" className="py-0.5 pl-2 pr-4 text-left">{t('playground.t2.object')}</th>
+              <th scope="col" className="py-0.5 pr-4 text-left">{t('playground.t2.neighbours')}</th>
+              <th scope="col" className="py-0.5 pr-4 text-right tabular-nums">b⁽⁰⁾</th>
+              <th scope="col" className="py-0.5 pr-4 text-right tabular-nums">b⁽ᵗ⁾</th>
             </tr>
           </thead>
           <tbody>
@@ -115,10 +128,14 @@ export function BeliefsUnderAveraging({ part }: PlaygroundProps = {}) {
                 : g.lists[i]!.map((j) => `#${j} ${nameById.get(j)}`).join(separator);
               return (
                 <tr key={id} data-testid={`t2-belief-${id}`}>
-                  <th scope="row">{`#${id} ${g.names[i]}`}</th>
-                  <td data-testid={`t2-belief-${id}-nb`}>{neighbourText}</td>
-                  <td data-testid={`t2-belief-${id}-b0`}>{decimals(g.b0[i]!, 2)}</td>
-                  <td data-testid={`t2-belief-${id}-bt`}>{decimals(bt[i]!, 2)}</td>
+                  <th scope="row" className="py-0.5 pl-2 pr-4 text-left font-normal">{`#${id} ${g.names[i]}`}</th>
+                  <td data-testid={`t2-belief-${id}-nb`} className="py-0.5 pr-4">{neighbourText}</td>
+                  <td data-testid={`t2-belief-${id}-b0`} className="py-0.5 pr-4 text-right tabular-nums">
+                    {decimals(g.b0[i]!, 2)}
+                  </td>
+                  <td data-testid={`t2-belief-${id}-bt`} className="py-0.5 pr-4 text-right tabular-nums">
+                    {decimals(bt[i]!, 2)}
+                  </td>
                 </tr>
               );
             })}
@@ -162,14 +179,14 @@ export function BeliefsUnderAveraging({ part }: PlaygroundProps = {}) {
                   label={t('playground.t2.limit')}
                   value={decimals(degreeWeightedMean(g.lists, g.b0), 4)}
                   note={t('playground.t2.limit_note')
-                    .replace('{weighted}', decimals(g.b0.reduce((s, x, j) => s + g.lists[j]!.length * x, 0), 1))
-                    .replace('{degrees}', String(g.lists.reduce((s, l) => s + l.length, 0)))}
+                    .replace('{weighted}', decimals(weightedParts.weighted, 1))
+                    .replace('{degrees}', String(weightedParts.degrees))}
                 />
                 <Readout
                   id="T2.mean"
                   label={t('playground.t2.mean')}
                   value={decimals(mean(g.b0), 4)}
-                  note={t('playground.t2.mean_note').replace('{sum}', decimals(g.b0.reduce((s, x) => s + x, 0), 1))}
+                  note={t('playground.t2.mean_note').replace('{sum}', decimals(b0Sum, 1))}
                 />
               </>
             )}

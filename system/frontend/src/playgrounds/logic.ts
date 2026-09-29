@@ -748,8 +748,26 @@ export function spread(b: readonly number[]): number {
   return Math.max(...b) - Math.min(...b);
 }
 
+/** `Σ values`, the one expression `mean` divides and a note beside it states in full. */
+export function sum(values: readonly number[]): number {
+  return values.reduce((s, x) => s + x, 0);
+}
+
 export function mean(values: readonly number[]): number {
-  return values.reduce((s, x) => s + x, 0) / values.length;
+  return sum(values) / values.length;
+}
+
+/**
+ * `Σⱼ dⱼ b⁽⁰⁾ⱼ` and `Σⱼ dⱼ`, `dⱼ = lists[j].length`: the numerator and denominator
+ * `degreeWeightedMean` divides, held apart so a note that states them in full (T2's `limit_note`)
+ * reads the same two numbers the readout beside it divides, rather than recomputing either.
+ */
+export function degreeWeightedParts(
+  lists: readonly (readonly number[])[], b0: readonly number[],
+): { weighted: number; degrees: number } {
+  const weighted = b0.reduce((s, x, j) => s + lists[j]!.length * x, 0);
+  const degrees = lists.reduce((s, l) => s + l.length, 0);
+  return { weighted, degrees };
 }
 
 /**
@@ -759,9 +777,8 @@ export function mean(values: readonly number[]): number {
  * `relations`.
  */
 export function degreeWeightedMean(lists: readonly (readonly number[])[], b0: readonly number[]): number {
-  const num = b0.reduce((s, x, j) => s + lists[j]!.length * x, 0);
-  const den = lists.reduce((s, l) => s + l.length, 0);
-  return num / den;
+  const { weighted, degrees } = degreeWeightedParts(lists, b0);
+  return weighted / degrees;
 }
 
 /**

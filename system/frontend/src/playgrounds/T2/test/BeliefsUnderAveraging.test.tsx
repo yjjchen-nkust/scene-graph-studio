@@ -14,6 +14,13 @@ const renderAt = (url: string, props: PlaygroundProps = {}) =>
     </MemoryRouter>,
   );
 
+/** Review Focus 1: an invented URL must never leave a NaN or an unfilled `{placeholder}` on screen. */
+const expectClean = () => {
+  const frame = screen.getByTestId('playground-frame').textContent ?? '';
+  expect(frame).not.toMatch(/NaN/);
+  expect(frame).not.toMatch(/\{/);
+};
+
 describe('T2', () => {
   it('opens on the relations at w = 0.5, t = 0', () => {
     renderAt('/m/m05');
@@ -26,22 +33,36 @@ describe('T2', () => {
     expect(screen.getByTestId('readout-T2.spread')).toHaveTextContent('0.3924 at b*');
     expect(screen.getByTestId('readout-T2.distance-value')).toHaveTextContent('0.2065');
     expect(screen.getByTestId('readout-T2.bound-value')).toHaveTextContent('0.2065');
-    expect(screen.getByTestId('readout-T2.bound')).toHaveTextContent('wᵗ × 0.2065');
+    expect(screen.getByTestId('readout-T2.bound')).toHaveTextContent('wᵗ × 0.2065; 0.2065 is the distance at t = 0');
     expect(screen.getByTestId('t2-regime')).toHaveTextContent('0 < w < 1');
     expect(screen.queryByTestId('readout-T2.limit')).toBeNull();
+    expectClean();
   });
 
   it('names each object with its neighbours', () => {
     renderAt('/m/m05');
-    expect(screen.getByTestId('t2-belief-1-nb')).toHaveTextContent('#2 person, #3 box, #5 wrench, #6 panel');
-    expect(screen.getByTestId('t2-belief-3-nb')).toHaveTextContent('#1 table');
-    expect(screen.getByTestId('t2-belief-5-nb')).toHaveTextContent('#1 table, #2 person');
+    expect(screen.getByTestId('t2-belief-1-nb').textContent).toBe('#2 person, #3 box, #5 wrench, #6 panel');
+    expect(screen.getByTestId('t2-belief-3-nb').textContent).toBe('#1 table');
+    expect(screen.getByTestId('t2-belief-5-nb').textContent).toBe('#1 table, #2 person');
     cleanup();
 
     renderAt('/m/m05?T2.graph=every');
     for (const id of [1, 2, 3, 4, 5, 6]) {
-      expect(screen.getByTestId(`t2-belief-${id}-nb`)).toHaveTextContent('the other five');
+      expect(screen.getByTestId(`t2-belief-${id}-nb`).textContent).toBe('the other five');
     }
+  });
+
+  it("pads the table's cells so adjacent values do not touch", () => {
+    renderAt('/m/m05');
+    const rowHeader = screen.getByTestId('t2-belief-1').querySelector('th')!;
+    expect(rowHeader).toHaveClass('pl-2', 'pr-4');
+    expect(screen.getByTestId('t2-belief-1-nb')).toHaveClass('pr-4');
+    expect(screen.getByTestId('t2-belief-1-b0')).toHaveClass('pr-4', 'text-right', 'tabular-nums');
+    expect(screen.getByTestId('t2-belief-1-bt')).toHaveClass('pr-4', 'text-right', 'tabular-nums');
+    const headerCells = screen.getByTestId('t2-beliefs').querySelectorAll('thead th');
+    for (const cell of headerCells) expect(cell).toHaveClass('pr-4');
+    expect(headerCells[2]).toHaveClass('text-right', 'tabular-nums');
+    expect(headerCells[3]).toHaveClass('text-right', 'tabular-nums');
   });
 
   it("gives spec §2's round 1 and round 5", () => {
@@ -130,24 +151,29 @@ describe('T2', () => {
     renderAt('/m/m05?T2.graph=foo');
     expect(screen.getByTestId('T2.graph')).toHaveValue('relations');
     expect(screen.getByTestId('t2-belief-3-nb')).toHaveTextContent('#1 table');
+    expectClean();
     cleanup();
 
     renderAt('/m/m05?T2.w=1.7');
     expect(screen.getByTestId('T2.w')).toHaveValue('1');
     expect(screen.getByTestId('readout-T2.limit')).toBeInTheDocument();
+    expectClean();
     cleanup();
 
     renderAt('/m/m05?T2.w=0.53');
     expect(screen.getByTestId('T2.w')).toHaveValue('0.55');
+    expectClean();
     cleanup();
 
     renderAt('/m/m05?T2.t=-3');
     expect(screen.getByTestId('T2.t')).toHaveValue('0');
     expect(screen.getByTestId('readout-T2.spread-value')).toHaveTextContent('0.8000');
+    expectClean();
     cleanup();
 
     renderAt('/m/m05?T2.t=99');
     expect(screen.getByTestId('T2.t')).toHaveValue('40');
+    expectClean();
   });
 
   it("names IMP's update as learned", () => {
@@ -197,7 +223,9 @@ describe('T2', () => {
     renderAt('/m/m05');
     expect(screen.getByTestId('readout-T2.spread')).toHaveTextContent('b⁽ᵗ⁾ 之全距');
     expect(screen.getByTestId('readout-T2.spread')).toHaveTextContent('b* 處為 0.3924');
-    expect(screen.getByTestId('t2-belief-1-nb')).toHaveTextContent('#2 person、#3 box、#5 wrench、#6 panel');
+    expect(screen.getByTestId('readout-T2.bound')).toHaveTextContent('wᵗ × 0.2065；0.2065 為 t = 0 時之距離');
+    expect(screen.getByTestId('t2-belief-1-nb').textContent).toBe('#2 person、#3 box、#5 wrench、#6 panel');
+    expectClean();
     cleanup();
 
     setLocale('zh-TW');
