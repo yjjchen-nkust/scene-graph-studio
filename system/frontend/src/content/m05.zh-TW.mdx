@@ -12,6 +12,12 @@ symbols:
   - sym: "w"
     gloss_en: "the weight a node gives its neighbours' beliefs against its own"
     gloss_zh: "節點賦予鄰居信念相對於自身信念的權重"
+  - sym: "S"
+    gloss_en: "the averaging matrix: each row averages over a node's neighbours"
+    gloss_zh: "平均矩陣：每一列對該節點之鄰居取平均"
+  - sym: "\\mathcal{N}(i)"
+    gloss_en: "the neighbours of node i, i itself not among them"
+    gloss_zh: "節點 i 之鄰居集合，不含 i 本身"
 claims: []
 steps:
   - id: s1
@@ -20,11 +26,11 @@ steps:
   - id: s2
     kind: math
     seconds_budget: 300
-    presenter_notes_zh: "五分鐘。配對列舉與偵測數呈平方關係，成立的關係則呈線性，此比值即兩階段設計的全部成本結構。宜先請現場估計 N = 80 時的判定次數，再揭示實際數量；其嚴重程度高於直覺所示，而直覺的誤差本身即為本頁的教學效果。"
+    presenter_notes_zh: "五分鐘。配對列舉與偵測數呈平方關係，成立的關係則呈線性，此比值即兩階段設計的全部成本結構。宜先請現場估計 N = 80、採用 VG150 之 50 個 predicate 時的判定次數，再揭示實際數量：80 · 79 · 50 = 316,000。其嚴重程度高於直覺所示，而直覺的誤差本身即為本頁的教學效果。下一步驟將同一計數對照 80 張已標註之影像。"
   - id: s3
     kind: math
     seconds_budget: 360
-    presenter_notes_zh: "六分鐘。IMP 的構想正確而算術含有陷阱：同一平均運算執行足夠久，全部節點將持有相同信念。宜將不動點推導寫完，並明確指出變異數每步收縮 (1 − w)，該式即為 s6 檢核點的依據。若時間不足可略去收斂速率，保留共識結論。"
+    presenter_notes_zh: "六分鐘。IMP 的構想正確而算術含有陷阱：若僅反覆執行平均運算，全部節點將趨向同一信念。宜將推導寫完：w < 1 時信念收斂至 b*，保留各節點自身證據之 (1 − w) 份，且與 b* 之距離每輪至少縮小為原來之 w 倍；w = 1 時該份證據消失，全部信念趨於依分支度加權之平均。w = 1 時之趨同即為檢核點所問之內容。下一步驟於 ph-001 之六個物件上執行此規則。若時間不足，可略去界限，保留 w < 1 與 w = 1 兩種情形。"
   - id: s4
     kind: prose
     seconds_budget: 300
@@ -36,7 +42,7 @@ steps:
     presenter_notes_zh: "L4 七分鐘。觀察順序須嚴格：先看各模型一致之處，即僅憑頻率先驗即可取得的頭部 predicate；再看長尾。四年架構演進之間的差距何等有限，唯有依此順序觀察方能顯現，順序顛倒則失去效果。"
   - id: s6
     kind: checkpoint
-    presenter_notes_zh: "檢核點。可接受的答案包括 GPS-Net 的節點優先序損失（使高信心物件不致被低信心鄰居覆寫）與 VCTree 的動態樹（限制訊息流動的結構）。代價方面：前者需額外的信心估計且引入新的超參數，後者需逐影像建構結構故成本上升。若現場僅答出設計而未答代價，請追問代價。"
+    presenter_notes_zh: "檢核點，對應 w = 1 時之趨同。可接受的答案包括 GPS-Net 的節點優先序損失（使高信心物件不致被低信心鄰居覆寫）與 VCTree 的動態樹（限制訊息流動的結構）。代價方面：前者需額外的信心估計且引入新的超參數，後者需逐影像建構結構故成本上升。若現場僅答出設計而未答代價，請追問代價。"
 ---
 
 
@@ -81,12 +87,14 @@ $$
 <Implications>
 
 $$
-\begin{gathered}N=80,\ \lvert\mathcal{P}\rvert=310:\quad 80\cdot 79\cdot 310 = 1{,}958{,}800 \ \text{decisions for} \approx 20 \ \text{relations}
+\begin{gathered}\lvert\mathcal{P}\rvert=50\ (\text{VG150}),\ N=12:\quad 12\cdot 11=132 \ \text{pairs},\quad 132\cdot 50=6{,}600 \ \text{decisions for} \approx 7 \ \text{relations}
+\\ N=80 \ \text{boxes kept}:\quad 80\cdot 79=6{,}320 \ \text{pairs},\quad 6{,}320\cdot 50=316{,}000 \ \text{decisions for the same} \approx 7
 \\[4pt]
-\text{positive rate} \approx 1.0\times 10^{-5}. \text{ This ratio is the motivation for one-stage set prediction.}\end{gathered}
+\text{positive rate} \approx 1.1\times 10^{-3} \ \text{at } N=12, \quad \approx 2.2\times 10^{-5} \ \text{at } N=80
+\\ \text{The 80 VG150 frames bundled here: } 651 \text{ of } 26{,}282 \text{ ordered pairs carry a relation.}\end{gathered}
 $$
 
-每十萬次判定之中約有一次為正例。以此種分布訓練的分類器，將學會輸出「無關係」，且幾乎總是正確；此即每一兩階段方法均將其容量投注於配對*剪枝*與先驗的理由，亦為 M4 所述頻率基線表現優異的理由。
+VG150 之資料卡記載其驗證集含 5,000 張影像、62,754 個物件標註與 33,203 個關係，即每張影像 12.6 個物件與 6.6 個關係。影像含十二個物件時，約每一千次判定之中有一次為正例；若偵測器保留 80 個框（此為本頁所設之數值，並非取自論文），則約每四萬五千次判定之中僅有一次。本課程所附之 80 張 VG150 影像中，26,282 個有序配對僅 651 個承載任何關係，即 2.5%，此比例尚未計入 50 個 predicate 對判定次數之倍增。以此種分布訓練的分類器，將學會輸出「無關係」，且幾乎總是正確；此即每一兩階段方法均將其容量投注於配對*剪枝*與先驗的理由，亦為 M4 所述頻率基線表現優異的理由。
 
 此一比值亦為 M7 單階段集合預測的動機所在：若問題出在配對，則停止列舉配對。
 
@@ -98,14 +106,18 @@ $$
 
 <Intuition>
 
-IMP 的構想在於：關係的證據部分存在於其鄰居之中，故令節點交換信念並反覆迭代。此一構想正確，但其算術含有陷阱：同一平均運算持續執行足夠久之後，全部節點將持有相同的信念。
+IMP 的構想在於：關係的證據部分存在於其鄰居之中，故令節點交換信念並反覆迭代。此一構想正確，但其算術含有陷阱：若僅反覆執行平均運算，全部節點將趨向同一信念；每一輪保留各節點自身證據之一部分，方能阻止此一結果。
 
 </Intuition>
 
 <Formal>
 
 $$
-b^{(t+1)}_i=(1-w)\,b^{(0)}_i+w\,\overline{b^{(t)}_{\mathcal{N}(i)}}\ \xrightarrow[\ t\to\infty\ ]{w>0}\ \overline{b^{(0)}}\quad(\text{consensus; information destroyed})
+\begin{gathered}
+b^{(t+1)}=(1-w)\,b^{(0)}+w\,S\,b^{(t)},\qquad S_{ij}=\tfrac{1}{d_i}\ \text{for } j\in\mathcal{N}(i),\ \text{else } 0,\qquad d_i=\lvert\mathcal{N}(i)\rvert
+\\ 0\le w<1:\quad b^{(t)}\longrightarrow b^{\ast}=(1-w)(I-wS)^{-1}\,b^{(0)}
+\\ w=1:\quad b^{(t)}_i\longrightarrow\frac{\sum_j d_j\,b^{(0)}_j}{\sum_j d_j}\quad(\text{connected, with an odd cycle})
+\end{gathered}
 $$
 
 </Formal>
@@ -114,8 +126,11 @@ $$
 
 $$
 \begin{aligned}
-b^{(t+1)}_i &= (1-w)\,b^{(0)}_i + w\,\overline{b^{(t)}} , \qquad \overline{b^{(t)}}=\tfrac{1}{n}\textstyle\sum_j b^{(t)}_j\\
-\overline{b^{(t+1)}} &= (1-w)\overline{b^{(0)}} + w\,\overline{b^{(t)}} \;\Rightarrow\; \overline{b^{(t)}}=\overline{b^{(0)}} \ \forall t
+b^{\ast} &= (1-w)\,b^{(0)}+w\,S\,b^{\ast} \iff (I-wS)\,b^{\ast}=(1-w)\,b^{(0)} &&\text{the fixed point}\\
+\lVert wS\rVert_\infty &= w\,\max_i\textstyle\sum_j S_{ij}\le w<1 \;\Rightarrow\; b^{\ast}=(1-w)\textstyle\sum_{k\ge 0}w^{k}S^{k}\,b^{(0)} &&\text{a mixture of } k\text{-hop averages}\\
+b^{(t+1)}-b^{\ast} &= w\,S\,\bigl(b^{(t)}-b^{\ast}\bigr) \;\Rightarrow\; \lVert b^{(t)}-b^{\ast}\rVert_\infty\le w^{t}\,\lVert b^{(0)}-b^{\ast}\rVert_\infty &&\text{the contraction bound}\\
+w=1:\ \ d^{\top}S &= d^{\top} \;\Rightarrow\; d^{\top}b^{(t)}=d^{\top}b^{(0)}\ \text{for every } t &&j\in\mathcal{N}(i)\iff i\in\mathcal{N}(j)\\
+b^{(t)}\to c\,\mathbf{1} &\;\Rightarrow\; c=\frac{\sum_j d_j\,b^{(0)}_j}{\sum_j d_j} &&\text{the degree-weighted mean}
 \end{aligned}
 $$
 
@@ -124,18 +139,20 @@ $$
 <Implications>
 
 $$
-\begin{gathered}\text{So } b^{(t)}_i = (1-w^t)\bigl[(1-w)b^{(0)}_i + w\overline{b^{(0)}}\bigr]\cdot\!\ldots\ \longrightarrow\
-b^{\ast}_i = (1-w)b^{(0)}_i + w\,\overline{b^{(0)}}
+\begin{gathered}\text{Averaging over all } n \text{ nodes, } i \text{ included}:\quad S=\tfrac{1}{n}\mathbf{1}\mathbf{1}^{\top},\ \ S\,b=\overline{b}\,\mathbf{1},\ \ \overline{b^{(t)}}=\overline{b^{(0)}}
+\\ \Rightarrow\ b^{(1)}=b^{\ast}=(1-w)\,b^{(0)}+w\,\overline{b^{(0)}}\,\mathbf{1}: \ \text{the fixed point in one round; the spread falls once, by the factor } (1-w).
 \\[4pt]
-\text{Spread contracts by } (1-w) \text{ per step: } \ \operatorname{Var}(b^{(t)}) = (1-w)^{2}\operatorname{Var}(b^{(0)}) \text{ at the fixed point.}
-\\ w\to 1 \Rightarrow \text{every belief equals the graph mean and the model distinguishes nothing.}\end{gathered}
+w<1:\ b^{\ast} \text{ keeps a } (1-w) \text{ share of each node's own evidence, so no consensus.}
+\\ w=1:\ \text{consensus, at the degree-weighted mean.}\end{gathered}
 $$
 
-其不動點為一收縮映射，而非保留任何資訊的共識。當 $w \to 1$ 時，每一信念皆等於圖的平均值，模型完全喪失區辨能力——它已將原本要傳遞的訊號平均殆盡。
+造成信念趨同者為平均運算本身；每一輪保留之 $(1-w)$ 份自身證據，則為阻止趨同者。當 $w < 1$ 時，信念收斂至 $b^{\ast}$，其為各階鄰域平均之混合，並非共識；每一輪與 $b^{\ast}$ 之距離至少縮小為原來之 $w$ 倍。唯有當 $w = 1$、該份自身證據為零時，全部信念方趨於同一數值；若各節點之鄰居數不等，該數值為依分支度加權之平均，而非算術平均。
 
 IMP 之後的全部工作皆為對此的回應。Neural Motifs 以固定物件排序上的 LSTM 加上顯式頻率偏置，取代自由的訊息傳遞；VCTree 學習樹結構而非完全圖，使平均運算具備結構；GPS-Net 加入方向感知與節點優先序，使各鄰居不再等權；KERN 與 BGNN 則依類別路由並對長尾重新取樣。
 
-宜將此四者視為「在不喪失脈絡的前提下阻止收縮」的四種嘗試。
+IMP 本身（Xu 等人 2017）並未採用此一規則：其於節點圖與邊圖上更新 GRU 隱藏狀態，並以學習而得之權重彙整訊息。此處之規則係重複平均運算之模型，而其所揭示之問題適用於 IMP 之後的每一方法：如何傳遞脈絡而不將訊號平均殆盡。
+
+宜將此四者視為「保留脈絡而不致以平均運算消除各節點自身證據」的四種嘗試。
 
 </Implications>
 
@@ -161,7 +178,7 @@ mean recall 於 2019 年出現，由 KERN 與 VCTree 各自獨立提出。在此
 
 ## 實作單元的內容
 
-L4 將上述各模型於同一影像上的既存預測並列執行。請先觀察其一致之處：頭部 predicate，亦即僅憑頻率先驗即可取得者。接著觀察長尾，並留意四年的架構演進之間差距何等有限。
+L4 將上述各模型存於 `data/predictions/` 之預測，於同一影像上並列執行。請先觀察其一致之處：頭部 predicate，亦即僅憑頻率先驗即可取得者。接著觀察長尾，並留意四年的架構演進之間差距何等有限。
 
 </Step>
 
@@ -169,6 +186,6 @@ L4 將上述各模型於同一影像上的既存預測並列執行。請先觀�
 
 ## 檢核點
 
-訊息傳遞的不動點使信念變異數每步收縮 $(1-w)$。請指出本單元中一項可避免該收縮的設計，並說明其為此所付出的代價。
+當重複平均運算不保留節點自身證據之任何份額（$w = 1$）時，全部信念趨於同一數值。請指出本單元中一項可避免此一趨同的設計，並說明其為此所付出的代價。
 
 </Step>

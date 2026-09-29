@@ -287,6 +287,76 @@ describe('the playground step kind', () => {
     }
   });
 
+  it('M5 states the pair counts and the averaging rule its corpus and its derivation support', () => {
+    // Spec §2: s2 used GQA's 310 predicates, which no source here states, for "≈ 20 relations";
+    // s3's Formal line claimed consensus for every w > 0, its Worked step reached its fixed point in
+    // one round under a whole-graph mean, and its Implications wrote a non-expression and a per-step
+    // contraction that the checkpoint repeated.
+    const text = (file: string) => source(file).replace(/\s+/g, ' ');
+    for (const file of ['../m05.en.mdx', '../m05.zh-TW.mdx']) {
+      const m05 = text(file);
+      for (const present of [
+        '\\lvert\\mathcal{P}\\rvert=50\\ (\\text{VG150})',
+        '6{,}320\\cdot 50=316{,}000',
+        '651 \\text{ of } 26{,}282',
+        '(1-w)(I-wS)^{-1}\\,b^{(0)}',
+        '(I-wS)\\,b^{\\ast}=(1-w)\\,b^{(0)}',
+        '\\lVert b^{(t)}-b^{\\ast}\\rVert_\\infty\\le w^{t}\\,\\lVert b^{(0)}-b^{\\ast}\\rVert_\\infty',
+        'd^{\\top}S &= d^{\\top}',
+        'S=\\tfrac{1}{n}\\mathbf{1}\\mathbf{1}^{\\top}',
+        'data/predictions/',
+      ]) {
+        expect(m05, `${file}: ${present}`).toContain(present);
+      }
+      for (const absent of [
+        '\\lvert\\mathcal{P}\\rvert=310', '1{,}958{,}800', '\\approx 20', '(1-w^t)', 'per step',
+        'information destroyed', 'committed predictions', '{w>0}',
+      ]) {
+        expect(m05, `${file}: ${absent}`).not.toContain(absent);
+      }
+    }
+    expect(text('../m05.en.mdx')).not.toContain('hundred thousand');
+    expect(text('../m05.zh-TW.mdx')).not.toMatch(/每十萬|每步收縮|既存預測/);
+    for (const locale of ['en', 'zh-TW'] as const) {
+      expect(getMeta('m05', locale)!.symbols!.map((s) => s.sym))
+        .toEqual(expect.arrayContaining(['S', '\\mathcal{N}(i)']));
+    }
+    // M7 quoted M5's old rate in its opening note and its first step, in both locales.
+    expect(text('../m07.en.mdx')).not.toContain('hundred thousand');
+    expect(text('../m07.en.mdx')).toContain('forty-five thousand');
+    expect(text('../m07.zh-TW.mdx')).not.toContain('十萬');
+    expect(text('../m07.zh-TW.mdx')).toContain('四萬五千');
+    // The harvest carries the corrected s2 and s3; the Formal line of s2 is unchanged.
+    const formulas = math as Record<string, string>;
+    const derivations = deriv as Record<string, string>;
+    expect(formulas.T1).toContain('N(N-1)\\lvert\\mathcal{P}\\rvert');
+    expect(formulas.T2).toContain('(I-wS)^{-1}');
+    expect(formulas.T2).not.toContain('information destroyed');
+    expect(derivations.T1).toContain('316{,}000');
+    expect(derivations.T1).not.toContain('310');
+    expect(derivations.T2).toContain('d^{\\top}S &= d^{\\top}');
+    for (const absent of ['(1-w^t)', 'per step']) expect(derivations.T2, absent).not.toContain(absent);
+    // The map's notes, read without the toy's controls (T1's slider still runs to 310, spec §8).
+    const map = source('../../../../web/knowledge-map/pg.js');
+    const t1 = /pg\(\{id:'T1'[\s\S]*?note_en:'((?:[^'\\]|\\.)*)',\s*note_zh:'((?:[^'\\]|\\.)*)'/.exec(map);
+    const t2 = /pg\(\{id:'T2'[\s\S]*?note_en:'((?:[^'\\]|\\.)*)',\s*note_zh:'((?:[^'\\]|\\.)*)'/.exec(map);
+    for (const note of [t1?.[1], t1?.[2]]) {
+      expect(note).toContain('316,000');
+      expect(note).not.toMatch(/310|GQA/);
+    }
+    expect(t2?.[1]).toContain('degree-weighted mean');
+    expect(t2?.[1]).not.toContain('converges to the graph mean');
+    expect(t2?.[2]).toContain('依分支度加權之平均');
+    expect(t2?.[2]).not.toContain('收斂到全圖平均');
+    for (const locale of ['en', 'zh-TW'] as const) {
+      for (const step of getModule('m05', locale)!.filter((s) => s.kind === 'math')) {
+        const { container, unmount } = render(<>{step.node}</>);
+        expect(container.querySelector('.katex-error'), `${locale} ${step.id}`).toBeNull();
+        unmount();
+      }
+    }
+  });
+
   it('every citation of an M4 step names the step it means', () => {
     // M4 went from 11 steps to 19 (D106), and M8, M11 and M12 kept citing three of its steps by the
     // ids before: s7 for mask pairing, s4 for the covariance identity, s9 for the calibration item.

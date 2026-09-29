@@ -295,3 +295,42 @@ corrected MDX.
 the number is "close to pair recall". The note now writes `m` for the per-pair count, VRD's `k`,
 and says that at `m = 70` every predicate of every pair is a candidate while the cut at `K` still
 ranks them; it makes no claim about pair recall. The knob's label and title still write `k`.
+
+### 2026-09-29 — M5's pair counts and its averaging rule
+
+Opened for the M5 playgrounds (`docs/superpowers/specs/2026-09-29-playgrounds-m5-design.md` §2),
+read against `data/slices/vg150-sgb/annotations.json`, the vg150-sgb dataset card and M5's own
+derivation.
+
+**1 · T1 set N = 80 and |P| = 310, "GQA's 310 predicates", for "≈ 20 relations".** No source in
+this repository states 310. The course's anchor dataset is VG150, whose card states 50 predicate
+categories and, for its validation split, 5,000 images, 62,754 object annotations and 33,203
+relations: 12.6 objects and 6.6 relations per image. "≈ 20" is near the original Visual Genome's
+22 relationships per image (Xu et al. 2017, §4), not VG150's. M5 s2's Implications and DERIV.T1 now
+use |P| = 50: twelve objects give 132 ordered pairs and 6,600 decisions for about seven relations;
+80 boxes, a setting rather than a figure from a paper, give 6,320 pairs and 316,000 decisions; the
+80 bundled frames hold 651 related ordered pairs of 26,282. The T1 note says the same.
+
+**2 · T2's Formal line claimed b⁽ᵗ⁾ → mean(b⁽⁰⁾) for every w > 0.** For 0 ≤ w < 1 the rule
+b ↦ (1 − w)b⁽⁰⁾ + wSb, S row-normalised over the neighbours, is a contraction in the max norm with
+factor w: the beliefs converge to b* = (1 − w)(I − wS)⁻¹b⁽⁰⁾, which is no consensus, and
+‖b⁽ᵗ⁾ − b*‖∞ ≤ wᵗ‖b⁽⁰⁾ − b*‖∞. Only at w = 1, on a connected graph with an odd cycle, do they reach
+one value, the degree-weighted mean Σⱼ dⱼb⁽⁰⁾ⱼ / Σⱼ dⱼ.
+
+**3 · T2's Worked step replaced the neighbourhood mean by the whole-graph mean, the node
+included.** Under that rule the mean is invariant and the first round already reaches the fixed
+point. The Implications now state that case as the one where the node averages over itself too.
+
+**4 · T2's Implications wrote "b⁽ᵗ⁾ = (1 − wᵗ)[…]·…", which is not an expression, and "spread
+contracts by (1 − w) per step";** under the Worked rule it contracts once. M5's checkpoint and the
+s3 presenter note repeated "per step"; both now ask about the collapse at w = 1.
+
+MATH.T2 and DERIV.T2 are rebuilt from the corrected s3, DERIV.T1 from the corrected s2; MATH.T1 is
+unchanged. On ph-001 with the starting beliefs of the M5 spec §4.2, w = 0.5 settles at a spread of
+0.3924, w = 0.9 at 0.1105, and w = 1 converges to 0.5083 where the plain mean is 0.4833.
+`npm run harvest` carries the three into `data/content/`. The brief (`web/brief/index.html`) was
+searched for `310`, `consensus`, `message passing` and `per step`; it states none of them. No
+option, control or knowledge point was added. The map's toy playgrounds are unchanged (D-14, spec
+§8): T1's toy still reads "real relations ~20, per image, VG150", which its corrected note now
+attributes to the original Visual Genome, and T2's toy still averages over the whole graph, so its
+iteration slider changes nothing after the first round, as its corrected note now says.
