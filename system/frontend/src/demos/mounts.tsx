@@ -1,10 +1,11 @@
 import type { ComponentType } from 'react';
+import { Traditional } from './DT/Traditional';
 
 /**
  * Every demonstration, keyed by its id, as `playgrounds/mounts.tsx` keys the playgrounds.
  *
- * A demo always spans consecutive steps, so `part` is always given. Tasks 8 and 9 of the M0 demos
- * plan register `DT` and `DV` here.
+ * A demo always spans consecutive steps, so `part` is always given. Task 8 of the M0 demos plan
+ * registered `DT`; Task 9 registers `DV`.
  *
  * `content_lint.mjs` reads the three tables below as text, one entry to a line: two spaces, the
  * id, a colon, the value, a comma. Keep that form.
@@ -12,6 +13,7 @@ import type { ComponentType } from 'react';
 export type DemoProps = { part: number };
 
 export const DEMO_MOUNTS: Record<string, ComponentType<DemoProps>> = {
+  DT: Traditional,
 };
 
 /** How many consecutive steps each demo spans: D-T four, D-V five (spec 2026-09-29-m0-demos-design §4). */

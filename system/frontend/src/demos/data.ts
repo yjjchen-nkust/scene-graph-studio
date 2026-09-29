@@ -135,6 +135,27 @@ export const FRAME_IDS: string[] = CLIP_FRAMES.map((f) => f.image_id);
 
 export const KEYFRAME_IDS: string[] = CLIP_FRAMES.filter((f) => f.keyframe).map((f) => f.image_id);
 
+/** The keyframes' names in time order, as spec §3.1 and Figure 6 name them. */
+const KEYFRAME_MARKS = ['t₁', 't₂', 't₃'];
+
+/** A keyframe's name, t₁, t₂ or t₃; `undefined` for any other frame. */
+export function keyframeMark(imageId: string): string | undefined {
+  const k = KEYFRAME_IDS.indexOf(imageId);
+  return k === -1 ? undefined : KEYFRAME_MARKS[k];
+}
+
+/**
+ * A frame's name on a slide, as the clip's tick reads: its time in the source video, then its
+ * keyframe name if it has one. A part that chooses a frame by a list or a thumbnail names it the
+ * same way. An id the clip does not have is returned as it is.
+ */
+export function frameLabel(imageId: string): string {
+  const frame = CLIP_FRAMES.find((f) => f.image_id === imageId);
+  if (!frame) return imageId;
+  const mark = keyframeMark(imageId);
+  return mark === undefined ? `${frame.t} s` : `${frame.t} s ${mark}`;
+}
+
 /** The frame a demo opens on, and the one an id the clip does not have falls back to: t₁. */
 export const DEFAULT_FRAME = 'm0-demo-090';
 

@@ -8,7 +8,9 @@ import {
   SEGMENT_START,
   TRADITIONAL,
   VLM,
+  frameLabel,
   frameUrl,
+  keyframeMark,
   resolveFrame,
 } from '../data';
 import { traditionalTriplets } from '../logic';
@@ -38,6 +40,14 @@ describe('the demos\' data', () => {
   it('carries the same frames in the same order in both artefacts', () => {
     expect(TRADITIONAL.frames.map((f) => f.image_id)).toEqual(FRAME_IDS);
     expect(VLM.frames.map((f) => f.image_id)).toEqual(FRAME_IDS);
+  });
+
+  it('names each frame by its time, and the three keyframes t₁, t₂ and t₃ after it', () => {
+    expect(FRAME_IDS.map(frameLabel)).toEqual([
+      '88 s', '90 s t₁', '92 s', '94 s', '96 s t₂', '98 s', '100 s', '102 s t₃', '104 s', '106 s',
+    ]);
+    expect(FRAME_IDS.map(keyframeMark).filter(Boolean)).toEqual(['t₁', 't₂', 't₃']);
+    expect(frameLabel('m0-demo-999')).toBe('m0-demo-999');
   });
 
   it('falls back to m0-demo-090 for a frame the clip does not have', () => {

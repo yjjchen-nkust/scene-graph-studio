@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocale } from '../i18n/useLocale';
-import { CLIP_FRAMES, CLIP_SIZE, CLIP_URL, KEYFRAME_IDS, SEGMENT_START } from './data';
-
-const KEYFRAME_MARKS = ['t₁', 't₂', 't₃'];
+import { CLIP_FRAMES, CLIP_SIZE, CLIP_URL, SEGMENT_START, frameLabel, keyframeMark } from './data';
 
 const TICK = 'rounded border-2 px-1 font-mono text-[0.75em] leading-tight tabular-nums text-slate-900';
 /** A keyframe differs by the shape of its border, not by its colour alone (NFR-5). */
@@ -56,8 +54,7 @@ export function ClipPlayer({
       />
       <div role="group" aria-label={t('demo.frame')} className="mt-1 flex flex-wrap gap-1">
         {CLIP_FRAMES.map((f) => {
-          const k = KEYFRAME_IDS.indexOf(f.image_id);
-          const mark = k === -1 ? undefined : KEYFRAME_MARKS[k];
+          const mark = keyframeMark(f.image_id);
           const chosen = f.image_id === value;
           return (
             <button
@@ -77,8 +74,7 @@ export function ClipPlayer({
                 chosen ? TICK_CHOSEN : TICK_UNCHOSEN,
               ].join(' ')}
             >
-              {`${f.t} s`}
-              {mark !== undefined && ` ${mark}`}
+              {frameLabel(f.image_id)}
             </button>
           );
         })}
