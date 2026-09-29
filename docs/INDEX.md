@@ -439,7 +439,7 @@ w < 1 the beliefs settle at a fixed point that keeps each node's own evidence, a
 which quoted M5's old rate, and the map's Proposition 6 were corrected with them. The averaging
 matrix is written S, since M2's A is area; CLAUDE.md's rule for what a playground computes now
 admits a value of the rule its step teaches, and contracts §2.4 was amended in place to match,
-awaiting the author's review; and both frames take M4's `dense`. Two M4 tests of
+accepted by the author on 2026-09-29; and both frames take M4's `dense`. Two M4 tests of
 `registry.test.tsx`, which contention ran past vitest's 5000 ms default in four of the branch's
 tasks, carry a measured timeout of 20,000 ms. The branch's eleven golden cases and its harvest are
 on the NAS, which every branch reads, so `main` before the merge fails `npm run ci`: content lint

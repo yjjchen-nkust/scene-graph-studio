@@ -4451,11 +4451,11 @@ and the plan with the spec's amendments is `45e283e`.
 - *R11, contracts §2.4 amended in place* (the final review, below). The review found CLAUDE.md,
   after R2, and §2.4 disagreeing on what a playground computes, with T2 conforming to the one that
   does not govern. §2.4 now carries an amendment in the form D105 used: [**Amended 2026-09-29
-  (D111), awaiting the author's review:** a playground may also show a value of the rule its step
+  (D111), accepted by the author the same day:** a playground may also show a value of the rule its step
   teaches, as T2 shows the course's own averaging rule on six beliefs; the playground design's §1
   allows "a quantity its own definition contains". It still computes no metric.] The alternative,
   rejecting R2 and reducing T2 to its bound, was the larger change. The cost: the contract carries a sentence
-  the assistant wrote, marked as awaiting the author's review.
+  the assistant wrote, which the author accepted on 2026-09-29.
 
 **Spec §2's findings, read on 2026-09-29.**
 - *T1.* s2 and the map (`pg.js`, DERIV.T1 and the T1 note) set N = 80 and |P| = 310, "GQA's 310
@@ -4743,7 +4743,7 @@ commit on the controller's rulings).
   neighbours" (若各節點之鄰居數不等，則可能與算術平均相異), where it said "differs", since equal
   degrees are sufficient and not necessary; and on a disconnected graph "each component with an
   odd cycle settles on its own value" (各含奇數長度迴路之連通分量各自收斂至其自身之數值), since a
-  bipartite component oscillates. The same sufficiency, stated as necessity, was corrected in
+  bipartite component can oscillate. The same sufficiency, stated as necessity, was corrected in
   `logic.ts`'s comment on `degreeWeightedMean` (which also claimed convergence "on any graph
   without isolated nodes"), in `M5/beliefs.ts`'s comment on `M5_B0`, in the `logic.test.ts` title
   "only on the regular graph", which now carries a counterexample with unequal degrees, and in spec
@@ -4768,9 +4768,9 @@ commit on the controller's rulings).
 - The `why` texts of `pg-T2-relations-w05-t5` and `pg-T2-relations-w09-t10` name the box as the
   object at the largest gap, where the panel ties with it; the values hold, and
   `pg-T2-relations-w05-t1` names its tie. The text is the plan's, and it is on the NAS only.
-- The new files under `playgrounds/M5/`, `T1/` and `T2/` are LF in the working tree, where their
+- The new files under `playgrounds/M5/`, `T1/` and `T2/` were LF in the working tree, where their
   neighbours are CRLF. Git stores LF and a checkout writes CRLF, and nothing compares working-tree
-  bytes.
+  bytes. They are CRLF since the final fix wave.
 
 Not checked: how MATH.T2's three lines lay out in the map's formula card, where every other formula
 is one line; `lint:frozen` passes over it, and no look at it in a browser is recorded. The VG150
@@ -4785,3 +4785,10 @@ with a placeholder (20 before), content lint clean over 21 golden cases, **75 pl
 equations, frontend builds 790 modules (786 before). `npm run test:e2e` **83** (79 before),
 2.0 min. `npm run check:perf` **30** (28 before), 36.3 s; T1 33.7 ms, 1.8 ms above its 31.9 ms
 two-frame floor, and T2 33.6 ms, 0.3 ms above its 33.3 ms floor. See VERIFICATION §30.
+
+**The author's review, 2026-09-29.** The author accepted R2 with contracts §2.4's amendment, S for
+the averaging matrix (R1), and the correction of the three items the final review left open
+(R13 to R15). A follow-up commit made them: M5 s8 and its presenter note no longer speak of four
+years of architecture, since s8 names two methods, Neural Motifs (2018) and VCTree (2019); the
+bipartite statement here reads "can oscillate"; and the note on the new files' line endings is
+in the past tense.

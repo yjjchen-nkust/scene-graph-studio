@@ -21,7 +21,7 @@ its anchor lab; s6 is the checkpoint.
 
 The author asked for the next task to be implemented without a design session ("review the current
 progress and go for implementing the next task"). The choices below are therefore the assistant's,
-each with the alternative it rejects, and stand for the author's review before the merge.
+each with the alternative it rejects, and stood for the author's review before the merge. [**Accepted by the author, 2026-09-29.**]
 
 | Question | Answer |
 |---|---|
@@ -39,7 +39,7 @@ rate.]
 [**As built (D111, R11):** the opening's "changes no contract rule" no longer holds. T2 shows
 values of the course's averaging rule, which contracts §2.4's list of a count, a bound or a set
 membership did not admit. On the final review's ruling, §2.4 was amended in place on 2026-09-29,
-awaiting the author's review: a playground may also show a value of the rule its step teaches, and
+accepted by the author the same day: a playground may also show a value of the rule its step teaches, and
 it still computes no metric.]
 
 ---
@@ -289,4 +289,4 @@ Branch `feat/playgrounds-m5`, from `main` at `dfe4dc4`. Before merge: `npm run c
 
 ## 9. Open items
 
-None that block the build. The decisions of §1 await the author's review.
+None that block the build. The author accepted the decisions of §1 on 2026-09-29.
