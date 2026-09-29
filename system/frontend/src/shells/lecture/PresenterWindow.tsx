@@ -58,7 +58,9 @@ export function PresenterView({
             {title}
           </p>
           <p className="font-mono text-sm" style={{ color: LECTURE_PALETTE.muted }}>
-            {step ? `${step.id} · ${step.kind}${step.kp ? ` · ${step.kp}` : ''}` : '—'}
+            {step
+              ? `${step.id} · ${step.kind}${step.kp ? ` · ${step.kp}` : ''}${step.demo ? ` · ${step.demo}` : ''}`
+              : '—'}
           </p>
         </div>
         <div className="flex items-baseline gap-8">
@@ -124,6 +126,7 @@ export function PresenterView({
             {next.id} · {next.kind}
             {next.lab ? ` · ${next.lab}` : ''}
             {next.kp ? ` · ${next.kp}` : ''}
+            {next.demo ? ` · ${next.demo}` : ''}
           </p>
         ) : (
           <p data-testid="next-absent" className="text-lg" style={{ color: LECTURE_PALETTE.muted }}>

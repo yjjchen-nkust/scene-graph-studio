@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { placeholderImageUrl } from '../images';
 import { MARK_ANNOTATED, MARK_PREDICTED, PhotoMarks } from '../PhotoMarks';
 import { frameById } from '../slice';
 
@@ -100,6 +101,23 @@ describe('PhotoMarks', () => {
     expect(screen.getByTestId('badge-above').style.transform).toBe('translateY(-100%)');
     expect(screen.getByTestId('badge-inside').style.transform).toBe('');
     expect(screen.getByTestId('badge-left').style.transform).toBe('translate(-100%, -100%)');
+  });
+
+  it('draws the photograph it is given when imageUrl is set', () => {
+    // A demo frame is no placeholder frame and no SceneGraph: its id, its size and its own URL.
+    const demo = { image_id: 'm0-demo-096', width: 1280, height: 720 };
+    const given = render(
+      <PhotoMarks frame={demo} imageUrl="/frames/m0-demo-096.jpg" marks={[]} maxVh={28} alt="m0-demo-096" testid="picture" />,
+    );
+    const img = screen.getByTestId('picture').querySelector('img')!;
+    expect(img.getAttribute('src')).toBe('/frames/m0-demo-096.jpg');
+    expect(img.getAttribute('width')).toBe('1280');
+    expect(img.getAttribute('height')).toBe('720');
+    expect(screen.getByTestId('picture').querySelector('svg')!.getAttribute('viewBox')).toBe('0 0 1280 720');
+    given.unmount();
+
+    draw();
+    expect(screen.getByTestId('picture').querySelector('img')!.getAttribute('src')).toBe(placeholderImageUrl('ph-001'));
   });
 
   it('renders what it is given beneath the picture, and no text inside it', () => {

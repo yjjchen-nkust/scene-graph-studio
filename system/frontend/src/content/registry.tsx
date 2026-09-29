@@ -1,4 +1,5 @@
 import type { ComponentProps, ComponentType, ReactNode } from 'react';
+import { Demo } from '../demos/Demo';
 import type { Locale } from '../i18n/useLocale';
 import { Playground } from '../playgrounds/Playground';
 
@@ -21,11 +22,16 @@ export interface ModuleClaim {
 
 export interface ModuleStepMeta {
   id: string;
-  kind: 'prose' | 'math' | 'figure' | 'lab' | 'checkpoint' | 'playground';
+  kind: 'prose' | 'math' | 'figure' | 'lab' | 'checkpoint' | 'playground' | 'demo';
   lab?: string;
   /** The knowledge point a `playground` step demonstrates. Contracts §2.4. */
   kp?: string;
-  /** Which part of a playground split across consecutive steps this step shows. Contracts §2.4. */
+  /** The demonstration a `demo` step replays: D-T or D-V. Contracts §2.4. */
+  demo?: 'DT' | 'DV';
+  /**
+   * Which part of a playground or a demo split across consecutive steps this step shows.
+   * Contracts §2.4.
+   */
   part?: number;
   seconds_budget?: number;
   /**
@@ -75,13 +81,18 @@ interface StepProps {
 }
 
 /**
- * `components` carries two shapes at once: `Step` takes `StepProps`, `Playground` takes its own
- * `kp` prop (read off the real component rather than redeclared, so the two cannot drift). A
- * plain `Record<string, ComponentType<StepProps>>` would honestly reject `Playground` — they
- * really do take different props — so this widens to the union of both instead of casting past
+ * `components` carries three shapes at once: `Step` takes `StepProps`, `Playground` its `kp` and
+ * `Demo` its `id` (each read off the real component rather than redeclared, so they cannot
+ * drift). A plain `Record<string, ComponentType<StepProps>>` would honestly reject the other two
+ * — they really do take different props — so this widens to the union instead of casting past
  * the checker.
  */
-type MdxComponents = Record<string, ComponentType<StepProps> | ComponentType<ComponentProps<typeof Playground>>>;
+type MdxComponents = Record<
+  string,
+  | ComponentType<StepProps>
+  | ComponentType<ComponentProps<typeof Playground>>
+  | ComponentType<ComponentProps<typeof Demo>>
+>;
 
 /**
  * Every module, in both locales, found at build time.
@@ -128,8 +139,8 @@ export function getModule(id: string, locale: Locale): ModuleStep[] | null {
   return found.meta.steps.map((step) => {
     const Only = ({ id: stepId, children }: StepProps) =>
       stepId === step.id ? <>{children}</> : null;
-    // `Playground` joins `Step` here rather than being imported by each MDX file: see the
-    // component's own docstring.
-    return { ...step, node: <Body components={{ Step: Only, Playground }} /> };
+    // `Playground` and `Demo` join `Step` here rather than being imported by each MDX file: see
+    // `Playground`'s own docstring.
+    return { ...step, node: <Body components={{ Step: Only, Playground, Demo }} /> };
   });
 }

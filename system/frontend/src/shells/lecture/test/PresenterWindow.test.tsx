@@ -63,6 +63,16 @@ describe('PresenterView', () => {
     expect(screen.getByTestId('next')).toHaveTextContent('s2');
   });
 
+  it('names the demo beside the kind, for this step and the next', () => {
+    const demos: ModuleStep[] = [
+      { id: 's9', kind: 'demo', demo: 'DT', part: 3, node: <p>D-T part 3</p> },
+      { id: 's10', kind: 'demo', demo: 'DT', part: 4, node: <p>D-T part 4</p> },
+    ];
+    view({ steps: demos });
+    expect(screen.getByText('s9 · demo · DT')).toBeInTheDocument();
+    expect(screen.getByTestId('next')).toHaveTextContent('s10 · demo · DT');
+  });
+
   it('says plainly when there is no next step', () => {
     view({ stepIndex: 2, remainingSeconds: null });
     expect(screen.getByTestId('next-absent')).toBeInTheDocument();

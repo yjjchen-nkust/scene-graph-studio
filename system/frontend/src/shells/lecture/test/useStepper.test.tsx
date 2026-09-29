@@ -275,6 +275,69 @@ describe('useStepper and a playground split across steps', () => {
   });
 });
 
+describe('useStepper and a demo split across steps', () => {
+  // D-T's parts 3 and 4, then D-V's part 1: two demos side by side, each carrying its own frame.
+  const DEMOS = [{ id: 's9', demo: 'DT' }, { id: 's10', demo: 'DT' }, { id: 's11', demo: 'DV' }];
+
+  function Where() {
+    const location = useLocation();
+    return <output data-testid="where">{`${location.pathname}${location.search}`}</output>;
+  }
+
+  function Demos() {
+    useStepper('m00', DEMOS);
+    return <Where />;
+  }
+
+  it('carries the query between two parts of one demo, and not into the next demo', () => {
+    render(
+      <MemoryRouter initialEntries={['/lecture/m/m00/0?DT.frame=m0-demo-096']}>
+        <Routes>
+          <Route path="/lecture/m/:moduleId/:stepIndex" element={<Demos />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    const where = () => screen.getByTestId('where').textContent;
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(where()).toBe('/lecture/m/m00/1?DT.frame=m0-demo-096');
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(where()).toBe('/lecture/m/m00/2');
+  });
+});
+
+describe('useStepper and the clip', () => {
+  function Clip() {
+    const stepper = useStepper('m00', STEPS);
+    return (
+      <div>
+        <output data-testid="index">{stepper.index}</output>
+        {/* jsdom makes a <video controls> focusable only through tabIndex; a browser does it alone. */}
+        <video data-testid="clip" controls tabIndex={0} />
+      </div>
+    );
+  }
+
+  it('yields Space to a focused video', () => {
+    // ArrowRight still advances: an arrow means nothing to the clip, as to a button.
+    render(
+      <MemoryRouter initialEntries={['/lecture/m/m00/0']}>
+        <Routes>
+          <Route path="/lecture/m/:moduleId/:stepIndex" element={<Clip />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    const clip = screen.getByTestId('clip');
+    clip.focus();
+    expect(document.activeElement).toBe(clip);
+
+    fireEvent.keyDown(clip, { key: ' ' });
+    expect(Number(screen.getByTestId('index').textContent)).toBe(0);
+
+    fireEvent.keyDown(clip, { key: 'ArrowRight' });
+    expect(Number(screen.getByTestId('index').textContent)).toBe(1);
+  });
+});
+
 describe('useStepper keyboard policy', () => {
   function Modifiers() {
     const stepper = useStepper('m00', STEPS);
