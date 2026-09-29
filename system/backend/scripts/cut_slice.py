@@ -4,9 +4,9 @@ No script in this repository downloads a dataset (decision D-08). This one reads
 already under SGS_CORPUS_ROOT, converts it through the dataset adapter, applies D-10 selection
 rule, samples deterministically, and writes:
 
-  data/slices/<ds>/annotations.json   committed
-  data/slices/<ds>/MANIFEST.json      committed
-  data/slices/<ds>/images/            git-ignored; distributed via bundle_slices.py
+  data/slices/<ds>/annotations.json   on the NAS with the rest of data/; git carries none (D109)
+  data/slices/<ds>/MANIFEST.json      likewise
+  data/slices/<ds>/images/            likewise; handed to students via bundle_slices.py
 
 It refuses to write anything for a dataset whose annotations_commit gate is not cleared.
 """
@@ -50,7 +50,7 @@ def main() -> None:
             f"  Expected layout: {LAYOUTS[ds]}\n"
             f"  Download it yourself, then point SGS_CORPUS_ROOT at the parent directory\n"
             f"  (it currently resolves to {CORPUS_ROOT}). A missing corpus is a normal state:\n"
-            f"  every lab runs on the committed placeholder slice until one is cut."
+            f"  every lab runs on the placeholder slice until one is cut."
         )
 
     graphs = list(read_dataset(ds, root))

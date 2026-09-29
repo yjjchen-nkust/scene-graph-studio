@@ -73,8 +73,10 @@ substitute there — this is why the script takes the ports as parameters.
 SGS_BACKEND_PORT=8010 SGS_FRONTEND_PORT=5180 npm start
 ```
 
-**A fresh clone works with no data of any kind.** The committed placeholder slice — six
-synthetic frames — is enough to run every lab. Nothing is downloaded, and nothing needs a GPU.
+**A fresh clone needs `data/` from the NAS, and nothing more (D109).** Git carries nothing
+under `data/`: run `.\sync-data.ps1 -Pull` first, and `start.ps1` stops and says so when
+`data/` is absent. Beyond that no data of any kind is needed: the placeholder slice, six
+synthetic frames, is enough to run every lab. Nothing is downloaded, and nothing needs a GPU.
 
 ### If you are a student
 
@@ -150,9 +152,11 @@ decision D-14.
 ## Data
 
 ```powershell
-.etch-data.ps1                          # what exists, what each dataset still needs
-.etch-data.ps1 -Fetch -Dataset psg      # per-image download from source, hash-checked
-.etch-data.ps1 -Unpack <bundle.zip>     # unpack a slice bundle, then verify it
+.\fetch-data.ps1                          # what exists, what each dataset still needs
+.\fetch-data.ps1 -Fetch -Dataset psg      # per-image download from source, hash-checked
+.\fetch-data.ps1 -Unpack <bundle.zip>     # unpack a slice bundle, then verify it
+.\sync-data.ps1                           # compare data/ with the NAS copy
+.\sync-data.ps1 -Push                     # copy data/ to the NAS; -Pull copies it back
 ```
 
 `fetch-data.ps1` does **not** download a corpus, and neither does anything else here — D-08
@@ -162,8 +166,15 @@ tells you what to fetch by hand and where to put it.
 Source corpora are downloaded by the instructor. **No script in this repository downloads a
 dataset.**
 
-Committed: `annotations.json` and `MANIFEST.json` per slice, plus the placeholder frames.
-Not committed: `data/_raw/`, and every real slice's `images/`.
+Nothing under `data/` is committed (D109): not the corpora or slice images, and not the
+slices' annotations and manifests, the placeholder frames, `data/content/`, the golden vectors,
+the predictions or `data/LICENCES.md` either. `.gitignore` ignores the whole directory, and the
+NAS carries it between machines, never the remote (D108, D109). `sync-data.ps1` copies `data/`
+to `C:\DataRaw\scene-graph` and back; `SGS_DATA_NAS` or `-Nas` names another directory. A pull
+refuses any file that would land on a path git does not ignore, and neither direction
+overwrites a newer file or deletes one, so push after every harvest, cut or other change under
+`data/`. The NAS copy is private storage, not a route to students: `bundle_distribute` in
+`data/LICENCES.md` still governs that.
 
 `data/LICENCES.md` carries two findings per dataset, because downloading for your own use and
 handing images to a class are different acts:
@@ -192,7 +203,7 @@ npm run test:py            # pytest
 npm run test:ts            # vitest (metrics package + frontend)
 npm run lint:parity        # the two engines must agree on every golden vector
 npm run lint:i18n          # every key in both locales, non-empty, with the same placeholders, none repeated
-npm run lint:content       # golden vectors hand-checked; no uncleared slice committed
+npm run lint:content       # golden vectors hand-checked; no uncleared slice present
 npm run lint:frozen        # the static page's own validators
 ```
 
@@ -223,7 +234,7 @@ dataset identifier, and prose uses VG150 only as the published benchmark's name.
 **No fallback locale.** A missing i18n key renders as `⟦key⟧` in development and throws in a
 production build. A silent fallback to English would let a half-translated build look finished.
 
-**Never committed.** `.env`, `data/_raw/`, real slice images, and any API key or token in any
+**Never committed.** `.env`, anything under `data/` (D109), and any API key or token in any
 form — including inside teaching content, fixtures and prompt transcripts.
 
 ---
@@ -256,7 +267,8 @@ your own server, or a drag-and-drop host.
 
 It was **frozen on 2026-09-15** and harvested into `data/content/` as the seed corpus for the MDX
 modules. **The freeze was released on 2026-09-27 (D-23)**, so the page may be extended again. It is
-still the harvest's source: change the page, run `npm run harvest`, and commit both. It is kept
+still the harvest's source: change the page, run `npm run harvest`, commit the page and push
+`data/` to the NAS (`.\sync-data.ps1 -Push`), which is where the harvest's output lives. It is kept
 because it is the only artefact here that runs with no toolchain at all, which makes it the
 last-resort offline fallback, so it must still open from disk with no build step. `npm run ci`
 still validates it so it cannot rot silently.
@@ -289,7 +301,7 @@ that (D-05). The registry says so in both languages rather than offering a butto
 * `measured` — produced by running the model here. Blocked on licences; see
   `data/predictions/PROVENANCE.md`.
 * `reconstructed` — written to exhibit a behaviour the literature reports, by a script in this
-  repository. Every committed prediction is currently this tier, and each file says so in its own
+  repository. Every prediction in `data/predictions/` is currently this tier, and each file says so in its own
   `provenance.note`.
 * `published` — a figure read off a named table in a named paper, attributed to the paper that
   printed it, which for a re-implementation is not the paper the card is about.

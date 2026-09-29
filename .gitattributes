@@ -7,26 +7,10 @@
 docs/brief.standalone.html    eol=lf
 system/web/brief/index.html   eol=lf
 
-# Every tracked generated file is LF, on both sides of the round trip.
-#
-# Two halves, and the first version of this rule had only one of them. The check-out half:
-# `core.autocrlf=true` writes CRLF into the working tree, so a generator emitting LF leaves
-# `git status` reporting files modified while `git diff` shows no content change -- a tree that
-# is dirty after every green gate is a tree in which nobody reads `git status`, and a real
-# uncommitted change goes unnoticed among the false ones. `eol=lf` fixes that side.
-#
-# The write half: the generators must actually emit LF. `tools/harvest.mjs` does. The Python
-# cutters did NOT -- `Path.write_text` defaults to `newline=None`, which translates "
-" to
-# `os.linesep`, and that is CRLF here. Measured: running `make_placeholders.py` unpinned put 743
-# carriage returns into the placeholder slice and dirtied two tracked files, with `eol=lf`
-# already in force. `eol=lf` normalises on check-in, so the blob stays LF, but it does not stop
-# the working tree going modified. Both halves are needed, and the second lives in the scripts:
-# every `write_text` under `system/backend/scripts/` passes `newline=""`. A new generator that
-# writes a tracked path needs the same, and its path listed below. See D89 and D91.
-data/content/*.json           eol=lf
-data/slices/**/*.json         eol=lf
-data/golden/*.json            eol=lf
-data/predictions/**/*.json    eol=lf
-data/vlm/**/*.json            eol=lf
-data/mini-isg/*.json          eol=lf
+# Six rules stood here that pinned the generated JSON under data/ to LF (D89, D91). Nothing
+# under data/ is tracked since D109, so they are gone. The write half of their reasoning stays
+# in the scripts: every `write_text` under `system/backend/scripts/` passes `newline=""`,
+# because `Path.write_text` otherwise writes CRLF here. A generator that writes a tracked path
+# needs the same, and its path listed above. The block also held a stray line reading `" to`,
+# where the backslash-n of its comment had been written as a line break; git read it as a
+# pattern.

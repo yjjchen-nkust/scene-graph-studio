@@ -43,7 +43,7 @@ export const SLICE_CLASS_COUNT = new Set(
 const vgParsed = vgRaw as unknown as { dataset: string; graphs: SceneGraph[] };
 
 /**
- * The committed `vg150-sgb` slice: 80 frames of annotation, and no images.
+ * The `vg150-sgb` slice in `data/`: 80 frames of annotation, and no images.
  *
  * F6 and F7 count over a real vocabulary, and the placeholder's 16 predicates are this project's
  * own and carry no synonyms. The images of this slice are not committed (D-08) and neither

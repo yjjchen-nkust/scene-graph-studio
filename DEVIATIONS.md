@@ -4213,3 +4213,129 @@ map or the tests read the page; the only reader was its own check.
 **Verification.** `npm run ci` exit 0 in eleven steps: 287 pytest and 7 skipped, 1017 vitest in 74 files (1016 before; the one added is this record's test), parity 21, i18n 380 keys, content lint clean, 786 modules built. The new records test failed on the missing
 heading before this record was written, and requires that `lint:mockup` is gone from the scripts
 and from `ci`, that CLAUDE.md names eleven steps, and that neither file exists.
+
+## D108 — the data git does not carry moves through the NAS, by `sync-data.ps1`
+
+**Plan:** none. **Decisions:** the author's, on 2026-09-29: "for scene-graph-studio, the data
+should not go to github. Please use NAS: C:\DataRaw\scene-graph to sync the untracked data."
+Branch `chore/sgs-data-nas-sync`, from `main` at `eb68d64`.
+
+[**Superseded 2026-09-29 (D109):** the author then moved all of `data/` to the NAS; the committed
+part this paragraph keeps in git is no longer committed.]
+
+**How the request was read.** The remote is Gitea (`gitea.cillab.me`), not GitHub, so "github" is
+read as the git remote. What git carries stays in git: the slice annotations and manifests,
+`data/content/`, the golden vectors, the predictions, `data/vlm/` and the placeholder frames, 65
+files and 2.5 MB that the licence gates cleared and the gate reads. What git ignores under
+`data/` moves through the NAS: on this machine `data/_raw/industreal/` (2 files, 4.619 GB) and the
+images of four slices, `indoorvg`, `mini-isg`, `psg` and `vg150-sgb` (190 files, 25.3 MB). None of
+it had reached the remote; `.gitignore` already excluded all of it. The corpora at
+`C:\DataRaw\psg`, `C:\DataRaw\vg150-sgb` and `C:\DataRaw\indoorvg`, which `SGS_CORPUS_ROOT` names,
+were already on that drive and were not touched.
+
+**What was added.** `sync-data.ps1` at the track root, beside `fetch-data.ps1`. `-Status`, the
+default, compares this checkout with the NAS group by group and names the direction each group
+needs; `-Push` and `-Pull` copy with robocopy; `-DryRun` lists and copies nothing. The NAS
+directory stands for `data/` and defaults to `C:\DataRaw\scene-graph`; `SGS_DATA_NAS` or `-Nas`
+overrides it. The copied set is what `git ls-files --others --ignored --exclude-standard` reports
+under `data/`, so a new ignore rule extends it with no edit to the script.
+`data/predictions/.latency.json` is left out, because each machine reports its own timings in
+`PROVENANCE.md`. A pull refuses to start when any file on the NAS maps to a path that
+`git check-ignore` does not report ignored; that covers a committed file the pull would overwrite
+and a new file the next `git add` would commit. Copies are additive: `/XO` never overwrites a
+newer file, and no deletion travels in either direction.
+
+**What it is not.** The NAS copy is the author's storage between the author's machines. It is not
+a route to students: `bundle_distribute` in `data/LICENCES.md` still governs that, and it is NO for
+`psg`, `vg150-sgb` and `indoorvg`. It downloads nothing from a source, so D-08 stands, and it does
+not replace `fetch-data.ps1`.
+
+**A fault found before the first pull.** Fed one path per line from PowerShell,
+`git check-ignore --stdin` reported no path ignored: PowerShell ends each piped line with CRLF, and
+git kept the CR as part of the path, so the guard refused every file. The script now passes the
+paths NUL-separated in both directions (`-z`). Against a scratch NAS holding one committed path
+(`slices/psg/annotations.json`), the machine-local timings file, a stray file at the root and two
+ignored files, the corrected guard refused exactly the first three.
+
+**Also corrected.** README's Data commands read `.` followed by a form feed and `etch-data.ps1` on
+three lines: the `\f` of `.\fetch-data.ps1` had been written as the control character, the
+backslash collapse recorded for Git Bash heredocs. The three lines read `.\fetch-data.ps1` again,
+and the records test refuses a form feed anywhere in README.
+
+**Verification.** The first push copied 192 files, 4.619 GB, with 0 failed. The NAS copy of
+`all_rgb_videos.zip` matches its `.md5` file (`c5b8901dba179d2eb10e9348f8163c79`), and all 190
+slice images match their local copies by SHA-256. A second push copied 0 and skipped 192, and
+`-Status` reports every group in step. A pull into a fresh worktree of this branch, which stands
+for a second machine, copied the same 192 files, left `git status` empty, reproduced the `.md5`,
+and `fetch-data.ps1 -Verify` exited 0 against the committed manifests. `npm run ci` exit 0 in eleven steps: 287 pytest and 7
+skipped, 1018 vitest in 74 files (1017 before; the one added is this record's test), parity 21,
+i18n 380 keys, 786 modules built. The new records test failed on the missing heading before this
+record was written. The gate runs no PowerShell, so the script's behaviour rests on the runs
+above; the test holds its text: the NAS path, the two git calls, `/XO`, and no deleting switch.
+
+## D109 — all of `data/` on the NAS, and none of it in git
+
+**Plan:** none. **Decisions:** the author's, on 2026-09-29, after D108: "move all data into NAS
+for the sync mechanism. Also gitignore all data in the remote." Branch `chore/sgs-data-nas-sync`,
+continued from `85ea580`, D108's last commit.
+
+**What changed in git.** The 65 files D108 left committed under `data/` (the slices' annotations
+and manifests, the six placeholder frames, `data/content/`, the golden vectors and their README,
+`data/mini-isg/`, the predictions and `PROVENANCE.md`, `data/vlm/` and `data/LICENCES.md`) were
+removed from the index with `git rm -r --cached`, so each machine's working copy keeps them.
+`.gitignore` replaces its five `data/` rules, the `!data/slices/placeholder/images/` negation
+among them, with one: `/data/`, anchored because in course-lab a bare `data` rule caught other
+directories of that name. `.gitattributes` loses the six `data/` rules of D89 and D91, which
+governed files git no longer tracks, and with them a stray line reading `" to`: the backslash-n of
+that block's comment had been written as a line break, and git read the fragment as a pattern.
+
+**What changed on the NAS.** `sync-data.ps1` needed two changes for a directory git ignores whole.
+`git ls-files --directory` now answers with the single entry `data/`, which the script read as
+the empty path and dropped; it now stands for `data/` itself. And the machine-local
+`data/predictions/.latency.json`, which `.gitignore` no longer names on its own, is excluded by
+robocopy `/XF` by full path on both sides. With a probe timings file in place, a push listed
+65 new files and not the probe, and the NAS did not receive it. The NAS now holds all 257 files
+of `data/`, 4.646 GB, and every one matches its local copy by SHA-256. A third change came from
+the first gate run after the push: the harvest rewrites `deriv.json`, `kp.json` and `math.json`
+unchanged on every run, and `-Status`, which compared times alone, reported them to push. It now
+compares the bytes when only the times differ; the three read in step, and a one-byte probe in
+`data/golden/README.md` read "1 to push" until the NAS copy was put back.
+
+**What a fresh clone needs now.** `start.ps1` stops before any install when `data/LICENCES.md`
+is absent and names `.\sync-data.ps1 -Pull`. README, CLAUDE.md and INDEX say so;
+`fetch-data.ps1`, `cut_slice.py`, `fetch_images.py`, `make_placeholders.py`, `verify_bundle.py`
+and `playgrounds/slice.ts` no longer call a file under `data/` committed. Test names and
+docstrings that say "committed" (`test_every_committed_annotation_validates` and others) and the
+dated records keep their text, and now read "present in `data/`".
+
+**What this costs, stated for the author's review before the merge.**
+
+- **NFR-1.** "A fresh clone works with no data of any kind" no longer holds: a clone without the
+  NAS has no placeholder slice, no content and no golden vectors, and neither the application
+  nor the gate runs. Once `data/` is pulled, NFR-1's offline requirement holds as before.
+- **CI.** `.gitea/workflows/scene-graph-studio.yml` checks out the repository and runs
+  `npm run ci`; with no `data/` the gate fails at its first read of it, and a runner in Docker
+  cannot reach `C:\DataRaw`. The workflow has no runner yet, so nothing is red today. It is left
+  as it was: whether CI gets its data another way or is retired is the author's decision.
+- **The other machine.** A `git pull` that brings this commit deletes the 65 files from that
+  working tree, because git removes what a merged commit removes; `.\sync-data.ps1 -Pull`
+  restores them, if that machine reaches the NAS.
+- **History.** The 65 files remain in the remote's history, in every commit before this one.
+  Removing them from history needs a rewrite and a force push, which was not done.
+- **Versioning.** From here the content, the golden vectors and the licence gates change without
+  a diff or a review, and the NAS copy keeps no earlier version and propagates no deletion.
+- **Students.** README's student route begins from a clone; a student without the NAS has no
+  `data/`.
+
+**The ruling.** The author accepted the six, CI and the student route included, on 2026-09-29:
+"yes. proceed." The branch was merged to `main` and pushed; the history was not rewritten.
+
+**Verification.** `git ls-files data` is empty at `cef5bf4`. A fresh worktree of that commit had
+no `data/`; `start.ps1 -SkipInstall` exited 1 naming `.\sync-data.ps1 -Pull`, before any install;
+the pull copied 257 files, 4.646 GB, every one identical by SHA-256 to this checkout's, with
+`git status` empty; and pytest there gave 287 passed and 7 skipped. `npm run ci` here exit 0 in
+eleven steps: 287 pytest and 7 skipped, 1019 vitest in 74 files (1018 before; the one added is
+this record's test), parity 21, i18n 380 keys, 786 modules built. The new records test failed on
+the missing heading before this record was written, and requires the `/data/` rule with no
+negation, no `data/` attribute rule and no attribute line that is not a rule, and the pull
+named in `start.ps1` before its first install.

@@ -6,17 +6,11 @@ __pycache__/
 .env
 .DS_Store
 .pytest_cache/
-data/_raw/
-data/slices/*/images/
-!data/slices/placeholder/images/
-
-# Model weights. WekaExt's root .gitignore has no rule over this tree at all, so every
-# exclusion the track needs has to be stated here. (In course-lab a bare `data` rule swallowed
-# this directory twice before two un-ignore negations were added; that hazard is gone, and with
-# it the negations -- but the weights still must not be committed.)
-data/checkpoints/
-# Machine-local timing, written by the live path and reported per machine in PROVENANCE.md.
-data/predictions/.latency.json
+# All of data/, at the author's request (D109): the NAS carries it, by sync-data.ps1, and the
+# remote carries none of it. Anchored with the leading slash, because in course-lab a bare
+# `data` rule swallowed other directories named data twice. WekaExt's root .gitignore has no
+# rule over this tree at all, so every exclusion the track needs has to be stated here.
+/data/
 
 # Playwright (check 8 of docs/VERIFICATION.md) writes both on every run.
 test-results/
