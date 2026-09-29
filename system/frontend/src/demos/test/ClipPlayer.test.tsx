@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { setLocale } from '../../i18n/useLocale';
 import { ClipPlayer } from '../ClipPlayer';
-import { CLIP_URL, FRAME_IDS, KEYFRAME_IDS } from '../data';
+import { CLIP_SECONDS, CLIP_URL, FRAME_IDS, KEYFRAME_IDS, clipTime } from '../data';
 
 beforeEach(() => setLocale('en'));
 
@@ -60,5 +60,32 @@ describe('ClipPlayer', () => {
   it('opens on the chosen frame\'s time, so the clip and the frame agree', () => {
     render(<ClipPlayer value="m0-demo-096" onPick={() => {}} maxVh={28} />);
     expect(video().currentTime).toBe(8);
+  });
+
+  it('seeks the last frame to just before the clip ends, never onto its end', () => {
+    // 106 s is 18 s into the clip, which is its duration: a seek there leaves the clip at its end
+    // rather than on a frame. jsdom knows no duration, so the manifest's 18 s is the end here.
+    expect(CLIP_SECONDS).toBe(18);
+    const onPick = vi.fn();
+    render(<ClipPlayer value="m0-demo-090" onPick={onPick} maxVh={28} />);
+    fireEvent.click(screen.getByTestId('demo-tick-m0-demo-106'));
+    expect(video().currentTime).toBeLessThan(CLIP_SECONDS);
+    expect(video().currentTime).toBeGreaterThanOrEqual(CLIP_SECONDS - 0.01);
+    expect(onPick).toHaveBeenCalledWith('m0-demo-106');
+  });
+
+  it('opens on the last frame just before the clip ends as well', () => {
+    render(<ClipPlayer value="m0-demo-106" onPick={() => {}} maxVh={28} />);
+    expect(video().currentTime).toBeLessThan(CLIP_SECONDS);
+    expect(video().currentTime).toBeGreaterThanOrEqual(CLIP_SECONDS - 0.01);
+  });
+
+  it('holds a seek below the duration the browser reports, when it reports one', () => {
+    expect(clipTime(106)).toBeLessThan(CLIP_SECONDS);
+    expect(clipTime(106, 17.5)).toBeLessThan(17.5);
+    expect(clipTime(106, 17.5)).toBeGreaterThanOrEqual(17.49);
+    expect(clipTime(96, 17.5)).toBe(8);
+    expect(clipTime(96, Number.NaN)).toBe(8);
+    expect(clipTime(88)).toBe(0);
   });
 });

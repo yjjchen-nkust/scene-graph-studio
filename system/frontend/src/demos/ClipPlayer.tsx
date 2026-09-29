@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocale } from '../i18n/useLocale';
-import { CLIP_FRAMES, CLIP_SIZE, CLIP_URL, SEGMENT_START, frameLabel, keyframeMark } from './data';
+import { CLIP_FRAMES, CLIP_SIZE, CLIP_URL, clipTime, frameLabel, keyframeMark } from './data';
 
 const TICK = 'rounded border-2 px-1 font-mono text-[0.75em] leading-tight tabular-nums text-slate-900';
 /** A keyframe differs by the shape of its border, not by its colour alone (NFR-5). */
@@ -17,8 +17,9 @@ const TICK_UNCHOSEN = 'bg-white';
  * inline, so a phone does not take it full screen; and `preload="metadata"`, so a lecture that
  * never plays it fetches its header and nothing more. Nothing autoplays.
  *
- * A tick seeks the clip to its frame and picks that frame, which a part holds in the URL. The
- * clip also opens on the chosen frame while paused, so the clip and the photograph beside it
+ * A tick seeks the clip to its frame and picks that frame, which a part holds in the URL; the last
+ * frame's seek is held just below the clip's end (`clipTime`). The clip also opens on the chosen
+ * frame while paused, so the clip and the photograph beside it
  * agree when a part is entered with a frame already chosen. The lecture shell yields Space to a
  * focused clip and to a focused tick (`useStepper.ts`, `consumesSpace`), and keeps the arrows.
  */
@@ -31,7 +32,7 @@ export function ClipPlayer({
   useEffect(() => {
     const clip = video.current;
     const frame = CLIP_FRAMES.find((f) => f.image_id === value);
-    if (clip && frame && clip.paused) clip.currentTime = frame.t - SEGMENT_START;
+    if (clip && frame && clip.paused) clip.currentTime = clipTime(frame.t, clip.duration);
   }, [value]);
 
   return (
@@ -65,7 +66,7 @@ export function ClipPlayer({
               aria-pressed={chosen}
               title={mark === undefined ? undefined : `${t('demo.keyframe')} ${mark}`}
               onClick={() => {
-                if (video.current) video.current.currentTime = f.t - SEGMENT_START;
+                if (video.current) video.current.currentTime = clipTime(f.t, video.current.duration);
                 onPick(f.image_id);
               }}
               className={[

@@ -116,7 +116,7 @@ export interface ClipFrame {
 
 interface Manifest {
   segment_seconds: [number, number];
-  clip: { width: number; height: number };
+  clip: { width: number; height: number; seconds: number };
   frames: { image_id: string; timestamp_seconds: number; keyframe: boolean }[];
 }
 
@@ -161,6 +161,23 @@ export const DEFAULT_FRAME = 'm0-demo-090';
 
 /** Where the clip starts in the source video, 88 s, so a frame at t sits at t − 88 s in the clip. */
 export const SEGMENT_START: number = manifest.segment_seconds[0];
+
+/** The clip's length, 18 s, as the manifest states it. */
+export const CLIP_SECONDS: number = manifest.clip.seconds;
+
+/** How far before the clip's end a seek to its last frame is held. */
+const END_MARGIN_SECONDS = 0.001;
+
+/**
+ * Where in the clip a frame `t` seconds into the source video lies: t − 88 s, held just below the
+ * clip's end. The last frame, 106 s, is 18 s into the clip, which is its duration, and a seek there
+ * leaves the clip at its end rather than on a frame. `duration` is the browser's, where it knows
+ * one; before the clip's metadata arrives it knows none, and the manifest's length stands in.
+ */
+export function clipTime(t: number, duration?: number): number {
+  const end = duration !== undefined && Number.isFinite(duration) && duration > 0 ? duration : CLIP_SECONDS;
+  return Math.max(0, Math.min(t - SEGMENT_START, end - END_MARGIN_SECONDS));
+}
 
 export const CLIP_URL: string = CLIP;
 
