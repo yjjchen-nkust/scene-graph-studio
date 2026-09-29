@@ -189,3 +189,9 @@ def test_an_expert_count_the_paper_did_not_measure_is_refused(n):
         "n_experts": n, "steps": [1], "ablate": [], "provider": "transcript",
     })
     assert r.status_code == 422
+
+
+def test_criteria_for_the_m0_demo_frames_is_the_isg_triple() -> None:
+    isg = (prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG)
+    assert indvissgg.criteria_for("m0-demo-096") == isg
+    assert indvissgg.criteria_for("m0-demo-999") != isg
