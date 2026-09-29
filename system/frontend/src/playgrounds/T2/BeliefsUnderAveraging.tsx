@@ -55,6 +55,9 @@ export function BeliefsUnderAveraging({ part }: PlaygroundProps = {}) {
   const tableView = part !== 2;
   const readoutsView = part !== 1;
 
+  // `‖b⁽⁰⁾ − b*‖∞`, the distance the bound decays from; undefined when `star` is null.
+  const d0 = star ? maxDistance(g.b0, star) : 0;
+
   const separator = locale === 'zh-TW' ? '、' : ', ';
 
   const controls = (
@@ -130,26 +133,26 @@ export function BeliefsUnderAveraging({ part }: PlaygroundProps = {}) {
               label={t('playground.t2.spread')}
               value={decimals(spread(bt), 4)}
               note={
-                w === 1
-                  ? t('playground.t2.spread_note_limit')
-                  : t('playground.t2.spread_note').replace('{fixed}', decimals(spread(star!), 4))
+                star
+                  ? t('playground.t2.spread_note').replace('{fixed}', decimals(spread(star), 4))
+                  : t('playground.t2.spread_note_limit')
               }
             />
-            {w < 1 ? (
+            {star ? (
               <>
                 <Readout
                   id="T2.distance"
                   label={t('playground.t2.distance')}
-                  value={decimals(maxDistance(bt, star!), 4)}
+                  value={decimals(maxDistance(bt, star), 4)}
                   note={t('playground.t2.distance_note')}
                 />
                 <Readout
                   id="T2.bound"
                   label={t('playground.t2.bound')}
-                  value={decimals((w ** round) * maxDistance(g.b0, star!), 4)}
+                  value={decimals((w ** round) * d0, 4)}
                   note={t('playground.t2.bound_note')
-                    .replace('{d0}', decimals(maxDistance(g.b0, star!), 4))
-                    .replace('{d0Again}', decimals(maxDistance(g.b0, star!), 4))}
+                    .replace('{d0}', decimals(d0, 4))
+                    .replace('{d0Again}', decimals(d0, 4))}
                 />
               </>
             ) : (
