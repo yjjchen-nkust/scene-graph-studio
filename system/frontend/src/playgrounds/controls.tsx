@@ -50,7 +50,10 @@ const FIELD = 'rounded border border-slate-300 bg-white px-2 py-1 text-[1em]';
  * render spec §4.1's full twelve-row list regardless of k, and E13 and X2 sit beside three-line
  * readouts that wrap onto a second row at 1024×768 — dense is how they fit the panel without a
  * third part, and it is opt-in rather than the default precisely so the other nine keep the
- * layout their own records measured.
+ * layout their own records measured. M5's T1 and T2 pass it for the same reason: T1 carries six
+ * readouts and T2 a six-row table beside three, both past what X2's four readouts already ran 74
+ * px over 1024×768 at the base spacing (D106); neither has an earlier measurement of its own to
+ * move.
  */
 export const DensityContext = createContext<boolean>(false);
 
@@ -205,7 +208,9 @@ export function Readout({
  * number those records state without re-measuring it. E3, E4, E7, E13 and X2 pass `dense` because
  * their longest states do not fit 1024×768 at the spacing above: E3/E4/E7 always draw spec §4.1's
  * full twelve-row list beside three readouts, and E13/X2 sit beside readouts that wrap onto a
- * second row at that width.
+ * second row at that width. M5's T1 and T2 pass it too, for the same reason and with no earlier
+ * measurement to move: X2's four readouts already ran 74 px past 1024×768 at the spacing above
+ * (D106), and T1 carries six readouts, T2 a six-row table beside three.
  */
 export function PlaygroundFrame({
   title, controls, children, clip = true, dense = false,

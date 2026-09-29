@@ -378,5 +378,19 @@
   "playground.x2.cut": "Does the cut at 100 select?",
   "playground.x2.cut_yes": "yes: {pool} candidates for 100 places",
   "playground.x2.cut_no": "no: all {pool} candidates fit in 100",
-  "playground.x2.cut_note": "candidates > 100"
+  "playground.x2.cut_note": "candidates > 100",
+  "playground.t1.frame": "Frame, by object count",
+  "playground.t1.objects": "Objects N",
+  "playground.t1.objects_note": "frame {image}, rank {rank} of 80",
+  "playground.t1.pairs": "Ordered pairs",
+  "playground.t1.pairs_note": "N(N − 1) = {n} × {m}",
+  "playground.t1.decisions": "Decisions",
+  "playground.t1.decisions_note": "N(N − 1) × 50; VG150's 50 predicates",
+  "playground.t1.rows": "Relationship rows",
+  "playground.t1.rows_note": "one row per annotated relation; a pair may carry several",
+  "playground.t1.related": "Ordered pairs with a relation",
+  "playground.t1.related_note": "{related} / {pairs} of the ordered pairs",
+  "playground.t1.slice": "All 80 frames",
+  "playground.t1.slice_note": "ordered pairs with a relation / ordered pairs",
+  "playground.t1.source": "The 80 VG150 frames of data/slices/vg150-sgb, annotations only; no photograph ships with them."
 }
