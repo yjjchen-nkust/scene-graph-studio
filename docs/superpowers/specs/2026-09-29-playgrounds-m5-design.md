@@ -70,6 +70,11 @@ What holds, for the Formal rule with A the row-normalised neighbourhood (Aᵢⱼ
   plain mean only on a regular graph. This is the consensus s3 describes, and it needs w = 1.
 - The (1 − w) b⁽⁰⁾ term is therefore what prevents the collapse, not what causes it.
 
+[**Amended 2026-09-29, before the build (plan review):** the course writes the averaging matrix
+**S**, not A, which M2's symbol table defines as area (`A(\cdot)`, `m02.en.mdx:15`), and the limit
+as Σⱼ dⱼ b⁽⁰⁾ⱼ / Σⱼ dⱼ, not with πⱼ, which M4's table defines as the map from a triplet to its pair.
+The mathematics above is unchanged; only the letters are.]
+
 On ph-001 with the starting beliefs of §4.2: under the annotated relations, w = 0.5 settles at a
 spread of 0.3924 and w = 0.9 at 0.1105; w = 1 converges to 0.5083, the degree-weighted mean, where the
 plain mean is 0.4833. Every value was computed on 2026-09-29, the fixed point by solving
@@ -99,11 +104,19 @@ these claims (searched 2026-09-29).
   and the consensus value at w = 1. The Implications state the complete-graph case, where the fixed
   point is reached in one round and the spread falls once by (1 − w), and say that IMP's update is
   learned and this rule models averaging. The presenter note loses "per step".
+  [**Amended (plan review):** the one-round fixed point holds only when each node averages over
+  itself too, S = 𝟏𝟏ᵀ/n, which is the earlier Worked rule. With 𝒩(i) excluding i, as the Formal
+  line and T2's every pair do, the error shrinks by w/(n − 1) per round and alternates in sign, and
+  b* is not reached in one round (every pair, w = 0.5, t = 1: distance 0.0227). The Implications
+  name the node included.]
 - **s6.** The checkpoint asks about the collapse at w = 1 rather than a per-step contraction; its
   presenter note keeps its acceptable answers.
 - **s5.** "the committed predictions" becomes "the predictions in `data/predictions/`": nothing under
   `data/` is committed since D109.
-- **Symbols.** M5's table gains A and 𝒩(i).
+- **Symbols.** M5's table gains A and 𝒩(i). [**Amended (plan review):** S and 𝒩(i).]
+- [**Added (plan review):**] **M7.** Its s1 body and presenter note quote M5's old rate, "about one
+  candidate pair in a hundred thousand" (`m07.en.mdx:19`, `:45`, and the same lines in 繁體中文).
+  Once s2 is corrected that rate is stated nowhere, so M7 carries the corrected one.
 
 ---
 
@@ -160,7 +173,7 @@ photograph: the slice ships no images.
 A two-way `Choice` of neighbourhood (relations, every pair), a `Slider` for w, 0 to 1 in steps of
 0.05, default 0.5, and a `Slider` for t, 0 to 40, default 0. Readouts: the six beliefs b⁽ᵗ⁾, each
 named with its neighbours; their spread; for w < 1, ‖b⁽ᵗ⁾ − b*‖∞ beside its bound wᵗ‖b⁽⁰⁾ − b*‖∞; for
-w = 1, the value the beliefs converge to, Σⱼ πⱼ b⁽⁰⁾ⱼ, beside the plain mean. Beliefs to two
+w = 1, the value the beliefs converge to, Σⱼ dⱼ b⁽⁰⁾ⱼ / Σⱼ dⱼ, beside the plain mean. Beliefs to two
 decimals, spread, distance and bound to four.
 
 ---
@@ -200,6 +213,9 @@ Branch `feat/playgrounds-m5`, from `main` at `dfe4dc4`. Before merge: `npm run c
 * T3 to T6, which are `spec`.
 * s4's survey of later methods, beyond the one sentence s3 hands it.
 * The map's toy playgrounds (D-14); only its formula, derivations and notes are corrected.
+  [**Amended (plan review):** T1's toy therefore keeps its readout "real relations ~20, per image,
+  VG150"; its corrected note attributes the 20 to the original Visual Genome. T2's toy keeps its
+  whole-graph mean; its corrected note says the iteration slider changes nothing after one round.]
 * Any recall, mean recall or score in a playground.
 * The other twelve live points.
 
