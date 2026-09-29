@@ -209,6 +209,7 @@ describe('the playground step kind', () => {
     }
   });
 
+  // About 1.3 s alone, 5.6 to 8.9 s under CPU contention against vitest's 5000 ms default (D111: Tasks 1, 6, 7 and 8).
   it('M4 derives only what the engine and the definitions force', () => {
     // §2's five findings: s3's Worked step claimed X_k ⊆ X_k^ng from the constrained pool, where
     // only the pools nest (X ⊆ X^ng) and R@k ≤ ngR@k holds once k covers the unconstrained pool;
@@ -285,7 +286,7 @@ describe('the playground step kind', () => {
         unmount();
       }
     }
-  });
+  }, 20_000);
 
   it('M5 states the pair counts and the averaging rule its corpus and its derivation support', () => {
     // Spec §2: s2 used GQA's 310 predicates, GQA's count in the anchor paper's Table 1, set against Visual Genome's relation rate, for "≈ 20 relations";
@@ -908,6 +909,7 @@ describe('the playground step kind', () => {
     expect((deriv as Record<string, string>).F3).toContain('\\lambda>\\sqrt{2}');
   });
 
+  // About 0.6 s alone, 5.6 to 8.9 s under CPU contention against vitest's 5000 ms default (D111: Tasks 1, 6, 7 and 8).
   it('M4 carries E3, E4, E7, E13 and X2 directly after the steps that teach them', () => {
     const meta = getMeta('m04', 'en')!;
     const part = (n?: number) => (n === undefined ? '' : `.${n}`);
@@ -924,7 +926,7 @@ describe('the playground step kind', () => {
       expect(mounted.container.querySelector('[data-testid="playground-unknown"]')).toBeNull();
       mounted.unmount();
     }
-  });
+  }, 20_000);
 
   it('M3 carries E1 and E10, in two parts each, directly after the steps that teach them', () => {
     const meta = getMeta('m03', 'en')!;
