@@ -29,6 +29,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/specs/2026-09-27-graph-constraint-key-design.md` | The graph and semi constraints keyed on object pairs, as the reference keys them | **executed** |
 | `superpowers/specs/2026-09-28-playgrounds-m4-design.md` | E3, E4, E7, E13, X2, and five statements about constraints, blends and VRD's per-pair count the engine contradicts | **executed** |
 | `superpowers/specs/2026-09-29-playgrounds-m5-design.md` | T1, T2, and the pair and averaging statements the corpus and M5's derivation contradict | **executed** |
+| `superpowers/specs/2026-09-29-m0-demos-design.md` | The `demo` step kind, D-T and D-V over recorded artefacts, the clip and ten frames, and what a demo may compute | **executed** |
 | `superpowers/plans/…-00-master.md` | Index, dependency graph, global constraints | live |
 | `superpowers/plans/…-01-skeleton-and-eval-engine.md` | Phases 1–2 | **executed** |
 | `superpowers/plans/…-02-graph-labs-and-content.md` | Phases 3–4: graph, L1, L2, harvest, corpus | **executed** |
@@ -41,9 +42,10 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-27-graph-constraint-key.md` | Both engines re-keyed, gv-014, `semi` described, D51 corrected | **executed** |
 | `superpowers/plans/2026-09-28-playgrounds-m4.md` | M4's corrections, the ranked list and its arithmetic, E3, E4, E7, E13 and X2, their golden cases, M4 s3 to s16 | **executed** |
 | `superpowers/plans/2026-09-29-playgrounds-m5.md` | M5's corrections, the slice ordered and the six beliefs, T1 and T2, their golden cases, M5 s3, s5 and s6 | **executed** |
+| `superpowers/plans/2026-09-29-m0-demos.md` | The live VLM provider's frame, the clip, D-T and D-V recorded and derived, the demo components, the lint rules, M0 s7 to s15, the Chromium checks | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D111. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28), the M4 playgrounds (§29) and the M5 playgrounds (§30)** | live |
+| `../DEVIATIONS.md` | **D1…D117. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28), the M4 playgrounds (§29), the M5 playgrounds (§30) and the M0 demos (§31)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | The freeze, its release by D-23, and every correction made under it | live |
 
@@ -226,7 +228,7 @@ jsdom for the rule and in Chromium for the hit testing jsdom does not have.
 **Presenter notes are complete, 2026-09-19.** All 95 steps carry them in both locales, 190 in
 total [**corrected 2026-09-26:** 92 steps and 184 notes on this date, as first written and as this
 paragraph's last sentence says; 95 and 190 replaced them on 2026-09-20, after M0's playgrounds,
-the corpus held 98 steps and 196 notes after M1's playgrounds, held 103 and 206 after D96, 105 and 210 after D97, 109 and 218 after D98, 117 and 234 after D106, 120 and 240 after D111, and holds 129 and 258 since D116], written against each step's own content: what
+the corpus held 98 steps and 196 notes after M1's playgrounds, held 103 and 206 after D96, 105 and 210 after D97, 109 and 218 after D98, 117 and 234 after D106, 120 and 240 after D111, and holds 129 and 258 since D117], written against each step's own content: what
 has to land, what to put on the board before
 the slide does, what the room usually gets wrong, what to compress when the clock is short. They
 are procedural rather than expository — none introduces a claim its module does not already make.
@@ -449,15 +451,33 @@ old text. A revert after the merge needs the eleven cases deleted from
 `data/content/playground_golden.json` by hand and `npm run harvest` run on the reverted tree. See
 D111 and VERIFICATION §30.
 
-**Verification.** `npm run ci` green, 2026-09-29, on branch `feat/playgrounds-m5` with D111's records: **287 pytest** and 7 skipped, parity 21 agree, i18n 418 keys both locales,
-**1079 vitest** in 76 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
+**M0's demonstrations, D-T and D-V, 2026-09-30.** Nine steps, `m00` s7 to s15, replay two recorded
+pipelines over one 18.0 s clip of IndustReal's `01_assy_0_1.mp4` (88.0 to 106.0 s, 2,139,278 bytes) and ten
+frames cut from it. D-T, four parts, is the traditional pipeline: a COCO Faster R-CNN detects 52 objects over
+the ten frames, and the 224 ordered pairs take a predicate from an 80-frame frequency prior, every one of them
+the fallback `on`, 166 because a class maps to no slice class and 58 because the pair never occurs in the
+prior. D-V, five parts, is IndVisSGG's three-step pipeline (a draft, three experts' revisions, a summary),
+recorded on the author's pro6000 server with `stamping-vlm` (Qwen/Qwen3.8-27B) and not on the Anthropic API
+(D114); the expert prompt and the revision parser were corrected first (D115), and the transcript is 132,893
+bytes over 50 calls. A demo computes counts, set memberships and set differences over the recordings, never a
+metric, and shows the model's words as model output, unrewritten. The `demo` step kind has five lint rules and
+its own mount tables (`DEMO_PARTS = { DT: 4, DV: 5 }`), and the demonstrations' graphs are filed under
+`mini-isg` (D113). Where the spec drew graphs, strips and three columns, the build lists, numbers and shows one
+expert at a time, so that every part fits 1024×768 at 18 px in 繁體中文 (D116). M0's lab and checkpoint moved from
+s7 and s8 to s16 and s17, which orphans stored quiz schedules keyed `m00:s8:*`, and the corpus went from 120 to
+129 steps a locale (D117). The live VLM provider had sent no frame, so a live L5 run on the paper's Figure 2
+now answers 503 (D112). Three parts run past the panel in English (D117). The recordings and derived files are
+on the NAS, in no commit. See D112 to D117 and VERIFICATION §31.
+
+**Verification.** `npm run ci` green, 2026-09-30, on branch `feat/m0-demos` with D117's records: **356 pytest** and 7 skipped, parity 21 agree, i18n 505 keys both locales,
+**1234 vitest** in 83 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points
 assigned, 50 symbols, 75 playground cases, 25 release figures, **and every step's presenter notes in both locales**), `ruff` clean over
 `backend` **and `tools`** (D79),
 frozen-page lints clean, standalone current (254 equations), frontend builds. `npm run test:e2e`,
-2026-09-29, on branch `feat/playgrounds-m5` at `b3013b9`:
-83 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
-check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
-check:perf`, 2026-09-29, on branch `feat/playgrounds-m5` at `b3013b9`: 30 passed, NFR-8 measured over five labs and sixteen playgrounds, plus the D75 selection guard.
+2026-09-30, on branch `feat/m0-demos`:
+107 passed across the keyboard walkthrough, the playgrounds, the demos and the three projector resolutions. `npm run
+check:offline`: 9 passed, re-run 2026-09-30 on the torch-free interpreter. `npm run
+check:perf`, 2026-09-30, on branch `feat/m0-demos`: 33 passed, NFR-8 measured over five labs and sixteen playgrounds and two demos, plus the D75 selection guard. `npm run check:pins`: 9 of 9 and 5 of 5 agree.
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in

@@ -116,10 +116,13 @@ packages/         sgg-metrics — the same engine in TypeScript, for in-browser 
 frontend/         Vite 8 + React 19 + TypeScript + Tailwind 4
 data/             golden vectors, slices, licence findings
 tools/            parity harness, linters, the startup script, the knowledge map's validators
+frontend/src/demos/  M0's two recorded demonstrations, D-T (traditional pipeline) and D-V (IndVisSGG's
+                    three steps), over one 18 s clip and ten frames; they replay recordings and need no
+                    live model (D112 to D117)
 system/web/knowledge-map/  a static page, frozen then released (D-23): 93 knowledge points, 27 playgrounds, no build step
 docs/superpowers/   PRD, SRS, design, decisions, contracts, three later designs, the master
                     plan and seven executable plans, and the anchor paper read from the PDF
-                    (M11's source)
+                    (M11's source); the M0 demonstrations' spec and plan sit beside them
 ```
 
 **Read `docs/superpowers/specs/…-decisions.md` before changing anything.** It records D-01
@@ -318,12 +321,12 @@ kept up to date; `docs/VERIFICATION.md` records the nine checks of design §6 wi
 was run and its outcome. All nine have been run and passed; check 6 was first recorded as
 **not run** (D69) and passed on 2026-09-18.
 
-`npm run ci` is green on py12: 287 Python tests (7 skipped for a corpus this machine may not
-have), 1079 TypeScript tests across 76 files, parity 21/21, i18n 418 keys in both locales,
-content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 83
-passed and `npm run check:perf` is 30. All were measured 2026-09-29 on branch
-`feat/playgrounds-m5`; `docs/VERIFICATION.md` §30 records those runs, §15 to §29 the fifteen
-before it, and §14 the earlier run that reconciled
+`npm run ci` is green on py12: 356 Python tests (7 skipped for a corpus this machine may not
+have), 1234 TypeScript tests across 83 files, parity 21/21, i18n 505 keys in both locales,
+content lint clean, frozen-page lints clean, and the frontend builds. `npm run test:e2e` is 107
+passed and `npm run check:perf` is 33, which now also measures the two demonstrations. All were
+measured 2026-09-30 on branch `feat/m0-demos`; `docs/VERIFICATION.md` §31 records those runs, §15
+to §30 the sixteen before it, and §14 the earlier run that reconciled
 three documents carrying three different counts.
 
 Two further checks are scripts rather than prose:
@@ -349,8 +352,8 @@ M11, so authoring that module was transcription rather than a fresh reading.
 * Slides that run past the bottom of a 1024×768 projector. 25 of the then 92 were reviewed and
   accepted as they stand on 2026-09-18 (DEVIATIONS D71; `docs/VERIFICATION.md` §8). The eleven
   playgrounds too tall for one panel are split across steps (D96 to D98, D106, D111), and every part fits
-  1024×768 in 繁體中文 in every state measured (§20 to §22, §29, §30). In English some parts, and E13's one
-  step, still run past it, by up to 163 px, and F2 and F8, one step each, by 24 and 27 px in 繁體中文.
+  1024×768 in 繁體中文 in every state measured (§20 to §22, §29, §30). In English some parts, three of the M0 demos' (D117, §31)
+  among them, and E13's one step, still run past it, by up to 163 px, and F2 and F8, one step each, by 24 and 27 px in 繁體中文.
   M5's T1 and both parts of T2 fit in English too; T2 as one step ran 114 px past in English and 67
   px in 繁體中文 (§30). The step region scrolls inside
   a fixed shell, so the position and the section clock stay on screen, and no playground hides a

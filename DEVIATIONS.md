@@ -5013,3 +5013,54 @@ height to a row; the colour is the rule's alone, and the sign and the words keep
 **D-V part 1's whole prompt.** The TEC prompt's 27 lines are taller than the panel at 18 px. They sit behind a
 `<details>` below the prompt's parts; opened, the whole prompt takes the parts' place and scrolls within its
 own box, so the part stays inside the panel open or closed.
+
+## D117 — M0's lab and checkpoint moved to s16 and s17, and what the demos' steps leave unrecorded
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Tasks 10 to 12. **Decisions:** none new. Branch `feat/m0-demos`.
+This record holds what no earlier deviation of the branch (D112 to D116) states. The spec §4 renderings the
+build departs from are in D116 and are not repeated.
+
+**M0's lab and checkpoint moved from s7 and s8 to s16 and s17.** The nine demo steps, D-T's four and D-V's five,
+are inserted between the playgrounds and the lab, at `s7` to `s15`; M0 goes from 8 steps to 17, and the corpus from
+120 steps a locale to 129 (240 presenter notes to 258). The checkpoint's items are named
+`<module>:<step>:<i>` (`assess/quiz.tsx`), and each item's corruption is seeded from that name. A stored quiz
+schedule keyed `m00:s8:0` to `m00:s8:2` therefore belongs to a step that is now a demo, and the checkpoint's
+own items are `m00:s17:0` to `m00:s17:2`, which are different corruptions of the checkpoint graph. No migration
+is written: carrying a card from the old key to the new one would attach a review history to a different
+question. The old entries stay in the browser's `localStorage`, read by nothing, as M4's renumbering (D106) left
+its own. A student who had rated M0's checkpoint before this branch starts that checkpoint's schedule again. A
+bookmark or a link to M0 by step index changes with the insertion: the lab was index 6 and is 15, the checkpoint
+was 7 and is 16, and index 6 is D-T's first part.
+
+**INDEX attributes the corpus count to D117.** INDEX states that the corpus "holds 129 and 258 since D117". The
+step count changed on this branch by the insertion above, and D117 is the record that names the renumbering. The
+records test's pattern, `since D\d+]`, is unchanged and stays strict; the new records test also holds the number
+after `since D` to 117.
+
+**Three demo steps run past the panel in English at 1024×768.** Task 11 measured every state of every part on the
+production build after the webfonts decoded. In 繁體中文 every part fits, the tightest being D-T part 4 at 19 px
+spare (frame 092) and D-V part 5 at 20 px. In English three parts do not: D-T part 4 at 092, D-V part 4 at 100
+and D-V part 5, at 25, 37 and 43 px past the frame's bottom edge (`scrollHeight − clientHeight` 25, 38 and 43 px).
+The steps scroll inside a fixed shell, so the words remain reachable. The projector suite holds every part to
+1024×768 in 繁體中文 only, as D96 states for every playground, and no English assertion exists to fail. At
+1280×800 and 1920×1080 every part fits in both locales. VERIFICATION §31 lists the spare pixels per part, size
+and locale.
+
+**The last tick may leave the clip `ended`.** The clip's last frame is 105.9 s of the source video (17.9 s of the
+clip, at 10 fps), so the 106.0 s photograph lies past it. `clipTime` holds a seek to that frame 1 ms below the
+clip's end, which keeps `currentTime` inside the clip. Chromium nevertheless sets `ended` for any seek at or after
+17.9 s (measured: 17.9, 17.91, 17.95, 17.999 and 18 s ended; 17.89 s and earlier did not), so the tick on 106 shows
+the last frame, which is the closest to the photograph, and Play then restarts from the beginning of the clip. A
+margin long enough to avoid `ended` would show the frame at 105.8 s instead. The comments of `clipTime` and
+`ClipPlayer` say this; `END_MARGIN_SECONDS` in `demos/data.ts` is the one constant to change if the ruling is
+reversed.
+
+**Deferred minors of the reviews, for the author.**
+- D-T's tick took 71.1 and 72.8 ms in Task 11's two `check:perf` runs against about 33 ms for every other case,
+  and 32.9 ms in the run that closed the branch; all are inside the 100 ms budget. The cost, when it appears, is
+  the first decode of the new photograph. `PhotoMarks` is shared with F3, E1 and E10, so `decoding="async"` or a
+  preload is left undecided.
+- The lecture test that no backend is needed does not block `/api`, so it would pass vacuously if a backend were
+  running; the badge and marks tests wait for visibility, not for `img.decode()`.
+- `DEMO_LONGEST` in the projector suite chooses its states by rules over the recordings; each rule was checked
+  against a full sweep, and a new recording needs that check again.

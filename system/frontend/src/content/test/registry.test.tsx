@@ -914,6 +914,49 @@ describe('the playground step kind', () => {
     }
   });
 
+  it('the records carry the M0 demos', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    // Every deviation the branch took, in the heading form the records use.
+    for (const id of ['D112', 'D113', 'D114', 'D115', 'D116', 'D117']) {
+      expect(new RegExp(`^## ${id} — `, 'm').test(deviations), id).toBe(true);
+    }
+    const last = 117;
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, last, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, last, 'CLAUDE.md deviations');
+    expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 31. ');
+    expect(claude).toContain('§31 the M0 demos');
+    expect(index).toContain('the M0 demos (§31)');
+    // INDEX lists the spec and the plan, each executed.
+    for (const file of ['specs/2026-09-29-m0-demos-design.md', 'plans/2026-09-29-m0-demos.md']) {
+      const row = index.split('\n').find((line) => line.includes(file));
+      expect(row, file).toBeDefined();
+      expect(row, file).toContain('**executed**');
+    }
+    // CLAUDE.md names the `demo` kind beside the playground, and the table, the data and the filing.
+    const kind = claude.replace(/\s+/g, ' ');
+    expect(kind).toContain('A playground is a step kind, not a lab.');
+    expect(kind).toContain('**A `demo` is the second such step kind**');
+    for (const item of ['DEMO_PARTS = { DT: 4, DV: 5 }', 'data/demos/m0/', '`mini-isg`', 'D113', 'D114', 'Five lint rules']) {
+      expect(kind, item).toContain(item);
+    }
+    // The counts the branch measured, as the three records state them.
+    atLeast(claude, /resolutions, (\d+) tests,/, 107, 'CLAUDE.md e2e');
+    atLeast(readme, /`npm run test:e2e` is (\d+)/, 107, 'README e2e');
+    atLeast(readme, /`npm run check:perf` is (\d+)/, 33, 'README perf');
+    expect(readme.replace(/\s+/g, ' ')).toContain('two demonstrations');
+    // The note count is attributed to the deviation that changed it: D117 moved M0's lab and checkpoint.
+    expect(/since\s+D(\d+)\]/.exec(index)?.[1], 'INDEX attribution').toBe(String(last));
+    const d117 = record(deviations, 'D117').replace(/\s+/g, ' ');
+    for (const item of ['m00:s8', 'm00:s17', 'D106', '1024×768', 'D-T part 4', 'D-V part 4', 'D-V part 5', '25, 37 and 43 px', 'D96', 'D116']) {
+      expect(d117, item).toContain(item);
+    }
+  });
+
   it('the records state as many playgrounds, uncovered live points and steps as the code holds', () => {
     // Taken from the mount table, the harvest and the modules, as the vectors' count is taken from
     // their file: a bound passes a count left stale (D104's branch review, D106).

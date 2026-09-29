@@ -18,7 +18,9 @@ const TICK_UNCHOSEN = 'bg-white';
  * never plays it fetches its header and nothing more. Nothing autoplays.
  *
  * A tick seeks the clip to its frame and picks that frame, which a part holds in the URL; the last
- * frame's seek is held just below the clip's end (`clipTime`). The clip also opens on the chosen
+ * frame's seek is held just below the clip's end (`clipTime`); Chromium still sets `ended` for a
+ * seek at or after 17.9 s, the last frame's start, and Play then restarts from the beginning. The
+ * clip also opens on the chosen
  * frame while paused, so the clip and the photograph beside it
  * agree when a part is entered with a frame already chosen. The lecture shell yields Space to a
  * focused clip and to a focused tick (`useStepper.ts`, `consumesSpace`), and keeps the arrows.

@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split, §29 the M4 playgrounds and §30 the M5 playgrounds), and all 111 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split, §29 the M4 playgrounds, §30 the M5 playgrounds and §31 the M0 demos), and all 117 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -43,15 +43,15 @@ cd scene-graph-studio\system ; npm run ci
   parity, i18n, content, frozen, standalone, frontend build. The static UI mockup and its
   `lint:mockup` check were removed on 2026-09-29 (D107).
 - **Four checks `ci` does not run**, each for a reason: `npm run test:e2e` (check 8, the keyboard
-  walkthrough at three projector resolutions, 83 tests, over the production build with no backend
+  walkthrough at three projector resolutions, 107 tests, over the production build with no backend
   running), `npm run check:offline` (check 6, a torch-free interpreter with every outward request
   intercepted), `npm run check:perf` (NFR-8, cold start on five routes and input-to-paint on five
-  labs and sixteen playgrounds, against a backend it starts itself), `npm run check:pins`.
+  labs and sixteen playgrounds, and on two demos, against a backend it starts itself), `npm run check:pins`.
 
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D111` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D117` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
   `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
@@ -146,6 +146,24 @@ cd scene-graph-studio\system ; npm run ci
   else, and the projector suite asserts that every part fits 1024×768 in 繁體中文 in its longest
   state. **F6 and F7 count distinct triplets** (D96): E is a set, and 208 of the slice's 892
   relationship rows repeat a triplet of the same frame.
+- **A `demo` is the second such step kind** (D112 to D117): `kind: demo` with `demo:`, `part: n` and a
+  `seconds_budget`, and one `<Demo id="DT" part="1" />` in the body, mounted from
+  `frontend/src/demos/mounts.tsx`. Its three tables, `DEMO_MOUNTS`, `DEMO_PARTS = { DT: 4, DV: 5 }` and
+  `DEMO_ARTEFACTS`, are read by `content_lint.mjs` as text, one entry to a line, so keep that form. A demo
+  replays a recording and computes counts, set memberships and set differences over it, never a metric:
+  D-T (four parts) is a COCO detector with an 80-frame frequency prior, D-V (five parts) is IndVisSGG's
+  three steps. **Five lint rules** hold it, each failing a test in `tools/test/content_lint.test.mjs` when
+  disabled: a registered demo and an integer part; exactly one `<Demo>` per step, agreeing with the
+  frontmatter, and every tag answering to a step; parts 1 to n on consecutive steps of one module, in order;
+  the recorded artefact exists and carries a provenance object; a positive `seconds_budget`. The data are
+  under `data/demos/m0/` (the 18.0 s clip, ten frames, `traditional.json`, `indvissgg.json`) and D-V's
+  transcript is `data/vlm/transcripts/m0-demo.json`, all on the NAS. **Every graph a demo produces is filed
+  under `mini-isg`** with no `DatasetId` of its own, though its frames are not the slice's (D113). D-V was
+  recorded on the author's own vLLM server, `stamping-vlm` (`Qwen/Qwen3.8-27B`), through
+  `app/vlm/openai_compat.py` and not on the Anthropic API (D114); its graphs are `reconstructed`, and no label
+  says "measured" of a replay. The projector suite holds every demo part to 1024×768 in 繁體中文 only, and
+  three parts run past it in English (D117). M0's lab and checkpoint are s16 and s17 since the nine demo
+  steps were inserted, so a quiz schedule stored under `m00:s8:*` is orphaned (D117).
 
 ## CI
 
