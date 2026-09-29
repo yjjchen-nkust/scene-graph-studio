@@ -43,12 +43,13 @@ export const SLICE_CLASS_COUNT = new Set(
 const vgParsed = vgRaw as unknown as { dataset: string; graphs: SceneGraph[] };
 
 /**
- * The `vg150-sgb` slice in `data/`: 80 frames of annotation, and no images.
+ * The `vg150-sgb` slice in `data/`: 80 frames, read here for their annotations only.
  *
  * F6 and F7 count over a real vocabulary, and the placeholder's 16 predicates are this project's
- * own and carry no synonyms. The images of this slice are not committed (D-08) and neither
- * playground draws one, so both still compute with no backend, network or corpus. 583 KB raw,
- * 34 KB gzipped.
+ * own and carry no synonyms. The slice's 80 photographs sit beside the annotations
+ * (`images/`, `MANIFEST.json`'s `"distribution": "fetch"`) but are not licensed for distribution
+ * (`data/LICENCES.md`, `bundle_distribute` NO), so no playground draws one, and F6, F7 and T1
+ * still compute with no backend, network or corpus. 583 KB raw, 34 KB gzipped.
  */
 export const VG_FRAMES: SceneGraph[] = vgParsed.graphs;
 

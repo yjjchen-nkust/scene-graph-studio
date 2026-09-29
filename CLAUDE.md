@@ -5,14 +5,14 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split and §29 the M4 playgrounds), and all 110 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split, §29 the M4 playgrounds and §30 the M5 playgrounds), and all 111 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
 
 A full-stack teaching application for scene graph generation, built for 大語言模型技術與應用
 (2026) and anchored on Wang et al., *IndVisSGG*, Advanced Engineering Informatics 65 (2025)
-103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 14 playgrounds, 60 paper
+103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 16 playgrounds, 60 paper
 cards and 5 frozen leaderboards.
 
 It lives at `scene-graph-studio/` inside the WekaExt repository and is **not** a separate
@@ -43,15 +43,15 @@ cd scene-graph-studio\system ; npm run ci
   parity, i18n, content, frozen, standalone, frontend build. The static UI mockup and its
   `lint:mockup` check were removed on 2026-09-29 (D107).
 - **Four checks `ci` does not run**, each for a reason: `npm run test:e2e` (check 8, the keyboard
-  walkthrough at three projector resolutions, 79 tests, over the production build with no backend
+  walkthrough at three projector resolutions, 83 tests, over the production build with no backend
   running), `npm run check:offline` (check 6, a torch-free interpreter with every outward request
   intercepted), `npm run check:perf` (NFR-8, cold start on five routes and input-to-paint on five
-  labs and fourteen playgrounds, against a backend it starts itself), `npm run check:pins`.
+  labs and sixteen playgrounds, against a backend it starts itself), `npm run check:pins`.
 
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D110` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D111` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
   `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
@@ -83,7 +83,7 @@ cd scene-graph-studio\system ; npm run ci
   longest state, 96.5 px at Δx = 18, with every readout correct (D97), and
   `F3, E1, E10, E3, E4 and E7 draw their marks on their photographs` now measures that (D98, D106).
 - **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
-  in both locales (**D76**). All 117 steps carry theirs; 234 notes.
+  in both locales (**D76**). All 120 steps carry theirs; 240 notes.
 - **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and
   `npm run lint:standalone` asserts they agree. Edit the source, then run
   `npm run build:standalone` in the same commit.
@@ -106,6 +106,12 @@ cd scene-graph-studio\system ; npm run ci
   it could not before D110 either, and the build can. `sync-data.ps1` (D108) was retired: there
   is no second copy to keep in step. WekaExt's root `.gitignore` has no rule over this tree, so
   every exclusion the track needs is stated locally.
+- **`data/` is one copy, shared by every branch and every checkout.** A branch that changes
+  `data/` changes it for every branch at once: merge it promptly, and do not run another branch's
+  gate or harvest in between. M5's playgrounds were the first such branch: until they merge, `main`
+  fails `npm run ci` against the NAS, and running `main`'s harvest writes M5's old text back into
+  `data/content/`; a revert after the merge needs a hand edit of `playground_golden.json` on the
+  NAS and a fresh harvest (D111).
 - **Never `rm -rf data/` in Git Bash.** With the trailing slash it deletes the files on the NAS
   through the link (measured on a scratch junction, D110), and the NAS copy is the only copy.
   `rm -rf data`, `git clean -fdX` and PowerShell `Remove-Item -Recurse` remove the link alone.
@@ -124,17 +130,18 @@ cd scene-graph-studio\system ; npm run ci
   `data/content/vg150_splits.json`, each
   failing a test in `tools/test/content_lint.test.mjs` when disabled (D92 for the eleven, D93 to
   D95 for the twelfth). **It computes a
-  count, a bound or a set membership, never a metric** — a metric is a lab's business and the
+  count, a bound, a set membership or a value of the rule its step teaches, never a metric** (D111) — a metric is a lab's business and the
   boundary is the point. Nothing in `frontend/src/playgrounds/` imports from `sgg-metrics` except
   its types, and three tests in `playgrounds/test/logic.test.ts` that hold F3's IoU to `boxIou`, on the golden cases and at every knob setting, and E1's verdict to `classify` (D97, D98, D100), and four more there that hold M4's cap to `applyConstraint`, its counts to `evaluate`, and E13's admission to `applyPairing` and its match to `evaluate` (D106). M0 carries three (F1, F2, F8), M1
-  three (F6, F7, X1), M2 one (F3), M3 two (E1, E10) and M4 five (E3, E4, E7, E13, X2); 14 live knowledge points have none. See D88, D93, D97, D98 and D106. **`PlaygroundFrame`
+  three (F6, F7, X1), M2 one (F3), M3 two (E1, E10), M4 five (E3, E4, E7, E13, X2) and M5 two (T1, T2); 12 live knowledge points have none. See D88, D93, D97, D98, D106 and D111. **`PlaygroundFrame`
   clips only a picture** (`clip`, default on): a playground of words and figures passes
   `clip={false}`, because a word under the clip is beyond the reach of the step's scroll (D93).
-  **`PlaygroundFrame`'s `dense` is M4's**, for its twelve-row lists at 1024×768; the earlier
+  **`PlaygroundFrame`'s `dense` is M4's**, for its twelve-row lists at 1024×768, and M5's, for T1's
+  six readouts and T2's table (D111); the earlier
   playgrounds keep the measured default, and their records (D95 to D102) measure it (D106);
-  `playgrounds/test/Playground.test.tsx` requires the dense frame of exactly E3, E4, E7, E13 and X2.
+  `playgrounds/test/Playground.test.tsx` requires the dense frame of exactly E3, E4, E7, E13, X2, T1 and T2.
   **A playground too tall for one panel spans consecutive steps as parts** (D96): `part: n` on
-  each step and its tag, the count in `PLAYGROUND_PARTS` in `mounts.tsx`, E1, E10, E3, E4, E7, F1, F3, F6 and F7 in two
+  each step and its tag, the count in `PLAYGROUND_PARTS` in `mounts.tsx`, E1, E10, E3, E4, E7, F1, F3, F6, F7 and T2 in two
   and X1 in three. The stepper carries the knobs between the parts of one playground and nowhere
   else, and the projector suite asserts that every part fits 1024×768 in 繁體中文 in its longest
   state. **F6 and F7 count distinct triplets** (D96): E is a set, and 208 of the slice's 892

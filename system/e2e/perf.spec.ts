@@ -481,6 +481,23 @@ const PLAYGROUND_CASES: {
     readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
     why: 'raising m regrows the pool and the share the cut leaves standing',
   },
+  {
+    module: 'm05',
+    kp: 'T1',
+    step: 2,
+    act: { kind: 'set', testid: 'T1.frame', value: '80' },
+    readout: '[data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'another frame recounts its pairs, decisions and related pairs',
+  },
+  {
+    module: 'm05',
+    kp: 'T2',
+    // The readouts are T2's second part (D96, D111); its table alone sits on the first.
+    step: 5,
+    act: { kind: 'set', testid: 'T2.t', value: '5' },
+    readout: '[data-testid^="t2-belief-"], [data-testid="playground-frame"] [data-testid^="readout-"]',
+    why: 'five rounds of the rule re-average every belief and re-measure the distance to b*',
+  },
 ];
 
 test.describe('playground interaction', () => {
@@ -512,12 +529,12 @@ test.describe('playground interaction', () => {
     });
   }
 
-  test('all fourteen playgrounds were actually measured', () => {
+  test('all sixteen playgrounds were actually measured', () => {
     const timed = measured.filter((l) => l.startsWith('playground'));
     expect(
       timed.length,
-      `only ${timed.length} playgrounds were timed; M0 to M4 carry fourteen`,
-    ).toBe(14);
+      `only ${timed.length} playgrounds were timed; M0 to M5 carry sixteen`,
+    ).toBe(16);
   });
 });
 

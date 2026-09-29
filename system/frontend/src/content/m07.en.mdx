@@ -16,7 +16,7 @@ claims: []
 steps:
   - id: s1
     kind: prose
-    presenter_notes_en: "Opening, and it picks up M05's ratio: roughly one candidate pair in a hundred thousand carries a relation. One-stage methods predict the set of triplets directly and enumerate nothing. Say plainly that this is not a speed optimisation: the question changes from which of these pairs has a relation to what is in this image, and the two fail differently. That sentence is the spine of the module."
+    presenter_notes_en: "Opening, and it picks up M05's ratio: at VG150's 50 predicates, about one decision in a thousand is positive for an image of twelve objects, and about one in forty-five thousand once a detector keeps 80 boxes. One-stage methods predict the set of triplets directly and enumerate nothing. Say plainly that this is not a speed optimisation: the question changes from which of these pairs has a relation to what is in this image, and the two fail differently. That sentence is the spine of the module."
   - id: s2
     kind: math
     seconds_budget: 360
@@ -42,10 +42,11 @@ import { Formal, Implications, Intuition, Worked } from './math/Parts';
 
 ## Stop enumerating pairs
 
-M5 ended on a ratio: about one candidate pair in a hundred thousand carries a relation. One-stage
-methods take that seriously and predict the set of triplets directly, with no pair enumeration
-anywhere. The mechanism they borrow is DETR's: a fixed number of queries, each of which may emit
-one prediction, matched to the ground truth by a bipartite assignment computed per image.
+M5 ended on a ratio: at VG150's 50 predicates, about one decision in a thousand is positive for an
+image of twelve objects, and about one in forty-five thousand once a detector keeps 80 boxes.
+One-stage methods take that seriously and predict the set of triplets directly, with no pair
+enumeration anywhere. The mechanism they borrow is DETR's: a fixed number of queries, each of which
+may emit one prediction, matched to the ground truth by a bipartite assignment computed per image.
 
 The change is not a speed optimisation. It replaces "which of these pairs is related" with "what
 is in this image", and the two questions have different failure modes.

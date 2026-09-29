@@ -4401,3 +4401,387 @@ fresh worktree of this branch had no `data/`; `fetch-data.ps1` made the junction
 datasets through it and left `git status` empty, and the helper then refused another target
 rather than moving the link. Removing that link left all 257 files on the NAS. The new records
 test failed on the missing heading before this record was written.
+
+## D111 — M5's playgrounds, T1 and T2, and the pair and averaging statements the corpus and the derivation contradicted
+
+**Plan:** `specs/2026-09-29-playgrounds-m5-design.md`, `plans/2026-09-29-playgrounds-m5.md`.
+**Decisions:** the assistant's, on 2026-09-29, taken without a design session on the author's
+instruction ("review the current progress and go for implementing the next task") and set out in
+the spec's §1 table, each with the alternative it rejects, for the author's review before the
+merge: the scope T1 and T2, each a playground step directly after the math step that teaches it,
+with T3 to T6 left `spec`; T1 over the 80 VG150 frames of the vg150-sgb slice with |P| = 50; T2
+over `ph-001`'s six objects, with a choice between the annotated relations and every pair; and
+T2's rule the course's linear averaging rule, corrected and presented as a model of repeated
+averaging, not as IMP's update, which is learned. Execution by subagents under a controller.
+Branch `feat/playgrounds-m5`, from `main` at `dfe4dc4`; the spec is its first commit, `57e678b`,
+and the plan with the spec's amendments is `45e283e`.
+
+**The controller's rulings, 2026-09-29.** The ledger records eleven, each with its cost.
+- *R1, the averaging matrix is S.* The spec and the plan's first draft wrote A, which M2's symbol
+  table defines as area, A(·) (`m02.en.mdx:15`). Every displayed string writes S: the MDX, the symbol table, the
+  map's notes, `FROZEN.md`, the golden `why` texts and this record. Code identifiers that are not
+  displayed, such as the parameter `a`, stay.
+- *R2, the rule sentence widened.* T2 shows values of the course's own averaging rule: the beliefs
+  b⁽ᵗ⁾, their spread, the distance to the fixed point and the limit. Only the bound beside the
+  distance is a bound; the others are neither counts nor set memberships. CLAUDE.md's "It computes
+  a count, a bound or a set membership, never a metric" now reads "It computes a count, a bound, a
+  set membership or a value of the rule its step teaches, never a metric". The M0 playground
+  design's §1 allows "a quantity its own definition contains", and each of T2's values is a
+  quantity T2's definition contains; no recall, mean recall or score is shown, and neither T1 nor
+  T2 imports anything from `sgg-metrics`. Contracts §2.4, which CLAUDE.md calls normative, said
+  only "a count, a bound or a set membership that its own knowledge point's definition contains";
+  on the final review's ruling (R11) §2.4 was amended in place and awaits the author's review.
+- *R3, the spec amended before the build* (`45e283e`): the complete-graph case of s3's
+  Implications names the node itself (below); the limit is written Σⱼ dⱼ b⁽⁰⁾ⱼ / Σⱼ dⱼ, not with
+  π, which M4's table defines as the map from a triplet to its pair; M7 is corrected with M5
+  (below); and T1's toy readout on the map is kept and attributed by its note (below).
+- *R4, the main checkout.* The branch was worked in the main checkout, not in a separate worktree,
+  since the checkout holds `node_modules` and the `data/` junction, which a worktree would lack.
+- *R5 and R6, the scope of Task 1's review round.* Both Important findings and Minors 1, 2, 3, 4, 7
+  and 9 were fixed in one round, since each changes mathematical truth or precision in the same
+  text; spec §2 was corrected for 310 in the same commit.
+- *R7, `{d0Again}` kept* (below).
+- *R8, the scope of T2's review round.* Minors 3 to 6 were fixed with the two Important findings,
+  being small and in the same files.
+- *R9, CLAUDE.md's dense-frame sentence.* T1's and T2's registration made it stale; the plan gave it
+  to this record's commit and no test reads it, so it stayed stale for three branch commits and is
+  updated here.
+- *R10, a measured timeout for two M4 tests.* Given when this record's gate failed six times on
+  vitest's default timeout under contention (below).
+- *R11, contracts §2.4 amended in place* (the final review, below). The review found CLAUDE.md,
+  after R2, and §2.4 disagreeing on what a playground computes, with T2 conforming to the one that
+  does not govern. §2.4 now carries an amendment in the form D105 used: [**Amended 2026-09-29
+  (D111), awaiting the author's review:** a playground may also show a value of the rule its step
+  teaches, as T2 shows the course's own averaging rule on six beliefs; the playground design's §1
+  allows "a quantity its own definition contains". It still computes no metric.] The alternative,
+  rejecting R2 and reducing T2 to its bound, was the larger change. The cost: the contract carries a sentence
+  the assistant wrote, marked as awaiting the author's review.
+
+**Spec §2's findings, read on 2026-09-29.**
+- *T1.* s2 and the map (`pg.js`, DERIV.T1 and the T1 note) set N = 80 and |P| = 310, "GQA's 310
+  predicates", for "≈ 20 relations", a positive rate near 10⁻⁵. The course's anchor dataset is
+  VG150, whose card states 50 predicate categories and, for its validation split, 5,000 images,
+  62,754 object annotations and 33,203 relations: 12.6 objects and 6.6 relations per image. "≈ 20"
+  is near the original Visual Genome's 22 relationships per image (Xu et al. 2017, §4, quoted in
+  `vg150_splits.json`), not VG150's. The 80 frames the course bundles hold 1,348 objects, 26,282
+  ordered pairs, 892 relationship rows and 651 ordered pairs carrying at least one relation, 2.5
+  per cent of the pairs, with 4 to 39 objects a frame, median 16.
+- *310 is sourced.* The spec said that no source in the repository states 310. Task 1's review
+  found that one does: the anchor paper's Table 1, reproduced in the map
+  (`web/knowledge-map/index.html:293`), gives GQA 310 predicates and 50.6 relations per image, and
+  Visual Genome 21.4. The old line set GQA's predicates against Visual Genome's relation rate. The
+  correction to VG150's figures stands for that reason, not for a missing source. Spec §2 carries
+  the correction in place (`b6c3d8a`), `FROZEN.md` and the corrections test's comment say the same,
+  and spec §1's decisions table, which still gave the missing source as the reason, carries an
+  as-built note from this record. The map's Proposition 6 (§2.10) carried the same figures and was
+  corrected in both languages with them.
+- *T2.* Three statements disagreed with one another. The Formal line wrote the neighbourhood mean
+  and claimed b⁽ᵗ⁾ → mean(b⁽⁰⁾) for every w > 0, "consensus; information destroyed". The Worked
+  step replaced it by the whole-graph mean with the node included, under which the mean is
+  invariant and the first round is already the fixed point. The Implications wrote "b⁽ᵗ⁾ =
+  (1 − wᵗ)[…]·…", which is not an expression, and "spread contracts by (1 − w) per step", which the
+  checkpoint and the s3 presenter note repeated. What holds, with S the row-normalised
+  neighbourhood: for 0 ≤ w < 1 the map b ↦ (1 − w)b⁽⁰⁾ + wSb is a contraction in the max norm with
+  factor w; the beliefs converge to b* = (1 − w)(I − wS)⁻¹b⁽⁰⁾, a mixture of k-hop averages that
+  keeps a (1 − w) share of each node's own evidence; and ‖b⁽ᵗ⁾ − b*‖∞ ≤ wᵗ‖b⁽⁰⁾ − b*‖∞. At w = 1,
+  on a connected graph with an odd cycle, the beliefs converge to one value, the degree-weighted
+  mean Σⱼ dⱼ b⁽⁰⁾ⱼ / Σⱼ dⱼ, which is the plain mean on a regular graph. The (1 − w)b⁽⁰⁾ term
+  therefore prevents the collapse. On `ph-001` with spec §4.2's beliefs, under the annotated
+  relations, w = 0.5 settles at a spread of 0.3924 and w = 0.9 at 0.1105, and w = 1 converges to
+  0.5083, where the plain mean is 0.4833.
+
+**The corrections**, in both locales, before any playground was built (`114a8c8`, and Task 1's
+review round, `b6c3d8a`). The step ids are those before the insertion below.
+- *s2.* The Implications use |P| = 50: twelve objects, near the validation mean, give 132 ordered
+  pairs and 6,600 decisions for about seven relations, a positive rate near 1.1 × 10⁻³; 80 boxes
+  kept, a setting rather than a figure from a paper, give 6,320 pairs and 316,000 decisions for
+  the same seven, near 2.2 × 10⁻⁵; and the 80 bundled frames give 651 of 26,282. The presenter
+  note keeps its N = 80 exercise with |P| = 50.
+- *s3.* The Intuition says that averaging alone drives every node to one belief and that keeping a
+  share of each node's own evidence stops it. The Formal line states the rule with S, its limit for
+  w < 1 and its consensus at w = 1. The Worked step derives the fixed point, ‖wS‖∞ ≤ w, the
+  contraction bound, dᵀS = dᵀ at w = 1 and the degree-weighted mean. The Implications state the
+  complete-graph case with the node included, say where w = 1 converges, can oscillate or settles
+  per component with an odd cycle, and say that IMP's update is learned and this rule models
+  averaging. The presenter note loses "per step".
+- *s6*, the checkpoint, asks about the collapse at w = 1; its presenter note keeps its acceptable
+  answers. *s5* says that L4 runs these models' predictions, stored in `data/predictions/`, where it
+  said "the committed predictions": nothing under `data/` is committed since D109.
+- *The symbol table* gains S and 𝒩(i): 50 symbols in the corpus (48 before).
+- *The map.* MATH.T2, DERIV.T1 and DERIV.T2 are rebuilt from the corrected MDX and MATH.T1 is
+  unchanged; the harvest still gives 26 formulas and 23 derivations. The T1 and T2 notes are
+  rewritten, and Proposition 6 carries VG150's figures in both languages. `FROZEN.md`'s 2026-09-29
+  entry records four items. The brief (`web/brief/index.html`), searched for `310`, `consensus`,
+  `message passing` and `per step`, states none of them and is unchanged.
+- *The review round* (R5, R6). Besides Proposition 6 and the premise about 310, the w = 1
+  statements now carry their hypothesis wherever they are made, a connected graph with an odd
+  cycle: a tree is bipartite and can oscillate, and VCTree's tree is among the checkpoint's
+  acceptable answers. The mixture of k-hop averages carries every dᵢ ≥ 1. "Distance" became "the
+  largest gap", naming the max norm in which the bound is proved. The complete-graph line writes the
+  map b ↦ (1 − w)b⁽⁰⁾ + w b̄ 𝟏 rather than giving a second matrix the letter S. The paragraph on
+  IMP's own update moved before the list of later methods, and s5's sentence on L4 was reworded.
+- *The test.* It reads both M5 files, the harvested `math.json` and `deriv.json`, the map's notes
+  and Proposition 6, and M7 in both locales; requires the corrected statements; refuses the defects
+  and the letters A and π in M5's averaging mathematics; and renders every M5 math step in both
+  locales with no KaTeX error. It failed first on its first required string,
+  `\lvert\mathcal{P}\rvert=50\ (\text{VG150})`.
+
+**The complete-graph case names the node itself.** The spec first said that the Implications state
+the complete-graph case, "where the fixed point is reached in one round". That holds only when each
+node averages over itself too, which was the old Worked rule. With 𝒩(i) excluding i, as the Formal
+line and T2's every pair do, b* is not reached in one round: on every pair at w = 0.5 the distance
+after one round is 0.0227. The plan review amended the spec before the build (R3), s3's
+Implications say "i included", and a test holds both sides: the rule with the node included
+reaches b* in one round with its spread at 0.5 × 0.8, and every pair stands 0.0227 from b* after
+one round.
+
+**M7, corrected beyond spec §3's list.** M7's s1 body and presenter note, in both locales, quoted
+M5's rate, "about one candidate pair in a hundred thousand" and 約每十萬組候選配對僅一組. Once s2
+was corrected no module stated that rate, and M7 would have cited M5 for a figure M5 no longer
+gives. M7 now states the corrected rate: at VG150's 50 predicates about one decision in a thousand
+is positive for an image of twelve objects, and about one in forty-five thousand once a detector
+keeps 80 boxes (316,000 / 7 ≈ 45,143); 約每一千次 and 約每四萬五千次 in 繁體中文. The plan
+review found the quotation and added M7 to spec §3 before the build. Nothing else in M7 changed.
+
+**The map's toy readouts are left as they are** (spec §8, D-14). T1's toy still reads "real
+relations ~20, per image, VG150", and its |P| slider still runs to 310; its corrected note
+attributes the 20 to the original Visual Genome, so the card disagrees with itself and the note
+says so. T2's toy still averages over the whole graph, and its corrected note says that its
+iteration slider changes nothing after the first round.
+
+**The slice ordered, the six beliefs and their arithmetic** (`c220b62`). `playgrounds/M5/pairs.ts`
+orders the 80 frames of `VG_FRAMES` by object count and then by image id as a number; as strings
+`1246` sorts before `547`, and as numbers `547` is rank 40, the median place.
+`playgrounds/M5/beliefs.ts` reads `ph-001`'s six objects and six relationships and gives them spec
+§4.2's b⁽⁰⁾ = (0.9, 0.2, 0.7, 0.4, 0.1, 0.6) for table, person, box, glove, wrench and panel; the
+relation degrees are (4, 3, 1, 1, 2, 1), and every pair gives each object five neighbours.
+`logic.ts` gains eleven functions: `relatedPairs`, `neighbours`, `rowNormalised`,
+`averagingRound`, `averagingRounds`, `fixedPoint`, `maxDistance`, `spread`, `mean`,
+`degreeWeightedMean` and `decimals`. `fixedPoint` solves (I − wS)b* = (1 − w)b⁽⁰⁾ by Gaussian
+elimination with partial pivoting, which meets no zero pivot for w < 1 since every row of I − wS
+is strictly diagonally dominant, and returns null at w = 1, where I − S is singular. T2's review
+added `sum` and `degreeWeightedParts`, so that the limit and its note read one computation (R8).
+None of the thirteen imports anything from `sgg-metrics`.
+- *The slice's ranks, as tested:* rank 1 is frame 2045 (4 objects, 12 ordered pairs, 4 rows, 2
+  related pairs), rank 2 frame 4176 (4, 12, 18, 7), rank 40 frame 547 (16, 240, 5, 5), rank 41
+  frame 1246 (16, 240, 8, 8) and rank 80 frame 3182 (39, 1,482, 45, 29); the totals are 80 frames,
+  1,348 objects, 26,282 ordered pairs, 892 rows and 651 related pairs.
+- *Spec §2's values, as the tests hold them to four decimals:* the spread at b* is 0.3924
+  (relations, w = 0.5), 0.1105 (relations, w = 0.9) and 0.0678 (every pair, w = 0.9);
+  ‖b⁽⁰⁾ − b*‖∞ is 0.3659 (relations, w = 0.9); the spread at w = 1 is 0.0094 after 20 rounds and
+  0.0002 after 40; the degree-weighted mean is 0.5083 and the plain mean 0.4833; and every pair
+  at w = 0.5 stands 0.0227 from b* after one round. The fixed point agrees with 2,000 rounds of
+  the rule to within 10⁻¹² at every w on the knob below 1, on both graphs, and the distance stays
+  within its bound at every t from 0 to 40, at every such w, on both graphs. Every value agreed
+  with the spec on its first run. The logic suite went from 86 tests at `dfe4dc4` to 105 at the
+  branch's tip, 19 added: 18 in Task 2 and one in T2's review.
+
+**The two playgrounds**, each computing and neither scoring.
+- *T1*, "Pairs against relations" / 「配對數與關係數之對照」, at s3, after s2 (`36d47d5`).
+  `PairsAgainstRelations`: `T1.frame`, a slider over the ranks 1 to 80, default 40; six readouts,
+  N, N(N − 1) ordered pairs, N(N − 1) · 50 decisions through `candidateSpace` and E10's
+  `VG150_PREDICATES`, the frame's relationship rows, its related ordered pairs as a ratio of counts,
+  and the slice's 651 / 26,282, which no knob moves; and a line naming the source. It draws no
+  photograph, since the slice's photographs are not licensed for distribution (`data/LICENCES.md`),
+  and no SVG. At rank 2 it shows 7 / 12, never 18 / 12.
+- *T2*, "Beliefs under averaging", at s5 and s6, after s4 (`41259b0`, `4ee8c89`, `c8ff2aa`).
+  `BeliefsUnderAveraging`: `T2.graph`, a choice of the relations or every pair; `T2.w`, a slider
+  from 0 to 1 in steps of 0.05, default 0.5; `T2.t`, a slider from 0 to 40, default 0. A regime
+  line; a table of the six objects with their neighbours, b⁽⁰⁾ and b⁽ᵗ⁾ to two decimals; the
+  spread; for w < 1 the distance ‖b⁽ᵗ⁾ − b*‖∞ beside its bound wᵗ‖b⁽⁰⁾ − b*‖∞, and for w = 1 the
+  limit Σⱼ dⱼ b⁽⁰⁾ⱼ / Σⱼ dⱼ beside the plain mean, each to four decimals; and a line saying that
+  the rule models averaging and is not IMP's learned update. `fixedPoint` runs once a render and
+  never at w = 1. T2's review found the table's cells unpadded, so that adjacent values ran
+  together ("0.900.90"), and the bound note's second fill untested; the cells are padded, both fills
+  are tested in both locales, every knob the URL invents is tested to show no `NaN` and no unfilled
+  placeholder, and three comments were made exact.
+- *`{d0Again}`* (R7). The plan's copy table wrote T2's bound note with one placeholder twice,
+  "wᵗ × {d0}; {d0} is the distance at t = 0", filled by `replaceAll`. `tools/i18n_parity.mjs`
+  refuses a placeholder repeated within one value, since `String.replace` fills only the first
+  occurrence. The second occurrence is `{d0Again}` in both locale tables and the component fills
+  both with one value, so the text displayed is the plan's. The plan's copy table and the locale
+  tables differ in that one name, and this record is where the difference is stated.
+- The locale tables went from 380 keys to 418, 14 for T1 and 24 for T2, and the keys carrying a
+  placeholder from 20 to 27.
+
+**M5's steps, and the order of registration** (`cf4eab0`). The old s3 to s6 became s4, s6, s7 and
+s8, renamed from the last so that no two steps shared an id at any point, and s3 (T1) and s5 (T2)
+were inserted, each 90 s with a noun-phrase heading, the tag and presenter notes in both locales
+naming the setting to show and the number it gives. T2's split (below) gave M5 nine steps: s1
+prose, s2 math, s3 T1, s4 math, s5 and s6 T2's two parts, s7 prose, s8 lab and s9 checkpoint. The
+corpus holds 120 steps a locale and 240 presenter notes (117 and 234 before). No module or locale
+table cites an M5 step by id, and the notes Task 1 wrote, which name the next step by what it
+shows, read true after the insertion.
+- *The order of the tasks.* As M4 found (D106), registration moved to the task that inserts the
+  steps (Task 5), and the golden cases followed it (Task 6), for two reasons:
+  `KnowledgeIndex.test.tsx:75-90` fails for a registered playground with no lecture step, and
+  `content_lint.mjs:271-273` refuses a golden case for an unregistered playground. Tasks 3 and 4
+  tested their components by direct mount.
+- *The counts* that the records test reads at every `npm run ci` (16 playgrounds, 12 live points
+  without one, the steps and notes, sixteen playgrounds timed and eleven in parts) were written in
+  the commits that changed them, Task 5's and Task 7's.
+
+**`dense` for T1 and T2.** Both frames are `clip={false}`, since neither draws a picture (D93),
+and `dense`. `dense` was M4's opt-in (D106), so that the nine earlier playgrounds keep the spacing
+their records measured. T1 and T2 have no earlier measurement to move, and at the base spacing X2's
+four readouts ran 74 px past 1024 × 768 (D106), where T1 carries six readouts and T2 a six-row
+table beside three. `Playground.test.tsx` requires the dense frame of exactly E3, E4, E7, E13, X2,
+T1 and T2, and `controls.tsx`'s comments name M5's two beside M4's five.
+
+**The golden cases** (`269ed88`). Eleven cases in `data/content/playground_golden.json`, each `why`
+writing out its arithmetic: T1 at ranks 1, 40 and 80 and the slice's totals; T2 at (relations,
+0.5, t = 0, 1 and 5), (relations, 0.9, 10), (relations, 1, 40), (every pair, 0.9, 1) and (every
+pair, 1, 5). Content lint counts 75 playground cases (64 before). With the cases written and no
+block to run them, the golden test failed 1 of 68, on "every case is run by exactly one block",
+first at `pg-T1-rank1`; with the three blocks and a test pinning four T1 cases and seven T2 cases
+it passed 80. Each expected value was computed from the functions over the slice before it was
+written, and none disagreed with the plan.
+
+**The fit** (`b3013b9`). Task 7 measured `step.scrollHeight − step.clientHeight`, in px, on the
+production build at 1024 × 768 with the webfonts decoded, T2 still one step at `m05/4`:
+
+| State | 繁體中文 | English |
+|---|---|---|
+| `m05/2?T1.frame=80` | 0 | 0 |
+| `m05/2?T1.frame=1` | 0 | 0 |
+| `m05/4` | 44 | 91 |
+| `m05/4?T2.w=0.95&T2.t=40` | 44 | 91 |
+| `m05/4?T2.w=1&T2.t=40` | 44 | 91 |
+| `m05/4?T2.graph=every&T2.w=1&T2.t=5` | 67 | 114 |
+| `m05/4?T2.w=0&T2.t=40` | 44 | 91 |
+
+- *The parts (D96).* T1 fits in both locales at ranks 1 and 80 and stays one step. T2 ran 44 to 67
+  px past in 繁體中文 and was split in two by the plan's recipe: part 1, s5, "Six beliefs, round by
+  round" / 「六個信念之逐輪變化」, the regime line and the table; part 2, s6, "Where the beliefs
+  settle" / 「信念之收斂位置」, the regime line, the readouts and the model line; the three knobs on
+  both. `PLAYGROUND_PARTS` gives T2 two parts, and eleven playgrounds span parts. s5 carries a new
+  note on the table, and s6 T2's earlier note from "Open on the annotated relations" onward.
+  `perf.spec.ts`'s T2 case moved to step 5, where the readouts are.
+- *After the split,* the same measure with the five states repeated at `m05/5` gave 0 for every
+  state of both parts in both locales, English included.
+
+**The browser** (`b3013b9`). `lecture.spec.ts` gains four tests: M5's playgrounds compute with no
+backend (`m05/2` reads 240, 5 and 651 / 26,282; `m05/4` reads 0.90 for the table's b⁽ᵗ⁾; `m05/5`
+reads the spread 0.8000 and the bound 0.2065); every knob works from the keyboard without advancing
+the deck (the rows 5 to 8 on `T1.frame`, 0.90 to 0.65 on `T2.t`, 0.65 to 0.63 on `T2.w` at t = 1,
+and `T2.graph`); a knob writes the address bar (`T2.graph=every`, which, opened cold, reads "the
+other five"); and a knob set on T2's first part reaches its second (`m05/4?T2.w=1`, ArrowRight, the
+limit 0.5083). The test that no playground takes focus gains M5's steps 2, 4 and 5.
+`projector.spec.ts` holds seven longest states to the panel at all three sizes, T1 at rank 80 and
+each of T2's parts at w = 0.95 and t = 40, at w = 1 and t = 40, and on every pair at w = 1 and
+t = 5; adds `m05/2`, `m05/4` and `m05/5` to the check that a playground step fits with its controls
+reachable and to the 18 px floor; and adds the three steps to the contrast walk, where they read
+27, 41 and 22 rows at 1024 × 768, with floors 21, 32 and 17, four fifths rounded down.
+`perf.spec.ts` times `T1.frame` to 80 and `T2.t` to 5 and requires sixteen playgrounds measured.
+Task 7's runs: `npm run test:e2e` 83 passed in 2.2 min; `npm run check:perf` 30 passed in 38.7 s,
+T1 at 34.9 ms, 2.0 ms above its 32.9 ms two-frame floor, and T2 at 33.1 ms, 0.2 ms above its
+32.9 ms floor.
+
+**Data no commit carries.** `data/` is not in git (D109) and is a directory junction to the NAS
+(D110), so two of this branch's changes appear in no commit and no diff.
+- *The harvest* (Task 1). `npm run harvest` after `114a8c8` changed six entries under
+  `data/content/`: `math.json` T2; `deriv.json` T1 and T2; and `kp.json` T1.deriv, T2.math and
+  T2.deriv. The re-harvest after the review round, `b6c3d8a`, changed `deriv.json` T2 and `kp.json`
+  T2.deriv again and `math.json` not at all. Each value is what the harvest reads from the committed
+  `pg.js`, and `npm run ci` runs the harvest first, so their text follows from this branch's
+  commits; the before and after of each value is recorded verbatim in Task 1's report.
+- *The golden cases* (Task 6). Eleven cases were appended to `data/content/playground_golden.json`,
+  64 cases to 75: `pg-T1-rank1`, `pg-T1-rank40`, `pg-T1-rank80`, `pg-T1-slice`,
+  `pg-T2-relations-w05-t0`, `pg-T2-relations-w05-t1`, `pg-T2-relations-w05-t5`,
+  `pg-T2-relations-w09-t10`, `pg-T2-relations-w1-t40`, `pg-T2-every-w09-t1` and
+  `pg-T2-every-w1-t5`. Their full text is the plan's Task 6 Step 1, which the eleven cases on the
+  NAS equal as parsed JSON, compared for this record; Task 6's report carries them verbatim too.
+  The file stays LF.
+- *One copy for every branch* (the final review). `data/` is one copy on the NAS, read by every
+  branch and every checkout. This branch's golden cases, the eleven above, and its harvest are
+  already there, so `main` before the merge fails `npm run ci` against the NAS: content lint
+  refuses each of the eleven with "golden case for 'T1', which has no registered component", or
+  'T2' (`content_lint.mjs:271-273` at `dfe4dc4`, where `mounts.tsx` registers neither), and the
+  golden test fails "every case is run by exactly one block" at `pg-T1-rank1`. Running `main`'s harvest rewrites `kp.json`,
+  `math.json` and `deriv.json` on the NAS with M5's old text, after which this branch's corrections
+  test fails until its own harvest runs again. A revert after the merge needs the eleven cases
+  deleted from `data/content/playground_golden.json` by hand and `npm run harvest` run on the
+  reverted tree. As far as the records show, this is the first branch since D109 to change
+  `data/content/`, and so the first whose data breaks another branch's gate. The rule it leaves,
+  stated in CLAUDE.md's traps: a branch that changes `data/` changes it for every branch at once;
+  merge it promptly, and do not run another branch's gate or harvest in between. Versioning
+  `data/content/` would remove the hazard, and is the author's decision under D109.
+- The implementers' reports are under `.superpowers/sdd/2026-09-29-playgrounds-m5/` at the
+  WekaExt root, which git ignores; the plan and the spec are committed.
+
+**vitest's 5000 ms timeout, observed during the build and given a measured bound.** `npm run ci`
+hit vitest's default timeout in two M4 tests of `registry.test.tsx` whose content this branch does
+not change, "M4 carries E3, E4, E7, E13 and X2 directly after the steps that teach them" and "M4
+derives only what the engine and the definitions force". In Task 1 three runs failed on the first,
+which ran in 290 and 571 ms alone and passed at `--testTimeout=20000`, and the fourth passed. In
+Task 6 one run failed on both, and the re-run passed. In Task 7 it recurred once in a vitest run
+outside the gate, the test then passing alone in 854 ms, and the gate passed on its first run. On
+this record's tree, before the change below, it failed six runs in a row: the first on both tests
+(8,941 and 8,009 ms), the next five on one of them (5,555, 6,201, 6,278, 5,767 and 5,917 ms), while
+another session's Python jobs held the machine's processors. Run alone, the two take 639 and
+1,299 ms, and within their file alone 4 to 8 s. The failure reproduced on `b3013b9` with this
+record's changes stashed (5,696 ms), so the records did not cause it. With `--testTimeout=20000` on
+the command line vitest passed 1079 of 1079, the two at 187 and 2,077 ms.
+- *The change* (`62c76d2`), on the controller's ruling (R10). Each of the two tests carries an
+  explicit timeout of 20,000 ms, vitest's third argument to `it`, and a one-line comment stating
+  its measurement: about 0.6 s and 1.3 s alone, 5.6 to 8.9 s under contention, against vitest's
+  5000 ms default. The global timeout and every other test are unchanged. One test renders M4's
+  playground steps in jsdom and the other its math steps in both locales, work that contention
+  stretches; the bound is more than twice the slowest time measured, 8,941 ms, and a test that
+  hangs still fails.
+- *After it,* `npm run ci` exited 0 at its first run on `62c76d2`'s own tree, 1078 tests, the two
+  at 6,050 and 3,064 ms, and at its first run on this record's tree, 1079 tests, the two at 5,991
+  and 5,173 ms. Three of those four times exceed the default. It passed again on this commit's
+  final text.
+
+**The final review** (`dfe4dc4..ddc495e`, 3 Important and 9 Minor findings, all fixed in one
+commit on the controller's rulings).
+- *§2.4* amended in place (R11, above), and the records test requires the amendment's text.
+- *The shared NAS data* recorded above, in INDEX's M5 paragraph and in CLAUDE.md's traps.
+- *Two displayed w = 1 sentences made exact,* in s4's Implications in both locales: the
+  degree-weighted mean "can differ from the plain mean when nodes have unequal numbers of
+  neighbours" (若各節點之鄰居數不等，則可能與算術平均相異), where it said "differs", since equal
+  degrees are sufficient and not necessary; and on a disconnected graph "each component with an
+  odd cycle settles on its own value" (各含奇數長度迴路之連通分量各自收斂至其自身之數值), since a
+  bipartite component oscillates. The same sufficiency, stated as necessity, was corrected in
+  `logic.ts`'s comment on `degreeWeightedMean` (which also claimed convergence "on any graph
+  without isolated nodes"), in `M5/beliefs.ts`'s comment on `M5_B0`, in the `logic.test.ts` title
+  "only on the regular graph", which now carries a counterexample with unequal degrees, and in spec
+  §2 by a dated note. The two `logic.test.ts` titles that kept the old letter now read
+  "(I − wS) b*" and "I − S is singular". `M5/pairs.ts` no longer says that 547 carries fewer
+  objects than 1246: both carry 16, and the tie is broken by image id as a number. The display
+  math, `pg.js` and the harvest are unchanged.
+- *The notes and the copy.* s5's note says the table falls to 0.65 at t = 1 and settles near 0.70;
+  s6's English note says the distance never exceeds its bound and equals it at t = 0, and its
+  繁體中文 note gains the same equality; s3's 繁體中文 note reads 依序呈現. s8 says that L4 shows
+  reconstructions of Neural Motifs' and VCTree's published behaviour: `data/predictions/placeholder/`
+  holds reconstructed files for motifs and vctree among five models and no measured file, and
+  `data/predictions/PROVENANCE.md` states that a reconstructed file "is never described as a
+  model's output". T1's source line says that its photographs are not
+  licensed for distribution (`data/LICENCES.md`), where it said that none ships, and `slice.ts` and
+  spec §5.1 say the same; T2's option reads "relations annotated on ph-001, either direction"
+  (ph-001 標註之關係（不分方向）), since `beliefGraph` joins subject and object both ways.
+- *This record* gives the logic suite's count from `dfe4dc4`, and the records test holds README's
+  e2e figure at 83.
+
+**Two minor findings of the reviews are deferred to the author.**
+- The `why` texts of `pg-T2-relations-w05-t5` and `pg-T2-relations-w09-t10` name the box as the
+  object at the largest gap, where the panel ties with it; the values hold, and
+  `pg-T2-relations-w05-t1` names its tie. The text is the plan's, and it is on the NAS only.
+- The new files under `playgrounds/M5/`, `T1/` and `T2/` are LF in the working tree, where their
+  neighbours are CRLF. Git stores LF and a checkout writes CRLF, and nothing compares working-tree
+  bytes.
+
+Not checked: how MATH.T2's three lines lay out in the map's formula card, where every other formula
+is one line; `lint:frozen` passes over it, and no look at it in a browser is recorded. The VG150
+card's figures are external to the repository and were not re-read for this record.
+
+**The records test.** This record's test failed first on its missing heading.
+
+**Verification.** `npm run ci` exit 0 in eleven steps on this commit's tree, after `62c76d2`: 287
+pytest and 7 skipped, **1079 vitest in 76 files** (1020 in 74 before), parity 21, **i18n 418 keys** (380 before), 27 of them
+with a placeholder (20 before), content lint clean over 21 golden cases, **75 playground cases**
+(64 before) and 25 release figures with **50 symbols** (48 before), standalone current at 254
+equations, frontend builds 790 modules (786 before). `npm run test:e2e` **83** (79 before),
+2.0 min. `npm run check:perf` **30** (28 before), 36.3 s; T1 33.7 ms, 1.8 ms above its 31.9 ms
+two-frame floor, and T2 33.6 ms, 0.3 ms above its 33.3 ms floor. See VERIFICATION §30.

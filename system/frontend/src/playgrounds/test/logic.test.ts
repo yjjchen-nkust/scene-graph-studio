@@ -9,12 +9,17 @@ import { E1_DEFECTS, E1_FRAME, E1_RELATIONSHIP } from '../E1/setup';
 import { F3_FRAME, F3_OBJECT, F3_RANGES } from '../F3/setup';
 import { M4_CAPS, M4_FRAME, M4_K_MAX, M4_RANKING } from '../M4/ranking';
 import { VRD_PREDICATES, e13Copies } from '../E13/setup';
+import { PAIR_ROWS, SLICE_TOTALS } from '../M5/pairs';
+import { beliefGraph, W_STEP } from '../M5/beliefs';
 import {
-  admitByMask, annotatedTriplet, area, byScore, candidateSpace, capPerPair, conjuncts, failureMode, frameVerdict,
-  hypothesisSpace, iouCounts, canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic,
-  headShare, idRun, intersection, isInE, isInMergedE, matchedByMask, matchedRanks, matchedTruths, measuredHeadShare, mergeMap,
-  pairsWithSeveral, predicateLabels, ranked, ratio, scaleBound, scaledBox, snap, splitDifference, tailToHead, topK,
-  tripletKey, truncatedRatio, unionArea, valPool, wholePixelBoxes, withDefects, type BoxTriplet,
+  admitByMask, annotatedTriplet, area, averagingRound, averagingRounds, byScore, candidateSpace, capPerPair,
+  conjuncts, decimals, degreeWeightedMean, degreeWeightedParts, failureMode, fixedPoint, frameVerdict,
+  hypothesisSpace, iouCounts,
+  canonical, clamp, classCounts, densityCut, explain, flag, formatRatio, harmonic, headShare, idRun, intersection,
+  isInE, isInMergedE, matchedByMask, matchedRanks, matchedTruths, maxDistance, mean, measuredHeadShare, mergeMap,
+  pairsWithSeveral, predicateLabels, ranked, ratio, relatedPairs, rowNormalised, scaleBound, scaledBox,
+  snap, spread, splitDifference, tailToHead, topK, tripletKey, truncatedRatio, unionArea, valPool, wholePixelBoxes,
+  withDefects, type BoxTriplet,
 } from '../logic';
 
 /** The engine's triplet, which `sgg-metrics` does not export by name. */
@@ -801,5 +806,184 @@ describe('E13 against the engine', () => {
         expect(result.matched_count).toBe(matchedByMask(admitted, frame.relationships).length);
       }
     }
+  });
+});
+
+describe('M5: pairs against relations', () => {
+  it('counts a related ordered pair once, however many rows it carries, and each direction apart', () => {
+    const rows = [
+      { subject_id: 1, object_id: 2 }, { subject_id: 1, object_id: 2 },
+      { subject_id: 2, object_id: 1 }, { subject_id: 3, object_id: 3 },
+    ];
+    expect(relatedPairs(rows)).toBe(2);
+    expect(relatedPairs([])).toBe(0);
+  });
+
+  it('orders the 80 frames by object count, then by image id as a number', () => {
+    expect(PAIR_ROWS.map((r) => r.rank)).toEqual(Array.from({ length: 80 }, (_, i) => i + 1));
+    for (let i = 1; i < PAIR_ROWS.length; i += 1) {
+      const [a, b] = [PAIR_ROWS[i - 1]!, PAIR_ROWS[i]!];
+      const ordered = a.objects < b.objects || (a.objects === b.objects && Number(a.imageId) < Number(b.imageId));
+      expect(ordered, `${a.imageId} before ${b.imageId}`).toBe(true);
+    }
+  });
+
+  it("gives spec §4.1's ranks 1, 40 and 80, and 1246 after 547", () => {
+    expect(PAIR_ROWS[0]).toEqual({ rank: 1, imageId: '2045', objects: 4, pairs: 12, rows: 4, related: 2 });
+    expect(PAIR_ROWS[39]).toEqual({ rank: 40, imageId: '547', objects: 16, pairs: 240, rows: 5, related: 5 });
+    expect(PAIR_ROWS[40]).toEqual({ rank: 41, imageId: '1246', objects: 16, pairs: 240, rows: 8, related: 8 });
+    expect(PAIR_ROWS[79]).toEqual({ rank: 80, imageId: '3182', objects: 39, pairs: 1482, rows: 45, related: 29 });
+  });
+
+  it('never has more related pairs than pairs, though 4176 has more rows than pairs', () => {
+    expect(PAIR_ROWS[1]).toEqual({ rank: 2, imageId: '4176', objects: 4, pairs: 12, rows: 18, related: 7 });
+    for (const r of PAIR_ROWS) expect(r.related, r.imageId).toBeLessThanOrEqual(r.pairs);
+  });
+
+  it('totals 1,348 objects, 26,282 ordered pairs, 892 rows and 651 related pairs', () => {
+    expect(SLICE_TOTALS).toEqual({ frames: 80, objects: 1348, pairs: 26282, rows: 892, related: 651 });
+  });
+});
+
+describe('M5: beliefs under averaging', () => {
+  const rel = beliefGraph('relations');
+  const every = beliefGraph('every');
+  // Every setting of the w knob, 0 to 1 in steps of 0.05, each on its decimal.
+  const onKnob = Array.from({ length: 21 }, (_, i) => snap(i * W_STEP, 0, 1, W_STEP));
+  const below1 = onKnob.filter((w) => w < 1);
+
+  it("reads spec §4.2's six objects, beliefs and relation neighbours from ph-001", () => {
+    expect(rel.ids).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(rel.names).toEqual(['table', 'person', 'box', 'glove', 'wrench', 'panel']);
+    expect(rel.b0).toEqual([0.9, 0.2, 0.7, 0.4, 0.1, 0.6]);
+    expect(rel.lists).toEqual([[2, 3, 5, 6], [1, 4, 5], [1], [2], [1, 2], [1]]);
+    expect(every.lists).toEqual(rel.ids.map((i) => rel.ids.filter((j) => j !== i)));
+  });
+
+  it('row-normalises: every row sums to 1 over its neighbours, and no node is its own neighbour', () => {
+    for (const g of [rel, every]) {
+      g.a.forEach((row, i) => {
+        expect(row[i]).toBe(0);
+        expect(row.reduce((s, x) => s + x, 0)).toBeCloseTo(1, 12);
+        expect(row.filter((x) => x > 0)).toHaveLength(g.lists[i]!.length);
+      });
+    }
+    expect(rowNormalised([1, 2, 3], [[2], [1], []])[2]).toEqual([0, 0, 0]);
+  });
+
+  it('one round is (1 − w) b⁽⁰⁾ + w S b, and zero rounds is b⁽⁰⁾', () => {
+    const b1 = averagingRound(rel.a, 0.5, rel.b0, rel.b0);
+    [0.65, 1 / 3, 0.8, 0.3, 0.325, 0.75].forEach((x, i) => expect(b1[i]).toBeCloseTo(x, 12));
+    expect(averagingRounds(rel.a, 0.5, rel.b0, 1)).toEqual(b1);
+    expect(averagingRounds(rel.a, 0.5, rel.b0, 0)).toEqual(rel.b0);
+  });
+
+  it('w = 0 moves nothing, at any t, on either graph', () => {
+    for (const g of [rel, every]) {
+      for (const t of [0, 1, 5, 40]) expect(averagingRounds(g.a, 0, g.b0, t)).toEqual(g.b0);
+      expect(fixedPoint(g.a, 0, g.b0)).toEqual(g.b0);
+    }
+  });
+
+  it('the fixed point solves (I − wS) b* = (1 − w) b⁽⁰⁾ and is where 2,000 rounds arrive, at every w below 1', () => {
+    for (const g of [rel, every]) {
+      for (const w of below1) {
+        const star = fixedPoint(g.a, w, g.b0)!;
+        const residual = star.map((x, i) =>
+          x - w * g.a[i]!.reduce((s, aij, j) => s + aij * star[j]!, 0) - (1 - w) * g.b0[i]!);
+        expect(maxDistance(residual, residual.map(() => 0)), `w = ${w}`).toBeLessThan(1e-12);
+        expect(maxDistance(averagingRounds(g.a, w, g.b0, 2000), star), `w = ${w}`).toBeLessThan(1e-12);
+      }
+    }
+  });
+
+  it('solves nothing at w = 1, where I − S is singular', () => {
+    expect(fixedPoint(rel.a, 1, rel.b0)).toBeNull();
+    expect(fixedPoint(every.a, 1, every.b0)).toBeNull();
+  });
+
+  it('never lets the distance exceed wᵗ‖b⁽⁰⁾ − b*‖∞, at every t from 0 to 40, every w below 1 and both graphs', () => {
+    for (const g of [rel, every]) {
+      for (const w of below1) {
+        const star = fixedPoint(g.a, w, g.b0)!;
+        const d0 = maxDistance(g.b0, star);
+        let b = [...g.b0];
+        for (let t = 0; t <= 40; t += 1) {
+          expect(maxDistance(b, star), `w = ${w}, t = ${t}`).toBeLessThanOrEqual(w ** t * d0 + 1e-12);
+          b = averagingRound(g.a, w, g.b0, b);
+        }
+      }
+    }
+  });
+
+  it('at w = 1 keeps the degree-weighted sum and reaches the degree-weighted mean', () => {
+    const d = rel.lists.map((l) => l.length);
+    const weighted = (b: number[]) => b.reduce((s, x, j) => s + d[j]! * x, 0);
+    let b = [...rel.b0];
+    for (let t = 0; t < 10; t += 1) {
+      b = averagingRound(rel.a, 1, rel.b0, b);
+      expect(weighted(b)).toBeCloseTo(6.1, 12);
+    }
+    for (const g of [rel, every]) {
+      const limit = degreeWeightedMean(g.lists, g.b0);
+      for (const x of averagingRounds(g.a, 1, g.b0, 2000)) expect(x).toBeCloseTo(limit, 9);
+    }
+  });
+
+  it('equal degrees suffice for the degree-weighted mean to be the plain mean, and are not necessary', () => {
+    expect(degreeWeightedMean(rel.lists, rel.b0)).toBeCloseTo(6.1 / 12, 12);
+    expect(mean(rel.b0)).toBeCloseTo(2.9 / 6, 12);
+    expect(degreeWeightedMean(every.lists, every.b0)).toBeCloseTo(mean(every.b0), 12);
+    // Unequal degrees (4, 3, 1, 1, 2, 1), mean degree 2, and the two means still agree: all the
+    // weight on the wrench, whose degree is the mean, gives Σⱼ (dⱼ − d̄) b⁽⁰⁾ⱼ = 0 and both 1 / 6.
+    const onWrench = [0, 0, 0, 0, 1, 0];
+    expect(degreeWeightedMean(rel.lists, onWrench)).toBeCloseTo(1 / 6, 12);
+    expect(mean(onWrench)).toBeCloseTo(1 / 6, 12);
+  });
+
+  it('degreeWeightedParts holds the numerator and denominator degreeWeightedMean divides', () => {
+    const relParts = degreeWeightedParts(rel.lists, rel.b0);
+    expect(relParts.weighted).toBeCloseTo(6.1, 12);
+    expect(relParts.degrees).toBe(12);
+    const everyParts = degreeWeightedParts(every.lists, every.b0);
+    expect(everyParts.weighted).toBeCloseTo(14.5, 12);
+    expect(everyParts.degrees).toBe(30);
+    for (const g of [rel, every]) {
+      const { weighted, degrees } = degreeWeightedParts(g.lists, g.b0);
+      expect(weighted / degrees).toBe(degreeWeightedMean(g.lists, g.b0));
+    }
+  });
+
+  it("gives spec §2's spreads and limits to four decimals", () => {
+    expect(spread(fixedPoint(rel.a, 0.5, rel.b0)!)).toBeCloseTo(0.3924, 4);
+    expect(spread(fixedPoint(rel.a, 0.9, rel.b0)!)).toBeCloseTo(0.1105, 4);
+    expect(spread(fixedPoint(every.a, 0.9, every.b0)!)).toBeCloseTo(0.0678, 4);
+    expect(maxDistance(rel.b0, fixedPoint(rel.a, 0.9, rel.b0)!)).toBeCloseTo(0.3659, 4);
+    expect(spread(averagingRounds(rel.a, 1, rel.b0, 20))).toBeCloseTo(0.0094, 4);
+    expect(spread(averagingRounds(rel.a, 1, rel.b0, 40))).toBeCloseTo(0.0002, 4);
+    expect(degreeWeightedMean(rel.lists, rel.b0)).toBeCloseTo(0.5083, 4);
+    expect(mean(rel.b0)).toBeCloseTo(0.4833, 4);
+  });
+
+  it('reaches b* in one round only when each node averages over itself too', () => {
+    // Spec §3's complete-graph case includes the node; T2's every pair excludes it (Review Focus 5).
+    const star = fixedPoint(every.a, 0.5, every.b0)!;
+    expect(maxDistance(averagingRounds(every.a, 0.5, every.b0, 1), star)).toBeCloseTo(0.0227, 4);
+    const withSelf = rel.ids.map(() => rel.ids.map(() => 1 / 6));
+    const once = averagingRounds(withSelf, 0.5, rel.b0, 1);
+    expect(maxDistance(once, fixedPoint(withSelf, 0.5, rel.b0)!)).toBeLessThan(1e-12);
+    expect(spread(once)).toBeCloseTo(0.5 * 0.8, 12);
+  });
+
+  it('spread is max − min, and the distance the max norm', () => {
+    expect(spread([0.2, 0.9, 0.5])).toBeCloseTo(0.7, 12);
+    expect(maxDistance([0.1, 0.5], [0.3, 0.4])).toBeCloseTo(0.2, 12);
+  });
+
+  it('prints a tie the same whichever side of it the arithmetic lands', () => {
+    expect(decimals(0.325, 2)).toBe('0.33');
+    expect(decimals(0.32499999999999996, 2)).toBe('0.33');
+    expect(decimals(0.1 + 0.2, 4)).toBe('0.3000');
+    expect(decimals(-0, 4)).toBe('0.0000');
   });
 });

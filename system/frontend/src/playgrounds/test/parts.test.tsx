@@ -19,9 +19,9 @@ function part(kp: string, n?: string, search = '') {
 const shown = (...ids: string[]) => ids.filter((id) => screen.queryByTestId(id) !== null);
 
 describe('a playground split across steps', () => {
-  it('registers the ten playgrounds too long for one panel, X1 in three parts and the rest in two', () => {
+  it('registers the eleven playgrounds too long for one panel, X1 in three parts and the rest in two', () => {
     expect(PLAYGROUND_PARTS).toEqual({
-      E1: 2, E10: 2, E3: 2, E4: 2, E7: 2, F1: 2, F3: 2, F6: 2, F7: 2, X1: 3,
+      E1: 2, E10: 2, E3: 2, E4: 2, E7: 2, F1: 2, F3: 2, F6: 2, F7: 2, T2: 2, X1: 3,
     });
   });
 

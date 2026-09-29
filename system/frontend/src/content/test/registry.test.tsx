@@ -209,6 +209,7 @@ describe('the playground step kind', () => {
     }
   });
 
+  // About 1.3 s alone, 5.6 to 8.9 s under CPU contention against vitest's 5000 ms default (D111: Tasks 1, 6, 7 and 8).
   it('M4 derives only what the engine and the definitions force', () => {
     // §2's five findings: s3's Worked step claimed X_k ⊆ X_k^ng from the constrained pool, where
     // only the pools nest (X ⊆ X^ng) and R@k ≤ ngR@k holds once k covers the unconstrained pool;
@@ -280,6 +281,110 @@ describe('the playground step kind', () => {
     expect(formulas.X2).toContain('m=\\lvert');
     for (const locale of ['en', 'zh-TW'] as const) {
       for (const step of getModule('m04', locale)!.filter((s) => s.kind === 'math')) {
+        const { container, unmount } = render(<>{step.node}</>);
+        expect(container.querySelector('.katex-error'), `${locale} ${step.id}`).toBeNull();
+        unmount();
+      }
+    }
+  }, 20_000);
+
+  it('M5 states the pair counts and the averaging rule its corpus and its derivation support', () => {
+    // Spec §2: s2 used GQA's 310 predicates, GQA's count in the anchor paper's Table 1, set against Visual Genome's relation rate, for "≈ 20 relations";
+    // s3's Formal line claimed consensus for every w > 0, its Worked step reached its fixed point in
+    // one round under a whole-graph mean, and its Implications wrote a non-expression and a per-step
+    // contraction that the checkpoint repeated.
+    const text = (file: string) => source(file).replace(/\s+/g, ' ');
+    for (const file of ['../m05.en.mdx', '../m05.zh-TW.mdx']) {
+      const m05 = text(file);
+      for (const present of [
+        '\\lvert\\mathcal{P}\\rvert=50\\ (\\text{VG150})',
+        '6{,}320\\cdot 50=316{,}000',
+        '651 \\text{ of } 26{,}282',
+        '(1-w)(I-wS)^{-1}\\,b^{(0)}',
+        '(I-wS)\\,b^{\\ast}=(1-w)\\,b^{(0)}',
+        '\\lVert b^{(t)}-b^{\\ast}\\rVert_\\infty\\le w^{t}\\,\\lVert b^{(0)}-b^{\\ast}\\rVert_\\infty',
+        'd^{\\top}S &= d^{\\top}',
+        'i \\text{ included}',
+        'w\\,\\overline{b}\\,\\mathbf{1}',
+        'data/predictions/',
+      ]) {
+        expect(m05, `${file}: ${present}`).toContain(present);
+      }
+      for (const absent of [
+        '\\lvert\\mathcal{P}\\rvert=310', '1{,}958{,}800', '\\approx 20', '(1-w^t)', 'per step',
+        'information destroyed', 'committed predictions', '{w>0}',
+        '(I-wA)', 'w\\,A\\,b', 'd^{\\top}A', '\\pi',
+      ]) {
+        expect(m05, `${file}: ${absent}`).not.toContain(absent);
+      }
+    }
+    expect(text('../m05.en.mdx')).not.toContain('hundred thousand');
+    expect(text('../m05.en.mdx')).toContain('odd cycle');
+    expect(text('../m05.zh-TW.mdx')).not.toMatch(/每十萬|每步收縮|既存預測/);
+    expect(text('../m05.zh-TW.mdx')).toContain('奇數長度迴路');
+    // The final review: s4's two w = 1 sentences made exact (equal degrees suffice and are not
+    // necessary; a bipartite component oscillates), s5's and s6's notes read the table's dip and the
+    // bound's equality at t = 0, s8 names the files reconstructions (PROVENANCE.md), and s3's note
+    // is written register.
+    const finalReview = {
+      '../m05.en.mdx': {
+        present: [
+          'which can differ from the plain mean when nodes have unequal numbers of neighbours',
+          'each component with an odd cycle settles on its own value',
+          'falls to 0.65 at t = 1 and settles near 0.70',
+          'never exceeds its bound, and equals it at t = 0',
+          "L4 shows reconstructions of Neural Motifs' and VCTree's published behaviour",
+        ],
+        absent: ['which differs from the plain mean', 'each component settles', 'falls from 0.90 to 0.70',
+          'stays under its bound', "runs these models' predictions"],
+      },
+      '../m05.zh-TW.mdx': {
+        present: ['若各節點之鄰居數不等，則可能與算術平均相異', '各含奇數長度迴路之連通分量各自收斂至其自身之數值',
+          '於 t = 1 降至 0.65，其後趨近 0.70', '且於 t = 0 時等於其界限',
+          'L4 將依 Neural Motifs 與 VCTree 已發表行為所重建之預測', '滑桿依物件數依序呈現 80 張影像'],
+        absent: ['即與算術平均相異', '上，各連通分量', '由 0.90 降至 0.70', '上述各模型之預測', '走過'],
+      },
+    };
+    for (const [file, { present, absent }] of Object.entries(finalReview)) {
+      for (const item of present) expect(text(file), `${file}: ${item}`).toContain(item);
+      for (const item of absent) expect(text(file), `${file}: ${item}`).not.toContain(item);
+    }
+    const mapPage = source('../../../../web/knowledge-map/index.html');
+    expect(mapPage).toContain('80\\cdot 79\\cdot 50=316{,}000');
+    expect(mapPage).not.toContain('1{,}958{,}800');
+    for (const locale of ['en', 'zh-TW'] as const) {
+      expect(getMeta('m05', locale)!.symbols!.map((s) => s.sym))
+        .toEqual(expect.arrayContaining(['S', '\\mathcal{N}(i)']));
+    }
+    // M7 quoted M5's old rate in its opening note and its first step, in both locales.
+    expect(text('../m07.en.mdx')).not.toContain('hundred thousand');
+    expect(text('../m07.en.mdx')).toContain('forty-five thousand');
+    expect(text('../m07.zh-TW.mdx')).not.toContain('十萬');
+    expect(text('../m07.zh-TW.mdx')).toContain('四萬五千');
+    // The harvest carries the corrected s2 and s3; the Formal line of s2 is unchanged.
+    const formulas = math as Record<string, string>;
+    const derivations = deriv as Record<string, string>;
+    expect(formulas.T1).toContain('N(N-1)\\lvert\\mathcal{P}\\rvert');
+    expect(formulas.T2).toContain('(I-wS)^{-1}');
+    expect(formulas.T2).not.toContain('information destroyed');
+    expect(derivations.T1).toContain('316{,}000');
+    expect(derivations.T1).not.toContain('310');
+    expect(derivations.T2).toContain('d^{\\top}S &= d^{\\top}');
+    for (const absent of ['(1-w^t)', 'per step']) expect(derivations.T2, absent).not.toContain(absent);
+    // The map's notes, read without the toy's controls (T1's slider still runs to 310, spec §8).
+    const map = source('../../../../web/knowledge-map/pg.js');
+    const t1 = /pg\(\{id:'T1'[\s\S]*?note_en:'((?:[^'\\]|\\.)*)',\s*note_zh:'((?:[^'\\]|\\.)*)'/.exec(map);
+    const t2 = /pg\(\{id:'T2'[\s\S]*?note_en:'((?:[^'\\]|\\.)*)',\s*note_zh:'((?:[^'\\]|\\.)*)'/.exec(map);
+    for (const note of [t1?.[1], t1?.[2]]) {
+      expect(note).toContain('316,000');
+      expect(note).not.toMatch(/310|GQA/);
+    }
+    expect(t2?.[1]).toContain('degree-weighted mean');
+    expect(t2?.[1]).not.toContain('converges to the graph mean');
+    expect(t2?.[2]).toContain('依分支度加權之平均');
+    expect(t2?.[2]).not.toContain('收斂到全圖平均');
+    for (const locale of ['en', 'zh-TW'] as const) {
+      for (const step of getModule('m05', locale)!.filter((s) => s.kind === 'math')) {
         const { container, unmount } = render(<>{step.node}</>);
         expect(container.querySelector('.katex-error'), `${locale} ${step.id}`).toBeNull();
         unmount();
@@ -766,6 +871,44 @@ describe('the playground step kind', () => {
     }
   });
 
+  it("the records carry D111 and M5's playgrounds", () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    const d111 = record(deviations, 'D111').replace(/\s+/g, ' ');
+    expect(deviations).toContain(
+      "## D111 — M5's playgrounds, T1 and T2, and the pair and averaging statements the corpus and the derivation contradicted",
+    );
+    expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 30. ');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 111, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 111, 'CLAUDE.md deviations');
+    expect(claude).toContain('§30 the M5 playgrounds');
+    expect(index).toContain('the M5 playgrounds (§30)');
+    atLeast(readme, /`npm run test:e2e` is (\d+)/, 83, 'README e2e');
+    atLeast(readme, /`npm run check:perf` is (\d+)/, 30, 'README perf');
+    // The corpus figures, the averaging values, where the branch was cut, and the data no commit shows.
+    for (const item of ['651', '26,282', '0.3924', '0.5083', '0.4833', 'dfe4dc4', 'D109', 'playground_golden.json', 'M7']) {
+      expect(d111, item).toContain(item);
+    }
+    // The final review. R2's wider rule is the contract's own, amended in place for the author's
+    // review, so CLAUDE.md and contracts §2.4 no longer disagree on what a playground computes.
+    const contracts = source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-contracts.md')
+      .replace(/\s+/g, ' ');
+    expect(contracts).toContain(
+      "[**Amended 2026-09-29 (D111), awaiting the author's review:** a playground may also show a value of the rule its step teaches",
+    );
+    expect(contracts).toContain('It still computes no metric.]');
+    // The NAS is one copy for every branch: what this branch's data does to `main`, and a revert.
+    expect(claude).toContain('**`data/` is one copy, shared by every branch and every checkout.**');
+    expect(index.replace(/\s+/g, ' ')).toContain('`main` before the merge fails `npm run ci`');
+    for (const item of ['§2.4 was amended in place', 'every branch', 'pg-T1-rank1', 'by hand', '86 tests', 'R11']) {
+      expect(d111, item).toContain(item);
+    }
+  });
+
   it('the records state as many playgrounds, uncovered live points and steps as the code holds', () => {
     // Taken from the mount table, the harvest and the modules, as the vectors' count is taken from
     // their file: a bound passes a count left stale (D104's branch review, D106).
@@ -831,6 +974,7 @@ describe('the playground step kind', () => {
     expect((deriv as Record<string, string>).F3).toContain('\\lambda>\\sqrt{2}');
   });
 
+  // About 0.6 s alone, 5.6 to 8.9 s under CPU contention against vitest's 5000 ms default (D111: Tasks 1, 6, 7 and 8).
   it('M4 carries E3, E4, E7, E13 and X2 directly after the steps that teach them', () => {
     const meta = getMeta('m04', 'en')!;
     const part = (n?: number) => (n === undefined ? '' : `.${n}`);
@@ -847,7 +991,7 @@ describe('the playground step kind', () => {
       expect(mounted.container.querySelector('[data-testid="playground-unknown"]')).toBeNull();
       mounted.unmount();
     }
-  });
+  }, 20_000);
 
   it('M3 carries E1 and E10, in two parts each, directly after the steps that teach them', () => {
     const meta = getMeta('m03', 'en')!;
@@ -865,6 +1009,21 @@ describe('the playground step kind', () => {
       's1:prose', 's2:math', 's3:playground/F3.1', 's4:playground/F3.2', 's5:prose', 's6:prose',
       's7:lab', 's8:checkpoint',
     ]);
+  });
+
+  it('M5 carries T1, and T2 in two parts, directly after the steps that teach them', () => {
+    const meta = getMeta('m05', 'en')!;
+    const part = (n?: number) => (n === undefined ? '' : `.${n}`);
+    expect(meta.steps.map((s) => `${s.id}:${s.kind}${s.kp ? `/${s.kp}${part(s.part)}` : ''}`)).toEqual([
+      's1:prose', 's2:math', 's3:playground/T1', 's4:math', 's5:playground/T2.1', 's6:playground/T2.2',
+      's7:prose', 's8:lab', 's9:checkpoint',
+    ]);
+    for (const step of getModule('m05', 'zh-TW')!.filter((s) => s.kind === 'playground')) {
+      const mounted = render(<MemoryRouter initialEntries={['/m/m05']}>{step.node}</MemoryRouter>);
+      expect(within(mounted.container).getByTestId('playground-frame')).toBeInTheDocument();
+      expect(mounted.container.querySelector('[data-testid="playground-unknown"]')).toBeNull();
+      mounted.unmount();
+    }
   });
 
   it('supplies Playground to every module body, so no MDX file imports it', () => {
