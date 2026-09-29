@@ -288,7 +288,7 @@ describe('the playground step kind', () => {
   });
 
   it('M5 states the pair counts and the averaging rule its corpus and its derivation support', () => {
-    // Spec §2: s2 used GQA's 310 predicates, which no source here states, for "≈ 20 relations";
+    // Spec §2: s2 used GQA's 310 predicates, GQA's count in the anchor paper's Table 1, set against Visual Genome's relation rate, for "≈ 20 relations";
     // s3's Formal line claimed consensus for every w > 0, its Worked step reached its fixed point in
     // one round under a whole-graph mean, and its Implications wrote a non-expression and a per-step
     // contraction that the checkpoint repeated.
@@ -303,7 +303,8 @@ describe('the playground step kind', () => {
         '(I-wS)\\,b^{\\ast}=(1-w)\\,b^{(0)}',
         '\\lVert b^{(t)}-b^{\\ast}\\rVert_\\infty\\le w^{t}\\,\\lVert b^{(0)}-b^{\\ast}\\rVert_\\infty',
         'd^{\\top}S &= d^{\\top}',
-        'S=\\tfrac{1}{n}\\mathbf{1}\\mathbf{1}^{\\top}',
+        'i \\text{ included}',
+        'w\\,\\overline{b}\\,\\mathbf{1}',
         'data/predictions/',
       ]) {
         expect(m05, `${file}: ${present}`).toContain(present);
@@ -311,12 +312,18 @@ describe('the playground step kind', () => {
       for (const absent of [
         '\\lvert\\mathcal{P}\\rvert=310', '1{,}958{,}800', '\\approx 20', '(1-w^t)', 'per step',
         'information destroyed', 'committed predictions', '{w>0}',
+        '(I-wA)', 'w\\,A\\,b', 'd^{\\top}A', '\\pi',
       ]) {
         expect(m05, `${file}: ${absent}`).not.toContain(absent);
       }
     }
     expect(text('../m05.en.mdx')).not.toContain('hundred thousand');
+    expect(text('../m05.en.mdx')).toContain('odd cycle');
     expect(text('../m05.zh-TW.mdx')).not.toMatch(/每十萬|每步收縮|既存預測/);
+    expect(text('../m05.zh-TW.mdx')).toContain('奇數長度迴路');
+    const mapPage = source('../../../../web/knowledge-map/index.html');
+    expect(mapPage).toContain('80\\cdot 79\\cdot 50=316{,}000');
+    expect(mapPage).not.toContain('1{,}958{,}800');
     for (const locale of ['en', 'zh-TW'] as const) {
       expect(getMeta('m05', locale)!.symbols!.map((s) => s.sym))
         .toEqual(expect.arrayContaining(['S', '\\mathcal{N}(i)']));

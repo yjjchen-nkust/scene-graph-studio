@@ -302,14 +302,18 @@ Opened for the M5 playgrounds (`docs/superpowers/specs/2026-09-29-playgrounds-m5
 read against `data/slices/vg150-sgb/annotations.json`, the vg150-sgb dataset card and M5's own
 derivation.
 
-**1 · T1 set N = 80 and |P| = 310, "GQA's 310 predicates", for "≈ 20 relations".** No source in
-this repository states 310. The course's anchor dataset is VG150, whose card states 50 predicate
-categories and, for its validation split, 5,000 images, 62,754 object annotations and 33,203
-relations: 12.6 objects and 6.6 relations per image. "≈ 20" is near the original Visual Genome's
-22 relationships per image (Xu et al. 2017, §4), not VG150's. M5 s2's Implications and DERIV.T1 now
-use |P| = 50: twelve objects give 132 ordered pairs and 6,600 decisions for about seven relations;
-80 boxes, a setting rather than a figure from a paper, give 6,320 pairs and 316,000 decisions; the
-80 bundled frames hold 651 related ordered pairs of 26,282. The T1 note says the same.
+**1 · T1 set N = 80 and |P| = 310, "GQA's 310 predicates", for "≈ 20 relations".** 310 is GQA's
+predicate count: the anchor paper's Table 1, which the map reproduces (`index.html:293`), gives
+GQA 310 predicates and 50.6 relations per image, and Visual Genome 21.4. The line set GQA's
+predicates against Visual Genome's relation rate. The course's anchor dataset is VG150, whose card
+states 50 predicate categories and, for its validation split, 5,000 images, 62,754 object
+annotations and 33,203 relations: 12.6 objects and 6.6 relations per image. "≈ 20" is near the
+original Visual Genome's 22 relationships per image (Xu et al. 2017, §4), not VG150's. M5 s2's
+Implications and DERIV.T1 now use |P| = 50: twelve objects give 132 ordered pairs and 6,600
+decisions for about seven relations; 80 boxes, a setting rather than a figure from a paper, give
+6,320 pairs and 316,000 decisions; the 80 bundled frames hold 651 related ordered pairs of 26,282.
+The T1 note says the same. Proposition 6 (`index.html` §2.10), in both languages, carried the same
+figures and now carries the s2 ones.
 
 **2 · T2's Formal line claimed b⁽ᵗ⁾ → mean(b⁽⁰⁾) for every w > 0.** For 0 ≤ w < 1 the rule
 b ↦ (1 − w)b⁽⁰⁾ + wSb, S row-normalised over the neighbours, is a contraction in the max norm with

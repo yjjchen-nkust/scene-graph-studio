@@ -47,6 +47,12 @@ pairs carrying at least one relation**: 2.5 per cent of pairs. Its frames carry 
 median 16; the largest, `3182`, has 39 objects, 1,482 ordered pairs, 45 relationship rows and 29
 related pairs. Computed from `data/slices/vg150-sgb/annotations.json` on 2026-09-29.
 
+[**Corrected 2026-09-29 (Task 1's review):** 310 is sourced. The anchor paper's Table 1, which the
+map reproduces (`index.html:293`), gives GQA 310 predicates and 50.6 relations per image, and
+Visual Genome 21.4; the old line set GQA's predicates against Visual Genome's relation rate. The
+correction to VG150's figures stands, for that reason rather than for a missing source. The map's
+Proposition 6 (§2.10) carried the same figures and is corrected with s2.]
+
 **T2.** Three statements disagree with one another.
 
 1. *The Formal line* (`m05.en.mdx:117`, `pg.js:369`, `kp.json` T2 `math`) writes the neighbourhood
