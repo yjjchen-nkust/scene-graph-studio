@@ -4946,12 +4946,15 @@ has no step-2 exchange and is unchanged. The script prints each old and new key,
 `m0-demo.json`.
 
 **The re-recording.** D-V was recorded again on `stamping-vlm` (`Qwen/Qwen3.8-27B`, D114's settings and
-per-call seed), 50 calls in 457.2 s, `m0-demo.json` 139,646 bytes. All 30 expert completions yield a non-empty
-`analysis_en` and a non-empty `analysis_zh` through `parse_analysis` (0 of 30 did before), so step 3 now
-receives the analyses. No predicate outside `P_ISG` appears in any of the 50 completions; the only
-out-of-vocabulary objects are `left_hand` and `right_hand` on `m0-demo-096` (twelve mentions, in the draft,
-the three revisions and the summary). Of the ten frames, the three revisions are pairwise different on three,
-exactly one pair coincides on six, and all three coincide on one (`m0-demo-092`). Two summaries repeat lines
-(`m0-demo-096`: 24 rows, 11 distinct; `m0-demo-102`: 41 rows, 10 distinct); `parse_triplets` keeps
-duplicates, and the demonstrations count rows and distinct triplets separately (Review Focus 5), so the
-recording is kept as the model produced it.
+per-call seed) twice: once under the prompt alone (superseded), and once more after `revision_text` (50 calls
+in 412.3 s; `m0-demo.json` 132,893 bytes). The step-1 and step-2 prompts did not change between the two, so the
+per-call seeds reproduced all 40 step-1 and step-2 completions byte for byte (40 of 40 identical, keys equal);
+only the ten step-3 calls differ, because their prompts now carry the revisions without the quoted triplets.
+All 30 expert completions yield a non-empty `analysis_en` and a non-empty `analysis_zh` through
+`parse_analysis` (0 of 30 before), so step 3 receives the analyses. No predicate outside `P_ISG` appears in any
+of the recorded completions; the only out-of-vocabulary objects are `left_hand` and `right_hand` on
+`m0-demo-096` (ten mentions under the fixed parse). Under the fixed parse the revisions hold 6 to 12 rows and no
+repeated row, and every summary has as many rows as distinct triplets (7 to 12; the repeated lines of the
+first recording's summaries, 24 rows on 096 and 41 on 102, came from the quoted triplets and are gone). Of the
+ten frames the three revisions are pairwise different on two (094, 098), exactly one pair coincides on six (088,
+090, 096, 102, 104, 106), and all three coincide on two (092, 100).
