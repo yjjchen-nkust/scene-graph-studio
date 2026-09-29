@@ -54,25 +54,25 @@ steps:
     demo: DT
     part: 1
     seconds_budget: 60
-    presenter_notes_en: "One minute. Play the clip once: 88 to 106 s of an IndustReal recording, in which a hand reaches for the axle, holds the wheel and the axle, inserts the axle into the wheel and attaches the wheel to the assembly. Then pick t₁, 90 s, on the ticks. Six boxes: the two `person` boxes are the hands, `cell phone`, `remote` and `toothbrush` lie on parts, and `donut` lies on the right hand. Read the right-hand column: only workbench has a COCO counterpart, `dining table`, which the detector never returns in these frames, and 11 of the 12 `O_ISG` classes have none. This is the closed vocabulary measured rather than argued: the detector cannot output axle, because axle is not among its classes. Over the ten frames it returns 52 boxes scoring at least 0.5, each under one of eight COCO labels."
+    presenter_notes_en: "One minute. Play the clip once: 88 to 106 s of an IndustReal recording, in which a hand reaches for the axle, holds the wheel and the axle, inserts the axle into the wheel and attaches the wheel to the assembly. Then pick t₁, 90 s, on the ticks. Six boxes: the two `person` boxes are the hands, `cell phone`, `remote` and `toothbrush` lie on parts, and `donut` lies on the right hand. Read the right-hand column: only workbench has a COCO counterpart, `dining table`, which the detector never returns in these frames, and 11 of the 12 `O_ISG` classes have none. This is the closed vocabulary measured rather than argued: the detector cannot output axle, because axle is not among its classes. Over the ten frames it returns 52 boxes scoring at least 0.5, each under one of eight COCO labels. If time is short, skip playing the clip and go straight to t₁'s boxes and the right-hand column."
   - id: s8
     kind: demo
     demo: DT
     part: 2
     seconds_budget: 60
-    presenter_notes_en: "One minute. The frame carries over from the previous step; stay on t₁. The grid is the n × n table with its diagonal struck out, and every ✓ is an ordered pair the next step must classify. The fourth readout sums the ten frames: 224 ordered pairs and 11,200 candidate triplets. The count grows with the square of the detections, as s5 showed on six objects; here the objects are hands and toy parts under COCO's names. Pick 92 s for one of the two smallest frames: 4 detections, 12 pairs, 600 candidates."
+    presenter_notes_en: "One minute. The frame carries over from the previous step; stay on t₁. The grid is the n × n table with its diagonal struck out, and every ✓ is an ordered pair the next step must classify. The fourth readout sums the candidates over the ten frames, 11,200; the 224 ordered pairs behind them, the sum of n(n − 1), are not on the panel. The count grows with the square of the detections, as s5 showed on six objects; here the objects are hands and toy parts under COCO's names. Pick 92 s for one of the two smallest frames: 4 detections, 12 pairs, 600 candidates."
   - id: s9
     kind: demo
     demo: DT
     part: 3
     seconds_budget: 60
-    presenter_notes_en: "One minute. The classifier is the FREQ baseline of Zellers et al. in form, counted over the slice's 80 frames and 892 relationship rows rather than over a training split; say so. It classified no pair in any frame, and all 224 took the fallback `on`. The panel counts the two causes. Over the ten frames, 166 pairs involve a detected class with no counterpart in the slice (`remote`, `donut`, `toothbrush`, `knife`), and 58 join two slice classes that its 80 frames never pair. In the right-hand table, `assembling`, `inserted into` and `reaching for` are not among the slice's predicates at all, so no prior counted over it could produce them; `holding`, `attached to` and `near` are, and the prior reached none of them."
+    presenter_notes_en: "One minute. The classifier is the FREQ baseline of Zellers et al. in form, counted over the slice's 80 frames and 892 relationship rows rather than over a training split; say so. It classified no pair in any frame, and all 224 took the fallback `on`. The panel counts the two causes for the chosen frame: at t₁, 24 pairs involve a detected class with no counterpart in the slice (`remote`, `donut`, `toothbrush`) and 6 join two slice classes that its 80 frames never pair. Over the ten frames, a total the panel does not show, the two are 166 and 58. The right-hand table marks which `P_ISG` predicates occur in D-T's output, and only `on` does. It does not show why the other six are absent, so say it: `assembling`, `inserted into` and `reaching for` are not among the slice's predicates, so no prior counted over it could produce them; `holding`, `attached to` and `near` are, and the prior reached none of them."
   - id: s10
     kind: demo
     demo: DT
     part: 4
     seconds_budget: 90
-    presenter_notes_en: "Ninety seconds. Walk the strip from left to right. Before each thumbnail, |Δ| over |∪| compares the frame's set of distinct class-level triplets with the previous frame's; two detections of one class name one triplet. From 88 to 90 s the set changes by 19 of 22, because `cell phone`, `donut` and `toothbrush` appear; from 104 to 106 s by 0 of 4, because both frames detect `person` and `remote`, each more than once. Neither figure says anything about the work of the hands: a D-T change is a change in what the detector named. Click 90 s to show the list beneath: 18 added and 1 removed, all `on`. Keep these figures for D-V's last step, where the same table stands beside D-V's."
+    presenter_notes_en: "Ninety seconds. Walk the strip from left to right. Before each thumbnail, |Δ| over |∪| compares the frame's set of distinct class-level triplets with the previous frame's; two detections of one class name one triplet. From 88 to 90 s the set changes by 19 of 22, because `cell phone`, `donut` and `toothbrush` appear and `remote` falls from 3 detections to 1; from 104 to 106 s by 0 of 4, because both frames detect `person` and `remote`, each more than once. Neither figure says anything about the work of the hands: a D-T change is a change in what the detector named. Click 90 s to show the list beneath: 18 added and 1 removed, all `on`. The one removal is ⟨remote, on, remote⟩, which needs two `remote` detections. Keep these figures for D-V's last step, where the same table stands beside D-V's."
   - id: s11
     kind: demo
     demo: DV
@@ -96,13 +96,13 @@ steps:
     demo: DV
     part: 4
     seconds_budget: 60
-    presenter_notes_en: "One minute. Read t₁'s summary, then pick others: the next step lists only the three keyframes, so the other seven summaries appear only here. The list is grouped by subject and carries no boxes, because the method returns no geometry. Over the ten frames the summary only removes rows from the draft. It adds none, keeps every triplet no expert deleted and drops every triplet two or three experts deleted; a triplet one expert deleted is dropped at 88, 102 and 106 s and kept at 94, 98 and 104 s, so the recording shows no fixed rule for a single dissent. In the table, D-V's summaries use all seven predicates of `P_ISG`, with `on` still the most frequent, and D-T's 224 rows are all `on`. Whether a triplet is true of the frame is for the room to judge; the demo computes no score."
+    presenter_notes_en: "One minute. Read t₁'s summary, then pick others: the next step lists only the three keyframes, so the other seven summaries appear only here. The list is grouped by subject and carries no boxes, because the method returns no geometry. Over the ten frames the summary only removes rows from the draft. It adds none, keeps every triplet no expert deleted and drops every triplet two or three experts deleted; a triplet one expert deleted is dropped at 88, 102 and 106 s and kept at 94, 98 and 104 s, so the recording shows no fixed rule for a single dissent. In the table, D-V's summaries use all seven predicates of `P_ISG`, with `on` still the most frequent, and D-T's 224 rows are all `on`. Whether a triplet is true of the frame is for the room to judge; the demo computes no score. If time is short, read t₁'s summary and the table, and leave the other frames."
   - id: s15
     kind: demo
     demo: DV
     part: 5
     seconds_budget: 120
-    presenter_notes_en: "Two minutes, and the step that needs the most care. The bands set out Figure 6's comparison on this clip: t₁, t₂ and t₃ at 90, 96 and 102 s, each triplet kept, added (solid blue rule) or removed (dotted rule). From t₁ to t₂, 2 triplets are kept, 8 added and 7 removed. Then the table: D-V's |Δ| exceeds D-T's on 6 of the 9 steps, and D-T's is 0 from 104 to 106 s. Say what this does and does not show. D-T changes only when the detector's labels change, so a low D-T figure means the detector named the same labels, not that the scene held still. D-V restates each frame from nothing: Eqs. (2) to (4) take the frame V_t alone, and no equation takes the frame before. Its fixed vocabulary keeps the words within O and P, with one exception: at 96 s the model wrote `left_hand` and `right_hand`, so the steps into and out of 96 s count a change of wording as well. Within the vocabulary the model may still name one part by two classes in two frames, and the table cannot tell that from a change of relation. Do not claim that IndVisSGG is temporally coherent: its equations do not provide it, and this is one recording on one clip, one seeded sample per call, from a model other than the paper's."
+    presenter_notes_en: "Two minutes, and the step that needs the most care. The bands set out Figure 6's comparison on this clip: t₁, t₂ and t₃ at 90, 96 and 102 s, each triplet kept, added (solid blue rule) or removed (dotted rule). From t₁ to t₂, 2 triplets are kept, 8 added and 7 removed. Then the table: D-V's |Δ| exceeds D-T's on 6 of the 9 steps, and D-T's is 0 from 104 to 106 s. Say what this does and does not show. D-T changes only when a label appears or disappears, or falls to a single detection or rises from one, as `remote` did at 90 s; a low D-T figure means the detector named the same labels, not that the scene held still. D-V restates each frame from nothing: Eqs. (2) to (4) take the frame V_t alone, and no equation takes the frame before. Its fixed vocabulary keeps the words within O and P, with one exception: at 96 s the model wrote `left_hand` and `right_hand`. That leaves 94 to 96 s unaffected, 15 of 16 either way, and raises 96 to 98 s: 11 of 14 as recorded, against 9 of 13 had the model written `hand`. Within the vocabulary the model may still name one part by two classes in two frames, and the table cannot tell that from a change of relation. Do not claim that IndVisSGG is temporally coherent: its equations do not provide it, and this is one recording on one clip, one seeded sample per call, from a model other than the paper's."
   - id: s16
     kind: lab
     lab: L1
@@ -255,7 +255,7 @@ Note what the reading is: *not recorded in E* and *false* are different claims. 
 
 ## A COCO detector on an assembly clip
 
-The detector knows only COCO's classes: the hands become `person`, the parts `remote`, `cell phone`, `toothbrush` and the like. Of the 12 `O_ISG` classes, 11 have none.
+The detector knows only COCO's classes: hands become `person`, parts `remote`, `cell phone`, `toothbrush` and the like. Of the 12 `O_ISG` classes, 11 have no COCO class.
 
 <Demo id="DT" part="1" />
 
@@ -295,7 +295,7 @@ Every D-T relation is `on` between two COCO labels, so its triplets change only 
 
 ## The TEC prompt of IndVisSGG
 
-IndVisSGG, the anchor paper's method, has a vision-language model write the triplets directly; its prompt names 12 object classes, 7 predicates and two examples.
+The paper's method has a vision-language model write triplets from 12 object classes, 7 predicates and two examples. This replays a model other than the paper's.
 
 <Demo id="DV" part="1" />
 
@@ -315,7 +315,7 @@ Step 1 is one call a frame: 10 triplets at t₁, where D-T enumerated 1,500 cand
 
 ## Three expert revisions
 
-Step 2 returns the draft to the model as three experts, with the frame and the criteria. Here the experts only delete, and 6 of their 30 revisions change nothing.
+Step 2 returns the draft to the model as three experts, with the frame and the criteria. In this recording the experts only delete, and 6 of their 30 revisions change nothing.
 
 <Demo id="DV" part="3" />
 

@@ -5,10 +5,10 @@ import math from '../../../../../data/content/math.json';
 import { render, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { KEYFRAME_IDS, TRADITIONAL, VLM } from '../../demos/data';
+import { KEYFRAME_IDS, TRADITIONAL, VLM, type Triplet } from '../../demos/data';
 import {
-  candidateTriplets, churn, countText, distinct, fallbackCauses, orderedPairs, rowChange, traditionalTriplets,
-  uncoveredClasses,
+  candidateTriplets, churn, countText, distinct, fallbackCauses, orderedPairs, outsideVocabulary, relationSources,
+  rowChange, traditionalTriplets, tripletKey, uncoveredClasses,
 } from '../../demos/logic';
 import { setLocale } from '../../i18n/useLocale';
 import { PLAYGROUND_MOUNTS, PLAYGROUND_PARTS } from '../../playgrounds/mounts';
@@ -1086,24 +1086,203 @@ describe('the demo step kind', () => {
     }
   }, 20_000);
 
-  it("M0's demo prose states only figures the recordings hold", () => {
-    // Spec §4: the prose and the notes are written from the recorded artefacts, and no figure in
-    // them is fixed before the run. So every Arabic number in the nine steps, body and presenter
-    // notes, in both locales, is one this test computes from the two recordings through
-    // `logic.ts`, or one of the references below, which are removed before the numbers are read.
+  /**
+   * What the two recordings hold, computed through `logic.ts`, for the two tests below. No figure
+   * here is typed from the prose: each is derived from `TRADITIONAL` and `VLM`.
+   */
+  const recorded = (() => {
     const P = TRADITIONAL.vg150_predicate_count;
     const frames = TRADITIONAL.frames;
     const n = frames.map((f) => f.detections.length);
     const relations = frames.map((f) => distinct(traditionalTriplets(f)));
     const summaries = VLM.frames.map((f) => distinct(f.summary));
+    // The terms of a summary outside O or P, per frame.
+    const outside = VLM.frames.map((f) => f.summary.flatMap((t) => {
+      const o = outsideVocabulary(t, VLM.O, VLM.P);
+      return [o.subject && t[0], o.predicate && t[1], o.object && t[2]].filter((x): x is string => Boolean(x));
+    }));
+    // The recording's two terms outside O (held to be the only ones, below), read as the O term
+    // they name, so the notes can state what the wording did to D-V's churn.
+    const asHand = (ts: readonly Triplet[]) => distinct(ts.map((t) =>
+      t.map((term) => (term === 'left_hand' || term === 'right_hand' ? 'hand' : term)) as unknown as Triplet));
     const between = relations.slice(1).map((_, i) => ({
       dt: churn(relations[i]!, relations[i + 1]!),
       dv: churn(summaries[i]!, summaries[i + 1]!),
+      dvAsHand: churn(asHand(summaries[i]!), asHand(summaries[i + 1]!)),
     }));
     const keyframes = KEYFRAME_IDS.map((id) => distinct(VLM.frames.find((f) => f.image_id === id)!.summary));
     const causes = frames.map((f) => fallbackCauses(f, TRADITIONAL.class_map));
     const revisions = VLM.frames.flatMap((f) => f.experts.map((e) => rowChange(f.draft, e.revision)));
-    const total = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+    // Per frame, each triplet exactly one expert deleted, and whether the summary kept it.
+    const single = VLM.frames.map((f) => distinct(f.draft)
+      .filter((t) => f.experts.filter((e) => !e.revision.some((r) => tripletKey(r) === tripletKey(t))).length === 1)
+      .map((t) => f.summary.some((r) => tripletKey(r) === tripletKey(t))));
+    return { P, frames, n, summaries, outside, between, keyframes, causes, revisions, single };
+  })();
+  const total = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+
+  /** A demo step's body (from its `<Step>` to its `</Step>`) or its presenter notes, in one locale. */
+  const stepText = (locale: 'en' | 'zh-TW', id: string, field: 'body' | 'notes') => {
+    if (field === 'notes') {
+      const step = getMeta('m00', locale)!.steps.find((s) => s.id === id);
+      return (locale === 'en' ? step?.presenter_notes_en : step?.presenter_notes_zh) ?? '';
+    }
+    const file = source(`../m00.${locale}.mdx`);
+    const start = file.indexOf(`<Step id="${id}">`);
+    return start === -1 ? '' : file.slice(start, file.indexOf('</Step>', start));
+  };
+
+  it("M0's demo prose states each figure where the recordings put it", () => {
+    // The membership test below admits any recorded figure anywhere, and nearly every integer up
+    // to 22 is one, so a permuted or misattributed small figure passes it, and a number written
+    // as a word is not read at all. Here each stated figure is read by its own sentence and held
+    // to the value that sentence names, in both locales.
+    const { P, frames, n, summaries, outside, between, keyframes, causes, revisions, single } = recorded;
+    const time = (i: number) => frames[i]!.t;
+    const t1 = frames.findIndex((f) => f.image_id === KEYFRAME_IDS[0]);
+    const first = between[0]!;
+    const last = between[between.length - 1]!;
+    // The recording's only out-of-vocabulary terms are the two `asHand` reads, on one frame.
+    expect([...new Set(outside.flat())].sort()).toEqual(['left_hand', 'right_hand']);
+    const withOutside = outside.flatMap((terms, i) => (terms.length > 0 ? [i] : []));
+    expect(withOutside).toHaveLength(1);
+    const oov = withOutside[0]!;
+    const into = between[oov - 1]!;
+    const out = between[oov]!;
+    // "Either way": the step into that frame counts the same whichever word the model wrote.
+    expect([into.dvAsHand.delta, into.dvAsHand.union]).toEqual([into.dv.delta, into.dv.union]);
+    // "One of the two smallest frames".
+    const smallest = n.indexOf(Math.min(...n));
+    expect(n.filter((k) => k === n[smallest])).toHaveLength(2);
+    const remote = (i: number) => frames[i]!.detections.filter((d) => d.label === 'remote').length;
+    const above = between.filter(({ dt, dv }) => dv.delta > dt.delta).length;
+    const drafts = VLM.frames.map((f) => f.draft.length);
+    const rows = summaries.map((s) => s.length);
+    const used = VLM.P.filter((p) => VLM.frames.some((f) => f.summary.some((t) => t[1] === p))).length;
+    const fallback = total(frames.map((f) => relationSources(f).fallback));
+    const dropped = VLM.frames.filter((_, i) => single[i]!.includes(false)).map((f) => f.t);
+    const kept = VLM.frames.filter((_, i) => single[i]!.includes(true)).map((f) => f.t);
+    const unchanged = revisions.filter((r) => r === 'identical').length;
+    const kf = churn(keyframes[0]!, keyframes[1]!);
+    const kfTimes = KEYFRAME_IDS.map((id) => frames.find((f) => f.image_id === id)!.t);
+    const classes = Object.keys(TRADITIONAL.o_isg_coco).length;
+    const uncovered = uncoveredClasses(TRADITIONAL.o_isg_coco).length;
+    const pairs1 = orderedPairs(n[t1]!);
+    const candidates1 = candidateTriplets(n[t1]!, P);
+    const draft1 = VLM.frames[t1]!.draft.length;
+    const sumPairs = total(n.map(orderedPairs));
+    const sumCandidates = total(n.map((k) => candidateTriplets(k, P)));
+    const unmapped = total(causes.map((c) => c.unmapped));
+    const unseen = total(causes.map((c) => c.unseen));
+    const calls = VLM.calls_per_frame * VLM.frames.length;
+
+    type Claim = [locale: 'en' | 'zh-TW', step: string, field: 'body' | 'notes', pattern: RegExp, expected: number[]];
+    const claims: Claim[] = [
+      // D-T part 1: O_ISG against COCO; t₁; the detections over the ten frames.
+      ['en', 's7', 'body', /Of the (\d+) `O_ISG` classes, (\d+) have no COCO class/, [classes, uncovered]],
+      ['zh-TW', 's7', 'body', /`O_ISG` 之 (\d+) 個類別中，(\d+) 個無對應之 COCO 類別/, [classes, uncovered]],
+      ['en', 's7', 'notes', /pick t₁, (\d+) s, on the ticks/, [time(t1)]],
+      ['zh-TW', 's7', 'notes', /選取 t₁（(\d+) s）/, [time(t1)]],
+      ['en', 's7', 'notes', /(\d+) of the (\d+) `O_ISG` classes have none/, [uncovered, classes]],
+      ['zh-TW', 's7', 'notes', /`O_ISG` 之 (\d+) 類中有 (\d+) 類無任何對應/, [classes, uncovered]],
+      ['en', 's7', 'notes', /returns (\d+) boxes scoring at least ([\d.]+)/, [total(n), TRADITIONAL.detector.threshold]],
+      ['zh-TW', 's7', 'notes', /共得 (\d+) 個分數不低於 ([\d.]+) 之框/, [total(n), TRADITIONAL.detector.threshold]],
+      // D-T part 2: pairs and candidates at t₁, over the ten frames, and at a smallest frame.
+      ['en', 's8', 'body', /any of VG-150's (\d+) predicates: at t₁ alone, (\d+) pairs and ([\d,]+) candidate/, [P, pairs1, candidates1]],
+      ['zh-TW', 's8', 'body', /VG-150 之 (\d+) 個 predicate[^。]*。僅 t₁ 一個影格即有 (\d+) 對、([\d,]+) 個候選/, [P, pairs1, candidates1]],
+      ['en', 's8', 'notes', /over the ten frames, ([\d,]+); the (\d+) ordered pairs/, [sumCandidates, sumPairs]],
+      ['zh-TW', 's8', 'notes', /候選三元組總和 ([\d,]+)；其所據之 (\d+) 個有序物件對/, [sumCandidates, sumPairs]],
+      ['en', 's8', 'notes', /Pick (\d+) s for one of the two smallest frames: (\d+) detections, (\d+) pairs, ([\d,]+) candidates/,
+        [time(smallest), n[smallest]!, orderedPairs(n[smallest]!), candidateTriplets(n[smallest]!, P)]],
+      ['zh-TW', 's8', 'notes', /選取 (\d+) s 可見偵測數最少之兩影格之一：(\d+) 個偵測、(\d+) 對、([\d,]+) 個候選/,
+        [time(smallest), n[smallest]!, orderedPairs(n[smallest]!), candidateTriplets(n[smallest]!, P)]],
+      // D-T part 3: the prior, the fallback, and its two causes at t₁ and over the ten frames.
+      ['en', 's9', 'body', /in (\d+) frames of VG-150[^.]*\. All (\d+) pairs took `on`/, [TRADITIONAL.prior.frames, fallback]],
+      ['zh-TW', 's9', 'body', /切片 (\d+) 個影格[^。]*。十個影格之 (\d+) 對全數取 `on`/, [TRADITIONAL.prior.frames, fallback]],
+      ['en', 's9', 'notes', /slice's (\d+) frames and (\d+) relationship rows/, [TRADITIONAL.prior.frames, TRADITIONAL.prior.rows]],
+      ['zh-TW', 's9', 'notes', /切片之 (\d+) 個影格與 (\d+) 筆關係/, [TRADITIONAL.prior.frames, TRADITIONAL.prior.rows]],
+      ['en', 's9', 'notes', /all (\d+) took the fallback/, [fallback]],
+      ['zh-TW', 's9', 'notes', /(\d+) 對全數取預設之 `on`/, [fallback]],
+      ['en', 's9', 'notes', /at t₁, (\d+) pairs involve [^;]*? and (\d+) join two slice classes/, [causes[t1]!.unmapped, causes[t1]!.unseen]],
+      ['zh-TW', 's9', 'notes', /t₁ 有 (\d+) 對含切片無對應之偵測類別[^，]*，(\d+) 對之兩類別皆屬切片/, [causes[t1]!.unmapped, causes[t1]!.unseen]],
+      ['en', 's9', 'notes', /the two are (\d+) and (\d+)/, [unmapped, unseen]],
+      ['zh-TW', 's9', 'notes', /總數分別為 (\d+) 與 (\d+)/, [unmapped, unseen]],
+      // D-T part 4: the first step's churn, its one removal, and the last step's.
+      ['en', 's10', 'notes', /From (\d+) to (\d+) s the set changes by (\d+) of (\d+)/, [time(0), time(1), first.dt.delta, first.dt.union]],
+      ['zh-TW', 's10', 'notes', /(\d+) 至 (\d+) s 間，\|Δ\| 為 (\d+)、\|∪\| 為 (\d+)/, [time(0), time(1), first.dt.delta, first.dt.union]],
+      ['en', 's10', 'notes', /`remote` falls from (\d+) detections to (\d+)/, [remote(0), remote(1)]],
+      ['zh-TW', 's10', 'notes', /`remote` 由 (\d+) 個偵測減為 (\d+) 個/, [remote(0), remote(1)]],
+      ['en', 's10', 'notes', /from (\d+) to (\d+) s by (\d+) of (\d+)/, [time(8), time(9), last.dt.delta, last.dt.union]],
+      ['zh-TW', 's10', 'notes', /(\d+) 至 (\d+) s 間分別為 (\d+) 與 (\d+)/, [time(8), time(9), last.dt.delta, last.dt.union]],
+      ['en', 's10', 'notes', /Click (\d+) s to show the list beneath: (\d+) added and (\d+) removed/,
+        [time(1), first.dt.added.length, first.dt.removed.length]],
+      ['zh-TW', 's10', 'notes', /點選 (\d+) s 以顯示下方清單：新增 (\d+)、移除 (\d+)/, [time(1), first.dt.added.length, first.dt.removed.length]],
+      // D-V part 1: the prompt's vocabularies.
+      ['en', 's11', 'body', /write triplets from (\d+) object classes, (\d+) predicates/, [VLM.O.length, VLM.P.length]],
+      ['zh-TW', 's11', 'body', /提示載明 (\d+) 個物件類別、(\d+) 個 predicate/, [VLM.O.length, VLM.P.length]],
+      // D-V part 2: one call's rows at t₁ against D-T's candidates; the range; the frame outside O.
+      ['en', 's12', 'body', /(\d+) triplets at t₁, where D-T enumerated ([\d,]+) candidates/, [draft1, candidates1]],
+      ['zh-TW', 's12', 'body', /t₁ 為 (\d+) 個，D-T 於同一影格則列舉 ([\d,]+) 個候選/, [draft1, candidates1]],
+      ['en', 's12', 'body', /only at (\d+) s/, [time(oov)]],
+      ['zh-TW', 's12', 'body', /僅見於 (\d+) s/, [time(oov)]],
+      ['en', 's12', 'notes', /Stay on t₁: (\d+) rows, against D-T's ([\d,]+) candidates/, [draft1, candidates1]],
+      ['zh-TW', 's12', 'notes', /維持 t₁：共 (\d+) 列，同一影格 D-T 則有 ([\d,]+) 個候選/, [draft1, candidates1]],
+      ['en', 's12', 'notes', /(\d+) to (\d+) rows over the ten frames/, [Math.min(...drafts), Math.max(...drafts)]],
+      ['zh-TW', 's12', 'notes', /十個影格介於 (\d+) 至 (\d+) 列/, [Math.min(...drafts), Math.max(...drafts)]],
+      ['en', 's12', 'notes', /(\d+) for the clip\. Then pick (\d+) s/, [calls, time(oov)]],
+      ['zh-TW', 's12', 'notes', /整段片段共 (\d+) 次。接著選取 (\d+) s/, [calls, time(oov)]],
+      // D-V part 3: the revisions that changed nothing.
+      ['en', 's13', 'body', /(\d+) of their (\d+) revisions change nothing/, [unchanged, revisions.length]],
+      ['zh-TW', 's13', 'body', /(\d+) 份修訂中有 (\d+) 份未作任何變更/, [revisions.length, unchanged]],
+      // D-V part 4: the summaries' size, the predicates they use, and the single dissents.
+      ['en', 's14', 'body', /into (\d+) to (\d+) triplets a frame[^.]*\. D-V's summaries use all (\d+)/,
+        [Math.min(...rows), Math.max(...rows), used]],
+      ['zh-TW', 's14', 'body', /彙整 (\d+) 至 (\d+) 個三元組[^。]*。十個影格中，D-V 用及 `P_ISG` 全部 (\d+) 個/,
+        [Math.min(...rows), Math.max(...rows), used]],
+      ['en', 's14', 'notes', /dropped at (\d+), (\d+) and (\d+) s and kept at (\d+), (\d+) and (\d+) s/, [...dropped, ...kept]],
+      ['zh-TW', 's14', 'notes', /於 (\d+)、(\d+)、(\d+) s 遭刪除，於 (\d+)、(\d+)、(\d+) s 則獲保留/, [...dropped, ...kept]],
+      ['en', 's14', 'notes', /D-T's (\d+) rows are all `on`/, [fallback]],
+      ['zh-TW', 's14', 'notes', /D-T 之 (\d+) 筆全數為 `on`/, [fallback]],
+      // D-V part 5: the steps where D-V's churn exceeds D-T's; the keyframes; the wording at 96 s.
+      ['en', 's15', 'body', /on (\d+) of the (\d+) steps/, [above, between.length]],
+      ['zh-TW', 's15', 'body', /之 (\d+) 步中，D-V 有 (\d+) 步變動大於 D-T/, [between.length, above]],
+      ['en', 's15', 'notes', /t₁, t₂ and t₃ at (\d+), (\d+) and (\d+) s/, kfTimes],
+      ['zh-TW', 's15', 'notes', /t₁、t₂、t₃ 分別為 (\d+)、(\d+)、(\d+) s/, kfTimes],
+      ['en', 's15', 'notes', /From t₁ to t₂, (\d+) triplets are kept, (\d+) added and (\d+) removed/,
+        [kf.kept.length, kf.added.length, kf.removed.length]],
+      ['zh-TW', 's15', 'notes', /t₁ 至 t₂ 保留 (\d+) 個、新增 (\d+) 個、移除 (\d+) 個/, [kf.kept.length, kf.added.length, kf.removed.length]],
+      ['en', 's15', 'notes', /exceeds D-T's on (\d+) of the (\d+) steps, and D-T's is (\d+) from (\d+) to (\d+) s/,
+        [above, between.length, last.dt.delta, time(8), time(9)]],
+      ['zh-TW', 's15', 'notes', /(\d+) 步中有 (\d+) 步 D-V 之 \|Δ\| 大於 D-T，且 D-T 於 (\d+) 至 (\d+) s 為 (\d+)/,
+        [between.length, above, time(8), time(9), last.dt.delta]],
+      ['en', 's15', 'notes', /as `remote` did at (\d+) s/, [time(1)]],
+      ['zh-TW', 's15', 'notes', /如 (\d+) s 之 `remote`/, [time(1)]],
+      ['en', 's15', 'notes', /at (\d+) s the model wrote `left_hand`/, [time(oov)]],
+      ['zh-TW', 's15', 'notes', /唯一例外為 (\d+) s 模型寫出 `left_hand`/, [time(oov)]],
+      ['en', 's15', 'notes', /leaves (\d+) to (\d+) s unaffected, (\d+) of (\d+) either way/,
+        [time(oov - 1), time(oov), into.dv.delta, into.dv.union]],
+      ['zh-TW', 's15', 'notes', /(\d+) 至 (\d+) s 不受影響，兩種寫法之 \|Δ\| 與 \|∪\| 皆為 (\d+) 與 (\d+)/,
+        [time(oov - 1), time(oov), into.dv.delta, into.dv.union]],
+      ['en', 's15', 'notes', /raises (\d+) to (\d+) s: (\d+) of (\d+) as recorded, against (\d+) of (\d+) had the model written `hand`/,
+        [time(oov), time(oov + 1), out.dv.delta, out.dv.union, out.dvAsHand.delta, out.dvAsHand.union]],
+      ['zh-TW', 's15', 'notes', /(\d+) 至 (\d+) s 則受影響，錄得 (\d+) 與 (\d+)，若模型寫為 `hand` 則為 (\d+) 與 (\d+)/,
+        [time(oov), time(oov + 1), out.dv.delta, out.dv.union, out.dvAsHand.delta, out.dvAsHand.union]],
+    ];
+    for (const [locale, step, field, pattern, expected] of claims) {
+      const where = `${locale} ${step} ${field}: ${pattern.source}`;
+      const match = pattern.exec(stepText(locale, step, field));
+      expect(match, where).not.toBeNull();
+      expect(match!.slice(1), where).toEqual(expected.map(countText));
+    }
+  });
+
+  it("M0's demo prose states only figures the recordings hold", () => {
+    // Spec §4: the prose and the notes are written from the recorded artefacts, and no figure in
+    // them is fixed before the run. So every Arabic number in the nine steps, body and presenter
+    // notes, in both locales, is one this test computes from the two recordings through
+    // `logic.ts`, or one of the references below, which are removed before the numbers are read.
+    // A backstop: the test above holds each figure to its own sentence.
+    const { P, frames, n, between, keyframes, causes, revisions } = recorded;
     const counts = (c: ReturnType<typeof churn>) =>
       [c.delta, c.union, c.kept.length, c.added.length, c.removed.length];
     const figures = [
@@ -1117,10 +1296,15 @@ describe('the demo step kind', () => {
       // O_ISG's classes and those COCO cannot name; the vocabularies the prompt carries.
       Object.keys(TRADITIONAL.o_isg_coco).length, uncoveredClasses(TRADITIONAL.o_isg_coco).length,
       VLM.O.length, VLM.P.length,
-      // Why D-T's pairs fell back, over the ten frames.
+      // How many detections carry each label, per frame.
+      ...frames.flatMap((f) => [...new Set(f.detections.map((d) => d.label))]
+        .map((label) => f.detections.filter((d) => d.label === label).length)),
+      // Why D-T's pairs fell back, per frame and over the ten frames.
+      ...causes.flatMap((c) => [c.unmapped, c.unseen]),
       total(causes.map((c) => c.unmapped)), total(causes.map((c) => c.unseen)),
-      // Churn between neighbouring frames, both pipelines; the steps, and those where D-V's exceeds D-T's.
-      ...between.flatMap(({ dt, dv }) => [...counts(dt), ...counts(dv)]),
+      // Churn between neighbouring frames, both pipelines, and D-V's with its two
+      // out-of-vocabulary terms read as `hand`; the steps, and those where D-V's exceeds D-T's.
+      ...between.flatMap(({ dt, dv, dvAsHand }) => [...counts(dt), ...counts(dv), ...counts(dvAsHand)]),
       between.length, between.filter(({ dt, dv }) => dv.delta > dt.delta).length,
       // From keyframe to keyframe, as D-V's part 5 marks them.
       ...keyframes.slice(1).flatMap((k, i) => counts(churn(keyframes[i]!, k))),
@@ -1145,16 +1329,13 @@ describe('the demo step kind', () => {
       [/GPT-4V|Qwen\/Qwen3\.8-27B/g, "a model's name"],
     ];
     for (const locale of ['en', 'zh-TW'] as const) {
-      const text = source(`../m00.${locale}.mdx`);
       const steps = getMeta('m00', locale)!.steps.filter((s) => s.kind === 'demo');
       expect(steps, locale).toHaveLength(9);
       let read = 0;
       for (const step of steps) {
-        const start = text.indexOf(`<Step id="${step.id}">`);
-        expect(start, `${locale} ${step.id}`).toBeGreaterThan(-1);
-        const body = text.slice(start, text.indexOf('</Step>', start));
-        const notes = (locale === 'en' ? step.presenter_notes_en : step.presenter_notes_zh) ?? '';
-        for (const [where, prose] of [['body', body], ['notes', notes]] as const) {
+        const body = stepText(locale, step.id, 'body');
+        expect(body, `${locale} ${step.id}`).not.toBe('');
+        for (const [where, prose] of [['body', body], ['notes', stepText(locale, step.id, 'notes')]] as const) {
           const rest = references.reduce((t, [pattern]) => t.replace(pattern, ' '), prose);
           const numbers = rest.match(/\d+(?:,\d{3})*(?:\.\d+)?/g) ?? [];
           read += numbers.length;
