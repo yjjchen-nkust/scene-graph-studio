@@ -4326,3 +4326,13 @@ dated records keep their text, and now read "present in `data/`".
   a diff or a review, and the NAS copy keeps no earlier version and propagates no deletion.
 - **Students.** README's student route begins from a clone; a student without the NAS has no
   `data/`.
+
+**Verification.** `git ls-files data` is empty at `cef5bf4`. A fresh worktree of that commit had
+no `data/`; `start.ps1 -SkipInstall` exited 1 naming `.\sync-data.ps1 -Pull`, before any install;
+the pull copied 257 files, 4.646 GB, every one identical by SHA-256 to this checkout's, with
+`git status` empty; and pytest there gave 287 passed and 7 skipped. `npm run ci` here exit 0 in
+eleven steps: 287 pytest and 7 skipped, 1019 vitest in 74 files (1018 before; the one added is
+this record's test), parity 21, i18n 380 keys, 786 modules built. The new records test failed on
+the missing heading before this record was written, and requires the `/data/` rule with no
+negation, no `data/` attribute rule and no attribute line that is not a rule, and the pull
+named in `start.ps1` before its first install.
