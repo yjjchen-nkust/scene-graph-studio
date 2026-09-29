@@ -212,3 +212,12 @@ def test_health_does_not_walk_the_prediction_tree(monkeypatch):
                         lambda model: calls.append(model) or [])
     registry.live_model_ids()
     assert calls == []
+
+
+def test_the_demo_predictions_pass_the_same_audit():
+    root = DATA_DIR / "demos" / "m0" / "traditional"
+    manifest = json.loads((DATA_DIR / "demos" / "m0" / "MANIFEST.json").read_text(encoding="utf-8"))
+    recorded = (DATA_DIR / "predictions" / "PROVENANCE.md").read_text(encoding="utf-8")
+    assert sorted(p.stem for p in root.glob("*.json")) == sorted(
+        f["image_id"] for f in manifest["frames"])
+    assert audit(root, recorded=recorded) == []

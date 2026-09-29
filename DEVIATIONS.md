@@ -4832,3 +4832,23 @@ replay of those ids is unaffected: it reads no frame, and the default provider i
 
 **Not checked.** The request shape follows the Claude API reference and is exercised against a
 fake `anthropic` module; the package is not installed on py12 and no live call was made.
+
+## D113 — the demonstrations' graphs carry `dataset: "mini-isg"`, and no `DatasetId` of their own
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Task 3. **Decisions:** none new. Branch `feat/m0-demos`.
+
+**What was done.** Every `SceneGraph` the M0 demonstrations record, the ten of D-T under
+`data/demos/m0/traditional/` and the drafts of D-V, carries `dataset: "mini-isg"`, though their frames
+`m0-demo-088` to `m0-demo-106` are not among the mini-ISG slice's own frames: they are other frames of an
+IndustReal recording, cut under the same licence finding (Apache-2.0, verified on the 4TU data record).
+
+**Why not a new `DatasetId`.** The literal is declared twice, in `app/schema.py` and in the TypeScript engine's
+types, and a new member would change both engines' schema and every exhaustive switch over it for graphs that no
+API serves: the datasets API serves the slices under `data/slices/`, and the demonstration frames are not a slice. The
+field states the domain (IndustReal assembly footage, the `O_ISG` vocabulary), which is what the other graphs of
+that value share. It does not state that the frame belongs to the 40-frame slice; `image_id` and the manifest
+of `data/demos/m0/` say which frames these are.
+
+**Consequence.** A reader that joins on `dataset == "mini-isg"` and then looks the `image_id` up in the slice's
+manifest will find no row for these ten. Nothing in the tree does that today; the demonstrations read their own
+manifest.
