@@ -4391,3 +4391,13 @@ the link and left the link. CLAUDE.md states it as a trap, and README where it d
 **Retired.** `sync-data.ps1` (D108): with no second copy there is nothing to keep in step. D108's
 records test no longer reads it, D109's asserts the link rather than the pull in `start.ps1`, and
 this record's test requires the script gone and `data/` a link.
+
+**Verification.** `npm run ci` exit 0 in eleven steps, every read of `data/` going through the
+link: 287 pytest and 7 skipped, 1020 vitest in 74 files (1019 before; the one added is this
+record's test), parity 21, i18n 380 keys, 786 modules built. `npm run test:e2e`, check 8 over
+the production build: 79 passed, among them "F1, F3, E3, E4 and E7 show their photographs, whole
+and on the screen" at all three resolutions, so the build takes the photographs from the NAS. A
+fresh worktree of this branch had no `data/`; `fetch-data.ps1` made the junction, read all seven
+datasets through it and left `git status` empty, and the helper then refused another target
+rather than moving the link. Removing that link left all 257 files on the NAS. The new records
+test failed on the missing heading before this record was written.
