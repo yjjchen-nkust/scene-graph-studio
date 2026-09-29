@@ -4958,3 +4958,52 @@ repeated row, and every summary has as many rows as distinct triplets (7 to 12; 
 first recording's summaries, 24 rows on 096 and 41 on 102, came from the quoted triplets and are gone). Of the
 ten frames the three revisions are pairwise different on two (094, 098), exactly one pair coincides on six (088,
 090, 096, 102, 104, 106), and all three coincide on two (092, 100).
+
+## D116 — the demos draw lists, numbers and one expert at a time where spec §4 names graphs, labels and all three
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Tasks 8 and 9. **Decisions:** none new. Branch `feat/m0-demos`.
+
+**Why.** Spec §4 names five renderings that do not fit a 1024×768 panel at the 18 px floor in 繁體中文, the
+state the projector suite holds every part to (D96). SVG text is scaled below the floor by its viewBox (D98),
+and a Cytoscape canvas takes a box of its own, so ten or three node-link drawings do not fit one panel. Each
+rendering below keeps what the spec's version shows, as counts, set memberships and set differences over the
+recording, and states it in DOM text at 18 px or more.
+
+- **T4, "the ten per-frame graphs as a strip".** D-T part 4 draws the ten frames as thumbnails in a grid of five
+  columns, each with |E_t| beneath it and, between neighbours, |Δ|, |∪| and their ratio (`—` where |∪| is 0).
+  Below, the chosen frame's distinct class-level triplets against the frame before: kept, `+` added on a solid
+  `blue-700` rule, `−` removed on a dotted `slate-700` rule.
+- **V5, "t1, t2 and t3 in Figure 6's style".** D-V part 5 lists the three keyframes' distinct summary triplets
+  in Figure 6's marks: in t₂ and t₃ each triplet is kept, `+` added on a solid `blue-700` rule or `−` removed on
+  a dotted `slate-700` rule, and a removed triplet is listed with the keyframe where it disappeared. The
+  keyframes are three bands, one above the other, each a flowing list as D-T part 4's is, **not three
+  columns**, which the plan's Task 9 names. At 18 px the t₂ column holds seventeen rows (its ten triplets and the
+  seven of t₁ it removed), 372 px tall, and the three columns take 742 px of the panel's 910 px. With the churn
+  table and the caption beneath them the part ran 193 px past 1024×768 in zh-TW; with the two beside them, the
+  table needed 232 px of a 156 px rail. Flowing, the three keyframes take twelve lines, and the churn of both
+  pipelines per step stands beneath as a table (|Δ| / |∪| over the ratio), with the caption beside it.
+- **V3, "each expert's revision".** D-V part 3 shows one expert at a time, chosen by `DV.expert` (`snap` onto 1
+  to 3). Three experts' lists and three analyses of up to 734 English characters each do not fit the panel
+  together.
+- **T3, "each pair's argmax predicate".** D-T part 3 carries no per-pair list. All 224 recorded relations took
+  the fallback `on`, since the prior's 80 frames hold none of the detected class pairs, so the list would repeat
+  one word n(n − 1) times; the two histograms and the counts of each fallback cause carry the same content.
+- **T1, "the frame with COCO boxes and labels".** D-T part 1 numbers each box with an HTML badge `#n` and names
+  every number in a legend `#n label score` beneath the photograph, as E10 does (D100). `label score` badges
+  overlapped in up to eight pairs at the default frame. `badgePlaces` sets each badge above its box, never
+  inside it, and no two overlap on the recording at 374, 398 or 538 px. **This is an exception to D100's rule
+  that a badge lies on the photograph:** a badge whose box's top is within one badge height of the frame's top
+  lies in a band one badge tall directly above the photograph (`dt-photo-band`), within the photograph's
+  horizontal extent; every other badge lies on the photograph. Task 11's badge assertion carries the exception.
+
+**D-V part 1's whole prompt.** The TEC prompt's 27 lines are taller than the panel at 18 px. They sit behind a
+`<details>` below the prompt's parts; opened, the whole prompt takes the parts' place and scrolls within its
+own box, so the part stays inside the panel open or closed.
+
+**Not resolved: the labels of the summary graph.** D-V part 4 draws step 3's summary through `SceneGraphView`
+(contracts §2.6), whose Cytoscape canvas sets node labels at 12 px and edge labels at 11 px and scales them by
+its fit zoom. Measured at 1024×768 (a 556 × 290 px box), the zoom is 0.66 to 1.21 over the ten frames, so the
+labels are drawn at about 8 to 15 px; at 1920×1080 it is 1.00 to 2.36. The 18 px floor is measured on DOM text
+and does not see a canvas. The part's caption and its predicate table are DOM text at 18 px, and part 5 lists
+the three keyframes' summary triplets as text. A label that holds on the projector needs a change to
+`SceneGraphView`, which L1 shares, and is left to the author.
