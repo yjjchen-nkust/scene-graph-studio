@@ -228,6 +228,23 @@ const PARTS = new Map(mountTable('PLAYGROUND_PARTS').map(([kp, n]) => [kp, Numbe
 const TAG = /<Playground\s+kp="([^"]+)"(?:\s+part="([^"]*)")?/g;
 const partText = (part) => (part === undefined ? '' : ` part ${part}`);
 
+// The registered demos, read from their own mount file for the same reason. `mounts.tsx` there
+// writes each table one entry to a line (two spaces, a two-letter id, a colon, the value, a comma)
+// and `demos/test/Demo.test.tsx` holds it to the pattern below; the two regexes must agree.
+const DEMOS_SOURCE = readFileSync('frontend/src/demos/mounts.tsx', 'utf-8');
+/** One exported object literal of the demo mount file, as `[id, value]` pairs, quotes stripped. */
+const demoTable = (name) =>
+  [...(DEMOS_SOURCE.match(new RegExp(`export const ${name}[^{]*\\{([^}]*)\\}`))?.[1] ?? '')
+    .matchAll(/^\s{2}([A-Z]{2}):\s*([^,\n]+)/gm)].map((m) => [m[1], m[2].replace(/['"]/g, '').trim()]);
+const DEMO_MOUNT_IDS = new Set(demoTable('DEMO_MOUNTS').map(([id]) => id));
+const DEMO_PARTS = new Map(demoTable('DEMO_PARTS').map(([id, n]) => [id, Number(n)]));
+const DEMO_ARTEFACTS = new Map(demoTable('DEMO_ARTEFACTS'));
+/** `<Demo id="…" part="…" />`, the part read as written so that a missing one is a mismatch. */
+const DEMO_TAG = /<Demo\s+id="([^"]+)"(?:\s+part="([^"]*)")?/g;
+const demoTagsOf = (text) =>
+  [...text.matchAll(DEMO_TAG)].map((m) => ({ id: m[1], part: m[2] === undefined ? undefined : Number(m[2]) }));
+const demoTagText = (id, part) => `<Demo id="${id}"${part === undefined ? '' : ` part="${part}"`} />`;
+
 const PLAYGROUND_GOLDEN = JSON.parse(
   readFileSync('../data/content/playground_golden.json', 'utf-8'),
 );
@@ -321,6 +338,8 @@ const glosses = new Map();
 // per-module because it reads one module's body, and on its own it would pass two modules that
 // each cite the same point and each mount it.
 const mountedBy = new Map();
+// The same, for demos: which steps carry each demo id, corpus-wide.
+const demoUses = new Map();
 for (const [id, locales] of [...modules].sort()) {
   // Both locales, or neither. NFR-6: a half-translated build must not look finished.
   for (const locale of LOCALES) {
@@ -360,12 +379,17 @@ for (const [id, locales] of [...modules].sort()) {
       // at the same position. Divergence here puts a different playground on the projector when
       // the lecturer switches language mid-class, which the step-id check above cannot see.
       for (let i = 0; i < Math.min(a.length, b.length); i += 1) {
-        if (a[i].kind === 'playground' || b[i].kind === 'playground') {
-          if (a[i].kind !== b[i].kind || a[i].kp !== b[i].kp || a[i].part !== b[i].part) {
-            const show = (s) => `${s.kind}/${s.kp ?? '\u2014'}${partText(s.part)}`;
+        // A demo is held to the same rule and by the same comparison, with its own key: it names
+        // its component by `demo`, where a playground names it by `kp`.
+        const shows = ['playground', 'demo'].filter((k) => a[i].kind === k || b[i].kind === k);
+        if (shows.length) {
+          if (a[i].kind !== b[i].kind || a[i].kp !== b[i].kp || a[i].demo !== b[i].demo ||
+              a[i].part !== b[i].part) {
+            const show = (s) => `${s.kind}/${s.kp ?? s.demo ?? '\u2014'}${partText(s.part)}`;
+            const noun = shows.includes('demo') ? 'demo' : 'playground';
             problems.push(`${id}: step '${a[i].id}' is ${show(a[i])} in ` +
                           `${LOCALES[0]} and ${show(b[i])} in ${LOCALES[1]}. ` +
-                          `A playground must be the same playground in both languages.`);
+                          `A ${noun} must be the same ${noun} in both languages.`);
           }
         }
       }
@@ -405,6 +429,51 @@ for (const [id, locales] of [...modules].sort()) {
           `${file}: step '${step.id}' has no ${NOTES[locale]}. Every step carries presenter ` +
             `notes; a new module writes its own rather than shipping an empty notes pane.`,
         );
+      }
+
+      // The demo contract, contracts §2.4 as amended for the `demo` kind. Five rules, each with
+      // the clause it enforces in its message; the corpus-wide ones (3 and 4) run after the walk.
+      if (step.kind === 'demo') {
+        // Rule 1: a demo names a registered demo and an integer part. A registered demo is a key
+        // of DEMO_MOUNTS or of DEMO_PARTS: the mounts are registered after the parts exist.
+        const registered = DEMO_MOUNT_IDS.has(step.demo) || DEMO_PARTS.has(step.demo);
+        if (!step.demo) {
+          problems.push(`${file}: step '${step.id}' is a demo and names no demo. Rule 1 of the ` +
+                        `demo step kind requires one.`);
+        } else if (!registered) {
+          problems.push(`${file}: step '${step.id}' names demo '${step.demo}', which is in neither ` +
+                        `DEMO_MOUNTS nor DEMO_PARTS in frontend/src/demos/mounts.tsx (rule 1)`);
+        }
+        if (!Number.isInteger(step.part)) {
+          problems.push(`${file}: step '${step.id}' is a demo and names no integer part. Rule 1 of ` +
+                        `the demo step kind requires one.`);
+        }
+
+        // Rule 5: the time the step is given, which the lecturer sees on the pacing bar.
+        if (typeof step.seconds_budget !== 'number' || !(step.seconds_budget > 0)) {
+          problems.push(`${file}: step '${step.id}' is a demo and declares no seconds_budget ` +
+                        `(rule 5): a positive number of seconds is required.`);
+        }
+
+        // Rule 2, the step's direction: exactly one <Demo>, and it is this step's demo and part.
+        const inStep = demoTagsOf(stepBody(body, step.id));
+        if (inStep.length !== 1 || inStep[0].id !== step.demo || inStep[0].part !== step.part) {
+          const carried = inStep.map((t) => `${t.id}${partText(t.part)}`).join(', ');
+          problems.push(`${file}: step '${step.id}' declares demo '${step.demo}'${partText(step.part)} ` +
+                        `but its body carries ${inStep.length === 0 ? 'no <Demo>' : carried} ` +
+                        `(rule 2). Frontmatter and body disagreeing is the defect this catches.`);
+        }
+
+        // Rule 3's evidence. One entry per module and step, not per locale, as for playgrounds.
+        if (step.demo) {
+          const uses = demoUses.get(step.demo) ?? new Map();
+          if (!uses.has(`${meta.id}:${step.id}`)) {
+            uses.set(`${meta.id}:${step.id}`, {
+              module: meta.id, id: step.id, index: meta.steps.indexOf(step), part: step.part,
+            });
+          }
+          demoUses.set(step.demo, uses);
+        }
       }
 
       // The playground contract, contracts §2.4. A playground is the one step kind whose
@@ -489,6 +558,21 @@ for (const [id, locales] of [...modules].sort()) {
         if (!declared.has(tag)) {
           problems.push(`${file}: the body mounts ${tag}, which no step in ` +
                         `this module's frontmatter declares. Every playground is a step.`);
+        }
+      }
+    }
+
+    // Rule 2, the body's direction: every `<Demo>` answers to a declared step. A tag belonging to
+    // no step renders on a slide that never asked for it, or on every slide when it sits outside
+    // every `<Step>`, and the per-step rule above only ever looks for its own step's tag.
+    {
+      const declaredDemos = new Set(
+        (meta.steps ?? []).filter((s) => s.kind === 'demo' && s.demo).map((s) => demoTagText(s.demo, s.part)),
+      );
+      for (const tag of new Set(demoTagsOf(body).map((t) => demoTagText(t.id, t.part)))) {
+        if (!declaredDemos.has(tag)) {
+          problems.push(`${file}: the body mounts ${tag}, which no step in this module's ` +
+                        `frontmatter declares (rule 2). Every demo part is a step.`);
         }
       }
     }
@@ -586,6 +670,54 @@ for (const [kp, uses] of [...mountedBy].sort()) {
         `${inOrder.map((u) => `${u.module}:${u.id} (${u.part ?? '—'})`).join(', ')}. Its parts ` +
         `are ${parts} consecutive steps of one module, in order (contracts §2.4).`,
     );
+  }
+}
+
+// A demo's parts are 1 to DEMO_PARTS[id], on consecutive steps of one module, in order (rule 3),
+// and its recorded artefact exists under data/ with a provenance object (rule 4). Judged after
+// every module has been walked, because no single module's body can see another's.
+for (const [demo, uses] of [...demoUses].sort()) {
+  const parts = DEMO_PARTS.get(demo);
+  if (parts === undefined) {
+    problems.push(`demo '${demo}' has no entry in DEMO_PARTS, so its parts cannot be counted (rule 3)`);
+  } else {
+    const inOrder = [...uses.values()].sort(
+      (x, y) => (x.module < y.module ? -1 : x.module > y.module ? 1 : x.index - y.index),
+    );
+    const [first] = inOrder;
+    const whole = inOrder.length === parts && inOrder.every(
+      (u, i) => u.module === first.module && u.index === first.index + i && u.part === i + 1,
+    );
+    if (!whole) {
+      problems.push(
+        `demo '${demo}' has ${parts} parts and is mounted as ` +
+          `${inOrder.map((u) => `${u.module}:${u.id} (${u.part ?? '—'})`).join(', ')}. Its parts ` +
+          `are ${parts} consecutive steps of one module, in order (rule 3).`,
+      );
+    }
+  }
+
+  const artefact = DEMO_ARTEFACTS.get(demo);
+  let defect = null;
+  if (!artefact) {
+    defect = 'DEMO_ARTEFACTS names no artefact for it';
+  } else if (!existsSync(`../data/${artefact}`)) {
+    defect = `its artefact data/${artefact} does not exist`;
+  } else {
+    let recorded = null;
+    try {
+      recorded = JSON.parse(readFileSync(`../data/${artefact}`, 'utf-8'));
+    } catch {
+      defect = `its artefact data/${artefact} is not JSON`;
+    }
+    const p = recorded?.provenance;
+    if (!defect && (typeof p !== 'object' || p === null || Array.isArray(p))) {
+      defect = `its artefact data/${artefact} carries no provenance object`;
+    }
+  }
+  if (defect) {
+    problems.push(`demo '${demo}': ${defect} (rule 4). A demo replays a recording and says where ` +
+                  `the recording came from.`);
   }
 }
 
