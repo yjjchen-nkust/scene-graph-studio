@@ -106,10 +106,10 @@ describe('T1', () => {
     }
   });
 
-  it('says the slice ships no photograph', () => {
+  it('says why the slice shows no photograph: its photographs are not licensed for distribution', () => {
     renderAt('/m/m05');
     expect(screen.getByTestId('t1-source')).toHaveTextContent(
-      'The 80 VG150 frames of data/slices/vg150-sgb, annotations only; no photograph ships with them.',
+      'The 80 VG150 frames of data/slices/vg150-sgb, annotations only on this page; their photographs are not licensed for distribution (data/LICENCES.md).',
     );
     expect(screen.getByTestId('playground-frame').querySelector('img')).toBeNull();
   });
@@ -120,6 +120,9 @@ describe('T1', () => {
     expect(screen.getByTestId('readout-T1.objects')).toHaveTextContent('影像 547，80 張中第 40 名');
     expect(screen.getByTestId('readout-T1.decisions')).toHaveTextContent('VG150 之 50 個 predicate');
     expect(screen.getByTestId('readout-T1.related')).toHaveTextContent('占有序配對之 5 / 240');
+    expect(screen.getByTestId('t1-source')).toHaveTextContent(
+      'data/slices/vg150-sgb 之 80 張 VG150 影像，本頁僅用其標註；其照片未獲授權散布（data/LICENCES.md）。',
+    );
   });
 
   it('takes no focus on mount', () => {

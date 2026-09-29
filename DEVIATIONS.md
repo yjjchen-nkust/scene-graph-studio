@@ -4416,7 +4416,7 @@ averaging, not as IMP's update, which is learned. Execution by subagents under a
 Branch `feat/playgrounds-m5`, from `main` at `dfe4dc4`; the spec is its first commit, `57e678b`,
 and the plan with the spec's amendments is `45e283e`.
 
-**The controller's rulings, 2026-09-29.** The ledger records ten, each with its cost.
+**The controller's rulings, 2026-09-29.** The ledger records eleven, each with its cost.
 - *R1, the averaging matrix is S.* The spec and the plan's first draft wrote A, which M2's symbol
   table defines as area, A(·) (`m02.en.mdx:15`). Every displayed string writes S: the MDX, the symbol table, the
   map's notes, `FROZEN.md`, the golden `why` texts and this record. Code identifiers that are not
@@ -4428,9 +4428,9 @@ and the plan with the spec's amendments is `45e283e`.
   set membership or a value of the rule its step teaches, never a metric". The M0 playground
   design's §1 allows "a quantity its own definition contains", and each of T2's values is a
   quantity T2's definition contains; no recall, mean recall or score is shown, and neither T1 nor
-  T2 imports anything from `sgg-metrics`. Contracts §2.4 keeps its narrower wording, "a count, a
-  bound or a set membership that its own knowledge point's definition contains"; whether it widens
-  as CLAUDE.md did is left to the author.
+  T2 imports anything from `sgg-metrics`. Contracts §2.4, which CLAUDE.md calls normative, said
+  only "a count, a bound or a set membership that its own knowledge point's definition contains";
+  on the final review's ruling (R11) §2.4 was amended in place and awaits the author's review.
 - *R3, the spec amended before the build* (`45e283e`): the complete-graph case of s3's
   Implications names the node itself (below); the limit is written Σⱼ dⱼ b⁽⁰⁾ⱼ / Σⱼ dⱼ, not with
   π, which M4's table defines as the map from a triplet to its pair; M7 is corrected with M5
@@ -4448,6 +4448,14 @@ and the plan with the spec's amendments is `45e283e`.
   updated here.
 - *R10, a measured timeout for two M4 tests.* Given when this record's gate failed six times on
   vitest's default timeout under contention (below).
+- *R11, contracts §2.4 amended in place* (the final review, below). The review found CLAUDE.md,
+  after R2, and §2.4 disagreeing on what a playground computes, with T2 conforming to the one that
+  does not govern. §2.4 now carries an amendment in the form D105 used: [**Amended 2026-09-29
+  (D111), awaiting the author's review:** a playground may also show a value of the rule its step
+  teaches, as T2 shows the course's own averaging rule on six beliefs; the playground design's §1
+  allows "a quantity its own definition contains". It still computes no metric.] The alternative,
+  rejecting R2 and reducing T2 to its bound, was the larger change. The cost: the contract carries a sentence
+  the assistant wrote, marked as awaiting the author's review.
 
 **Spec §2's findings, read on 2026-09-29.**
 - *T1.* s2 and the map (`pg.js`, DERIV.T1 and the T1 note) set N = 80 and |P| = 310, "GQA's 310
@@ -4494,8 +4502,8 @@ review round, `b6c3d8a`). The step ids are those before the insertion below.
   w < 1 and its consensus at w = 1. The Worked step derives the fixed point, ‖wS‖∞ ≤ w, the
   contraction bound, dᵀS = dᵀ at w = 1 and the degree-weighted mean. The Implications state the
   complete-graph case with the node included, say where w = 1 converges, can oscillate or settles
-  per component, and say that IMP's update is learned and this rule models averaging. The
-  presenter note loses "per step".
+  per component with an odd cycle, and say that IMP's update is learned and this rule models
+  averaging. The presenter note loses "per step".
 - *s6*, the checkpoint, asks about the collapse at w = 1; its presenter note keeps its acceptable
   answers. *s5* says that L4 runs these models' predictions, stored in `data/predictions/`, where it
   said "the committed predictions": nothing under `data/` is committed since D109.
@@ -4565,8 +4573,8 @@ None of the thirteen imports anything from `sgg-metrics`.
   at w = 0.5 stands 0.0227 from b* after one round. The fixed point agrees with 2,000 rounds of
   the rule to within 10⁻¹² at every w on the knob below 1, on both graphs, and the distance stays
   within its bound at every t from 0 to 40, at every such w, on both graphs. Every value agreed
-  with the spec on its first run. The logic suite went from 90 tests to 104, and to 105 with T2's
-  review.
+  with the spec on its first run. The logic suite went from 86 tests at `dfe4dc4` to 105 at the
+  branch's tip, 19 added: 18 in Task 2 and one in T2's review.
 
 **The two playgrounds**, each computing and neither scoring.
 - *T1*, "Pairs against relations" / 「配對數與關係數之對照」, at s3, after s2 (`36d47d5`).
@@ -4574,7 +4582,8 @@ None of the thirteen imports anything from `sgg-metrics`.
   N, N(N − 1) ordered pairs, N(N − 1) · 50 decisions through `candidateSpace` and E10's
   `VG150_PREDICATES`, the frame's relationship rows, its related ordered pairs as a ratio of counts,
   and the slice's 651 / 26,282, which no knob moves; and a line naming the source. It draws no
-  photograph, since the slice ships none, and no SVG. At rank 2 it shows 7 / 12, never 18 / 12.
+  photograph, since the slice's photographs are not licensed for distribution (`data/LICENCES.md`),
+  and no SVG. At rank 2 it shows 7 / 12, never 18 / 12.
 - *T2*, "Beliefs under averaging", at s5 and s6, after s4 (`41259b0`, `4ee8c89`, `c8ff2aa`).
   `BeliefsUnderAveraging`: `T2.graph`, a choice of the relations or every pair; `T2.w`, a slider
   from 0 to 1 in steps of 0.05, default 0.5; `T2.t`, a slider from 0 to 40, default 0. A regime
@@ -4683,6 +4692,20 @@ T1 at 34.9 ms, 2.0 ms above its 32.9 ms two-frame floor, and T2 at 33.1 ms, 0.2 
   `pg-T2-every-w1-t5`. Their full text is the plan's Task 6 Step 1, which the eleven cases on the
   NAS equal as parsed JSON, compared for this record; Task 6's report carries them verbatim too.
   The file stays LF.
+- *One copy for every branch* (the final review). `data/` is one copy on the NAS, read by every
+  branch and every checkout. This branch's golden cases, the eleven above, and its harvest are
+  already there, so `main` before the merge fails `npm run ci` against the NAS: content lint
+  refuses each of the eleven with "golden case for 'T1', which has no registered component", or
+  'T2' (`content_lint.mjs:271-273` at `dfe4dc4`, where `mounts.tsx` registers neither), and the
+  golden test fails "every case is run by exactly one block" at `pg-T1-rank1`. Running `main`'s harvest rewrites `kp.json`,
+  `math.json` and `deriv.json` on the NAS with M5's old text, after which this branch's corrections
+  test fails until its own harvest runs again. A revert after the merge needs the eleven cases
+  deleted from `data/content/playground_golden.json` by hand and `npm run harvest` run on the
+  reverted tree. As far as the records show, this is the first branch since D109 to change
+  `data/content/`, and so the first whose data breaks another branch's gate. The rule it leaves,
+  stated in CLAUDE.md's traps: a branch that changes `data/` changes it for every branch at once;
+  merge it promptly, and do not run another branch's gate or harvest in between. Versioning
+  `data/content/` would remove the hazard, and is the author's decision under D109.
 - The implementers' reports are under `.superpowers/sdd/2026-09-29-playgrounds-m5/` at the
   WekaExt root, which git ignores; the plan and the spec are committed.
 
@@ -4711,12 +4734,37 @@ the command line vitest passed 1079 of 1079, the two at 187 and 2,077 ms.
   and 5,173 ms. Three of those four times exceed the default. It passed again on this commit's
   final text.
 
-**Four minor findings of the reviews are deferred to the author.**
-- Two titles in `logic.test.ts` keep the old letter, "(I − wA) b*" and "I − A is singular". They
-  are not displayed, and the plan's snippet carried them.
-- `logic.ts`'s comment on `degreeWeightedMean` says that the two means agree "only when" every
-  degree is equal; equal degrees suffice and are not necessary. T2's review corrected the same
-  sentence in the component's comment, not in this one.
+**The final review** (`dfe4dc4..ddc495e`, 3 Important and 9 Minor findings, all fixed in one
+commit on the controller's rulings).
+- *§2.4* amended in place (R11, above), and the records test requires the amendment's text.
+- *The shared NAS data* recorded above, in INDEX's M5 paragraph and in CLAUDE.md's traps.
+- *Two displayed w = 1 sentences made exact,* in s4's Implications in both locales: the
+  degree-weighted mean "can differ from the plain mean when nodes have unequal numbers of
+  neighbours" (若各節點之鄰居數不等，則可能與算術平均相異), where it said "differs", since equal
+  degrees are sufficient and not necessary; and on a disconnected graph "each component with an
+  odd cycle settles on its own value" (各含奇數長度迴路之連通分量各自收斂至其自身之數值), since a
+  bipartite component oscillates. The same sufficiency, stated as necessity, was corrected in
+  `logic.ts`'s comment on `degreeWeightedMean` (which also claimed convergence "on any graph
+  without isolated nodes"), in `M5/beliefs.ts`'s comment on `M5_B0`, in the `logic.test.ts` title
+  "only on the regular graph", which now carries a counterexample with unequal degrees, and in spec
+  §2 by a dated note. The two `logic.test.ts` titles that kept the old letter now read
+  "(I − wS) b*" and "I − S is singular". `M5/pairs.ts` no longer says that 547 carries fewer
+  objects than 1246: both carry 16, and the tie is broken by image id as a number. The display
+  math, `pg.js` and the harvest are unchanged.
+- *The notes and the copy.* s5's note says the table falls to 0.65 at t = 1 and settles near 0.70;
+  s6's English note says the distance never exceeds its bound and equals it at t = 0, and its
+  繁體中文 note gains the same equality; s3's 繁體中文 note reads 依序呈現. s8 says that L4 shows
+  reconstructions of Neural Motifs' and VCTree's published behaviour: `data/predictions/placeholder/`
+  holds reconstructed files for motifs and vctree among five models and no measured file, and
+  `data/predictions/PROVENANCE.md` states that a reconstructed file "is never described as a
+  model's output". T1's source line says that its photographs are not
+  licensed for distribution (`data/LICENCES.md`), where it said that none ships, and `slice.ts` and
+  spec §5.1 say the same; T2's option reads "relations annotated on ph-001, either direction"
+  (ph-001 標註之關係（不分方向）), since `beliefGraph` joins subject and object both ways.
+- *This record* gives the logic suite's count from `dfe4dc4`, and the records test holds README's
+  e2e figure at 83.
+
+**Two minor findings of the reviews are deferred to the author.**
 - The `why` texts of `pg-T2-relations-w05-t5` and `pg-T2-relations-w09-t10` name the box as the
   object at the largest gap, where the panel ties with it; the values hold, and
   `pg-T2-relations-w05-t1` names its tie. The text is the plan's, and it is on the NAS only.

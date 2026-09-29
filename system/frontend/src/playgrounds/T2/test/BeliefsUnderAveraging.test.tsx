@@ -41,6 +41,10 @@ describe('T2', () => {
 
   it('names each object with its neighbours', () => {
     renderAt('/m/m05');
+    // `beliefGraph` joins subject and object both ways, and the option says so.
+    expect(screen.getByTestId('T2.graph').querySelector('option[value="relations"]')!.textContent)
+      .toBe('relations annotated on ph-001, either direction');
+    expect(screen.getByTestId('t2-belief-4-nb').textContent).toBe('#2 person');
     expect(screen.getByTestId('t2-belief-1-nb').textContent).toBe('#2 person, #3 box, #5 wrench, #6 panel');
     expect(screen.getByTestId('t2-belief-3-nb').textContent).toBe('#1 table');
     expect(screen.getByTestId('t2-belief-5-nb').textContent).toBe('#1 table, #2 person');
@@ -225,6 +229,8 @@ describe('T2', () => {
     expect(screen.getByTestId('readout-T2.spread')).toHaveTextContent('b* 處為 0.3924');
     expect(screen.getByTestId('readout-T2.bound')).toHaveTextContent('wᵗ × 0.2065；0.2065 為 t = 0 時之距離');
     expect(screen.getByTestId('t2-belief-1-nb').textContent).toBe('#2 person、#3 box、#5 wrench、#6 panel');
+    expect(screen.getByTestId('T2.graph').querySelector('option[value="relations"]')!.textContent)
+      .toBe('ph-001 標註之關係（不分方向）');
     expectClean();
     cleanup();
 

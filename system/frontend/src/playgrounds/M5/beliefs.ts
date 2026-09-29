@@ -8,8 +8,9 @@ export const M5_FRAME = 'ph-001';
  * Spec §4.2's starting beliefs, one per object id 1 to 6. Designed on paper rather than measured,
  * so that the two edge sets `beliefGraph` compares carry the belief vector to different fixed
  * points, and so that the degree-weighted mean and the plain mean of these six disagree at two
- * decimal places on the `relations` graph -- the discrepancy T2 exists to make visible, since the
- * two only agree when every object carries the same number of neighbours.
+ * decimal places on the `relations` graph -- the discrepancy T2 exists to make visible. Equal
+ * degrees are sufficient, not necessary, for the two to agree: they agree whenever
+ * Σⱼ (dⱼ − d̄) b⁽⁰⁾ⱼ = 0, as on the complete graph `every`.
  */
 export const M5_B0: Readonly<Record<number, number>> = { 1: 0.9, 2: 0.2, 3: 0.7, 4: 0.4, 5: 0.1, 6: 0.6 };
 

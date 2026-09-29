@@ -36,6 +36,12 @@ sourced: it is GQA's predicate count in the anchor paper's Table 1, which the ma
 VG150, with 50 predicates, and the old line set GQA's predicates against Visual Genome's relation
 rate.]
 
+[**As built (D111, R11):** the opening's "changes no contract rule" no longer holds. T2 shows
+values of the course's averaging rule, which contracts §2.4's list of a count, a bound or a set
+membership did not admit. On the final review's ruling, §2.4 was amended in place on 2026-09-29,
+awaiting the author's review: a playground may also show a value of the rule its step teaches, and
+it still computes no metric.]
+
 ---
 
 ## 2. What the sources say
@@ -86,6 +92,12 @@ What holds, for the Formal rule with A the row-normalised neighbourhood (Aᵢⱼ
 **S**, not A, which M2's symbol table defines as area (`A(\cdot)`, `m02.en.mdx:15`), and the limit
 as Σⱼ dⱼ b⁽⁰⁾ⱼ / Σⱼ dⱼ, not with πⱼ, which M4's table defines as the map from a triplet to its pair.
 The mathematics above is unchanged; only the letters are.]
+
+[**Corrected 2026-09-29 (the final review):** "the plain mean only on a regular graph" claims
+more than holds. Equal degrees are sufficient, not necessary: the degree-weighted mean equals the
+plain mean whenever Σⱼ (dⱼ − d̄) b⁽⁰⁾ⱼ = 0, for every constant b⁽⁰⁾ among others. On a disconnected
+graph at w = 1 only a component with an odd cycle settles on a value of its own; a bipartite one
+can oscillate. M5 s4's Implications say both, in both locales.]
 
 On ph-001 with the starting beliefs of §4.2: under the annotated relations, w = 0.5 settles at a
 spread of 0.3924 and w = 0.9 at 0.1105; w = 1 converges to 0.5083, the degree-weighted mean, where the
@@ -198,6 +210,12 @@ A `Slider` over the 80 frames by object count, 1 to 80, default 40 (frame `547`,
 N(N − 1) ordered pairs; N(N − 1) · 50 decisions; the frame's relationship rows; its related ordered
 pairs, and their share of N(N − 1) as a ratio of counts; and, fixed, the slice's 651 of 26,282. No
 photograph: the slice ships no images.
+
+[**As built (D111, the final review):** the slice does hold its 80 photographs
+(`data/slices/vg150-sgb/images/`, listed in `MANIFEST.json` with `"distribution": "fetch"`), and
+`data/LICENCES.md` sets vg150-sgb's `bundle_distribute` to NO. The licence, not an absence, is why
+T1 shows none, and its source line says so: "annotations only on this page; their photographs are
+not licensed for distribution (data/LICENCES.md)".]
 
 ### 5.2 T2, after s3: beliefs under averaging
 

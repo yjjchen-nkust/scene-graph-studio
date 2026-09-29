@@ -772,9 +772,11 @@ export function degreeWeightedParts(
 
 /**
  * `Σⱼ dⱼ b⁽⁰⁾ⱼ / Σⱼ dⱼ`, `dⱼ = lists[j].length`: the quantity the averaging rule conserves at
- * w = 1 and every belief converges to, on any graph without isolated nodes -- the plain mean only
- * when every degree is equal, which is why the two agree on the complete graph `every` and part on
- * `relations`.
+ * w = 1, and the value every belief converges to there when the graph is connected and has an odd
+ * cycle. On a bipartite graph the beliefs can oscillate instead, and on a disconnected one each
+ * component with an odd cycle settles on its own value. Equal degrees are sufficient, not
+ * necessary, for it to equal the plain mean: the two agree whenever Σⱼ (dⱼ − d̄) b⁽⁰⁾ⱼ = 0, which
+ * holds on the complete graph `every` and, for spec §4.2's beliefs, does not on `relations`.
  */
 export function degreeWeightedMean(lists: readonly (readonly number[])[], b0: readonly number[]): number {
   const { weighted, degrees } = degreeWeightedParts(lists, b0);

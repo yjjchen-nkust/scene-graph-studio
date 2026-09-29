@@ -885,7 +885,7 @@ describe('M5: beliefs under averaging', () => {
     }
   });
 
-  it('the fixed point solves (I − wA) b* = (1 − w) b⁽⁰⁾ and is where 2,000 rounds arrive, at every w below 1', () => {
+  it('the fixed point solves (I − wS) b* = (1 − w) b⁽⁰⁾ and is where 2,000 rounds arrive, at every w below 1', () => {
     for (const g of [rel, every]) {
       for (const w of below1) {
         const star = fixedPoint(g.a, w, g.b0)!;
@@ -897,7 +897,7 @@ describe('M5: beliefs under averaging', () => {
     }
   });
 
-  it('solves nothing at w = 1, where I − A is singular', () => {
+  it('solves nothing at w = 1, where I − S is singular', () => {
     expect(fixedPoint(rel.a, 1, rel.b0)).toBeNull();
     expect(fixedPoint(every.a, 1, every.b0)).toBeNull();
   });
@@ -930,10 +930,15 @@ describe('M5: beliefs under averaging', () => {
     }
   });
 
-  it('the degree-weighted mean is the plain mean only on the regular graph', () => {
+  it('equal degrees suffice for the degree-weighted mean to be the plain mean, and are not necessary', () => {
     expect(degreeWeightedMean(rel.lists, rel.b0)).toBeCloseTo(6.1 / 12, 12);
     expect(mean(rel.b0)).toBeCloseTo(2.9 / 6, 12);
     expect(degreeWeightedMean(every.lists, every.b0)).toBeCloseTo(mean(every.b0), 12);
+    // Unequal degrees (4, 3, 1, 1, 2, 1), mean degree 2, and the two means still agree: all the
+    // weight on the wrench, whose degree is the mean, gives Σⱼ (dⱼ − d̄) b⁽⁰⁾ⱼ = 0 and both 1 / 6.
+    const onWrench = [0, 0, 0, 0, 1, 0];
+    expect(degreeWeightedMean(rel.lists, onWrench)).toBeCloseTo(1 / 6, 12);
+    expect(mean(onWrench)).toBeCloseTo(1 / 6, 12);
   });
 
   it('degreeWeightedParts holds the numerator and denominator degreeWeightedMean divides', () => {

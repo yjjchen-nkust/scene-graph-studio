@@ -106,6 +106,12 @@ cd scene-graph-studio\system ; npm run ci
   it could not before D110 either, and the build can. `sync-data.ps1` (D108) was retired: there
   is no second copy to keep in step. WekaExt's root `.gitignore` has no rule over this tree, so
   every exclusion the track needs is stated locally.
+- **`data/` is one copy, shared by every branch and every checkout.** A branch that changes
+  `data/` changes it for every branch at once: merge it promptly, and do not run another branch's
+  gate or harvest in between. M5's playgrounds were the first such branch: until they merge, `main`
+  fails `npm run ci` against the NAS, and running `main`'s harvest writes M5's old text back into
+  `data/content/`; a revert after the merge needs a hand edit of `playground_golden.json` on the
+  NAS and a fresh harvest (D111).
 - **Never `rm -rf data/` in Git Bash.** With the trailing slash it deletes the files on the NAS
   through the link (measured on a scratch junction, D110), and the NAS copy is the only copy.
   `rm -rf data`, `git clean -fdX` and PowerShell `Remove-Item -Recurse` remove the link alone.

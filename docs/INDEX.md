@@ -438,9 +438,16 @@ w < 1 the beliefs settle at a fixed point that keeps each node's own evidence, a
 0.3924 when w = 0.5, and only at w = 1, on a connected graph with an odd cycle, do they meet. M7,
 which quoted M5's old rate, and the map's Proposition 6 were corrected with them. The averaging
 matrix is written S, since M2's A is area; CLAUDE.md's rule for what a playground computes now
-admits a value of the rule its step teaches; and both frames take M4's `dense`. Two M4 tests of
+admits a value of the rule its step teaches, and contracts §2.4 was amended in place to match,
+awaiting the author's review; and both frames take M4's `dense`. Two M4 tests of
 `registry.test.tsx`, which contention ran past vitest's 5000 ms default in four of the branch's
-tasks, carry a measured timeout of 20,000 ms. See D111 and VERIFICATION §30.
+tasks, carry a measured timeout of 20,000 ms. The branch's eleven golden cases and its harvest are
+on the NAS, which every branch reads, so `main` before the merge fails `npm run ci`: content lint
+refuses golden cases for the unregistered T1 and T2, and the golden test fails at `pg-T1-rank1`;
+and running `main`'s harvest rewrites `kp.json`, `math.json` and `deriv.json` on the NAS with M5's
+old text. A revert after the merge needs the eleven cases deleted from
+`data/content/playground_golden.json` by hand and `npm run harvest` run on the reverted tree. See
+D111 and VERIFICATION §30.
 
 **Verification.** `npm run ci` green, 2026-09-29, on branch `feat/playgrounds-m5` with D111's records: **287 pytest** and 7 skipped, parity 21 agree, i18n 418 keys both locales,
 **1079 vitest** in 76 files across metrics, tools and frontend, content lint clean (15 of 15 modules x 2 locales, 93 points

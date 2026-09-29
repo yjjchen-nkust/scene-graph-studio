@@ -20,8 +20,8 @@ export interface PairRow {
  * Spec §4.1's 80 rows, ranked by object count and then by image id **as a number**. `image_id` is
  * a string, and a lexical comparison of strings stops at the first differing character: `'1246'`
  * sorts before `'547'` because `'1' < '5'`, which is not the ascending numeric order spec §4.1
- * states -- `547` carries fewer objects than `1246` only by coincidence of this slice, and the two
- * are adjacent ranks (40 and 41) precisely because both carry 16 objects.
+ * states. `547` and `1246` both carry 16 objects, so the object count does not separate them and
+ * the tie is broken by image id as a number: `547` is rank 40 and `1246` rank 41.
  */
 export const PAIR_ROWS: PairRow[] = VG_FRAMES
   .map((frame) => ({

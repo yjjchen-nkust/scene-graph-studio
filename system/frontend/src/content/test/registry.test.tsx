@@ -322,6 +322,33 @@ describe('the playground step kind', () => {
     expect(text('../m05.en.mdx')).toContain('odd cycle');
     expect(text('../m05.zh-TW.mdx')).not.toMatch(/每十萬|每步收縮|既存預測/);
     expect(text('../m05.zh-TW.mdx')).toContain('奇數長度迴路');
+    // The final review: s4's two w = 1 sentences made exact (equal degrees suffice and are not
+    // necessary; a bipartite component oscillates), s5's and s6's notes read the table's dip and the
+    // bound's equality at t = 0, s8 names the files reconstructions (PROVENANCE.md), and s3's note
+    // is written register.
+    const finalReview = {
+      '../m05.en.mdx': {
+        present: [
+          'which can differ from the plain mean when nodes have unequal numbers of neighbours',
+          'each component with an odd cycle settles on its own value',
+          'falls to 0.65 at t = 1 and settles near 0.70',
+          'never exceeds its bound, and equals it at t = 0',
+          "L4 shows reconstructions of Neural Motifs' and VCTree's published behaviour",
+        ],
+        absent: ['which differs from the plain mean', 'each component settles', 'falls from 0.90 to 0.70',
+          'stays under its bound', "runs these models' predictions"],
+      },
+      '../m05.zh-TW.mdx': {
+        present: ['若各節點之鄰居數不等，則可能與算術平均相異', '各含奇數長度迴路之連通分量各自收斂至其自身之數值',
+          '於 t = 1 降至 0.65，其後趨近 0.70', '且於 t = 0 時等於其界限',
+          'L4 將依 Neural Motifs 與 VCTree 已發表行為所重建之預測', '滑桿依物件數依序呈現 80 張影像'],
+        absent: ['即與算術平均相異', '上，各連通分量', '由 0.90 降至 0.70', '上述各模型之預測', '走過'],
+      },
+    };
+    for (const [file, { present, absent }] of Object.entries(finalReview)) {
+      for (const item of present) expect(text(file), `${file}: ${item}`).toContain(item);
+      for (const item of absent) expect(text(file), `${file}: ${item}`).not.toContain(item);
+    }
     const mapPage = source('../../../../web/knowledge-map/index.html');
     expect(mapPage).toContain('80\\cdot 79\\cdot 50=316{,}000');
     expect(mapPage).not.toContain('1{,}958{,}800');
@@ -860,10 +887,24 @@ describe('the playground step kind', () => {
     atLeast(claude, /all (\d+) logged deviations/, 111, 'CLAUDE.md deviations');
     expect(claude).toContain('§30 the M5 playgrounds');
     expect(index).toContain('the M5 playgrounds (§30)');
-    atLeast(readme, /`npm run test:e2e` is (\d+)/, 82, 'README e2e');
+    atLeast(readme, /`npm run test:e2e` is (\d+)/, 83, 'README e2e');
     atLeast(readme, /`npm run check:perf` is (\d+)/, 30, 'README perf');
     // The corpus figures, the averaging values, where the branch was cut, and the data no commit shows.
     for (const item of ['651', '26,282', '0.3924', '0.5083', '0.4833', 'dfe4dc4', 'D109', 'playground_golden.json', 'M7']) {
+      expect(d111, item).toContain(item);
+    }
+    // The final review. R2's wider rule is the contract's own, amended in place for the author's
+    // review, so CLAUDE.md and contracts §2.4 no longer disagree on what a playground computes.
+    const contracts = source('../../../../../docs/superpowers/specs/2026-09-15-scene-graph-studio-contracts.md')
+      .replace(/\s+/g, ' ');
+    expect(contracts).toContain(
+      "[**Amended 2026-09-29 (D111), awaiting the author's review:** a playground may also show a value of the rule its step teaches",
+    );
+    expect(contracts).toContain('It still computes no metric.]');
+    // The NAS is one copy for every branch: what this branch's data does to `main`, and a revert.
+    expect(claude).toContain('**`data/` is one copy, shared by every branch and every checkout.**');
+    expect(index.replace(/\s+/g, ' ')).toContain('`main` before the merge fails `npm run ci`');
+    for (const item of ['§2.4 was amended in place', 'every branch', 'pg-T1-rank1', 'by hand', '86 tests', 'R11']) {
       expect(d111, item).toContain(item);
     }
   });

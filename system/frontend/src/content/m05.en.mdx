@@ -41,13 +41,13 @@ steps:
     kp: T2
     part: 1
     seconds_budget: 90
-    presenter_notes_en: "Ninety seconds. Six beliefs, each beside its neighbours. At w = 0.5 step t from 0 to 5: the table, with four neighbours, falls from 0.90 to 0.70; the box, with one, rises to 0.80 at t = 1 and returns to 0.70. Switch to every pair and each object averages the other five. The next step reads where they settle."
+    presenter_notes_en: "Ninety seconds. Six beliefs, each beside its neighbours. At w = 0.5 step t from 0 to 5: the table, with four neighbours, falls to 0.65 at t = 1 and settles near 0.70; the box, with one, rises to 0.80 at t = 1 and returns to 0.70. Switch to every pair and each object averages the other five. The next step reads where they settle."
   - id: s6
     kind: playground
     kp: T2
     part: 2
     seconds_budget: 90
-    presenter_notes_en: "Ninety seconds. Open on the annotated relations at w = 0.5 and step t from 0 to 5: the spread falls from 0.8000 to 0.3941 and settles near 0.3924, the spread at b*, which is no consensus; the distance to b* stays under its bound at every t. At w = 0.9 the spread at b* is 0.1105. Only at w = 1 do the beliefs meet, at 0.5083, the degree-weighted mean, not the plain mean 0.4833: the table has four neighbours and the box one. Switch to every pair at w = 1 and the two means agree, 0.4833, since every object then has five neighbours."
+    presenter_notes_en: "Ninety seconds. Open on the annotated relations at w = 0.5 and step t from 0 to 5: the spread falls from 0.8000 to 0.3941 and settles near 0.3924, the spread at b*, which is no consensus; the distance to b* never exceeds its bound, and equals it at t = 0. At w = 0.9 the spread at b* is 0.1105. Only at w = 1 do the beliefs meet, at 0.5083, the degree-weighted mean, not the plain mean 0.4833: the table has four neighbours and the box one. Switch to every pair at w = 1 and the two means agree, 0.4833, since every object then has five neighbours."
   - id: s7
     kind: prose
     seconds_budget: 300
@@ -190,9 +190,10 @@ Averaging alone is what collapses the beliefs; the $(1-w)$ share of each node's 
 what prevents the collapse. For $w < 1$ the beliefs settle on $b^{\ast}$, a mixture of $k$-hop
 averages that is not a consensus, and the largest gap to it shrinks at least by the factor $w$ each
 round. Only at $w = 1$, where that share is zero, can every belief reach one value. On a connected
-graph with an odd cycle they do, at the degree-weighted mean, which differs from the plain mean
+graph with an odd cycle they do, at the degree-weighted mean, which can differ from the plain mean
 when nodes have unequal numbers of neighbours; on a bipartite graph, a tree among them, the beliefs
-can oscillate instead, and on a disconnected one each component settles on its own value.
+can oscillate instead, and on a disconnected one each component with an odd cycle settles on its own
+value.
 
 IMP itself (Xu et al. 2017) does not apply this rule. It updates GRU hidden states over a node
 graph and an edge graph, pooling messages with learned weights. The rule here is a model of what
@@ -254,9 +255,10 @@ was ranked on a metric that could not see the tail.
 
 ## In the lab
 
-L4 runs these models' predictions, stored in `data/predictions/`, on one image side by side. Look
-first at where they agree: the head predicates, which the frequency prior alone would have got.
-Then look at the tail, and at how little separates four years of architecture.
+L4 shows reconstructions of Neural Motifs' and VCTree's published behaviour, stored in
+`data/predictions/`, side by side on one image. Look first at where they agree: the head
+predicates, which the frequency prior alone would have got. Then look at the tail, and at how
+little separates four years of architecture.
 
 </Step>
 
