@@ -24,7 +24,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.settings import DATA_DIR  # noqa: E402
 from app.vlm import indvissgg  # noqa: E402
-from app.vlm.openai_compat import MAX_TOKENS  # noqa: E402
+from app.vlm.openai_compat import (  # noqa: E402
+    MAX_TOKENS,
+    PRESENCE_PENALTY,
+    SEED,
+    TEMPERATURE,
+    TOP_K,
+    TOP_P,
+)
 from app.vlm.prompts import EXAMPLES_ISG, O_ISG, P_ISG  # noqa: E402
 from app.vlm.provider import VLMProvider, exchange_key  # noqa: E402
 
@@ -66,15 +73,24 @@ def _compat_notes(model: str, root: str | None) -> dict[str, str]:
             f"server and reached over Tailscale, was shown each frame with the prompt recorded "
             f"beside it, and its completion is recorded here verbatim. The calls were made by the "
             f"application's own provider, `app/vlm/openai_compat.py`, with the frame attached, "
-            f"thinking disabled, temperature 0 and max_tokens {MAX_TOKENS}. A graph replayed from "
-            f"this file is nevertheless `reconstructed`, because the replay is not the call: the "
-            f"application did not ask a model anything when it read this file."
+            f"thinking disabled, temperature {TEMPERATURE}, top_p {TOP_P}, top_k {TOP_K}, "
+            f"presence_penalty {PRESENCE_PENALTY}, seed {SEED} and max_tokens {MAX_TOKENS}. Greedy "
+            f"decoding degenerated on the first call (one triplet repeated until 8192 tokens, "
+            f"287 s), and these are the model family's published non-thinking settings; the fixed "
+            f"seed made two probe runs identical. Each completion is one seeded sample, not the "
+            f"model's only answer. A graph replayed from this file is nevertheless "
+            f"`reconstructed`, because the replay is not the call: the application did not ask a "
+            f"model anything when it read this file."
         ),
         "note_zh": (
             f"本檔各筆 completion 係將各影格連同其旁所錄之提示送入模型 `{model}`（權重 {weights}，"
             f"由作者之 pro6000 伺服器以 vLLM 提供，經 Tailscale 連線）後之輸出，逐字記錄。呼叫由"
             f"本應用程式自身之 provider（`app/vlm/openai_compat.py`）發出，並附上該影格，"
-            f"關閉 thinking，temperature 為 0，max_tokens 為 {MAX_TOKENS}。然而由本檔重播所得之圖"
+            f"關閉 thinking，temperature 為 {TEMPERATURE}，top_p 為 {TOP_P}，top_k 為 {TOP_K}，"
+            f"presence_penalty 為 {PRESENCE_PENALTY}，seed 為 {SEED}，max_tokens 為 {MAX_TOKENS}。"
+            f"貪婪解碼（temperature 0）於首次呼叫即退化（單一三元組重複至 8192 個 token，歷時 287 "
+            f"秒），故改用該模型系列所公布之非思考模式設定；固定 seed 使兩次試探結果相同。各筆 "
+            f"completion 僅為一次固定 seed 之取樣，並非該模型之唯一答案。然而由本檔重播所得之圖"
             f"仍屬 `reconstructed`，因重播並非呼叫：讀取本檔時，應用程式並未向任何模型提問。"
         ),
     }

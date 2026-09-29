@@ -88,8 +88,12 @@ def test_the_compatible_provider_sends_the_frame_before_the_prompt(frame_dir, se
     assert request.full_url == f"{BASE}/chat/completions"
     body = json.loads(request.data)
     assert body["model"] == "stamping-vlm"
-    assert body["max_tokens"] == 8192
-    assert body["temperature"] == 0
+    assert body["max_tokens"] == 2048
+    assert body["temperature"] == 0.7
+    assert body["top_p"] == 0.8
+    assert body["top_k"] == 20
+    assert body["presence_penalty"] == 1.5
+    assert body["seed"] == 20260930
     assert body["chat_template_kwargs"] == {"enable_thinking": False}
     content = body["messages"][0]["content"]
     data = base64.standard_b64encode((frame_dir / "x.jpg").read_bytes()).decode("ascii")

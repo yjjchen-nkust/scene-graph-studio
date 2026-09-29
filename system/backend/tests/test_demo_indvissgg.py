@@ -56,7 +56,9 @@ def test_the_provenance_names_the_served_weights_and_the_settings() -> None:
         assert "Qwen/Qwen3.8-27B" in note
         assert "vLLM" in note
         assert "pro6000" in note
-        assert "8192" in note
+        assert "2048" in note
+        assert "20260930" in note
+        assert "0.7" in note
 
 
 def test_a_frame_is_five_exchanges_in_the_paper_s_order() -> None:

@@ -125,8 +125,9 @@ first call.
 
 [Amended 2026-09-29 (D114): the recording model is `stamping-vlm`, the weights `Qwen/Qwen3.8-27B` served by
 vLLM on the author's pro6000 over Tailscale, through the new OpenAI-compatible provider
-(`app/vlm/openai_compat.py`) with thinking off and temperature 0, and not `claude-opus-5-5`; the recorder
-takes `--provider`. The `ClaudeProvider` fix above stands for L5.]
+(`app/vlm/openai_compat.py`) with thinking off and Qwen3's published non-thinking settings (temperature 0.7, top_p 0.8, top_k 20,
+presence_penalty 1.5, seed 20260930, max_tokens 2048; greedy decoding degenerated on the first call), and not
+`claude-opus-5-5`; each completion is one seeded sample. The recorder takes `--provider`. The `ClaudeProvider` fix above stands for L5.]
 
 `system/backend/scripts/record_demo_indvissgg.py` runs `indvissgg.step1`, `step2` with N = 3 and
 `step3` on each of the ten frames under `O_ISG`, `P_ISG` and `EXAMPLES_ISG`: 50 calls. Every

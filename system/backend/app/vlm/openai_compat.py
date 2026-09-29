@@ -19,8 +19,15 @@ from app.vlm.provider import ProviderUnavailable
 
 BASE_URL_ENV = "SGS_VLM_BASE_URL"
 MODEL_ENV = "SGS_VLM_MODEL"
-MAX_TOKENS = 8192
+MAX_TOKENS = 2048
 TIMEOUT_SECONDS = 300
+# Qwen3's published non-thinking settings. Greedy decoding (temperature 0) degenerated on the
+# first recorded call: one triplet repeated until the token limit (D114). The seed repeats a call.
+TEMPERATURE = 0.7
+TOP_P = 0.8
+TOP_K = 20
+PRESENCE_PENALTY = 1.5
+SEED = 20260930
 
 _THINK_END = "</think>"
 
@@ -77,7 +84,11 @@ class OpenAICompatibleProvider:
         body = {
             "model": self.model,
             "max_tokens": MAX_TOKENS,
-            "temperature": 0,
+            "temperature": TEMPERATURE,
+            "top_p": TOP_P,
+            "top_k": TOP_K,
+            "presence_penalty": PRESENCE_PENALTY,
+            "seed": SEED,
             "chat_template_kwargs": {"enable_thinking": False},
             "messages": [{"role": "user", "content": content}],
         }
