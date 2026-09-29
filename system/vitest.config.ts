@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
+import { dataDirectory } from './data.dir.ts';
 import { mdxPlugin } from './mdx.plugin.ts';
 
 export default defineConfig({
@@ -35,8 +36,9 @@ export default defineConfig({
         // so the allow list has to be widened by one level. Setting server.fs.allow
         // replaces Vite's own defaults rather than adding to them, but the root (system/)
         // is itself a descendant of that parent, so listing the parent alone still covers
-        // every path the defaults used to.
-        server: { fs: { allow: ['..'] } },
+        // every path the defaults used to. data/ is a link to the NAS since D110, and the
+        // guard checks real paths, so the link's target is listed as well.
+        server: { fs: { allow: ['..', dataDirectory()] } },
         test: {
           name: 'frontend',
           // Component tests live beside the component; frontend/test/ holds the

@@ -74,6 +74,14 @@ if (!existsSync(join(ROOT, 'node_modules'))) {
   die('node_modules is missing', 'npm install');
 }
 
+// data/ is a link to the NAS (D110), and nothing here can make one portably; start.ps1 can.
+if (!existsSync(join(TRACK, 'data/LICENCES.md'))) {
+  die(
+    'data/ is absent or its link does not reach the NAS (D110)',
+    'run .\\start.ps1 once, which links data/ to C:\\DataRaw\\scene-graph or SGS_DATA_DIR',
+  );
+}
+
 if (!existsSync(join(TRACK, 'data/slices/placeholder/annotations.json'))) {
   console.log(c.amber('placeholder slice missing; generating it'));
   const made = spawnSync(PYTHON, ['backend/scripts/make_placeholders.py'], {

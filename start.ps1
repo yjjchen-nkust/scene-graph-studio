@@ -12,8 +12,8 @@
 
     NFR-1: the application runs with no corpora and no bundle. The placeholder slice is
     generated locally and every lab is demonstrable on it. Real slices are a separate,
-    optional step -- see .\fetch-data.ps1. It does need data/, which git no longer carries
-    (D109): on a fresh clone, run .\sync-data.ps1 -Pull first, and this script says so.
+    optional step -- see .\fetch-data.ps1. It does need data/, which is a link this script
+    makes to the NAS, C:\DataRaw\scene-graph or SGS_DATA_DIR (D110).
 
 .PARAMETER Setup
     Force the install steps even if they appear done. Use after pulling changes that touch
@@ -80,14 +80,15 @@ Write-Host ''
 Write-Host '  Scene Graph Studio' -ForegroundColor White
 Write-Host ''
 
-# ---- data/ comes from the NAS, not from git (D109) ----------------------------------------
-# A fresh clone has no data/ at all, and saying so before any install saves a wasted one.
-# data/LICENCES.md is the file every later step needs: the placeholder slice is refused
-# without its gate row.
-if (-not (Test-Path 'data/LICENCES.md')) {
-    Stop-With 'data/ is absent: git carries none of it since D109, the NAS does.' `
-              'Run .\sync-data.ps1 -Pull (or -Pull -Nas <dir>), then .\start.ps1 again.'
+# ---- data/ is a link to the NAS (D110) ----------------------------------------------------
+# No file of data/ lives in the checkout; git carries none (D109) and the link reaches the one
+# copy. Made before any install, so a machine that cannot reach the data says so first.
+. (Join-Path $system 'tools/Connect-DataDirectory.ps1')
+$dataProblem = Connect-DataDirectory -Track $track
+if ($dataProblem) {
+    Stop-With $dataProblem 'SGS_DATA_DIR names the data directory when it is not C:\DataRaw\scene-graph.'
 }
+Write-Ok "data -> $(Get-DataTarget)"
 
 # ---- Node (D-03: >= 22.12 is a hard prerequisite; Vite 8 refuses anything older) ----------
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue

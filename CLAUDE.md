@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split and §29 the M4 playgrounds), and all 109 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split and §29 the M4 playgrounds), and all 110 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -28,7 +28,7 @@ WekaExt's `docker-compose.yml`, `ci.yml` or `deploy.yml`.
 
 **All machinery lives under `system/`** — the npm workspace root, `backend/`, `frontend/`,
 `packages/sgg-metrics/`, `tools/`, `web/`. `data/`, `docs/`, `start.ps1` and `fetch-data.ps1`
-stayed at the track root, and `sync-data.ps1` (D108) joined them. **Every `npm` command runs from `system/`.**
+stayed at the track root; `data/` is now a link to the NAS (D110). **Every `npm` command runs from `system/`.**
 
 ```powershell
 cd scene-graph-studio ; .\start.ps1     # checks both toolchains, installs on first run, launches
@@ -51,12 +51,12 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D109` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D110` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
   `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
   be extended, but it is still the harvest's source, so edit the page, run `npm run harvest`,
-  commit the page and push `data/` to the NAS (D109); and it must still open from disk with no build step. Its `pg.js evaluate()` is a
+  whose output lands on the NAS through `data/`, and commit the page (D110); and it must still open from disk with no build step. Its `pg.js evaluate()` is a
   teaching toy over fifteen hard-coded rows and **must never be promoted to the evaluation
   engine** (decision **D-14**, which D-23 leaves standing).
   `system/tools/audit.js` and `check.js` validate it; `audit.js` exists to catch a `\` line break
@@ -94,16 +94,21 @@ cd scene-graph-studio\system ; npm run ci
   that writes into a tracked path means adding its path there too. Nothing under `data/` is
   tracked since D109, so the six `data/` rules of D89 and D91 are gone; the Python generators
   still write LF (`newline=""`).
-- **Nothing under `data/` is committed; the NAS carries all of it (D108, D109).** This track's
-  own `.gitignore` ignores `/data/` whole: corpora, slice images, annotations, manifests,
-  `data/content/`, the golden vectors, the predictions and `data/LICENCES.md`. `sync-data.ps1`
-  copies `data/` to `C:\DataRaw\scene-graph` and back, and a pull refuses a file that would land
-  on a path git does not ignore. **A fresh clone has no `data/`**: `.\sync-data.ps1 -Pull` comes
-  before `start.ps1` or `npm run ci`, and a gate run on a machine without the NAS fails at its
-  first read of `data/`. After a harvest, a cut or any other change under `data/`, push; the
-  copy never deletes and never overwrites a newer file. `fetch-data.ps1` still obtains slice
-  images from their source. WekaExt's root `.gitignore` has no rule over this tree, so every
-  exclusion the track needs is stated locally.
+- **`data/` is a directory junction to `C:\DataRaw\scene-graph`, and no data file lives in the
+  checkout (D109, D110).** `.gitignore` ignores `/data/` whole, so git carries none of it:
+  corpora, slice images, annotations, manifests, `data/content/`, the golden vectors, the
+  predictions and `data/LICENCES.md`. Every reader keeps its `data/` path and reaches the one
+  copy through the link; `SGS_DATA_DIR` names another target. `start.ps1` and `fetch-data.ps1`
+  make the link through `system/tools/Connect-DataDirectory.ps1`. **A fresh clone has no
+  `data/`** until one of them runs, and a gate run on a machine without the NAS fails at its
+  first read of it. Vite checks real paths, so `vitest.config.ts` allows the link's target
+  through `data.dir.ts`; the dev server still cannot show the playgrounds' photographs, which
+  it could not before D110 either, and the build can. `sync-data.ps1` (D108) was retired: there
+  is no second copy to keep in step. WekaExt's root `.gitignore` has no rule over this tree, so
+  every exclusion the track needs is stated locally.
+- **Never `rm -rf data/` in Git Bash.** With the trailing slash it deletes the files on the NAS
+  through the link (measured on a scratch junction, D110), and the NAS copy is the only copy.
+  `rm -rf data`, `git clean -fdX` and PowerShell `Remove-Item -Recurse` remove the link alone.
 - **The design document's ARM64/Snapdragon hardware table describes a different machine** and is
   marked superseded in place.
 - **A playground reads `data/` from outside vitest's root, and the allow list is why that works.**

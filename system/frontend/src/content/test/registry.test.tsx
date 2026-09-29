@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync } from 'node:fs';
 import deriv from '../../../../../data/content/deriv.json';
 import kp from '../../../../../data/content/kp.json';
 import math from '../../../../../data/content/math.json';
@@ -681,26 +681,20 @@ describe('the playground step kind', () => {
     const claude = source('../../../../../CLAUDE.md');
     const index = source('../../../../../docs/INDEX.md');
     const readme = source('../../../../../README.md');
-    const script = source('../../../../../sync-data.ps1');
     const d108 = record(deviations, 'D108').replace(/\s+/g, ' ');
     expect(deviations).toContain('## D108 — the data git does not carry moves through the NAS, by `sync-data.ps1`');
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 108, name);
     }
     atLeast(claude, /all (\d+) logged deviations/, 108, 'CLAUDE.md deviations');
-    // The directory the author named, in the script and in both of its readers.
-    for (const [name, text] of [['script', script], ['CLAUDE.md', claude], ['README', readme]]) {
+    // The directory the author named, in both readers. The script itself was retired by D110,
+    // whose test requires it gone.
+    for (const [name, text] of [['CLAUDE.md', claude], ['README', readme]]) {
       expect(text, name).toContain('C:\\DataRaw\\scene-graph');
     }
-    // The set comes from git, a pull asks git first, and no robocopy switch deletes anything.
-    expect(script).toContain('ls-files --others --ignored --exclude-standard --directory -- data');
-    expect(script).toContain('check-ignore -z --stdin');
-    expect(script).toContain("'/XO'");
-    for (const flag of ["'/MIR'", "'/PURGE'", "'/MOV'", "'/MOVE'"]) expect(script, flag).not.toContain(flag);
     // README's commands are commands: a `\f` meant as `.\fetch` had been written as a form feed.
     expect(readme).not.toContain('\f');
     expect(readme).toContain('.\\fetch-data.ps1 -Unpack');
-    expect(readme).toContain('.\\sync-data.ps1 -Push');
     for (const item of ['eb68d64', 'bundle_distribute', 'CRLF', 'c5b8901d', 'form feed']) {
       expect(d108, item).toContain(item);
     }
@@ -727,13 +721,48 @@ describe('the playground step kind', () => {
     const rules = attributes.filter((line) => line.trim() && !line.startsWith('#'));
     expect(rules.filter((line) => line.startsWith('data/'))).toEqual([]);
     for (const line of rules) expect(line, line).toMatch(/^\S+\s+\S+=\S+$/);
-    // A fresh clone is told where data/ comes from before anything is installed.
-    expect(start.indexOf('sync-data.ps1 -Pull')).toBeGreaterThan(-1);
-    expect(start.indexOf('sync-data.ps1 -Pull')).toBeLessThan(start.indexOf('npm install'));
+    // A fresh clone gets its data/ before anything is installed: a pull at D109, a link since D110.
+    expect(start.indexOf('Connect-DataDirectory -Track')).toBeGreaterThan(-1);
+    expect(start.indexOf('Connect-DataDirectory -Track')).toBeLessThan(start.indexOf('npm install'));
     expect(readme).not.toContain('Committed: `annotations.json`');
     expect(readme).toContain('Nothing under `data/` is committed (D109)');
     for (const item of ['85ea580', '257 files', 'NFR-1', 'CI', 'git pull', 'history']) {
       expect(d109, item).toContain(item);
+    }
+  });
+
+  it('the records carry D110, and data/ is a link to the NAS with no file of its own', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md');
+    const index = source('../../../../../docs/INDEX.md');
+    const readme = source('../../../../../README.md');
+    const connect = source('../../../../tools/Connect-DataDirectory.ps1');
+    const d110 = record(deviations, 'D110').replace(/\s+/g, ' ');
+    expect(deviations).toContain('## D110 — `data/` a link to the NAS, and no data file in the checkout');
+    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+      atLeast(text, /D1…D(\d+)/, 110, name);
+    }
+    atLeast(claude, /all (\d+) logged deviations/, 110, 'CLAUDE.md deviations');
+    // Through a parameter, as `source` resolves its paths: Vite rewrites a literal `new URL`.
+    const at = (path: string) => new URL(path, import.meta.url);
+    // data/ is the link, not a directory of copies; Node reports a junction as a symbolic link.
+    expect(lstatSync(at('../../../../../data')).isSymbolicLink()).toBe(true);
+    expect(existsSync(at('../../../../../sync-data.ps1'))).toBe(false);
+    // One target, overridable, made by the two entry scripts, and the helper deletes nothing.
+    expect(connect).toContain("'C:\\DataRaw\\scene-graph'");
+    expect(connect).toContain('SGS_DATA_DIR');
+    expect(connect).not.toContain('Remove-Item');
+    for (const script of ['start.ps1', 'fetch-data.ps1']) {
+      expect(source(`../../../../../${script}`), script).toContain('Connect-DataDirectory -Track');
+    }
+    // Vite's guard checks real paths, so the test run allows the link's target by name.
+    expect(source('../../../../vitest.config.ts')).toContain("allow: ['..', dataDirectory()]");
+    expect(source('../../../../data.dir.ts')).toContain('realpathSync');
+    // The trailing-slash hazard, where a reader meets it.
+    expect(claude).toContain('**Never `rm -rf data/` in Git Bash.**');
+    expect(readme).toContain('never `rm -rf data/`');
+    for (const item of ['5d010e5', 'Denied ID', 'git clean', '403', 'index.html', '257']) {
+      expect(d110, item).toContain(item);
     }
   });
 

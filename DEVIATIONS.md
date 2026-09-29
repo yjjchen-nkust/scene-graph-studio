@@ -4220,6 +4220,9 @@ and from `ci`, that CLAUDE.md names eleven steps, and that neither file exists.
 should not go to github. Please use NAS: C:\DataRaw\scene-graph to sync the untracked data."
 Branch `chore/sgs-data-nas-sync`, from `main` at `eb68d64`.
 
+[**Retired 2026-09-29 (D110):** `sync-data.ps1` is gone; `data/` is a link to the NAS, and there
+is no second copy to keep in step.]
+
 [**Superseded 2026-09-29 (D109):** the author then moved all of `data/` to the NAS; the committed
 part this paragraph keeps in git is no longer committed.]
 
@@ -4278,6 +4281,9 @@ above; the test holds its text: the NAS path, the two git calls, `/XO`, and no d
 **Plan:** none. **Decisions:** the author's, on 2026-09-29, after D108: "move all data into NAS
 for the sync mechanism. Also gitignore all data in the remote." Branch `chore/sgs-data-nas-sync`,
 continued from `85ea580`, D108's last commit.
+
+[**Superseded in part 2026-09-29 (D110):** no data file lives in the checkout any longer;
+`data/` is a link to the NAS, `start.ps1` makes it, and `sync-data.ps1` is retired.]
 
 **What changed in git.** The 65 files D108 left committed under `data/` (the slices' annotations
 and manifests, the six placeholder frames, `data/content/`, the golden vectors and their README,
@@ -4339,3 +4345,59 @@ this record's test), parity 21, i18n 380 keys, 786 modules built. The new record
 the missing heading before this record was written, and requires the `/data/` rule with no
 negation, no `data/` attribute rule and no attribute line that is not a rule, and the pull
 named in `start.ps1` before its first install.
+
+## D110 — `data/` a link to the NAS, and no data file in the checkout
+
+**Plan:** none. **Decisions:** the author's, on 2026-09-29, after D109's merge at `5d010e5`:
+"remove the files under scene-graph-studio\data and point all data access to
+C:\DataRaw\scene-graph". Branch `chore/sgs-data-link-nas`, from `main` at `5d010e5`.
+
+**How the request was met, and why this way.** Before the removal all 257 files under `data/`
+were compared with the NAS copy by SHA-256, with no difference; the directory was then deleted
+and `data/` made a directory junction to `C:\DataRaw\scene-graph`. Every reader keeps its
+`data/` path and reaches the one copy: the backend's `DATA_DIR`, the Node tools, the PowerShell
+scripts, the tests and the frontend's build-time imports. Rewriting each reader to a configured
+absolute path founders on the last: fourteen static JSON imports and one `import.meta.glob` take
+their types from a path `tsc` must follow, and a `paths` entry in `tsconfig` would fix the NAS
+location in a file with no override. The link is therefore the one place the location is
+decided. `system/tools/Connect-DataDirectory.ps1` makes it, to `SGS_DATA_DIR` when that is set
+and to `C:\DataRaw\scene-graph` otherwise, as a junction, or as a symbolic link for a
+`\\server\share` target, which a junction cannot reach. It creates and never deletes or moves:
+a real `data/` directory, a link to another target and an unreachable target each return a
+sentence instead. `start.ps1` calls it before any install and `fetch-data.ps1` before any read;
+`tools/start.mjs` stops with the same instruction when `data/LICENCES.md` does not resolve.
+
+**Vite checks real paths.** With the link in place, the frontend suites that import from `data/`
+failed to collect on `Denied ID D:/Data/DataRaw/scene-graph/slices/placeholder/images/ph-001.png?url`:
+`C:\DataRaw` is itself a link to `D:\Data\DataRaw`, and the guard compares the resolved path with
+`server.fs.allow`. `system/data.dir.ts` resolves the link, and `vitest.config.ts` allows its
+target beside `..`; the suites then passed, 1019 tests in 74 files, and `tsc -b` over the
+frontend was clean. The production build does not apply the guard.
+
+**The dev server, found on the way and left as it was.** Before this change the dev server
+answered 403 for the playgrounds' photographs at `/@fs/C:/dev/WekaExt/scene-graph-studio/data/…`,
+because `data/` lay outside its workspace root; nothing had measured it, since check 8 runs over
+the build. Allowing the link's target in `vite.config.ts` turned the 403 into a 200 that carried
+`index.html` (641 bytes, `text/html`) instead of the image: Vite did not serve an `/@fs/` path on
+drive D: from a server started on drive C:. The edit was reverted, so the dev server still cannot
+show those photographs, and the build can.
+
+**What deletes the NAS copy.** The NAS copy is now the only copy, so each way of removing `data/`
+was tried on a scratch junction over a scratch target. `git clean -fdX`, `Remove-Item -Recurse`
+in PowerShell 7.6.6 and in Windows PowerShell 5.1, and Git Bash `rm -rf data` removed the link and
+kept the target's file. Git Bash `rm -rf data/`, with the trailing slash, deleted the file through
+the link and left the link. CLAUDE.md states it as a trap, and README where it describes the link.
+
+**Retired.** `sync-data.ps1` (D108): with no second copy there is nothing to keep in step. D108's
+records test no longer reads it, D109's asserts the link rather than the pull in `start.ps1`, and
+this record's test requires the script gone and `data/` a link.
+
+**Verification.** `npm run ci` exit 0 in eleven steps, every read of `data/` going through the
+link: 287 pytest and 7 skipped, 1020 vitest in 74 files (1019 before; the one added is this
+record's test), parity 21, i18n 380 keys, 786 modules built. `npm run test:e2e`, check 8 over
+the production build: 79 passed, among them "F1, F3, E3, E4 and E7 show their photographs, whole
+and on the screen" at all three resolutions, so the build takes the photographs from the NAS. A
+fresh worktree of this branch had no `data/`; `fetch-data.ps1` made the junction, read all seven
+datasets through it and left `git status` empty, and the helper then refused another target
+rather than moving the link. Removing that link left all 257 files on the NAS. The new records
+test failed on the missing heading before this record was written.
