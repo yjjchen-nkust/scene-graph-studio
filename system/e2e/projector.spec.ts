@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
@@ -51,6 +52,109 @@ const PARTS_LONGEST = [
   'm05/4?T2.w=0.95&T2.t=40', 'm05/4?T2.w=1&T2.t=40', 'm05/4?T2.graph=every&T2.w=1&T2.t=5',
   'm05/5?T2.w=0.95&T2.t=40', 'm05/5?T2.w=1&T2.t=40', 'm05/5?T2.graph=every&T2.w=1&T2.t=5',
 ];
+
+type Triplet = [string, string, string];
+
+interface TraditionalRecording {
+  frames: {
+    image_id: string;
+    detections: { object_id: number; label: string }[];
+    relations: { subject_id: number; object_id: number; predicate: string }[];
+  }[];
+}
+
+interface VlmRecording {
+  frames: {
+    image_id: string;
+    draft: Triplet[];
+    summary: Triplet[];
+    experts: { index: number; revision: Triplet[]; analysis_zh: string }[];
+  }[];
+}
+
+/** One of M0's two recorded artefacts, read as the build reads it, from `data/demos/m0/`. */
+function recording<T>(name: string): T {
+  return JSON.parse(readFileSync(new URL(`../../data/demos/m0/${name}`, import.meta.url), 'utf-8')) as T;
+}
+
+const DT_RECORDED = recording<TraditionalRecording>('traditional.json');
+const DV_RECORDED = recording<VlmRecording>('indvissgg.json');
+
+/** Every item of `items` that ties for the largest `score`. */
+function longest<T>(items: readonly T[], score: (item: T) => number): T[] {
+  const top = Math.max(...items.map(score));
+  return items.filter((item) => score(item) === top);
+}
+
+/** D-T's distinct class-level triplets of one frame, as `logic.ts` names them for churn. */
+function classTriplets(frame: TraditionalRecording['frames'][number]): Set<string> {
+  const label = new Map(frame.detections.map((d) => [d.object_id, d.label]));
+  return new Set(frame.relations.map((r) =>
+    JSON.stringify([label.get(r.subject_id), r.predicate, label.get(r.object_id)])));
+}
+
+/** A demo step in one state: its route and query, and whether D-V's whole prompt is opened on it. */
+interface DemoState {
+  where: string;
+  open?: boolean;
+}
+
+/**
+ * M0's nine demo parts (routes m00/6 to m00/14), each in its longest state, chosen from the
+ * recordings rather than listed by hand, so a new recording moves the states with it.
+ *
+ * Every state of every part was measured at the three panel sizes in both locales (Task 11 of the
+ * M0 demos, VERIFICATION §31), and these rules pick the states with the least room in 繁體中文 at
+ * 1024×768. D-T's first three parts at the frames with the most detections: the first part's legend
+ * and the second part's grid are longest there, and the third part measured the same at every frame.
+ * D-T's fourth part at the frame whose list of kept, added and removed triplets is longest (92 s, 25
+ * rows). D-V's first part with its prompt closed and opened, the second at the longest draft, the
+ * third at the expert whose Chinese analysis is longest and at the experts that deleted the most,
+ * the fourth at the longest summary, and the fifth in its one state.
+ */
+const DEMO_LONGEST: DemoState[] = (() => {
+  const mostDetected = longest(DT_RECORDED.frames, (f) => f.detections.length).map((f) => f.image_id);
+  const sets = DT_RECORDED.frames.map(classTriplets);
+  const longestChange = longest(DT_RECORDED.frames.map((f, i) => ({
+    id: f.image_id,
+    rows: sets[i]!.size + (i === 0 ? 0 : [...sets[i - 1]!].filter((k) => !sets[i]!.has(k)).length),
+  })), (f) => f.rows).map((f) => f.id);
+  const experts = DV_RECORDED.frames.flatMap((f) => f.experts.map((e) => {
+    const kept = new Set(e.revision.map((t) => JSON.stringify(t)));
+    return {
+      query: `DV.frame=${f.image_id}&DV.expert=${e.index}`,
+      analysis: e.analysis_zh.length,
+      deleted: new Set(f.draft.map((t) => JSON.stringify(t)).filter((k) => !kept.has(k))).size,
+    };
+  }));
+  const expertStates = [
+    ...longest(experts, (e) => e.analysis), ...longest(experts, (e) => e.deleted),
+  ].map((e) => e.query);
+  return [
+    ...[6, 7, 8].flatMap((step) => mostDetected.map((id) => ({ where: `m00/${step}?DT.frame=${id}` }))),
+    ...longestChange.map((id) => ({ where: `m00/9?DT.frame=${id}` })),
+    { where: 'm00/10' },
+    { where: 'm00/10', open: true },
+    ...longest(DV_RECORDED.frames, (f) => f.draft.length).map((f) => ({ where: `m00/11?DV.frame=${f.image_id}` })),
+    ...[...new Set(expertStates)].map((query) => ({ where: `m00/12?${query}` })),
+    ...longest(DV_RECORDED.frames, (f) => f.summary.length).map((f) => ({ where: `m00/13?DV.frame=${f.image_id}` })),
+    { where: 'm00/14' },
+  ];
+})();
+
+/** A demo state as a failure names it. */
+const stateName = (state: DemoState) => `${state.where}${state.open ? ' (prompt open)' : ''}`;
+
+/** Open a demo step in `state`, with the webfonts decoded, since a fallback face breaks lines elsewhere. */
+async function openDemo(page: Page, state: DemoState) {
+  await page.goto(`/lecture/m/${state.where}`);
+  await expect(page.getByTestId('demo-frame'), stateName(state)).toBeVisible();
+  if (state.open) {
+    await page.getByTestId('dv-prompt-whole').locator('summary').click();
+    await expect(page.getByTestId('dv-prompt-text'), stateName(state)).toBeVisible();
+  }
+  await page.evaluate(() => document.fonts.ready);
+}
 
 const SIZES = [
   { name: 'xga-1024x768', width: 1024, height: 768 },
@@ -389,6 +493,8 @@ for (const size of SIZES) {
       // F3's (2026-09-27, D97); 25 and 19 on E1's and 10 and 22 on E10's (2026-09-27, D98); and
       // 12 and 82 on E3's, 11 and 85 on E4's, 12 and 83 on E7's, 32 on E13's and 19 on X2's
       // (2026-09-28, D106). And 27 on T1's and 41 and 22 on T2's two parts (2026-09-29, D111).
+      // And on M0's nine demo parts at their default frame, 61, 70, 48 and 79 on D-T's and 54, 42,
+      // 21, 53 and 138 on D-V's (2026-09-30, VERIFICATION §31).
       // `toBeGreaterThan(3)` was kept here after the oklch finding with a comment explaining why it had failed to catch it,
       // which is a floor known to be inadequate left in place. These are set below the
       // measured counts so ordinary content edits do not trip them, and far enough above zero
@@ -399,6 +505,15 @@ for (const size of SIZES) {
         { module: 'm00', step: 2, floor: 17 },
         { module: 'm00', step: 4, floor: 18 },
         { module: 'm00', step: 5, floor: 12 },
+        { module: 'm00', step: 6, floor: 48 },
+        { module: 'm00', step: 7, floor: 56 },
+        { module: 'm00', step: 8, floor: 38 },
+        { module: 'm00', step: 9, floor: 63 },
+        { module: 'm00', step: 10, floor: 43 },
+        { module: 'm00', step: 11, floor: 33 },
+        { module: 'm00', step: 12, floor: 16 },
+        { module: 'm00', step: 13, floor: 42 },
+        { module: 'm00', step: 14, floor: 110 },
         { module: 'm01', step: 2, floor: 13 },
         { module: 'm01', step: 3, floor: 11 },
         { module: 'm01', step: 5, floor: 20 },
@@ -468,7 +583,7 @@ for (const size of SIZES) {
       // read by anyone.
       for (const [module, step] of [
         // Index 6 was the L1 lab until M0's nine demo steps took indices 6 to 14; the lab is 15.
-        ...[0, 1, 2, 3, 4, 5, 15].map((s) => ['m00', s] as const),
+        ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((s) => ['m00', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((s) => ['m01', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7].map((s) => ['m02', s] as const),
         ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => ['m03', s] as const),
@@ -686,6 +801,167 @@ for (const size of SIZES) {
         await page.evaluate(() => document.fonts.ready);
         const past = await page.getByTestId('step').evaluate((el) => el.scrollHeight - el.clientHeight);
         expect(past, `${where} runs ${past} px past the panel`).toBeLessThanOrEqual(0);
+      }
+    });
+
+    test('every demo part fits the panel in its longest state', async ({ page }) => {
+      // D-T in four parts and D-V in five, each on its own step, as D96 splits a playground. Measured
+      // after the webfonts decode, as the playgrounds' parts are. English is not held to it, as for
+      // the playgrounds: its header wraps, and at 1024×768 D-T's fourth part and D-V's fourth and
+      // fifth ran 25, 37 and 43 px past the panel there (2026-09-30, VERIFICATION §31).
+      for (const state of DEMO_LONGEST) {
+        await openDemo(page, state);
+        const past = await page.getByTestId('step').evaluate((el) => el.scrollHeight - el.clientHeight);
+        expect(past, `${stateName(state)} runs ${past} px past the panel`).toBeLessThanOrEqual(0);
+        await noHorizontalOverflow(page);
+      }
+    });
+
+    test('no word of a demo is clipped out of reach', async ({ page }) => {
+      // `DemoFrame` never clips (D93), and D-V's whole prompt scrolls inside its own box, which a
+      // reader can reach; this holds both to it in every longest state.
+      for (const state of DEMO_LONGEST) {
+        await openDemo(page, state);
+        expect(await clipped(page, '[data-testid="demo-frame"]'), stateName(state)).toEqual([]);
+      }
+    });
+
+    test("D-T's first part shows its frame whole and draws its marks on it", async ({ page }) => {
+      // The measure F1 and F3 are held to (D96, D97), at every frame of the clip: the photograph
+      // whole on the panel, the overlay on the photograph's box, and every detection's box on the
+      // photograph. The number of boxes comes from the recording, so a frame drawing none fails.
+      for (const frame of DT_RECORDED.frames) {
+        const where = `m00/6?DT.frame=${frame.image_id}`;
+        await page.goto(`/lecture/m/${where}`);
+        await expect(page.getByTestId('dt-photo').locator('img'), where).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const { picture, overlay, marks } = await page.getByTestId('dt-photo').evaluate((root) => {
+          const rect = (e: Element) => {
+            const r = e.getBoundingClientRect();
+            return { id: e.getAttribute('data-testid') ?? '', x: r.x, y: r.y, w: r.width, h: r.height };
+          };
+          return {
+            picture: rect(root.querySelector('img')!),
+            overlay: rect(root.querySelector('svg')!),
+            marks: [...root.querySelectorAll('rect[data-testid^="dt-det-"]:not([data-testid$="-halo"])')].map(rect),
+          };
+        });
+        const panel = page.viewportSize()!;
+        expect(picture.w, `${where}: the photograph has no width`).toBeGreaterThan(200);
+        expect(picture.h, `${where}: the photograph has no height`).toBeGreaterThan(150);
+        expect(
+          picture.x >= 0 && picture.y >= 0 && picture.x + picture.w <= panel.width && picture.y + picture.h <= panel.height,
+          `${where}: the photograph at ${JSON.stringify(picture)} leaves the panel`,
+        ).toBe(true);
+        for (const k of ['x', 'y', 'w', 'h'] as const) {
+          expect(Math.abs(overlay[k] - picture[k]), `${where}: overlay ${k} is ${overlay[k]}, photograph ${picture[k]}`)
+            .toBeLessThanOrEqual(1);
+        }
+        expect(marks, where).toHaveLength(frame.detections.length);
+        const off = marks.filter((m) => m.x < picture.x - 0.5 || m.y < picture.y - 0.5
+          || m.x + m.w > picture.x + picture.w + 0.5 || m.y + m.h > picture.y + picture.h + 0.5);
+        expect(off.map((m) => m.id), `${where}: boxes drawn off the photograph`).toEqual([]);
+      }
+    });
+
+    test("D-T's first part names its boxes without hiding them", async ({ page }) => {
+      // E10's measure (D100) at every frame of the clip, with the one exception D116 records. No two
+      // badges overlap and none covers more than half of any box. Each lies on the photograph, or,
+      // only for a box whose top is within one badge height of the frame's top, in the band above
+      // the photograph (`dt-photo-band`'s top padding, one badge tall) and within its width.
+      type Rect = { id: string; x: number; y: number; w: number; h: number };
+      const shared = (a: Rect, b: Rect) =>
+        Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x))
+        * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+      for (const frame of DT_RECORDED.frames) {
+        const where = `m00/6?DT.frame=${frame.image_id}`;
+        await page.goto(`/lecture/m/${where}`);
+        await expect(page.getByTestId('dt-photo').locator('img'), where).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const { band, picture, boxes, badges } = await page.getByTestId('dt-photo-band').evaluate((root) => {
+          const rect = (e: Element) => {
+            const r = e.getBoundingClientRect();
+            return { id: e.getAttribute('data-testid') ?? '', x: r.x, y: r.y, w: r.width, h: r.height };
+          };
+          return {
+            band: rect(root),
+            picture: rect(root.querySelector('[data-testid="dt-photo"] img')!),
+            boxes: [...root.querySelectorAll('rect[data-testid^="dt-det-"]:not([data-testid$="-halo"])')].map(rect),
+            badges: [...root.querySelectorAll('[data-testid^="dt-badge-"]')].map(rect),
+          };
+        });
+        expect(boxes, where).toHaveLength(frame.detections.length);
+        expect(badges, where).toHaveLength(frame.detections.length);
+        const faults: string[] = [];
+        for (const g of badges) {
+          for (const b of boxes) {
+            const part = shared(g, b) / (b.w * b.h);
+            if (part > 0.5) faults.push(`${g.id} covers ${Math.round(part * 100)}% of ${b.id}`);
+          }
+          for (const h of badges) {
+            if (h.id < g.id && shared(g, h) > 0) faults.push(`${g.id} overlaps ${h.id}`);
+          }
+          const own = boxes.find((b) => b.id === g.id.replace('dt-badge-', 'dt-det-'));
+          if (!own) {
+            faults.push(`${g.id} names no box`);
+            continue;
+          }
+          const banded = own.y - picture.y <= g.h + 0.5;
+          const top = banded ? band.y : picture.y;
+          const inside = g.x >= picture.x - 0.5 && g.x + g.w <= picture.x + picture.w + 0.5
+            && g.y >= top - 0.5 && g.y + g.h <= picture.y + picture.h + 0.5;
+          if (!inside) faults.push(`${g.id} leaves the photograph${banded ? ' and the band above it' : ''}`);
+        }
+        expect(faults, where).toEqual([]);
+      }
+    });
+
+    for (const [name, where] of [["D-T's first part", 'm00/6'], ["D-V's first part", 'm00/10']] as const) {
+      test(`${name} shows the clip whole`, async ({ page }) => {
+        // The clip and its ten ticks, which are the part's knob, whole on the panel.
+        await page.goto(`/lecture/m/${where}`);
+        const clip = page.getByTestId('demo-clip');
+        await expect(clip, where).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const panel = page.viewportSize()!;
+        const box = await clip.boundingBox();
+        expect(box, `${where}: the clip has no box`).not.toBeNull();
+        expect(box!.width, `${where}: the clip has no width`).toBeGreaterThan(200);
+        expect(box!.height, `${where}: the clip has no height`).toBeGreaterThan(100);
+        expect(
+          box!.x >= 0 && box!.y >= 0 && box!.x + box!.width <= panel.width && box!.y + box!.height <= panel.height,
+          `${where}: the clip at ${JSON.stringify(box)} leaves the panel`,
+        ).toBe(true);
+        const ticks = await page.locator('[data-testid^="demo-tick-"]').evaluateAll((els) =>
+          els.map((e) => ({ id: e.getAttribute('data-testid'), bottom: e.getBoundingClientRect().bottom })));
+        expect(ticks, where).toHaveLength(DT_RECORDED.frames.length);
+        expect(ticks.filter((t) => t.bottom > panel.height), `${where}: ticks below the panel`).toEqual([]);
+      });
+    }
+
+    test("Figure 6's rules run unbroken under the descenders", async ({ page }) => {
+      // D-T's fourth part and D-V's third and fifth underline an added triplet with a solid rule and
+      // a removed one with a dotted rule, 2 px below the baseline (`demos/marks.ts`). Under the
+      // browser's default `text-decoration-skip-ink: auto` the rule breaks at every g, p and y, and a
+      // dotted rule broken there reads as neither kind. The screenshots are for the author's eye.
+      for (const [where, shot] of [
+        ['m00/9?DT.frame=m0-demo-092', 'dt4-092'],
+        ['m00/12?DV.frame=m0-demo-098&DV.expert=1', 'dv3-098-e1'],
+        ['m00/14', 'dv5'],
+      ] as const) {
+        await page.goto(`/lecture/m/${where}`);
+        await expect(page.getByTestId('demo-frame'), where).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const rules = await page.getByTestId('demo-frame').evaluate((root) =>
+          [...root.querySelectorAll(
+            '[data-change="added"], [data-change="removed"], li[data-testid^="dv-deleted-"], li[data-testid^="dv-added-"]',
+          )].map((el) => {
+            const st = getComputedStyle(el);
+            return { text: (el.textContent ?? '').slice(0, 30), line: st.textDecorationLine, skip: st.textDecorationSkipInk };
+          }));
+        expect(rules.length, `${where}: no triplet is marked`).toBeGreaterThan(0);
+        expect(rules.filter((r) => r.line !== 'underline' || r.skip !== 'none'), where).toEqual([]);
+        await page.screenshot({ path: `test-results/projector/${size.name}-${shot}.png` });
       }
     });
 

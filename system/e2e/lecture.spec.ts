@@ -173,6 +173,82 @@ test('the node buttons of F2 take Space without advancing the slide', async ({ p
   await expect(position).toHaveText(before ?? '');
 });
 
+test('Space on the clip and on a tick does not advance the deck, and ArrowRight does', async ({ page }) => {
+  // Review focus 4 of the M0 demos: Space plays or pauses a focused clip and picks a focused tick's
+  // frame, and does neither and advance the deck; the arrows stay the deck's on both
+  // (`useStepper.ts`, `consumesSpace`). D-T's first part carries the clip and its ten ticks.
+  await page.goto('/lecture/m/m00/6');
+  await expect(page.getByTestId('demo-frame')).toBeVisible();
+  const position = page.getByTestId('position');
+  const before = await position.textContent();
+  const clip = page.getByTestId('demo-clip');
+  const paused = () => clip.evaluate((v: HTMLVideoElement) => v.paused);
+  await expect.poll(() => clip.evaluate((v: HTMLVideoElement) => v.readyState)).toBeGreaterThanOrEqual(1);
+  expect(await paused(), 'the clip autoplayed').toBe(true);
+
+  // The URL first: the deck moves by `navigate`, which writes it within the key's own handler.
+  await clip.focus();
+  await page.keyboard.press('Space');
+  await expect(page, 'Space on the clip advanced the deck').toHaveURL(/\/lecture\/m\/m00\/6$/);
+  await expect.poll(paused, 'Space on the clip did not play it').toBe(false);
+  await page.keyboard.press('Space');
+  await expect(page, 'Space on the playing clip advanced the deck').toHaveURL(/\/lecture\/m\/m00\/6$/);
+  await expect.poll(paused, 'Space on the playing clip did not pause it').toBe(true);
+  await expect(position).toHaveText(before ?? '');
+
+  const tick = page.getByTestId('demo-tick-m0-demo-096');
+  await tick.focus();
+  await page.keyboard.press('Space');
+  await expect(page, 'Space on the tick advanced the deck').toHaveURL(/\/lecture\/m\/m00\/6\?DT\.frame=m0-demo-096$/);
+  await expect(tick).toHaveAttribute('aria-pressed', 'true');
+  await expect(position).toHaveText(before ?? '');
+
+  // ArrowRight from the focused tick advances, carrying the frame to D-T's second part.
+  await page.keyboard.press('ArrowRight');
+  await expect(page).toHaveURL(/\/lecture\/m\/m00\/7\?DT\.frame=m0-demo-096$/);
+
+  // And from the focused clip, whose own default for the arrow is to seek.
+  await page.goto('/lecture/m/m00/6');
+  await page.getByTestId('demo-clip').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page).toHaveURL(/\/lecture\/m\/m00\/7$/);
+});
+
+test('the stepper carries DT.frame across D-T\'s parts and not into D-V', async ({ page }) => {
+  // D96's rule for the parts of one playground, applied to the demos: the frame chosen on D-T's
+  // first part is the one its other three show, and D-V, another demo, opens on its own t₁.
+  await page.goto('/lecture/m/m00/6?DT.frame=m0-demo-096');
+  await expect(page.getByTestId('demo-tick-m0-demo-096')).toHaveAttribute('aria-pressed', 'true');
+  for (const step of [7, 8]) {
+    await page.keyboard.press('ArrowRight');
+    await expect(page).toHaveURL(new RegExp(`/lecture/m/m00/${step}\\?DT\\.frame=m0-demo-096$`));
+    await expect(page.getByTestId('DT.frame')).toHaveValue('m0-demo-096');
+  }
+  await page.keyboard.press('ArrowRight');
+  await expect(page).toHaveURL(/\/lecture\/m\/m00\/9\?DT\.frame=m0-demo-096$/);
+  await expect(page.getByTestId('dt-thumb-m0-demo-096')).toHaveAttribute('aria-pressed', 'true');
+
+  await page.keyboard.press('ArrowRight');
+  await expect(page).toHaveURL(/\/lecture\/m\/m00\/10$/);
+  await expect(page.getByTestId('demo-tick-m0-demo-090')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('demo-tick-m0-demo-096')).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('a demo computes with no backend running', async ({ page }) => {
+  // A demo replays its recording from the build (NFR-1); this file starts no backend. The figures
+  // are D-T's and D-V's at t₁, 90 s, which both open on: six detections, 30 ordered pairs and
+  // 1,500 candidates, and a draft of ten rows from five calls.
+  await page.goto('/lecture/m/m00/7');
+  await expect(page.getByTestId('readout-DT.objects-value')).toHaveText('6');
+  await expect(page.getByTestId('readout-DT.pairs-value')).toHaveText('30');
+  await expect(page.getByTestId('readout-DT.candidates-value')).toHaveText('1,500');
+  await page.goto('/lecture/m/m00/11');
+  await expect(page.getByTestId('readout-DV.calls-value')).toHaveText('5');
+  await expect(page.getByTestId('readout-DV.emitted-value')).toHaveText('10');
+  await page.goto('/lecture/m/m00/12');
+  await expect(page.getByTestId('dv-analysis')).not.toHaveText('');
+});
+
 test('the study shell renders every playground of M0 to M3 in one column', async ({ page }) => {
   // Spec §4.1 says the study shell needs no special provision, which is a claim about the
   // product rather than an absence of work: it is true only if a playground renders outside the

@@ -128,6 +128,27 @@ test('the lecture walks M0 to M14 by keyboard with the network intercepted', asy
   expect(seen.attempts).toEqual([]);
 });
 
+test('the nine demo parts open with nothing fetched from outside this origin', async ({ page }) => {
+  // M0's demos replay recordings bundled into the build: the clip, the ten frames and both
+  // artefacts. The clip is on D-T's and D-V's first parts (steps 6 and 10), and its metadata has
+  // to arrive, from this origin, for either to show it.
+  const seen = offline(page);
+  const withClip = new Set([6, 10]);
+  for (let step = 6; step <= 14; step += 1) {
+    await page.goto(`/lecture/m/m00/${step}`);
+    await expect(page.getByTestId('demo-frame'), `m00/${step}`).toBeVisible();
+    const clip = page.getByTestId('demo-clip');
+    await expect(clip, `m00/${step}`).toHaveCount(withClip.has(step) ? 1 : 0);
+    if (!withClip.has(step)) continue;
+    await expect
+      .poll(() => clip.evaluate((v: HTMLVideoElement) => v.readyState), { message: `m00/${step}: the clip's metadata never arrived` })
+      .toBeGreaterThanOrEqual(1);
+    const source = await clip.evaluate((v: HTMLVideoElement) => v.currentSrc);
+    expect(source.startsWith(ORIGIN), `m00/${step}: the clip came from ${source}`).toBe(true);
+  }
+  expect(seen.attempts).toEqual([]);
+});
+
 test('every lab renders on the placeholder slice alone', async ({ page }) => {
   const seen = offline(page);
   for (const labId of ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8']) {
