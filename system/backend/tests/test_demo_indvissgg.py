@@ -13,7 +13,8 @@ import pytest
 
 from app.schema import SceneGraph
 from app.vlm import indvissgg, transcript
-from app.vlm.provider import VLMProvider, exchange_key
+from app.vlm import openai_compat as oc
+from app.vlm.provider import ProviderUnavailable, VLMProvider, exchange_key
 from app.vlm.transcript import TranscriptPlayer
 from scripts import record_demo_indvissgg as rec
 
@@ -53,12 +54,43 @@ def test_the_provenance_names_the_served_weights_and_the_settings() -> None:
     assert block["model"] == "stamping-vlm"
     assert block["generated_at"]
     for note in (block["note_en"], block["note_zh"]):
-        assert "Qwen/Qwen3.8-27B" in note
-        assert "vLLM" in note
-        assert "pro6000" in note
-        assert "2048" in note
-        assert "20260930" in note
-        assert "0.7" in note
+        for text in ("Qwen/Qwen3.8-27B", "vLLM", "pro6000", "thinking", "top_p", "top_k",
+                     "presence_penalty", "max_tokens"):
+            assert text in note
+        for value in (oc.TEMPERATURE, oc.TOP_P, oc.TOP_K, oc.PRESENCE_PENALTY, oc.MAX_TOKENS):
+            assert str(value) in note
+    assert "seed is derived from each exchange's key" in block["note_en"]
+    assert "one seeded sample" in block["note_en"]
+    assert "seed 由各筆 exchange 之 key 推得" in block["note_zh"]
+    assert "獨立" in block["note_zh"]
+
+
+def test_a_server_failure_stops_the_run_before_the_first_call(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[str] = []
+
+    class Failing:
+        name = "openai-compat"
+        model = "stamping-vlm"
+        base_url = "http://host/v1"
+
+        def served_root(self) -> str | None:
+            if calls == ["listed"]:
+                raise ProviderUnavailable("the model list is gone")
+            calls.append("listed")
+            return "Qwen/Qwen3.8-27B"
+
+        def complete(self, *, prompt: str, image_ref: str | None, context: dict[str, Any]) -> str:
+            calls.append("complete")
+            return "<a, on, b>"
+
+    monkeypatch.setattr(oc, "OpenAICompatibleProvider", Failing)
+    monkeypatch.setattr(rec, "TRANSCRIPT", tmp_path / "m0-demo.json")
+    with pytest.raises(ProviderUnavailable):
+        rec.main([])
+    assert "complete" not in calls
+    assert not (tmp_path / "m0-demo.json").exists()
 
 
 def test_a_frame_is_five_exchanges_in_the_paper_s_order() -> None:

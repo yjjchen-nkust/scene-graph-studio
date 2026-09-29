@@ -27,7 +27,6 @@ from app.vlm import indvissgg  # noqa: E402
 from app.vlm.openai_compat import (  # noqa: E402
     MAX_TOKENS,
     PRESENCE_PENALTY,
-    SEED,
     TEMPERATURE,
     TOP_K,
     TOP_P,
@@ -71,26 +70,32 @@ def _compat_notes(model: str, root: str | None) -> dict[str, str]:
         "note_en": (
             f"The model `{model}`, the weights {weights} served by vLLM on the author's pro6000 "
             f"server and reached over Tailscale, was shown each frame with the prompt recorded "
-            f"beside it, and its completion is recorded here verbatim. The calls were made by the "
-            f"application's own provider, `app/vlm/openai_compat.py`, with the frame attached, "
-            f"thinking disabled, temperature {TEMPERATURE}, top_p {TOP_P}, top_k {TOP_K}, "
-            f"presence_penalty {PRESENCE_PENALTY}, seed {SEED} and max_tokens {MAX_TOKENS}. Greedy "
-            f"decoding degenerated on the first call (one triplet repeated until 8192 tokens, "
-            f"287 s), and these are the model family's published non-thinking settings; the fixed "
-            f"seed made two probe runs identical. Each completion is one seeded sample, not the "
-            f"model's only answer. A graph replayed from this file is nevertheless "
-            f"`reconstructed`, because the replay is not the call: the application did not ask a "
-            f"model anything when it read this file."
+            f"beside it, and its completion is recorded here verbatim, apart from the `</think>` "
+            f"strip and surrounding whitespace. The calls were made by the application's own "
+            f"provider, `app/vlm/openai_compat.py`, with the frame attached, thinking disabled, "
+            f"temperature {TEMPERATURE}, top_p {TOP_P}, top_k {TOP_K}, presence_penalty "
+            f"{PRESENCE_PENALTY} and max_tokens {MAX_TOKENS}. Greedy decoding degenerated on the "
+            f"first call (one triplet repeated until 8192 tokens, 287 s), and these are the model "
+            f"family's published non-thinking settings. The seed is derived from each exchange's "
+            f"key (the first 8 hex digits, read as an integer), so a call can be reproduced from "
+            f"this file, and the three experts, whose prompts differ only in the expert index, "
+            f"sample independently instead of sharing one random stream. Each completion is one "
+            f"seeded sample, not the model's only answer. A graph replayed from this file is "
+            f"nevertheless `reconstructed`, because the replay is not the call: the application "
+            f"did not ask a model anything when it read this file."
         ),
         "note_zh": (
             f"本檔各筆 completion 係將各影格連同其旁所錄之提示送入模型 `{model}`（權重 {weights}，"
-            f"由作者之 pro6000 伺服器以 vLLM 提供，經 Tailscale 連線）後之輸出，逐字記錄。呼叫由"
-            f"本應用程式自身之 provider（`app/vlm/openai_compat.py`）發出，並附上該影格，"
-            f"關閉 thinking，temperature 為 {TEMPERATURE}，top_p 為 {TOP_P}，top_k 為 {TOP_K}，"
-            f"presence_penalty 為 {PRESENCE_PENALTY}，seed 為 {SEED}，max_tokens 為 {MAX_TOKENS}。"
+            f"由作者之 pro6000 伺服器以 vLLM 提供，經 Tailscale 連線）後之輸出，除去 `</think>` "
+            f"及其前文與首尾空白外，逐字記錄。呼叫由本應用程式自身之 provider"
+            f"（`app/vlm/openai_compat.py`）發出，並附上該影格，關閉 thinking，"
+            f"temperature 為 {TEMPERATURE}，top_p 為 {TOP_P}，top_k 為 {TOP_K}，"
+            f"presence_penalty 為 {PRESENCE_PENALTY}，max_tokens 為 {MAX_TOKENS}。"
             f"貪婪解碼（temperature 0）於首次呼叫即退化（單一三元組重複至 8192 個 token，歷時 287 "
-            f"秒），故改用該模型系列所公布之非思考模式設定；固定 seed 使兩次試探結果相同。各筆 "
-            f"completion 僅為一次固定 seed 之取樣，並非該模型之唯一答案。然而由本檔重播所得之圖"
+            f"秒），故改用該模型系列所公布之非思考模式設定。seed 由各筆 exchange 之 key 推得"
+            f"（取前 8 位十六進位數，轉為整數），使任一呼叫可由本檔重現，且三位專家之提示僅專家序號"
+            f"不同，取樣互相獨立，不共用同一隨機序列。各筆 completion 僅為一次以該 seed 取得之"
+            f"取樣，並非該模型之唯一答案。然而由本檔重播所得之圖"
             f"仍屬 `reconstructed`，因重播並非呼叫：讀取本檔時，應用程式並未向任何模型提問。"
         ),
     }
@@ -186,6 +191,8 @@ def main(argv: list[str] | None = None) -> int:
         inner = OpenAICompatibleProvider()
         print(f"server {inner.base_url}, model {inner.model}, served root {inner.served_root()}")
 
+    # Built before the first call: a server failure here must not come after fifty calls.
+    provenance = provenance_for(inner)
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     provider = RecordingProvider(inner)
     started = time.monotonic()
@@ -194,7 +201,6 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{frame['image_id']}: {len(provider.exchanges)} exchanges so far")
     print(f"wall time {time.monotonic() - started:.1f} s")
 
-    provenance = provenance_for(inner)
     payload = {"$schema_version": 1, "provenance": provenance, "exchanges": provider.exchanges}
     TRANSCRIPT.parent.mkdir(parents=True, exist_ok=True)
     TRANSCRIPT.write_text(

@@ -4869,12 +4869,22 @@ with the address and model id in `SGS_VLM_BASE_URL` and `SGS_VLM_MODEL`; it has 
 provider. The `ClaudeProvider` fix of D112 stands and remains L5's live path.
 
 **The settings, and why thinking is off.** `temperature` 0.7, `top_p` 0.8, `top_k` 20, `presence_penalty` 1.5,
-`seed` 20260930, `max_tokens` 2048 (Qwen3's published non-thinking settings; see the next paragraph), the frame as a base64
+`max_tokens` 2048 (Qwen3's published non-thinking settings; see the last paragraph), a `seed` derived from each
+exchange's key (`int(exchange_key(...)[:8], 16)`, not a constant), the frame as a base64
 `image_url` block before the text, and `chat_template_kwargs: {"enable_thinking": false}`. With thinking on,
 the server returns the reasoning inside `message.content`, ending in `</think>`, ahead of the answer (9.6 s
 per call against 3.9 s measured), and that text would reach the triplet parser as if it were the answer.
 The provider also removes any text up to a first `</think>`. `finish_reason: "length"`, a non-null
-`message.refusal`, an empty answer, an unreachable server and an HTTP error each raise; none is recorded.
+`message.refusal`, an empty answer, an unreachable server, an HTTP error (with up to 500 characters of the
+response body), a timeout or socket error during the read, a body that is not JSON and an answer without
+`choices`, `message` or `content` each raise `ProviderUnavailable` naming the URL; none is recorded.
+
+**The seed is per call.** A first version sent one fixed seed (20260930) on every call. The three expert calls
+of a frame have prompts that differ only in "expert N of N", so under one seed they were correlated by
+construction: on m0-demo-088 experts 2 and 3 returned identical triplets, which defeats the point of three
+experts. The seed is now `int(exchange_key(prompt, image_ref, context)[:8], 16)`: deterministic, so a recorded
+call is reproducible from the transcript alone, and distinct for distinct prompts, so the experts sample
+independently. The first recording (fixed seed) is superseded by a re-recording under a follow-up task.
 
 **Greedy decoding was tried first and rejected.** The first recording attempt used `temperature` 0 and
 `max_tokens` 8192. The first call (m0-demo-088, step 1) opened with five sensible triplets and then repeated
@@ -4882,5 +4892,5 @@ The provider also removes any text up to a first `</think>`. `finish_reason: "le
 settings above replace it: they are the model family's published non-thinking settings, and on the same frame
 and prompt a probe answered in 3.9 s, `stop`, 94 tokens, ten triplets, with two runs under the same seed
 returning identical text. The transcript is therefore one seeded sample, not the model's only answer. The
-completion is kept verbatim apart from the `</think>` strip; a Markdown fence around the triplets is not
+completion is kept verbatim apart from the `</think>` strip and surrounding whitespace; a Markdown fence around the triplets is not
 removed, because `parse_triplets` extracts the `<...>` lines regardless.

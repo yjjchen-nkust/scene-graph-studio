@@ -123,19 +123,22 @@ is present and precedes the text. The recorder passes `claude-opus-5-5`, the mos
 available on 2026-09-29, and the id is confirmed against the `claude-api` reference before the
 first call.
 
-[Amended 2026-09-29 (D114): the recording model is `stamping-vlm`, the weights `Qwen/Qwen3.8-27B` served by
-vLLM on the author's pro6000 over Tailscale, through the new OpenAI-compatible provider
-(`app/vlm/openai_compat.py`) with thinking off and Qwen3's published non-thinking settings (temperature 0.7, top_p 0.8, top_k 20,
-presence_penalty 1.5, seed 20260930, max_tokens 2048; greedy decoding degenerated on the first call), and not
-`claude-opus-5-5`; each completion is one seeded sample. The recorder takes `--provider`. The `ClaudeProvider` fix above stands for L5.]
+[Amended 2026-09-29 (D114), sampling settings 2026-09-30: the recording model is `stamping-vlm`, the weights
+`Qwen/Qwen3.8-27B` served by vLLM on the author's pro6000 over Tailscale, through the new OpenAI-compatible
+provider (`app/vlm/openai_compat.py`) with thinking off and Qwen3's published non-thinking settings
+(temperature 0.7, top_p 0.8, top_k 20, presence_penalty 1.5, max_tokens 2048; greedy decoding degenerated on
+the first call), and not `claude-opus-5-5`. The seed is derived from each exchange's key, so a call is
+reproducible from the transcript and the three experts sample independently; each completion is one seeded
+sample. The recorder takes `--provider`. The `ClaudeProvider` fix above stands for L5.]
 
 `system/backend/scripts/record_demo_indvissgg.py` runs `indvissgg.step1`, `step2` with N = 3 and
 `step3` on each of the ten frames under `O_ISG`, `P_ISG` and `EXAMPLES_ISG`: 50 calls. Every
 exchange (prompt, `image_ref`, context, key, completion) is appended to
 `data/vlm/transcripts/m0-demo.json`, whose provenance block reads `recorded: true` with the model
 and the date. The frames are keyed `m0-demo-088` to `m0-demo-106`. **Prerequisites:**
-`ANTHROPIC_API_KEY` in the environment and the `anthropic` package on py12, both supplied by the
-author at recording time and neither committed.
+`SGS_VLM_BASE_URL` (the pro6000 endpoint, `http://100.86.97.101:8001/v1`) and `SGS_VLM_MODEL`
+(`stamping-vlm`) in the environment, no key. `ANTHROPIC_API_KEY` and the `anthropic` package on py12 are
+needed only for `--provider claude`; nothing is committed.
 
 Replayed, the graphs carry `fidelity: 'reconstructed'` and `vlm: 'transcript'`, as `to_graph`
 requires of any replay; the demo shows the transcript's own provenance beside them, so the room
