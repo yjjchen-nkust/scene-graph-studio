@@ -632,3 +632,145 @@ export function matchedByMask(
   }
   return out.sort((a, b) => a - b);
 }
+
+// ---- M5: pairs against relations, and beliefs under averaging ----------------------------
+
+/**
+ * Ordered pairs of distinct objects a slice's relationship rows touch, each counted once however
+ * many rows name it and however many rows carry the reverse pair. `(s, o)` and `(o, s)` are
+ * different pairs, so a row of each direction counts twice; a self-loop `(s, s)`, which
+ * `candidateSpace` already excludes from the space this is measured against, is thrown out here
+ * too rather than counted as a pair joined to itself.
+ */
+export function relatedPairs(relationships: readonly { subject_id: number; object_id: number }[]): number {
+  const pairs = new Set<string>();
+  for (const r of relationships) {
+    if (r.subject_id === r.object_id) continue;
+    pairs.add(`${r.subject_id}|${r.object_id}`);
+  }
+  return pairs.size;
+}
+
+/**
+ * Each id of `ids`, mapped to the other ids `edges` joins it to, ascending and with no id ever
+ * its own neighbour. `edges` states a relation once per edge and undirected: `[s, o]` joins both
+ * `s` to `o` and `o` to `s`, which is how T2's averaging rule reads a relationship row or an
+ * "every pair" edge alike.
+ */
+export function neighbours(ids: readonly number[], edges: readonly (readonly [number, number])[]): number[][] {
+  return ids.map((id) => {
+    const found = new Set<number>();
+    for (const [x, y] of edges) {
+      if (x === id && y !== id) found.add(y);
+      if (y === id && x !== id) found.add(x);
+    }
+    return [...found].sort((p, q) => p - q);
+  });
+}
+
+/**
+ * The averaging matrix S: row i puts equal weight `1 / |lists[i]|` on each id it neighbours and
+ * zero everywhere else, so a row with neighbours always sums to 1 and a node with none is a zero
+ * row -- `averagingRound` then leaves that node's belief at exactly `(1 − w) b0_i`, never dividing
+ * by zero.
+ */
+export function rowNormalised(ids: readonly number[], lists: readonly (readonly number[])[]): number[][] {
+  return ids.map((_, i) => {
+    const list = lists[i]!;
+    return ids.map((id) => (list.includes(id) ? 1 / list.length : 0));
+  });
+}
+
+/** One round of the averaging rule: `(1 − w) b⁽⁰⁾ + w S b`, `w` the trust placed in one's neighbours. */
+export function averagingRound(
+  a: readonly (readonly number[])[], w: number, b0: readonly number[], b: readonly number[],
+): number[] {
+  return b0.map((b0i, i) => (1 - w) * b0i + w * a[i]!.reduce((s, aij, j) => s + aij * b[j]!, 0));
+}
+
+/** `t` rounds of `averagingRound`, each starting from the last; `t = 0` returns a copy of `b⁽⁰⁾`. */
+export function averagingRounds(
+  a: readonly (readonly number[])[], w: number, b0: readonly number[], t: number,
+): number[] {
+  let b: number[] = [...b0];
+  for (let k = 0; k < t; k += 1) b = averagingRound(a, w, b0, b);
+  return b;
+}
+
+/**
+ * The fixed point b* of the averaging rule: the solution of `(I − wS) b* = (1 − w) b⁽⁰⁾`, by
+ * Gaussian elimination with partial pivoting over the augmented matrix `[I − wS | (1 − w) b⁽⁰⁾]`.
+ * O(n³) for the n = 6 objects a slice ever carries here: n columns eliminated, each pass clearing
+ * up to n rows of up to n + 1 entries. `w ≥ 1` returns `null` rather than attempt a solve: at
+ * w = 1, `I − S` is singular whenever some node has a neighbour, since every such row of S sums to
+ * 1, so `(I − S) 1 = 0` for that row and the all-ones vector is a nonzero solution of `(I − S) x =
+ * 0` restricted to the connected nodes -- the case both `relations` and `every` are here, every
+ * object carrying at least one neighbour -- and past w = 1 the rule no longer contracts towards
+ * any point at all.
+ *
+ * Partial pivoting never meets an all-zero column for `w < 1`. Every row of `I − wS` carries
+ * diagonal entry 1 and off-diagonal entries `−w · S_ij` whose absolute values sum to `w` times
+ * that row's own share total (0 or 1), at most `w`, itself below 1: the diagonal strictly exceeds
+ * the sum of the rest of its row, so `I − wS` is strictly diagonally dominant. A strictly
+ * diagonally dominant matrix is nonsingular, and elimination on one never meets a column with
+ * nothing to pivot on: the dominance survives each elimination step, so some entry at or below the
+ * pivot row in the working column is always nonzero.
+ */
+export function fixedPoint(
+  a: readonly (readonly number[])[], w: number, b0: readonly number[],
+): number[] | null {
+  if (w >= 1) return null;
+  const n = b0.length;
+  const m = a.map((row, i) => [...row.map((aij, j) => (i === j ? 1 : 0) - w * aij), (1 - w) * b0[i]!]);
+  for (let c = 0; c < n; c += 1) {
+    let p = c;
+    for (let r = c + 1; r < n; r += 1) if (Math.abs(m[r]![c]!) > Math.abs(m[p]![c]!)) p = r;
+    [m[c], m[p]] = [m[p]!, m[c]!];
+    const pivot = m[c]!;
+    for (let r = 0; r < n; r += 1) {
+      if (r === c) continue;
+      const row = m[r]!;
+      const k = row[c]! / pivot[c]!;
+      for (let q = c; q <= n; q += 1) row[q] = row[q]! - k * pivot[q]!;
+    }
+  }
+  return m.map((row, i) => row[n]! / row[i]!);
+}
+
+/** `max_i |a_i − b_i|`, the max norm of the difference; 0 for empty input rather than −Infinity. */
+export function maxDistance(a: readonly number[], b: readonly number[]): number {
+  if (a.length === 0) return 0;
+  return a.reduce((m, x, i) => Math.max(m, Math.abs(x - b[i]!)), 0);
+}
+
+/** The widest gap a belief vector carries: its largest value less its smallest. */
+export function spread(b: readonly number[]): number {
+  return Math.max(...b) - Math.min(...b);
+}
+
+export function mean(values: readonly number[]): number {
+  return values.reduce((s, x) => s + x, 0) / values.length;
+}
+
+/**
+ * `Σⱼ dⱼ b⁽⁰⁾ⱼ / Σⱼ dⱼ`, `dⱼ = lists[j].length`: the quantity the averaging rule conserves at
+ * w = 1 and every belief converges to, on any graph without isolated nodes -- the plain mean only
+ * when every degree is equal, which is why the two agree on the complete graph `every` and part on
+ * `relations`.
+ */
+export function degreeWeightedMean(lists: readonly (readonly number[])[], b0: readonly number[]): number {
+  const num = b0.reduce((s, x, j) => s + lists[j]!.length * x, 0);
+  const den = lists.reduce((s, l) => s + l.length, 0);
+  return num / den;
+}
+
+/**
+ * `value` rounded to `places` decimals, the tie settled before the rounding rather than by it: a
+ * value one ulp either side of an exact tie, such as `0.32499999999999996` for `0.325`, first
+ * snaps to ten decimal places -- enough to absorb one ulp of binary floating-point error, not
+ * enough to move a value that genuinely differs at the tenth place -- so both sides of the tie
+ * print the same digit.
+ */
+export function decimals(value: number, places: number): string {
+  return Number(value.toFixed(10)).toFixed(places);
+}
