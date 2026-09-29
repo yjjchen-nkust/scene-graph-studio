@@ -195,3 +195,97 @@ def test_criteria_for_the_m0_demo_frames_is_the_isg_triple() -> None:
     isg = (prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG)
     assert indvissgg.criteria_for("m0-demo-096") == isg
     assert indvissgg.criteria_for("m0-demo-999") != isg
+
+
+# ── the expert prompt carries the criteria and asks for labelled analyses (D115) ──────────────
+
+STEP1_ISG_LITERAL = (
+    "INFORMATION\nYou are given one video frame from an industrial workcell.\n"
+    "Extract every relation you can see as <subject, predicate, object> triplets.\n\n"
+    "TRIPLETS EXTRACTION CRITERIA -- object categories\n- hand\n- beam\n- brace\n- block\n"
+    "- wheel\n- axle\n- pin\n- nut\n- washer\n- assembly\n- instruction sheet\n- workbench\n\n"
+    "TRIPLETS EXTRACTION CRITERIA -- predicate dictionary\n- holding\n- assembling\n"
+    "- attached to\n- inserted into\n- on\n- near\n- reaching for\n\n"
+    "TRIPLETS EXTRACTION CRITERIA -- examples\n"
+    "[positive] <hand, assembling, assembly> -- The hand is working on the partly built model; "
+    "`assembling` is in P.\n"
+    "[negative] <hand, tightening, nut> -- `tightening` is not in P, so this triplet cannot be "
+    "scored at all.\n\n"
+    "OUTPUT\nOne triplet per line, in <subject, predicate, object> form."
+)
+
+
+def criteria_section(prompt: str) -> str:
+    """From the first criteria heading to the blank line before OUTPUT."""
+    start = prompt.index("TRIPLETS EXTRACTION CRITERIA -- object categories")
+    return prompt[start:prompt.index("\n\nOUTPUT")]
+
+
+def test_the_expert_prompt_carries_the_criteria_and_asks_for_labelled_analyses():
+    prompt = prompts.step2_prompt(
+        [("hand", "holding", "beam")], 2, prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG
+    )
+    lines = prompt.split("\n")
+    for entry in (*prompts.O_ISG, *prompts.P_ISG):
+        assert f"- {entry}" in lines, entry
+    for ex in prompts.EXAMPLES_ISG:
+        s, p, o = ex["triplet"]
+        assert f"[{ex['kind']}] <{s}, {p}, {o}> -- {ex['analysis']}" in lines
+    assert "DRAFT\n<hand, holding, beam>" in prompt
+    assert "expert 2 of N" in prompt
+    assert prompt.endswith(
+        "OUTPUT\n"
+        "The revised triplet set, one per line, in <subject, predicate, object> form.\n"
+        "Then a line reading ANALYSIS_EN, followed by one paragraph in English explaining every "
+        "change.\n"
+        "Then a line reading ANALYSIS_ZH, followed by the same paragraph in Traditional Chinese."
+    )
+
+
+def test_step_one_is_unchanged_by_the_shared_criteria_helper():
+    prompt = prompts.step1_prompt(prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG)
+    assert prompt == STEP1_ISG_LITERAL
+
+
+def test_the_criteria_block_is_one_text_in_both_prompts():
+    one = prompts.step1_prompt(prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG)
+    two = prompts.step2_prompt(
+        [("hand", "holding", "beam")], 1, prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG
+    )
+    assert criteria_section(one) in two
+
+
+class Capturing:
+    """A provider that records every prompt and answers step 2 with labelled analyses."""
+
+    name = "capturing"
+
+    def __init__(self) -> None:
+        self.prompts: list[str] = []
+
+    def complete(self, *, prompt: str, image_ref: str | None, context: dict) -> str:
+        self.prompts.append(prompt)
+        if prompt.startswith("TRIPLE-CHECKING"):
+            i = prompt.split("expert ")[1].split(" ")[0]
+            return f"<hand, holding, beam>\nANALYSIS_EN\nen-{i}\nANALYSIS_ZH\nzh-{i}"
+        return "<hand, holding, beam>"
+
+
+def test_run_gives_the_experts_the_criteria_step_one_had(monkeypatch):
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    run(image_ref="isg-fig2-t1", steps=[1, 2])
+    step1, *experts = fake.prompts
+    assert len(experts) == 3
+    section = criteria_section(step1)
+    assert all(section in e for e in experts)
+
+
+def test_the_labelled_analyses_reach_the_summary(monkeypatch):
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    body = run(image_ref="isg-fig2-t1", steps=[1, 2, 3])
+    step3 = fake.prompts[-1]
+    for i in (1, 2, 3):
+        assert f"EXPERT {i} ANALYSIS\nen-{i}\n" in step3
+        assert body["step2"][i - 1]["analysis_zh"] == f"zh-{i}"

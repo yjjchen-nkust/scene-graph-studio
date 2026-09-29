@@ -4894,3 +4894,34 @@ and prompt a probe answered in 3.9 s, `stop`, 94 tokens, ten triplets, with two 
 returning identical text. The transcript is therefore one seeded sample, not the model's only answer. The
 completion is kept verbatim apart from the `</think>` strip and surrounding whitespace; a Markdown fence around the triplets is not
 removed, because `parse_triplets` extracts the `<...>` lines regardless.
+
+## D115 — The expert prompt carries the criteria and asks for labelled analyses; D-V is recorded again
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Task 4b. **Decisions:** none new. Branch `feat/m0-demos`.
+
+**Two defects, both older than this branch.** Reading the first D-V recording showed them. (1)
+`step2_prompt` asked for "one paragraph of analysis" with no labels, while `parse_analysis` reads only
+`ANALYSIS_EN` and `ANALYSIS_ZH` sections, so none of the 30 recorded expert completions carried a label and
+every `analysis_en` and `analysis_zh` was empty; step 3 received empty analyses, and Eq. (4)'s alpha never
+reached the summariser. A live L5 run had the same defect. (2) The expert prompt carried no criteria, although
+Eq. (3) is `VLM(V_t, O, P, E, Prompt, out^s1_t)` and the prompt told the model to replace a predicate "not in
+the dictionary" without giving it the dictionary.
+
+**The fix.** `step2_prompt(draft, expert, O, P, E)` renders the three `TRIPLETS EXTRACTION CRITERIA` blocks
+through `_criteria_parts`, the helper `step1_prompt` now also calls, so the two cannot drift and step 1's text
+is byte-for-byte what it was (a test holds it to the literal). Its OUTPUT section asks for the revised triplets
+one per line, then `ANALYSIS_EN` and `ANALYSIS_ZH` on lines of their own. `indvissgg.step2` takes O, P and E,
+`run` passes the ones it gave step 1, and the recorder passes `O_ISG`, `P_ISG` and `EXAMPLES_ISG`. `run` does
+not pass `ablate` to step 2, as before: ablation is a step-1 experiment.
+
+**The authored transcripts.** The eight hand-authored step-2 exchanges (five in `fig2-pipeline.json`, three in
+`fig2-corrections.json`) were keyed on the old prompt. `backend/scripts/rekey_step2_transcripts.py` recovers
+each draft and expert index from the old prompt, rebuilds the prompt with
+`step2_prompt(draft, expert, *criteria_for(image_ref))` (the wiring-workcell O, P, E these were authored
+against) and recomputes `key`. Only `prompt` and `key` of those eight exchanges changed. Their completions
+stand: each already carries the `ANALYSIS_EN` and `ANALYSIS_ZH` sections (all eight parse to a non-empty English
+and Chinese analysis through `parse_analysis`, measured), so the labelled format the new prompt asks for is the
+one they were authored in, and the criteria block the prompt gained is the O, P and E they were authored
+against. The authored prompt was the defective one, not the authored completions. `mini-isg-step1.json` has no
+step-2 exchange and is unchanged. The script prints each old and new key, has `--check`, and refuses
+`m0-demo.json`.

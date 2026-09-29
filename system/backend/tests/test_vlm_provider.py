@@ -18,7 +18,7 @@ import types
 import pytest
 
 from app.settings import DATA_DIR
-from app.vlm import frames, prompts
+from app.vlm import frames, indvissgg, prompts
 from app.vlm.claude import ClaudeProvider, ModelRefused
 from app.vlm.provider import (
     ProviderUnavailable,
@@ -44,7 +44,10 @@ def test_transcript_player_is_the_default():
 def test_transcript_player_needs_no_network_and_no_key(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     out = get_provider(None).complete(
-        prompt=prompts.step2_prompt(prompts.CANNED["hallucinated_wrench"]["draft"], expert=1),
+        prompt=prompts.step2_prompt(
+            prompts.CANNED["hallucinated_wrench"]["draft"], 1,
+            *indvissgg.criteria_for("isg-fig2-t1"),
+        ),
         image_ref="isg-fig2-t1",
         context={},
     )
@@ -125,7 +128,9 @@ def test_the_three_corrections_the_paper_names_are_all_playable():
     for case in ("hallucinated_wrench", "missing_nodes", "imprecise_taping"):
         canned = prompts.CANNED[case]
         out = player.complete(
-            prompt=prompts.step2_prompt(canned["draft"], expert=1),
+            prompt=prompts.step2_prompt(
+                canned["draft"], 1, *indvissgg.criteria_for(canned["image_ref"])
+            ),
             image_ref=canned["image_ref"],
             context={},
         )

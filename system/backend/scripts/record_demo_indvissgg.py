@@ -158,7 +158,7 @@ def record_frame(image_ref: str, provider: RecordingProvider) -> None:
     )
     experts = indvissgg.step2(
         image_ref=image_ref, dataset="mini-isg", draft=indvissgg.triplets_of(graph),
-        n_experts=N_EXPERTS, provider=provider,
+        n_experts=N_EXPERTS, provider=provider, O=O_ISG, P=P_ISG, E=EXAMPLES_ISG,
     )
     indvissgg.step3(
         image_ref=image_ref, dataset="mini-isg",

@@ -171,16 +171,17 @@ def step1(
 
 def step2(
     *, image_ref: str, dataset: str, draft: list[tuple[str, str, str]], n_experts: int,
-    provider: VLMProvider,
+    provider: VLMProvider, O: tuple[str, ...] | list[str], P: tuple[str, ...] | list[str],
+    E: list[dict[str, Any]] | None,
 ) -> list[dict[str, Any]]:
-    """N experts over the same draft, each with its own prompt.
+    """N experts over the same draft, each with its own prompt and the criteria of step 1.
 
     The expert index is in the prompt because Table 4 measures what varying N does; N experts
     given identical prompts would be one expert sampled N times, a different experiment.
     """
     out: list[dict[str, Any]] = []
     for i in range(1, n_experts + 1):
-        prompt = prompts.step2_prompt(draft, expert=i)
+        prompt = prompts.step2_prompt(draft, i, O, P, E)
         completion = provider.complete(prompt=prompt, image_ref=image_ref, context={})
         analysis_en, analysis_zh = parse_analysis(completion)
         out.append({
@@ -246,7 +247,7 @@ def run(
         return body
 
     experts = step2(image_ref=image_ref, dataset=dataset, draft=triplets_of(graph),
-                    n_experts=n_experts, provider=impl)
+                    n_experts=n_experts, provider=impl, O=objects, P=predicates, E=examples)
     body["step2"] = [{**e, "graph": e["graph"].model_dump()} for e in experts]
     if 3 not in wanted:
         return body
