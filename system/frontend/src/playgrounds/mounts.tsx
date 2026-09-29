@@ -11,6 +11,8 @@ import { BoxOverlap } from './F3/BoxOverlap';
 import { PredicateSynonymy } from './F6/PredicateSynonymy';
 import { LongTailDistribution } from './F7/LongTailDistribution';
 import { DirectedEdges } from './F8/DirectedEdges';
+import { PairsAgainstRelations } from './T1/PairsAgainstRelations';
+import { BeliefsUnderAveraging } from './T2/BeliefsUnderAveraging';
 import { SplitReleases } from './X1/SplitReleases';
 import { VrdPerPair } from './X2/VrdPerPair';
 
@@ -39,6 +41,8 @@ export const PLAYGROUND_MOUNTS: Record<string, ComponentType<PlaygroundProps>> =
   F6: PredicateSynonymy,
   F7: LongTailDistribution,
   F8: DirectedEdges,
+  T1: PairsAgainstRelations,
+  T2: BeliefsUnderAveraging,
   X1: SplitReleases,
   X2: VrdPerPair,
 };

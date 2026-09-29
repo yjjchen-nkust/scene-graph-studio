@@ -12,7 +12,7 @@ before changing anything.**
 
 A full-stack teaching application for scene graph generation, built for 大語言模型技術與應用
 (2026) and anchored on Wang et al., *IndVisSGG*, Advanced Engineering Informatics 65 (2025)
-103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 14 playgrounds, 60 paper
+103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 16 playgrounds, 60 paper
 cards and 5 frozen leaderboards.
 
 It lives at `scene-graph-studio/` inside the WekaExt repository and is **not** a separate
@@ -46,7 +46,7 @@ cd scene-graph-studio\system ; npm run ci
   walkthrough at three projector resolutions, 79 tests, over the production build with no backend
   running), `npm run check:offline` (check 6, a torch-free interpreter with every outward request
   intercepted), `npm run check:perf` (NFR-8, cold start on five routes and input-to-paint on five
-  labs and fourteen playgrounds, against a backend it starts itself), `npm run check:pins`.
+  labs and sixteen playgrounds, against a backend it starts itself), `npm run check:pins`.
 
 ## Traps
 
@@ -83,7 +83,7 @@ cd scene-graph-studio\system ; npm run ci
   longest state, 96.5 px at Δx = 18, with every readout correct (D97), and
   `F3, E1, E10, E3, E4 and E7 draw their marks on their photographs` now measures that (D98, D106).
 - **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
-  in both locales (**D76**). All 117 steps carry theirs; 234 notes.
+  in both locales (**D76**). All 119 steps carry theirs; 238 notes.
 - **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and
   `npm run lint:standalone` asserts they agree. Edit the source, then run
   `npm run build:standalone` in the same commit.
@@ -127,7 +127,7 @@ cd scene-graph-studio\system ; npm run ci
   count, a bound or a set membership, never a metric** — a metric is a lab's business and the
   boundary is the point. Nothing in `frontend/src/playgrounds/` imports from `sgg-metrics` except
   its types, and three tests in `playgrounds/test/logic.test.ts` that hold F3's IoU to `boxIou`, on the golden cases and at every knob setting, and E1's verdict to `classify` (D97, D98, D100), and four more there that hold M4's cap to `applyConstraint`, its counts to `evaluate`, and E13's admission to `applyPairing` and its match to `evaluate` (D106). M0 carries three (F1, F2, F8), M1
-  three (F6, F7, X1), M2 one (F3), M3 two (E1, E10) and M4 five (E3, E4, E7, E13, X2); 14 live knowledge points have none. See D88, D93, D97, D98 and D106. **`PlaygroundFrame`
+  three (F6, F7, X1), M2 one (F3), M3 two (E1, E10), M4 five (E3, E4, E7, E13, X2) and M5 two (T1, T2); 12 live knowledge points have none. See D88, D93, D97, D98, D106 and D111. **`PlaygroundFrame`
   clips only a picture** (`clip`, default on): a playground of words and figures passes
   `clip={false}`, because a word under the clip is beyond the reach of the step's scroll (D93).
   **`PlaygroundFrame`'s `dense` is M4's**, for its twelve-row lists at 1024×768; the earlier

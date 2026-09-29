@@ -224,7 +224,7 @@ jsdom for the rule and in Chromium for the hit testing jsdom does not have.
 **Presenter notes are complete, 2026-09-19.** All 95 steps carry them in both locales, 190 in
 total [**corrected 2026-09-26:** 92 steps and 184 notes on this date, as first written and as this
 paragraph's last sentence says; 95 and 190 replaced them on 2026-09-20, after M0's playgrounds,
-the corpus held 98 steps and 196 notes after M1's playgrounds, held 103 and 206 after D96, 105 and 210 after D97, 109 and 218 after D98, and holds 117 and 234 since D106], written against each step's own content: what
+the corpus held 98 steps and 196 notes after M1's playgrounds, held 103 and 206 after D96, 105 and 210 after D97, 109 and 218 after D98, 117 and 234 after D106, and holds 119 and 238 since D111], written against each step's own content: what
 has to land, what to put on the board before
 the slide does, what the room usually gets wrong, what to compress when the clock is short. They
 are procedural rather than expository — none introduces a claim its module does not already make.
@@ -428,7 +428,7 @@ frozen-page lints clean, standalone current (254 equations), frontend builds. `n
 2026-09-28, on branch `feat/playgrounds-m4` at `b57328b`:
 79 passed across the keyboard walkthrough, the playgrounds and the three projector resolutions. `npm run
 check:offline`: 8 passed, re-run 2026-09-19 on a freshly built torch-free interpreter. `npm run
-check:perf`, 2026-09-28, on branch `feat/playgrounds-m4` at `b57328b`: 28 passed, NFR-8 measured over five labs and fourteen playgrounds, plus the D75 selection guard.
+check:perf`, 2026-09-28, on branch `feat/playgrounds-m4` at `b57328b`: 28 passed, NFR-8 measured over five labs and the fourteen playgrounds of M0 to M4, plus the D75 selection guard; since D111 it measures five labs and sixteen playgrounds.
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in
