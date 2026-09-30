@@ -1872,3 +1872,211 @@ of this run is inside the 100 ms budget, the slowest F2 at 56.9 ms; cold starts 
 ### The records test
 
 Run alone before the records were written, this record's test failed on its missing heading.
+
+## 31. The M0 demos, measured 2026-09-30
+
+D112 to D117. Every number below is from the run that produced it, on branch `feat/m0-demos`, cut from
+`main` at `d5c7595`. The recordings are dated as their provenance objects date them. The task reports
+(`.superpowers/sdd/2026-09-29-m0-demos/task-*-report.md`) hold each measurement's method; this section states
+the figures and the run that closes the branch. Nothing under `data/` appears in a commit (D109, D110), so the
+sizes and SHA-256 hashes below are the only record of the recordings outside the NAS.
+
+The demos compute counts, set memberships and set differences over recorded artefacts, never a metric: nothing
+in `frontend/src/demos/` imports a value from `sgg-metrics`, and no figure below is R@K, mR@K or a comparison
+with mini-ISG's reference annotations.
+
+### The clip and its frames
+
+`01_assy_0_1.mp4` of IndustReal (Apache-2.0, the 4TU data record, the licence row `demos-m0`), 88.0 to 106.0 s,
+cut by `backend/scripts/cut_demo_m0.py` (Task 2, commit `10e911b`).
+
+| File | Bytes | SHA-256 |
+|---|---|---|
+| `demos/m0/clip.mp4` | 2,139,278 | `71d67ef8cfc9395868d87c87791fb7ad20c4b2eb6e09485f60c7b18c22bf1fbe` |
+| `demos/m0/MANIFEST.json` | 3,498 | `93f7eb1f1b437835e4249e2c22f47f721e57fcb74bd91e85db192173fc4727a6` |
+
+The clip is H.264 at CRF 28 (the budget is 5,000,000 bytes; the script raises CRF by 2 up to 34 if it is over),
+1280 × 720, 10 fps, 180 frames, 18.0 s, no audio. A second run reproduced its hash. The ten frames are JPEGs
+cut at 88.0, 90.0, …, 106.0 s, ids `m0-demo-088` to `m0-demo-106`, of 55,026, 36,333, 51,731, 51,918, 41,241,
+58,456, 67,901, 47,330, 63,258 and 54,958 bytes in that order. `data/LICENCES.md` gained the one `demos-m0` row
+(5,068 bytes after), and `npm run lint:content` counts 8 licence rows.
+
+### D-T, the traditional pipeline
+
+`backend/scripts/record_demo_traditional.py` (Task 3, commit `d21007a`), run 2026-09-29 on this machine: torch
+2.10.0+cu128, torchvision 0.25.0+cu128, device `cuda`, NVIDIA GeForce RTX 3090; the weights came from the torch hub
+cache and nothing was downloaded. Model id `fasterrcnn-r50fpn-coco+freq-vg150sgb`, detector threshold 0.5.
+
+| Frame | 088 | 090 | 092 | 094 | 096 | 098 | 100 | 102 | 104 | 106 | Total |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Detections | 6 | 6 | 4 | 4 | 5 | 5 | 5 | 6 | 6 | 5 | **52** |
+| Ordered pairs | 30 | 30 | 12 | 12 | 20 | 20 | 20 | 30 | 30 | 20 | **224** |
+
+The 52 detections are person 26, remote 19, donut 2, and book, cell phone, knife, tie and toothbrush 1 each.
+Four labels (donut, knife, remote, toothbrush) map to no class of the vg150-sgb slice. **All 224 relations take
+the fallback predicate `on`**, none from the prior: 166 have a class outside the slice's classes (unmapped) and
+58 have both classes in the slice but a pair the prior's 80 frames and 892 rows never contain (unseen). The
+demo states this as the prior's coverage limit, not as classification, and not as a finding about the
+frequency baseline on the full split. Task 5's first report gave 250 relations; that figure was wrong, and the
+data and every record here hold 224. The synonym `tv` to `screen` in the brief was dropped, since the slice has
+no such class and the brief's own test requires every synonym target to be one. The ten graphs and
+`detections.json` (1,476 bytes, SHA-256 `768b6cf5338d5df24bd150aecaa5ae1ce2039163f2cbb03be8493c53a047c5ea`) are
+on the NAS; the ten graphs pass the same audit as the other predictions (`test_registry.py`), and
+`data/predictions/PROVENANCE.md` carries the section `fasterrcnn-r50fpn-coco+freq-vg150sgb`.
+
+### D-V, the recordings
+
+D-V is recorded on the author's own vLLM server (pro6000, over Tailscale), model id `stamping-vlm`, which the
+server reports as `Qwen/Qwen3.8-27B`, and not on `claude-opus-5-5` (D114). Settings: thinking off,
+`temperature` 0.7, `top_p` 0.8, `top_k` 20, `presence_penalty` 1.5, `max_tokens` 2048, and a `seed` derived from
+each exchange's key. Five calls per frame (step 1, three experts, step 3), 50 in all. The provenance object is
+dated 2026-09-29 and each completion is one seeded sample, not the model's only answer. A graph replayed from
+the file has fidelity `reconstructed`: the replay is not the call, so no demo label says "measured" for D-V.
+
+One attempt and three recordings were made, and the file the demo replays is the third:
+
+| Run | What it did | Outcome |
+|---|---|---|
+| Greedy attempt | `temperature` 0, `max_tokens` 8192 | The first call (`m0-demo-088`, step 1) repeated `<block, on, workbench>` to the token limit, 287 s, `finish_reason` `length`; nothing recorded |
+| Recording 1 | Sampled settings above, one fixed seed, 20260930 | 50 calls in 330.5 s, 87,764 bytes, SHA-256 `18bac349…`; superseded. A fixed seed made the three experts of a frame correlated (on 088 experts 2 and 3 were identical), so the seed became per call |
+| Recording 2 | Expert prompt with O, P and E and labelled `ANALYSIS_EN` and `ANALYSIS_ZH` (D115) | 50 calls in 457.2 s, 139,646 bytes, SHA-256 `af9da103…`; superseded. Review found that `step2` parsed triplets quoted inside the analysis as revision rows |
+| Recording 3, the file | `step2` reads revision triplets only before the first `ANALYSIS_` line (D115) | **50 calls in 412.3 s, 132,893 bytes, SHA-256 `504531811d3a8ad61ab49855b7b7423af666b359f489b1a66854b6927293363e`** |
+
+The step-1 and step-2 prompts did not change between recordings 2 and 3, so the per-call seeds reproduced their
+completions: **40 of 40 identical**, keys equal. Only the ten step-3 calls differ, since their prompts now
+carry the revisions without the quoted triplets. All 30 expert completions give a non-empty `analysis_en` and
+`analysis_zh` (0 of 30 before D115). No predicate outside `P_ISG` occurs in the file; the only out-of-vocabulary
+objects are `left_hand` and `right_hand` on `m0-demo-096`. The eight authored step-2 exchanges of L5's transcripts
+(`fig2-pipeline.json` 5, `fig2-corrections.json` 3) and four authored step-3 exchanges were rekeyed by
+`backend/scripts/rekey_step2_transcripts.py`, their completions untouched.
+
+### The two derived files
+
+Built by `backend/scripts/build_demo_m0.py` (Task 5, commit `43a2c1c`), deterministic, compared on every run by
+`--check` and by the pytest suite:
+
+| File | Bytes | SHA-256 |
+|---|---|---|
+| `demos/m0/traditional.json` | 48,604 | `e8b160f0157e9dec56b260d76230ceccaae3201270fe1b9822d98b7bdf2fcdae` |
+| `demos/m0/indvissgg.json` | 83,669 | `c2bee30f0a2dc38aed4d524a465e8dde17357efe78945c159bf3dee02fbe3a15` |
+
+Per frame, D-V's draft rows, the three experts' revision rows and the summary's rows:
+
+| Frame | 088 | 090 | 092 | 094 | 096 | 098 | 100 | 102 | 104 | 106 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Draft | 10 | 10 | 8 | 9 | 11 | 11 | 13 | 10 | 10 | 10 |
+| Revisions | 10/9/10 | 9/9/10 | 7/7/7 | 6/8/7 | 10/11/10 | 7/9/7 | 12/12/12 | 9/10/10 | 8/9/9 | 9/9/9 |
+| Summary | 9 | 9 | 7 | 7 | 10 | 7 | 12 | 9 | 9 | 8 |
+
+The experts only delete: 6 of the 30 revisions change nothing. The prior's branch of D-T's relation-source test
+is never exercised, since no relation is `prior`.
+
+### Fit
+
+Task 11 (commits `c1046fb` and `3bdc263`). `step.scrollHeight − step.clientHeight` was read on the production
+build in Chromium after `document.fonts.ready`. The spare space below is the step's `clientHeight` less the demo
+frame's bottom edge, margin included, measured from the step's top; negative is overflow. The states swept: D-T
+parts 1 to 4 at all ten frames; D-V part 1 closed and open; parts 2 and 4 at all ten frames; part 3 at all 30 pairs
+of frame and expert; part 5. The worst state of each part, in px:
+
+| Part | zh-TW 1024×768 | zh-TW 1280×800 | zh-TW 1920×1080 | en 1024×768 | en 1280×800 | en 1920×1080 |
+|---|---|---|---|---|---|---|
+| DT.1 | 71 | 102 | 343 | 38 | 100 | 343 |
+| DT.2 | 136 | 191 | 510 | 92 | 168 | 510 |
+| DT.3 | 91 | 121 | 442 | 45 | 121 | 442 |
+| DT.4 | **19** (092) | 70 | 388 | **−25** (092) | 70 | 388 |
+| DV.1 | 58 open, 72 closed | 79 / 132 | 297 / 375 | 14 / 28 | 79 / 132 | 297 / 375 |
+| DV.2 | 48 (100) | 80 | 399 | 4 | 80 | 399 |
+| DV.3 | 136 | 184 | 503 | 2 | 168 | 503 |
+| DV.4 | 29 (100) | 59 | 380 | **−37** (100) | 61 | 380 |
+| DV.5 | **20** | 112 | 470 | **−43** | 112 | 470 |
+
+Every part fits in 繁體中文 at all three sizes, and no sideways scroll occurs in any state, size or locale. In
+English three parts run past 1024×768, by 25, 37 and 43 px past the frame's bottom edge (the table's negative spare space; D117 also gives the `scrollHeight − clientHeight` reading, 25, 38 and 43 px); the suite holds
+繁體中文 only (D96), so no assertion fails, and D117 records them. No layout change was needed, and nothing was
+fixed by clipping.
+
+### Boxes, badges and Figure 6's marks
+
+D-T part 1 numbers every box with an HTML badge `#n` and names it in a legend (D100, D116). On all ten frames, in
+繁體中文, at the three panel sizes (photograph 374 × 210, 398 × 224 and 538 × 302 px; badge 27.8 × 22.5 px; band
+24 px):
+
+| Size | Overlapping badge pairs | Largest share of a box a badge covers | Badges in the band, frames 088 to 106 |
+|---|---|---|---|
+| 1024×768 | 0 | 30 % (090) | 0, 0, 1, 0, 1, 0, 1, 1, 1, 2 |
+| 1280×800 | 0 | 25 % (090) | 0, 0, 1, 0, 1, 0, 1, 1, 1, 2 |
+| 1920×1080 | 0 | 10 % (090) | 0, 0, 0, 0, 0, 0, 1, 1, 1, 2 |
+
+Every banded badge belongs to a box whose top lies within one badge height of the photograph's top. Figure 6's
+rules (`marks.ts`, shared by D-T part 4 and D-V parts 3 and 5) broke under descenders until
+`text-decoration-skip-ink: none`; at all three sizes each added or removed item now computes `underline` with
+`skip-ink: none`. The test failed before the change and passes after (RED and GREEN in Task 11's report).
+
+### Contrast, the 18 px floor and the clip
+
+The contrast walk read 61, 70, 48, 79, 54, 42, 21, 53 and 138 rows on `m00/6` to `m00/14` at their default frame,
+the same at all three sizes; none is below 7:1 and none was skipped. The floors set in the suite are 48, 56, 38,
+63, 43, 33, 16, 42 and 110. No text is below 18 px on `m00/0` to `m00/15` at any size. Both clips (`m00/6` and
+`m00/10`) are wider than 200 px and taller than 100 px, wholly in the viewport, with all ten ticks above the
+panel's bottom. In Chromium the last frame is at 17.9 s of the clip; a seek at or after it sets `ended` (measured at
+18, 17.999, 17.95, 17.91 and 17.9 s; not at 17.89 s), which D117 records.
+
+### Keys
+
+On `m00/6`, Space on the focused clip plays and pauses it and the URL stays; Space on a focused tick picks the
+frame (`?DT.frame=m0-demo-096`) and does not advance; ArrowRight from the tick reaches `m00/7` with the frame
+carried; ArrowRight on the focused clip advances. The stepper carries `DT.frame` across D-T's four parts and does
+not carry it into D-V. The demos compute with no backend: `DT.objects` 6, `DT.pairs` 30 and `DT.candidates` 1,500
+at `m00/7`; `DV.calls` 5 and `DV.emitted` 10 at `m00/11`; a non-empty `dv-analysis` at `m00/12`.
+
+### NFR-8 and NFR-1
+
+`npm run check:perf`, input to paint under the 100 ms budget:
+
+| Case | Input to paint | Two-frame floor |
+|---|---|---|
+| D-T, tick 096 on `m00/6` | 72.8 ms and 71.1 ms (Task 11's two runs); 32.9 ms (the closing run, below its 33.4 ms floor) | 33.8, 32.3 and 33.4 ms |
+| D-V, expert 2 on `m00/12` | 33.0 ms and 35.0 ms; 38.9 ms (the closing run, 5.9 ms above its 33.0 ms floor) | 34.0, 33.6 and 33.0 ms |
+
+D-T's extra 39 ms in Task 11's runs is the new photograph's first decode; the closing run did not show it. In a scratch page the first click measured 68.5 to
+75.1 ms, and 32.7 to 33.7 ms with the photograph decoded beforehand. The sixteen playgrounds ran 31.5 to 38.1 ms
+and the five labs 32.5 to 36.4 ms. `npm run check:offline`: the nine demo routes `m00/6` to `m00/14` open with the
+network intercepted and `attempts` empty; the clip reaches `readyState` 1 or more on `m00/6` and `m00/10`, its
+`currentSrc` on the local origin, and Playwright's Chromium decodes the H.264 clip, so no re-encode was needed.
+That run used `.offline-venv` (Python 3.12.3, `torch` not importable), which is the NFR-1 evidence for the
+demos' backend side: the recorders import `torch`, `torchvision` and `anthropic` inside functions only.
+
+### The gate
+
+The five commands ran on the tree the records commit holds, 2026-09-30, on branch `feat/m0-demos`, each exit 0,
+with `SGS_PYTHON` set to py12 and no `vite preview` left on port 4173. The "before" column is `main` at
+`d5c7595`, as §30 measured it.
+
+| Step | Result |
+|---|---|
+| harvest | 93 knowledge points, 27 live; 26 formulas and 23 derivations |
+| pytest | **356 passed, 7 skipped** (287 before) |
+| vitest | **1234 passed in 83 files** (1079 in 76 before) |
+| parity | 21 cases agree |
+| i18n parity | **505 keys**, both locales complete (418 before); **53** carry a placeholder (27 before), all agreeing |
+| content lint | 21 golden cases, 75 playground cases, 25 release figures, 8 licence rows, 15 of 15 modules × 2 locales, 93 points assigned, 50 symbols, clean; the demo rules run over M0's nine demo steps |
+| frozen lints | no problems found |
+| standalone | up to date, 254 equations, 1063 KB |
+| frontend build | **824 modules** (790 before) |
+| `npm run test:e2e` | **107 passed** (83 before), 1.8 min |
+| `npm run check:perf` | **33 passed** (30 before), 29.0 s; the sixteen playgrounds 31.7 to 34.4 ms, D-T 32.9 ms, D-V 38.9 ms, cold starts 224 to 403 ms |
+| `npm run check:offline -- --python .offline-venv/Scripts/python` | **9 passed** (8 before), 22.8 s |
+| `npm run check:pins` | 9 of 9 pins in `requirements.txt` and 5 of 5 in `requirements-infer.txt` agree with this interpreter |
+
+The corpus holds 129 steps a locale and 258 presenter notes (120 and 240 before); M0 holds 17 steps (8 before).
+The lint suite holds 55 tests (D-T's and D-V's five rules among them, each watched failing in Task 7's mutation
+table). Apart from the records, the working tree was clean after each run, and nothing under `data/` appeared
+in `git status`.
+
+### The records test
+
+Run alone before the records were written, `the records carry the M0 demos` failed on the missing `D117`
+heading. It holds D112 to D117 in the heading form, the counts of CLAUDE.md, INDEX and README from below, the
+spec and the plan listed as executed, the `demo` kind named beside the playground with `DEMO_PARTS`, and INDEX's
+note count attributed to D117.

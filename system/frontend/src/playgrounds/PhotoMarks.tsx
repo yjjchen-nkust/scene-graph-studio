@@ -35,7 +35,8 @@ export interface Mark {
 }
 
 /**
- * A placeholder photograph with boxes drawn on it, shared by F3, E1 and E10.
+ * A photograph with boxes drawn on it, shared by F3, E1 and E10 over the placeholder slice and by
+ * the M0 demos over the clip's frames (`imageUrl`).
  *
  * The overlay is an `<svg>` on the frame's own viewBox, so it lands on the objects only if it has
  * the photograph's box exactly. The photograph is in flow inside a box nothing else sizes, and it
@@ -52,9 +53,15 @@ export interface Mark {
  * A badge sits above its box by default: at a box's corner it hid the smallest boxes (D100).
  */
 export function PhotoMarks({
-  frame, marks, hatch = null, badges = [], maxVh, alt, testid, children,
+  frame, imageUrl, marks, hatch = null, badges = [], maxVh, alt, testid, children,
 }: {
-  frame: SceneGraph;
+  /** The frame's id and pixel size; the marks are drawn on its own viewBox. */
+  frame: Pick<SceneGraph, 'image_id' | 'width' | 'height'>;
+  /**
+   * The photograph's URL, for a frame that is not a placeholder frame, such as a demo's
+   * (`demos/data.ts`, `frameUrl`). Absent, the placeholder slice's photograph of `frame` is drawn.
+   */
+  imageUrl?: string;
   marks: Mark[];
   hatch?: { box: BBox; testid: string } | null;
   /** Short HTML labels at each box's top-left corner, such as `#3`. */
@@ -73,7 +80,7 @@ export function PhotoMarks({
     >
       <div className="relative">
         <img
-          src={placeholderImageUrl(frame.image_id)}
+          src={imageUrl ?? placeholderImageUrl(frame.image_id)}
           alt={alt}
           width={frame.width}
           height={frame.height}

@@ -4792,3 +4792,290 @@ the averaging matrix (R1), and the correction of the three items the final revie
 years of architecture, since s8 names two methods, Neural Motifs (2018) and VCTree (2019); the
 bipartite statement here reads "can oscillate"; and the note on the new files' line endings is
 in the past tense.
+
+## D112 — the live VLM provider sent no frame
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Task 1. **Decisions:** none new. Branch `feat/m0-demos`.
+
+**The defect.** `ClaudeProvider.complete` sent the prompt text alone (`claude.py:39-43` before this
+commit): `image_ref` was accepted and never read. Every exchange recorded through the live path
+therefore described an image the model never saw, and the answer read as a description of it. L5's
+live answers change with the fix, since the model now receives the frame; recorded transcripts are
+unchanged, because none was produced by this path.
+
+**A live L5 run on the paper's Figure 2 now fails, by intent.** A live L5 run (provider `claude`) on
+`isg-fig2-t1`, `isg-fig2-t2` or `isg-fig2-t3` now answers 503 `vlm_unavailable`, because no frame for
+those ids exists under either directory of `FRAME_DIRS`. The endpoint's default `image_id` is
+`isg-fig2-t1` (`app/api/vlm.py:48`), so the default live request fails. This is intended: a live
+answer about an image the model never saw is the defect this record fixes. The offline transcript
+replay of those ids is unaffected: it reads no frame, and the default provider is still the replay.
+
+**What the fix does, and what the tests pin.**
+- *The frame is sent, before the prompt.* The request carries a base64 `image/jpeg` block and then
+  the text block. The model is `ClaudeProvider(model=...)`, default `claude-sonnet-5`, so L5's live
+  default is unchanged; the request states `max_tokens=16000` and `output_config={"effort":
+  "high"}`, and carries neither `fallbacks` nor `thinking`. A server-side fallback would put text
+  under a model's name that another model produced, which `get_provider` forbids.
+- *A frame that cannot be found is an error.* `app/vlm/frames.py` resolves an id in the mini-ISG
+  slice's images and then in `data/demos/m0/frames`; an id found in neither raises
+  `ProviderUnavailable` naming the id, and no request is made.
+- *The id is validated.* `image_ref` reaches `frame_path` from the request body of
+  `POST /api/vlm/indvissgg`, so `frame_path` looks up only an id that fully matches
+  `[A-Za-z0-9_-]+` (every real id does: `isg-001`, `m0-demo-088`, `isg-fig2-t1`) and skips a
+  candidate whose resolved path is not inside its directory's resolved path. `../x`, `..\x`,
+  `a/b`, the empty string and an absolute path return None, with a real `x.jpg` one level above
+  the frame directory so that the refusal is not a mere absence; the provider then raises the
+  error above.
+- *A refusal is raised.* `stop_reason == "refusal"` raises `ModelRefused`, which carries
+  `stop_details.category` when present.
+- *A truncation is raised.* `stop_reason == "max_tokens"` raises `ProviderUnavailable` naming it.
+
+**Not checked.** The request shape follows the Claude API reference and is exercised against a
+fake `anthropic` module; the package is not installed on py12 and no live call was made.
+
+## D113 — the demonstrations' graphs carry `dataset: "mini-isg"`, and no `DatasetId` of their own
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Task 3. **Decisions:** none new. Branch `feat/m0-demos`.
+
+**What was done.** Every `SceneGraph` the M0 demonstrations record, the ten of D-T under
+`data/demos/m0/traditional/` and the drafts of D-V, carries `dataset: "mini-isg"`, though their frames
+`m0-demo-088` to `m0-demo-106` are not among the mini-ISG slice's own frames: they are other frames of an
+IndustReal recording, cut under the same licence finding (Apache-2.0, verified on the 4TU data record).
+
+**Why not a new `DatasetId`.** The literal is declared twice, in `app/schema.py` and in the TypeScript engine's
+types, and a new member would change both engines' schema and every exhaustive switch over it for graphs that no
+API serves: the datasets API serves the slices under `data/slices/`, and the demonstration frames are not a slice. The
+field states the domain (IndustReal assembly footage, the `O_ISG` vocabulary), which is what the other graphs of
+that value share. It does not state that the frame belongs to the 40-frame slice; `image_id` and the manifest
+of `data/demos/m0/` say which frames these are.
+
+**Consequence.** A reader that joins on `dataset == "mini-isg"` and then looks the `image_id` up in the slice's
+manifest will find no row for these ten. Nothing in the tree does that today; the demonstrations read their own
+manifest.
+
+## D114 — D-V is recorded on the author's own server, through an OpenAI-compatible provider
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Task 4a. **Decisions:** none new. Branch `feat/m0-demos`.
+
+**Why.** The author chose to record D-V on their own vLLM server (pro6000, reached over Tailscale)
+instead of the Anthropic API: no API spend, no key, and the weights are known.
+
+**What differs from the spec (§3.3).** (1) The recording model is `stamping-vlm`, which the server reports
+as `Qwen/Qwen3.8-27B`, not `claude-opus-5-5`. (2) The recorder has a provider choice,
+`--provider {claude,openai-compat}`, default `openai-compat`, and builds its provenance block with
+`provenance_for(provider)`; the note names the served weights as the server reports them. (3) A new
+provider, `app/vlm/openai_compat.py`, standard library only, is selected by `get_provider("openai-compat")`,
+with the address and model id in `SGS_VLM_BASE_URL` and `SGS_VLM_MODEL`; it has no fallback to any other
+provider. The `ClaudeProvider` fix of D112 stands and remains L5's live path.
+
+**The settings, and why thinking is off.** `temperature` 0.7, `top_p` 0.8, `top_k` 20, `presence_penalty` 1.5,
+`max_tokens` 2048 (Qwen3's published non-thinking settings; see the last paragraph), a `seed` derived from each
+exchange's key (`int(exchange_key(...)[:8], 16)`, not a constant), the frame as a base64
+`image_url` block before the text, and `chat_template_kwargs: {"enable_thinking": false}`. With thinking on,
+the server returns the reasoning inside `message.content`, ending in `</think>`, ahead of the answer (9.6 s
+per call against 3.9 s measured), and that text would reach the triplet parser as if it were the answer.
+The provider also removes any text up to a first `</think>`. `finish_reason: "length"`, a non-null
+`message.refusal`, an empty answer, an unreachable server, an HTTP error (with up to 500 characters of the
+response body), a timeout or socket error during the read, a body that is not JSON and an answer without
+`choices`, `message` or `content` each raise `ProviderUnavailable` naming the URL; none is recorded.
+
+**The seed is per call.** A first version sent one fixed seed (20260930) on every call. The three expert calls
+of a frame have prompts that differ only in "expert N of N", so under one seed they were correlated by
+construction: on m0-demo-088 experts 2 and 3 returned identical triplets, which defeats the point of three
+experts. The seed is now `int(exchange_key(prompt, image_ref, context)[:8], 16)`: deterministic, so a recorded
+call is reproducible from the transcript alone, and distinct for distinct prompts, so the experts sample
+independently. The first recording (fixed seed) is superseded by a re-recording under a follow-up task.
+
+**Greedy decoding was tried first and rejected.** The first recording attempt used `temperature` 0 and
+`max_tokens` 8192. The first call (m0-demo-088, step 1) opened with five sensible triplets and then repeated
+`<block, on, workbench>` until the token limit, 287 s, `finish_reason` `length`; nothing was recorded. The
+settings above replace it: they are the model family's published non-thinking settings, and on the same frame
+and prompt a probe answered in 3.9 s, `stop`, 94 tokens, ten triplets, with two runs under the same seed
+returning identical text. The transcript is therefore one seeded sample, not the model's only answer. The
+completion is kept verbatim apart from the `</think>` strip and surrounding whitespace; a Markdown fence around the triplets is not
+removed, because `parse_triplets` extracts the `<...>` lines regardless.
+
+## D115 — The expert prompt carries the criteria and asks for labelled analyses; D-V is recorded again
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Task 4b. **Decisions:** none new. Branch `feat/m0-demos`.
+
+**Two defects, both older than this branch.** Reading the first D-V recording showed them. (1)
+`step2_prompt` asked for "one paragraph of analysis" with no labels, while `parse_analysis` reads only
+`ANALYSIS_EN` and `ANALYSIS_ZH` sections, so none of the 30 recorded expert completions carried a label and
+every `analysis_en` and `analysis_zh` was empty; step 3 received empty analyses, and Eq. (4)'s alpha never
+reached the summariser. A live L5 run had the same defect. (2) The expert prompt carried no criteria, although
+Eq. (3) is `VLM(V_t, O, P, E, Prompt, out^s1_t)` and the prompt told the model to replace a predicate "not in
+the dictionary" without giving it the dictionary.
+
+**The fix.** `step2_prompt(draft, expert, O, P, E)` renders the three `TRIPLETS EXTRACTION CRITERIA` blocks
+through `_criteria_parts`, the helper `step1_prompt` now also calls, so the two cannot drift and step 1's text
+is byte-for-byte what it was (a test holds it to the literal). Its OUTPUT section asks for the revised triplets
+one per line, then `ANALYSIS_EN` and `ANALYSIS_ZH` on lines of their own. `indvissgg.step2` takes O, P and E,
+`run` passes the O, P and E it gave step 1 before any ablation, and the recorder passes `O_ISG`, `P_ISG` and
+`EXAMPLES_ISG`.
+
+**Under a step-1 ablation the experts still receive the full O, P and E.** `run` does not pass `ablate` to
+step 2, because L5's authored step-2 exchanges are keyed on the full criteria and Table 3 ablates step 1 only.
+The consequence is stated plainly: a Table-3 row run through steps 2 and 3 no longer withholds the ablated
+block from the final graph, since the experts see the block the draft was made without and may restore what it
+would have supplied. Before D115 the experts saw no criteria at all, so an ablated block was withheld from
+them by accident; that is not a property to keep. `test_under_ablation_the_experts_still_get_the_full_criteria`
+holds the behaviour.
+
+**A second defect, found in review: quoted triplets became revision rows.** `step2` parsed the whole expert
+completion, so a triplet the model quotes inside its analysis (a deleted `<block, attached to, assembly>`, say)
+became a row of the revision, and the same rows reached step 3. `indvissgg.revision_text` now returns the text
+before the first line starting `ANALYSIS_` (the whole text when there is none), and `step2` builds its graph
+from that. The authored L5 exchanges had the same defect: `step3-n1` showed `<worker, holding, wrench>` twice
+under EXPERT 1 REVISION.
+
+**The authored transcripts.** The eight hand-authored step-2 exchanges (five in `fig2-pipeline.json`, three in
+`fig2-corrections.json`) were keyed on the old prompt. `backend/scripts/rekey_step2_transcripts.py` recovers
+each draft and expert index from the old prompt, rebuilds the prompt with
+`step2_prompt(draft, expert, *criteria_for(image_ref))` (the wiring-workcell O, P, E these were authored
+against) and recomputes `key`. Only `prompt` and `key` of those eight exchanges changed. Their completions
+stand: each already carries the `ANALYSIS_EN` and `ANALYSIS_ZH` sections (all eight parse to a non-empty English
+and Chinese analysis through `parse_analysis`, measured), so the labelled format the new prompt asks for is the
+one they were authored in, and the criteria block the prompt gained is the O, P and E they were authored
+against. The authored prompt was the defective one, not the authored completions. The four authored step-3
+exchanges of `fig2-pipeline.json` (`step3-n1`, `n2`, `n3`, `n5`) are rebuilt as well, from the same file's
+step-2 completions for that frame (experts 1 to N, revisions through `revision_text`, analyses through
+`parse_analysis`) and rekeyed; the script checks that each stored prompt equals the old or the new build
+before it writes, and stops otherwise. `fig2-corrections.json` has no step-3 exchange. `mini-isg-step1.json`
+has no step-2 exchange and is unchanged. The script prints each old and new key, has `--check`, and refuses
+`m0-demo.json`.
+
+**The re-recording.** D-V was recorded again on `stamping-vlm` (`Qwen/Qwen3.8-27B`, D114's settings and
+per-call seed) twice: once under the prompt alone (superseded), and once more after `revision_text` (50 calls
+in 412.3 s; `m0-demo.json` 132,893 bytes). The step-1 and step-2 prompts did not change between the two, so the
+per-call seeds reproduced all 40 step-1 and step-2 completions byte for byte (40 of 40 identical, keys equal);
+only the ten step-3 calls differ, because their prompts now carry the revisions without the quoted triplets.
+All 30 expert completions yield a non-empty `analysis_en` and a non-empty `analysis_zh` through
+`parse_analysis` (0 of 30 before), so step 3 receives the analyses. No predicate outside `P_ISG` appears in any
+of the recorded completions; the only out-of-vocabulary objects are `left_hand` and `right_hand` on
+`m0-demo-096` (ten mentions under the fixed parse). Under the fixed parse the revisions hold 6 to 12 rows and no
+repeated row, and every summary has as many rows as distinct triplets (7 to 12; the repeated lines of the
+first recording's summaries, 24 rows on 096 and 41 on 102, came from the quoted triplets and are gone). Of the
+ten frames the three revisions are pairwise different on two (094, 098), exactly one pair coincides on six (088,
+090, 096, 102, 104, 106), and all three coincide on two (092, 100).
+
+**One copy for every branch.** The rekey changed `fig2-pipeline.json` and `fig2-corrections.json` on the
+NAS, which every branch reads. `main`'s `step2_prompt(draft, expert=1)` builds three step-2 keys
+(`hallucinated_wrench`, `missing_nodes`, `imprecise_taping`) that are no longer in those files, so until this
+branch merges `main` fails `npm run ci` against the NAS: `test_transcript_player_needs_no_network_and_no_key`
+and `test_the_three_corrections_the_paper_names_are_all_playable` fail, and L5's Figure 2 replay returns
+`TranscriptMiss`. No other branch's L5 tests or harvest should run before the merge. A revert needs the old
+`step2_prompt` text restored and `rekey_step2_transcripts.py` run against it, because the script rebuilds
+from the current prompt only. The pre-rekey files are kept in the workspace at
+`.superpowers/sdd/2026-09-29-m0-demos/backup-fig2-pipeline.json` and `backup-fig2-corrections.json`, which git
+ignores and which are scratch; a durable copy is at `C:\DataRaw\scene-graph\vlm\transcripts-pre-D115\`, a
+sibling of `transcripts/` that the transcript player does not load (SHA-256 of `fig2-pipeline.json`:
+`3d12d9432888f1d494622282e3fff6e18186af971f75d458eb94de512838844e`; of `fig2-corrections.json`:
+`1a47b087972e1c459d09a9542893b8eba7598606b88adc3826da76ec2eb4db03`). Keep that directory after the
+workspace is deleted.
+
+## D116 — the demos draw lists, numbers and one expert at a time where spec §4 names graphs, labels and all three
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Tasks 8 and 9. **Decisions:** none new. Branch `feat/m0-demos`.
+
+**Why.** Spec §4 names six renderings that do not fit a 1024×768 panel at the 18 px floor in 繁體中文, the
+state the projector suite holds every part to (D96), or that cannot be held to the floor at all. SVG text is
+scaled below the floor by its viewBox (D98); a Cytoscape canvas takes a box of its own, so ten or three
+node-link drawings do not fit one panel, and it draws its labels on the canvas, where no sweep of the lecture
+can measure them. Each rendering below keeps what the spec's version shows, as counts, set memberships and set
+differences over the recording, and states it in DOM text at 18 px or more.
+
+Figure 6's marks are one definition, `frontend/src/demos/marks.ts`, which D-T part 4 and D-V parts 3 and 5 draw
+with: an added triplet on a solid `blue-700` rule, a removed one on a dotted `slate-700` rule, so the two differ
+by shape as well as colour (NFR-5), and a kept one on none. The rule is a 3 px text underline, which adds no
+height to a row; the colour is the rule's alone, and the sign and the words keep the text's ink.
+
+- **T4, "the ten per-frame graphs as a strip".** D-T part 4 draws the ten frames as thumbnails in a grid of five
+  columns, each with |E_t| beneath it and, between neighbours, |Δ|, |∪| and their ratio (`—` where |∪| is 0).
+  Below, the chosen frame's distinct class-level triplets against the frame before: kept, `+` added and `−`
+  removed, in Figure 6's marks.
+- **V4, "the summary graph, triplets only".** D-V part 4 lists the chosen frame's step-3 summary as text, not as
+  a graph through `SceneGraphView` (contracts §2.6): each subject once, in the order it first appears, above its
+  rows written `predicate → object`, beside the predicate table of both pipelines. The graph was drawn first,
+  and measured: `SceneGraphView`'s canvas sets node labels at 12 px and edge labels at 11 px and scales them by
+  its fit zoom, which at 1024×768 (a 556 × 290 px box) was 0.66 to 1.21 over the ten frames, so the labels were
+  about 8 to 15 px. The floor is the project's hard rule, and the lecture's sweeps measure DOM text only, so a
+  canvas label below it would pass every check unseen. Part 4 is where seven of the ten frames' summaries appear,
+  since part 5 lists only the three keyframes. `SceneGraphView` is unchanged, since L1 shares it.
+- **V5, "t1, t2 and t3 in Figure 6's style".** D-V part 5 lists the three keyframes' distinct summary triplets,
+  each written `s: p → o` as part 4 writes a row under its subject, in Figure 6's marks: in t₂ and t₃ each
+  triplet is kept, `+` added or `−` removed, and a removed triplet is listed with the keyframe where it
+  disappeared. The keyframes are three bands, one above the other, each a flowing list as D-T part 4's is,
+  **not three columns**, which the plan's Task 9 names. At 18 px the t₂ column holds seventeen rows (its ten
+  triplets and the seven of t₁ it removed), 372 px tall, and the three columns take 742 px of the panel's 910
+  px. With the churn table and the caption beneath them the part ran 193 px past 1024×768 in zh-TW; with the two
+  beside them, the table needed 232 px of a 156 px rail. Flowing, the three keyframes fit, and the churn of both
+  pipelines per step stands beneath as a table (|Δ| / |∪| over the ratio), with the caption beside it.
+- **V3, "each expert's revision".** D-V part 3 shows one expert at a time, chosen by `DV.expert` (`snap` onto 1
+  to 3). Three experts' lists and three analyses of up to 734 English characters each do not fit the panel
+  together.
+- **T3, "each pair's argmax predicate".** D-T part 3 carries no per-pair list. All 224 recorded relations took
+  the fallback `on`, since the prior's 80 frames hold none of the detected class pairs, so the list would repeat
+  one word n(n − 1) times; the two histograms and the counts of each fallback cause carry the same content.
+- **T1, "the frame with COCO boxes and labels".** D-T part 1 numbers each box with an HTML badge `#n` and names
+  every number in a legend `#n label score` beneath the photograph, as E10 does (D100). `label score` badges
+  overlapped in up to eight pairs at the default frame. `badgePlaces` sets each badge above its box, never
+  inside it, and no two overlap on the recording at 374, 398 or 538 px. **This is an exception to D100's rule
+  that a badge lies on the photograph:** a badge whose box's top is within one badge height of the frame's top
+  lies in a band one badge tall directly above the photograph (`dt-photo-band`), within the photograph's
+  horizontal extent; every other badge lies on the photograph. Task 11's badge assertion carries the exception.
+
+**D-V part 1's whole prompt.** The TEC prompt's 27 lines are taller than the panel at 18 px. They sit behind a
+`<details>` below the prompt's parts; opened, the whole prompt takes the parts' place and scrolls within its
+own box, so the part stays inside the panel open or closed.
+
+## D117 — M0's lab and checkpoint moved to s16 and s17, and what the demos' steps leave unrecorded
+
+**Plan:** `plans/2026-09-29-m0-demos.md`, Tasks 10 to 12. **Decisions:** none new. Branch `feat/m0-demos`.
+This record holds what no earlier deviation of the branch (D112 to D116) states. The spec §4 renderings the
+build departs from are in D116 and are not repeated.
+
+**M0's lab and checkpoint moved from s7 and s8 to s16 and s17.** The nine demo steps, D-T's four and D-V's five,
+are inserted between the playgrounds and the lab, at `s7` to `s15`; M0 goes from 8 steps to 17, and the corpus from
+120 steps a locale to 129 (240 presenter notes to 258). The checkpoint's items are named
+`<module>:<step>:<i>` (`assess/quiz.tsx`), and each item's corruption is seeded from that name. A stored quiz
+schedule keyed `m00:s8:0` to `m00:s8:2` therefore belongs to a step that is now a demo, and the checkpoint's
+own items are `m00:s17:0` to `m00:s17:2`, which are different corruptions of the checkpoint graph. No migration
+is written: carrying a card from the old key to the new one would attach a review history to a different
+question. The old entries stay in the browser's `localStorage`, read by nothing, as M4's renumbering (D106) left
+its own. A student who had rated M0's checkpoint before this branch starts that checkpoint's schedule again. A
+bookmark or a link to M0 by step index changes with the insertion: the lab was index 6 and is 15, the checkpoint
+was 7 and is 16, and index 6 is D-T's first part.
+
+**INDEX attributes the corpus count to D117.** INDEX states that the corpus "holds 129 and 258 since D117". The
+step count changed on this branch by the insertion above, and D117 is the record that names the renumbering. The
+records test's pattern, `since D\d+]`, is unchanged and stays strict; the new records test also holds the number
+after `since D` to 117.
+
+**Three demo steps run past the panel in English at 1024×768.** Task 11 measured every state of every part on the
+production build after the webfonts decoded. In 繁體中文 every part fits, the tightest being D-T part 4 at 19 px
+spare (frame 092) and D-V part 5 at 20 px. In English three parts do not: D-T part 4 at 092, D-V part 4 at 100
+and D-V part 5, at 25, 37 and 43 px past the frame's bottom edge (`scrollHeight − clientHeight` 25, 38 and 43 px).
+The steps scroll inside a fixed shell, so the words remain reachable. The projector suite holds every part to
+1024×768 in 繁體中文 only, as D96 states for every playground, and no English assertion exists to fail. At
+1280×800 and 1920×1080 every part fits in both locales. VERIFICATION §31 lists the spare pixels per part, size
+and locale.
+
+**The last tick may leave the clip `ended`.** The clip's last frame is 105.9 s of the source video (17.9 s of the
+clip, at 10 fps), so the 106.0 s photograph lies past it. `clipTime` holds a seek to that frame 1 ms below the
+clip's end, which keeps `currentTime` inside the clip. Chromium nevertheless sets `ended` for any seek at or after
+17.9 s (measured: 17.9, 17.91, 17.95, 17.999 and 18 s ended; 17.89 s and earlier did not), so the tick on 106 shows
+the last frame, which is the closest to the photograph, and Play then restarts from the beginning of the clip. A
+margin long enough to avoid `ended` would show the frame at 105.8 s instead. The comments of `clipTime` and
+`ClipPlayer` say this; `END_MARGIN_SECONDS` in `demos/data.ts` is the one constant to change if the ruling is
+reversed.
+
+**Deferred minors of the reviews, for the author.**
+- D-T's tick took 71.1 and 72.8 ms in Task 11's two `check:perf` runs against about 33 ms for every other case,
+  and 32.9 ms in the run that closed the branch; all are inside the 100 ms budget. The cost, when it appears, is
+  the first decode of the new photograph. `PhotoMarks` is shared with F3, E1 and E10, so `decoding="async"` or a
+  preload is left undecided.
+- The lecture test that no backend is needed does not block `/api`, so it would pass vacuously if a backend were
+  running; the badge and marks tests wait for visibility, not for `img.decode()`.
+- `DEMO_LONGEST` in the projector suite chooses its states by rules over the recordings; each rule was checked
+  against a full sweep, and a new recording needs that check again.

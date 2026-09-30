@@ -63,6 +63,11 @@ def get_provider(name: str | None) -> VLMProvider:
         from app.vlm.claude import ClaudeProvider  # noqa: PLC0415 - optional dependency
 
         return ClaudeProvider()
+    if name == "openai-compat":
+        from app.vlm.openai_compat import OpenAICompatibleProvider  # noqa: PLC0415
+
+        return OpenAICompatibleProvider()
     raise ProviderUnavailable(
-        f"unknown VLM provider {name!r}; this build offers 'transcript' and 'claude'"
+        f"unknown VLM provider {name!r}; this build offers 'transcript', 'claude' and "
+        f"'openai-compat'"
     )

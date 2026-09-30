@@ -539,6 +539,74 @@ test.describe('playground interaction', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// 2c. Demo interaction
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * The same budget on M0's two demos, which a professor also turns in front of the room.
+ *
+ * A demo replays a recording imported at build time, so like a playground it waits on nothing. One
+ * case each: D-T's first part, where a tick on the clip picks another frame and the photograph,
+ * its boxes and the counts beside them follow; and D-V's third part, where another expert's
+ * revision and analysis replace the first's.
+ */
+const DEMO_CASES: {
+  module: string; demo: string; step: number; act: Act; readout: string; why: string;
+}[] = [
+  {
+    module: 'm00',
+    demo: 'D-T',
+    step: 6,
+    act: { kind: 'click', testid: 'demo-tick-m0-demo-096' },
+    readout: '[data-testid="demo-frame"] [data-testid^="readout-"]',
+    why: 'a tick picks 96 s t₂, and its boxes and counts replace t₁\'s',
+  },
+  {
+    module: 'm00',
+    demo: 'D-V',
+    step: 12,
+    act: { kind: 'set', testid: 'DV.expert', value: '2' },
+    readout: '[data-testid="dv-analysis"], [data-testid="dv-analysis-none"]',
+    why: 'choosing expert 2 replaces expert 1\'s revision and analysis',
+  },
+];
+
+test.describe('demo interaction', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('sgs:v1:lang', '"zh-TW"'));
+  });
+
+  for (const c of DEMO_CASES) {
+    test(`${c.demo}: ${c.why}, inside the budget`, async ({ page }) => {
+      await page.goto(`/lecture/m/${c.module}/${c.step}`);
+      await expect(page.getByTestId('demo-frame')).toBeVisible();
+      await expect(page.getByTestId(c.act.testid)).toBeEnabled();
+
+      const { ms, floor, before, after } = await inputToPaint(page, c.act, c.readout);
+
+      expect(
+        after,
+        `${c.demo}: the interaction painted no change, so the ${ms.toFixed(1)} ms is the time to ` +
+          `do nothing. Readout was ${before} and stayed ${after}.`,
+      ).not.toBe(before);
+
+      measured.push(
+        `demo         ${c.demo.padEnd(22)} ${ms.toFixed(1).padStart(6)} ms ` +
+          `(work: ${workReport(ms, floor)})`,
+      );
+      expect(ms, `${c.demo} took ${ms.toFixed(1)} ms from input to paint`).toBeLessThan(
+        INTERACTION_MS,
+      );
+    });
+  }
+
+  test('both demos were measured', () => {
+    const timed = measured.filter((l) => l.startsWith('demo'));
+    expect(timed.length, `only ${timed.length} demos were timed; M0 carries two`).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // 3. Selecting a box by clicking inside it — D75
 // ---------------------------------------------------------------------------------------------
 

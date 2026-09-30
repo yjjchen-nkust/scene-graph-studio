@@ -98,10 +98,27 @@ def step1_prompt(
         "INFORMATION",
         "You are given one video frame from an industrial workcell.",
         "Extract every relation you can see as <subject, predicate, object> triplets.",
+        *_criteria_parts(O, P, E, ablate),
+        "", "OUTPUT", "One triplet per line, in <subject, predicate, object> form.",
     ]
+    return "\n".join(parts)
+
+
+def _criteria_parts(
+    O: tuple[str, ...] | list[str],
+    P: tuple[str, ...] | list[str],
+    E: list[dict[str, Any]] | None,
+    ablate: frozenset[str] = frozenset(),
+) -> list[str]:
+    """The three `TRIPLETS EXTRACTION CRITERIA` blocks, each led by a blank line.
+
+    Steps 1 and 2 both call this, so the criteria the experts check against are the text the
+    draft was made under and the two cannot drift. Eq. (3) gives step 2 the same O, P and E.
+    """
     # An empty list is an ablation, not an empty header: supplying a criteria block with no
     # entries in it is supplying no criteria, and emitting the heading anyway would make two
     # spellings of the same experiment that hash to different transcripts.
+    parts: list[str] = []
     if "O" not in ablate and O:
         parts += ["", "TRIPLETS EXTRACTION CRITERIA -- object categories", _bullets(O)]
     if "P" not in ablate and P:
@@ -111,28 +128,42 @@ def step1_prompt(
         for ex in E:
             s, p, o = ex["triplet"]
             parts.append(f"[{ex['kind']}] <{s}, {p}, {o}> -- {ex['analysis']}")
-    parts += ["", "OUTPUT", "One triplet per line, in <subject, predicate, object> form."]
-    return "\n".join(parts)
+    return parts
 
 
-def step2_prompt(draft: list[Triplet], expert: int) -> str:
+def step2_prompt(
+    draft: list[Triplet],
+    expert: int,
+    O: tuple[str, ...] | list[str] = O_DEFAULT,
+    P: tuple[str, ...] | list[str] = P_DEFAULT,
+    E: list[dict[str, Any]] | None = None,
+) -> str:
     """`(out^s2_t, a_i) = VLM(V_t, O, P, E, Prompt, out^s1_t)` for expert i.
 
     The expert index is part of the prompt because N experts run in parallel over the same draft
     and Table 4 measures what varying N does. Experts that received identical prompts would be one
     expert sampled N times, which is a different experiment.
+
+    The criteria are in the prompt because Eq. (3) has them as inputs and the instruction to
+    replace a predicate "not in the dictionary" is empty without the dictionary. The output section
+    names the `ANALYSIS_EN` and `ANALYSIS_ZH` labels that `indvissgg.parse_analysis` reads;
+    without them every analysis parsed empty and the summariser received none (D115).
     """
     return "\n".join([
         f"TRIPLE-CHECKING -- expert {expert} of N",
         "Review the draft triplets below against the frame and the criteria.",
         "Delete any entity that is not visible. Recover any entity that is visible and missing.",
         "Replace any predicate that is not in the dictionary with the nearest one that is.",
+        *_criteria_parts(O, P, E),
         "",
         "DRAFT",
         _triplets(draft),
         "",
         "OUTPUT",
-        "The revised triplet set, then one paragraph of analysis explaining every change.",
+        "The revised triplet set, one per line, in <subject, predicate, object> form.",
+        "Then a line reading ANALYSIS_EN, followed by one paragraph in English explaining every "
+        "change.",
+        "Then a line reading ANALYSIS_ZH, followed by the same paragraph in Traditional Chinese.",
     ])
 
 

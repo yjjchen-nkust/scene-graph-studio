@@ -48,11 +48,32 @@ def parse_triplets(completion: str) -> list[tuple[str, str, str]]:
     return [(m.group(1), m.group(2), m.group(3)) for m in TRIPLET_RE.finditer(completion)]
 
 
+# A label line: `ANALYSIS_EN` or `ANALYSIS_ZH` alone on a line, with up to four non-word characters
+# around it (`### ANALYSIS_EN`, `**ANALYSIS_EN**`, `ANALYSIS_EN:`). `revision_text` and
+# `parse_analysis` share it, so the revision ends exactly where the first analysis begins.
+_ANALYSIS_LABEL_RE = re.compile(r"^[^\w\n]{0,4}ANALYSIS_([A-Z]{2})[^\w\n]{0,4}$", re.M)
+
+
+def revision_text(completion: str) -> str:
+    """The revised triplet set of an expert completion: the text before the first analysis label.
+
+    An analysis quotes the triplets it deletes and recovers, and parsing the whole completion made
+    those quotations rows of the revision (D115). A completion with no label is read whole.
+    """
+    match = _ANALYSIS_LABEL_RE.search(completion)
+    return completion[: match.start()] if match else completion
+
+
 def parse_analysis(completion: str) -> tuple[str, str]:
     """The `ANALYSIS_EN` and `ANALYSIS_ZH` sections, or empty strings when absent."""
+    labels = list(_ANALYSIS_LABEL_RE.finditer(completion))
+
     def section(tag: str) -> str:
-        match = re.search(rf"ANALYSIS_{tag}\n(.*?)(?=\nANALYSIS_|\Z)", completion, re.S)
-        return match.group(1).strip() if match else ""
+        for i, label in enumerate(labels):
+            if label.group(1) == tag:
+                end = labels[i + 1].start() if i + 1 < len(labels) else len(completion)
+                return completion[label.end() : end].strip()
+        return ""
 
     return section("EN"), section("ZH")
 
@@ -135,19 +156,26 @@ def criteria_for(image_ref: str) -> tuple[tuple[str, ...], tuple[str, ...], list
     one it is, the other family's transcripts are keyed on a prompt nobody sends, and the endpoint
     answers 503 for every frame in it.
 
-    The manifest is the discriminator rather than a prefix rule, because it is the authoritative
-    list of what was cut. A frame nobody has heard of gets the paper's vocabulary and the usual
-    `TranscriptMiss` naming its key, which is the right answer to a question about a frame that
-    does not exist.
+    A third family, `m0-demo-NNN`, is the ten M0 demonstration frames cut from IndustReal; their
+    transcript was recorded under the same `O_ISG`, `P_ISG` and `EXAMPLES_ISG`.
+
+    The manifests are the discriminator rather than a prefix rule, because they are the
+    authoritative lists of what was cut. A frame nobody has heard of gets the paper's vocabulary and
+    the usual `TranscriptMiss` naming its key, which is the right answer to a question about a frame
+    that does not exist.
     """
     from app.datasets.loader import slice_dir  # noqa: PLC0415 - avoids an import cycle
 
+    cut: set[str] = set()
     manifest = slice_dir("mini-isg") / "MANIFEST.json"
     if manifest.is_file():
         listed = json.loads(manifest.read_text(encoding="utf-8"))["images"]
-        cut = {row["image_id"] for row in listed}
-        if image_ref in cut:
-            return prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG
+        cut |= {row["image_id"] for row in listed}
+    demo = DATA_DIR / "demos" / "m0" / "MANIFEST.json"
+    if demo.is_file():
+        cut |= {row["image_id"] for row in json.loads(demo.read_text(encoding="utf-8"))["frames"]}
+    if image_ref in cut:
+        return prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG
     return prompts.O_DEFAULT, prompts.P_DEFAULT, EXAMPLES
 
 
@@ -164,22 +192,23 @@ def step1(
 
 def step2(
     *, image_ref: str, dataset: str, draft: list[tuple[str, str, str]], n_experts: int,
-    provider: VLMProvider,
+    provider: VLMProvider, O: tuple[str, ...] | list[str], P: tuple[str, ...] | list[str],
+    E: list[dict[str, Any]] | None,
 ) -> list[dict[str, Any]]:
-    """N experts over the same draft, each with its own prompt.
+    """N experts over the same draft, each with its own prompt and the criteria of step 1.
 
     The expert index is in the prompt because Table 4 measures what varying N does; N experts
     given identical prompts would be one expert sampled N times, a different experiment.
     """
     out: list[dict[str, Any]] = []
     for i in range(1, n_experts + 1):
-        prompt = prompts.step2_prompt(draft, expert=i)
+        prompt = prompts.step2_prompt(draft, i, O, P, E)
         completion = provider.complete(prompt=prompt, image_ref=image_ref, context={})
         analysis_en, analysis_zh = parse_analysis(completion)
         out.append({
             "expert_index": i,
-            "graph": to_graph(parse_triplets(completion), image_ref=image_ref, dataset=dataset,
-                              live=_is_live(provider)),
+            "graph": to_graph(parse_triplets(revision_text(completion)), image_ref=image_ref,
+                              dataset=dataset, live=_is_live(provider)),
             "analysis_en": analysis_en,
             "analysis_zh": analysis_zh,
             "prompt_shown": prompt,
@@ -239,7 +268,7 @@ def run(
         return body
 
     experts = step2(image_ref=image_ref, dataset=dataset, draft=triplets_of(graph),
-                    n_experts=n_experts, provider=impl)
+                    n_experts=n_experts, provider=impl, O=objects, P=predicates, E=examples)
     body["step2"] = [{**e, "graph": e["graph"].model_dump()} for e in experts]
     if 3 not in wanted:
         return body

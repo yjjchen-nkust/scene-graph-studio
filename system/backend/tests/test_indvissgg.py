@@ -189,3 +189,159 @@ def test_an_expert_count_the_paper_did_not_measure_is_refused(n):
         "n_experts": n, "steps": [1], "ablate": [], "provider": "transcript",
     })
     assert r.status_code == 422
+
+
+def test_criteria_for_the_m0_demo_frames_is_the_isg_triple() -> None:
+    isg = (prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG)
+    assert indvissgg.criteria_for("m0-demo-096") == isg
+    assert indvissgg.criteria_for("m0-demo-999") != isg
+
+
+# ── the expert prompt carries the criteria and asks for labelled analyses (D115) ──────────────
+
+STEP1_ISG_LITERAL = (
+    "INFORMATION\nYou are given one video frame from an industrial workcell.\n"
+    "Extract every relation you can see as <subject, predicate, object> triplets.\n\n"
+    "TRIPLETS EXTRACTION CRITERIA -- object categories\n- hand\n- beam\n- brace\n- block\n"
+    "- wheel\n- axle\n- pin\n- nut\n- washer\n- assembly\n- instruction sheet\n- workbench\n\n"
+    "TRIPLETS EXTRACTION CRITERIA -- predicate dictionary\n- holding\n- assembling\n"
+    "- attached to\n- inserted into\n- on\n- near\n- reaching for\n\n"
+    "TRIPLETS EXTRACTION CRITERIA -- examples\n"
+    "[positive] <hand, assembling, assembly> -- The hand is working on the partly built model; "
+    "`assembling` is in P.\n"
+    "[negative] <hand, tightening, nut> -- `tightening` is not in P, so this triplet cannot be "
+    "scored at all.\n\n"
+    "OUTPUT\nOne triplet per line, in <subject, predicate, object> form."
+)
+
+
+def criteria_section(prompt: str) -> str:
+    """From the first criteria heading to the blank line before OUTPUT."""
+    start = prompt.index("TRIPLETS EXTRACTION CRITERIA -- object categories")
+    return prompt[start:prompt.index("\n\nOUTPUT")]
+
+
+def test_the_expert_prompt_carries_the_criteria_and_asks_for_labelled_analyses():
+    prompt = prompts.step2_prompt(
+        [("hand", "holding", "beam")], 2, prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG
+    )
+    lines = prompt.split("\n")
+    for entry in (*prompts.O_ISG, *prompts.P_ISG):
+        assert f"- {entry}" in lines, entry
+    for ex in prompts.EXAMPLES_ISG:
+        s, p, o = ex["triplet"]
+        assert f"[{ex['kind']}] <{s}, {p}, {o}> -- {ex['analysis']}" in lines
+    assert "DRAFT\n<hand, holding, beam>" in prompt
+    assert "expert 2 of N" in prompt
+    assert prompt.endswith(
+        "OUTPUT\n"
+        "The revised triplet set, one per line, in <subject, predicate, object> form.\n"
+        "Then a line reading ANALYSIS_EN, followed by one paragraph in English explaining every "
+        "change.\n"
+        "Then a line reading ANALYSIS_ZH, followed by the same paragraph in Traditional Chinese."
+    )
+
+
+def test_step_one_is_unchanged_by_the_shared_criteria_helper():
+    prompt = prompts.step1_prompt(prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG)
+    assert prompt == STEP1_ISG_LITERAL
+
+
+def test_the_criteria_block_is_one_text_in_both_prompts():
+    one = prompts.step1_prompt(prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG)
+    two = prompts.step2_prompt(
+        [("hand", "holding", "beam")], 1, prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG
+    )
+    assert criteria_section(one) in two
+
+
+class Capturing:
+    """A provider that records every prompt and answers step 2 with labelled analyses."""
+
+    name = "capturing"
+
+    def __init__(self) -> None:
+        self.prompts: list[str] = []
+
+    def complete(self, *, prompt: str, image_ref: str | None, context: dict) -> str:
+        self.prompts.append(prompt)
+        if prompt.startswith("TRIPLE-CHECKING"):
+            i = prompt.split("expert ")[1].split(" ")[0]
+            return (
+                "<hand, holding, beam>\n"
+                f"ANALYSIS_EN\nen-{i}, dropping <hand, near, wrench>\n"
+                f"ANALYSIS_ZH\nzh-{i}"
+            )
+        return "<hand, holding, beam>"
+
+
+def test_run_gives_the_experts_the_criteria_of_step_one(monkeypatch):
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    run(image_ref="isg-fig2-t1", steps=[1, 2])
+    step1, *experts = fake.prompts
+    assert len(experts) == 3
+    section = criteria_section(step1)
+    assert all(section in e for e in experts)
+
+
+def test_the_labelled_analyses_reach_the_summary(monkeypatch):
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    body = run(image_ref="isg-fig2-t1", steps=[1, 2, 3])
+    step3 = fake.prompts[-1]
+    for i in (1, 2, 3):
+        assert f"EXPERT {i} ANALYSIS\nen-{i}, dropping <hand, near, wrench>\n" in step3
+        assert f"EXPERT {i} REVISION\n<hand, holding, beam>\nEXPERT {i} ANALYSIS" in step3
+        assert body["step2"][i - 1]["analysis_zh"] == f"zh-{i}"
+
+
+def test_a_triplet_quoted_in_the_analysis_is_not_a_revision_row():
+    completion = (
+        "<hand, holding, beam>\nANALYSIS_EN\nDeleted <hand, near, wrench>.\n"
+        "ANALYSIS_ZH\n刪除 <hand, near, wrench>。"
+    )
+    assert indvissgg.revision_text(completion) == "<hand, holding, beam>\n"
+    assert indvissgg.parse_triplets(indvissgg.revision_text(completion)) == [
+        ("hand", "holding", "beam")
+    ]
+
+
+@pytest.mark.parametrize(
+    "en,zh",
+    [("### ANALYSIS_EN", "### ANALYSIS_ZH"), ("**ANALYSIS_EN**", "**ANALYSIS_ZH**")],
+)
+def test_decorated_labels_are_parsed_and_end_the_revision(en, zh):
+    completion = (
+        f"<hand, holding, beam>\n{en}\nDeleted <hand, near, wrench>.\n"
+        f"{zh}\n刪除 <hand, near, wrench>。"
+    )
+    assert indvissgg.revision_text(completion) == "<hand, holding, beam>\n"
+    assert indvissgg.parse_analysis(completion) == (
+        "Deleted <hand, near, wrench>.",
+        "刪除 <hand, near, wrench>。",
+    )
+
+
+def test_a_completion_without_labels_is_read_whole():
+    completion = "<hand, holding, beam>\n<beam, on, workbench>"
+    assert indvissgg.revision_text(completion) == completion
+
+
+def test_step_two_builds_its_graph_from_the_revision_only(monkeypatch):
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    body = run(image_ref="isg-fig2-t1", steps=[1, 2])
+    for expert in body["step2"]:
+        assert len(expert["graph"]["relationships"]) == 1
+
+
+def test_under_ablation_the_experts_still_get_the_full_criteria(monkeypatch):
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    run(image_ref="isg-fig2-t1", ablate=["O"], steps=[1, 2])
+    step1, *experts = fake.prompts
+    heading = "TRIPLETS EXTRACTION CRITERIA -- object categories"
+    assert heading not in step1
+    assert len(experts) == 3
+    assert all(heading in e for e in experts)

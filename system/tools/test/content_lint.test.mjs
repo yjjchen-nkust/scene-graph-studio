@@ -77,6 +77,7 @@ function corpus({
   frontmatter, body, en = {}, knowledgePoints = '[F1, F2, Z9]',
   assignment = { m00: ['F1', 'F2', 'Z9'] }, others = [],
   mounts = '  F1: A,\n  F2: B,\n', parts = '', golden, splits = SPLITS,
+  demos = { mounts: '', parts: '', artefacts: '' }, demoData = {},
 } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'sgs-lint-'));
   roots.push(root);
@@ -108,6 +109,16 @@ function corpus({
   mkdirSync(join(root, 'system/frontend/src/playgrounds'), { recursive: true });
   write('system/frontend/src/playgrounds/mounts.tsx',
     `export const PLAYGROUND_MOUNTS = {\n${mounts}};\n\nexport const PLAYGROUND_PARTS = {\n${parts}};\n`);
+  // Always written, so a corpus that has no demo still has the file the lint reads. The tables are
+  // in the form Task 6 wrote: a type annotation before the `=`, one entry to a line.
+  mkdirSync(join(root, 'system/frontend/src/demos'), { recursive: true });
+  write('system/frontend/src/demos/mounts.tsx',
+    `export const DEMO_MOUNTS: Record<string, ComponentType<DemoProps>> = {\n${demos.mounts}};\n\n` +
+      `export const DEMO_PARTS: Record<string, number> = {\n${demos.parts}};\n\n` +
+      `export const DEMO_ARTEFACTS: Record<string, string> = {\n${demos.artefacts}};\n`);
+  for (const [path, data] of Object.entries(demoData)) {
+    write(`data/${path}`, typeof data === 'string' ? data : JSON.stringify(data));
+  }
 
   const m00 = {
     id: 'm00', knowledgePoints, en,
@@ -138,6 +149,166 @@ function lint(cwd) {
 
 afterAll(() => {
   for (const r of roots) rmSync(r, { recursive: true, force: true });
+});
+
+/** A demo step; `demo` and `part` may be left out (undefined), and `budget` (null), to break a rule. */
+const demoStep = (id, demo, part, budget = 60) => [
+  `  - id: ${id}`, '    kind: demo',
+  ...(demo === undefined ? [] : [`    demo: ${demo}`]),
+  ...(part === undefined ? [] : [`    part: ${part}`]),
+  ...(budget === null ? [] : [`    seconds_budget: ${budget}`]),
+  '    presenter_notes_LOCALE: "n"',
+].join('\n');
+const demoBlock = (id, demo, part) =>
+  `<Step id="${id}">\n\n<Demo id="${demo}" part="${part}" />\n\n</Step>`;
+
+/** D-T in two parts, as steps s1 and s2, with its artefact on disk carrying a provenance. */
+const DT = {
+  demos: { mounts: '', parts: '  DT: 2,\n', artefacts: "  DT: 'demos/m0/traditional.json',\n" },
+  demoData: { 'demos/m0/traditional.json': { provenance: {} } },
+  frontmatter: `${demoStep('s1', 'DT', 1)}\n${demoStep('s2', 'DT', 2)}`,
+  body: `${demoBlock('s1', 'DT', 1)}\n\n${demoBlock('s2', 'DT', 2)}`,
+};
+
+describe('content_lint demo rules', () => {
+  it('passes a module whose demo steps are well formed', () => {
+    const r = lint(corpus(DT));
+    expect(r.out).not.toMatch(/demo/i);
+    expect(r.ok, r.out).toBe(true);
+  });
+
+  it('accepts a demo registered in DEMO_MOUNTS alone, and one in DEMO_PARTS alone', () => {
+    // Tasks 8 and 9 register the mounts after the parts exist, so either table names a demo.
+    const both = lint(corpus({ ...DT, demos: { ...DT.demos, mounts: '  DT: Traditional,\n' } }));
+    expect(both.ok, both.out).toBe(true);
+    const mountOnly = lint(corpus({
+      ...DT, demos: { ...DT.demos, mounts: '  DT: Traditional,\n', parts: '' },
+      frontmatter: demoStep('s1', 'DT', 1), body: demoBlock('s1', 'DT', 1),
+    }));
+    expect(mountOnly.out).not.toContain("names demo 'DT'");
+  });
+
+  it('refuses a demo step that names no demo, or no part', () => {
+    const noDemo = lint(corpus({
+      ...DT, frontmatter: demoStep('s1', undefined, 1), body: demoBlock('s1', 'DT', 1),
+    }));
+    expect(noDemo.out).toContain("step 's1' is a demo and names no demo");
+    const unknown = lint(corpus({
+      ...DT, frontmatter: demoStep('s1', 'ZZ', 1), body: demoBlock('s1', 'ZZ', 1),
+    }));
+    expect(unknown.out).toContain("step 's1' names demo 'ZZ', which is in neither DEMO_MOUNTS nor DEMO_PARTS");
+    const noPart = lint(corpus({
+      ...DT, frontmatter: demoStep('s1', 'DT', undefined), body: demoBlock('s1', 'DT', 1),
+    }));
+    expect(noPart.out).toContain("step 's1' is a demo and names no integer part");
+    const fractional = lint(corpus({
+      ...DT, frontmatter: demoStep('s1', 'DT', 1.5), body: demoBlock('s1', 'DT', 1),
+    }));
+    expect(fractional.out).toContain("step 's1' is a demo and names no integer part");
+  });
+
+  it('refuses a demo step whose body carries no matching <Demo>', () => {
+    const none = lint(corpus({ ...DT, body: `${demoBlock('s1', 'DT', 1)}\n\n<Step id="s2">\n\n</Step>` }));
+    expect(none.out).toContain("step 's2' declares demo 'DT' part 2 but its body carries no <Demo>");
+    const other = lint(corpus({ ...DT, body: `${demoBlock('s1', 'DT', 1)}\n\n${demoBlock('s2', 'DV', 2)}` }));
+    expect(other.out).toContain("step 's2' declares demo 'DT' part 2 but its body carries DV part 2");
+    const part = lint(corpus({ ...DT, body: `${demoBlock('s1', 'DT', 1)}\n\n${demoBlock('s2', 'DT', 1)}` }));
+    expect(part.out).toContain("step 's2' declares demo 'DT' part 2 but its body carries DT part 1");
+    const two = lint(corpus({
+      ...DT, body: `${demoBlock('s1', 'DT', 1)}\n\n<Step id="s2">\n\n<Demo id="DT" part="2" />\n\n<Demo id="DT" part="2" />\n\n</Step>`,
+    }));
+    expect(two.out).toContain("step 's2' declares demo 'DT' part 2 but its body carries DT part 2, DT part 2");
+  });
+
+  it('refuses a <Demo> no step declares', () => {
+    // Including one outside every `<Step>`, which the registry renders on every slide.
+    const r = lint(corpus({ ...DT, body: `${DT.body}\n\n<Demo id="DT" part="3" />` }));
+    expect(r.out).toContain('the body mounts <Demo id="DT" part="3" />, which no step');
+  });
+
+  it('refuses demo parts apart, out of order, or fewer than DEMO_PARTS gives', () => {
+    // Every step is well formed on its own, so only the corpus-wide judgement can see it.
+    const apart = lint(corpus({
+      ...DT,
+      frontmatter: `${demoStep('s1', 'DT', 1)}\n${step('s2', 'F1')}\n${demoStep('s3', 'DT', 2)}`,
+      body: `${demoBlock('s1', 'DT', 1)}\n\n${block('s2', 'F1')}\n\n${demoBlock('s3', 'DT', 2)}`,
+    }));
+    expect(apart.out).toContain("demo 'DT' has 2 parts and is mounted as m00:s1 (1), m00:s3 (2)");
+    const backwards = lint(corpus({
+      ...DT,
+      frontmatter: `${demoStep('s1', 'DT', 2)}\n${demoStep('s2', 'DT', 1)}`,
+      body: `${demoBlock('s1', 'DT', 2)}\n\n${demoBlock('s2', 'DT', 1)}`,
+    }));
+    expect(backwards.out).toContain("demo 'DT' has 2 parts and is mounted as m00:s1 (2), m00:s2 (1)");
+    const fewer = lint(corpus({ ...DT, demos: { ...DT.demos, parts: '  DT: 3,\n' } }));
+    expect(fewer.out).toContain("demo 'DT' has 3 parts and is mounted as m00:s1 (1), m00:s2 (2)");
+    const unsized = lint(corpus({ ...DT, demos: { ...DT.demos, parts: '' } }));
+    expect(unsized.out).toContain("demo 'DT' has no entry in DEMO_PARTS");
+  });
+
+  it('refuses the parts of one demo spread over two modules', () => {
+    const r = lint(corpus({
+      ...DT,
+      frontmatter: demoStep('s1', 'DT', 1), body: demoBlock('s1', 'DT', 1),
+      others: [{
+        id: 'm01', knowledgePoints: '[F1]', frontmatter: demoStep('s1', 'DT', 2), body: demoBlock('s1', 'DT', 2),
+      }],
+    }));
+    expect(r.out).toContain("demo 'DT' has 2 parts and is mounted as m00:s1 (1), m01:s1 (2)");
+  });
+
+  it('refuses a demo whose artefact is missing or carries no provenance', () => {
+    const missing = lint(corpus({ ...DT, demoData: {} }));
+    expect(missing.out).toContain("demo 'DT': its artefact data/demos/m0/traditional.json does not exist");
+    const bare = lint(corpus({ ...DT, demoData: { 'demos/m0/traditional.json': { rows: [] } } }));
+    expect(bare.out).toContain("demo 'DT': its artefact data/demos/m0/traditional.json carries no provenance object");
+    const broken = lint(corpus({ ...DT, demoData: { 'demos/m0/traditional.json': '{not json' } }));
+    expect(broken.out).toContain("demo 'DT': its artefact data/demos/m0/traditional.json is not JSON");
+    const unlisted = lint(corpus({ ...DT, demos: { ...DT.demos, artefacts: '' } }));
+    expect(unlisted.out).toContain("demo 'DT': DEMO_ARTEFACTS names no artefact for it");
+  });
+
+  it('refuses a demo whose artefact lies outside data/demos/', () => {
+    // The file exists and carries a provenance, so only the location check can refuse it.
+    for (const path of ['vlm/transcripts/m0-demo.json', 'demos/../vlm/m0-demo.json', '../elsewhere.json']) {
+      const r = lint(corpus({
+        ...DT,
+        demos: { ...DT.demos, artefacts: `  DT: '${path}',\n` },
+        demoData: { [path]: { provenance: {} } },
+      }));
+      expect(r.out, path).toContain(`demo 'DT': its artefact '${path}' does not lie under demos/ (relative to data/) (rule 4)`);
+    }
+  });
+
+  it('refuses a demo step with no seconds_budget', () => {
+    const r = lint(corpus({
+      ...DT,
+      frontmatter: `${demoStep('s1', 'DT', 1, null)}\n${demoStep('s2', 'DT', 2)}`,
+    }));
+    expect(r.out).toContain("step 's1' is a demo and declares no seconds_budget");
+  });
+
+  it('refuses a demo that differs between the two locales', () => {
+    // Each locale is consistent with itself, so no per-file rule can see the defect.
+    const r = lint(corpus({
+      ...DT,
+      en: {
+        frontmatter: `${demoStep('s1', 'DT', 2)}\n${demoStep('s2', 'DT', 1)}`,
+        body: `${demoBlock('s1', 'DT', 2)}\n\n${demoBlock('s2', 'DT', 1)}`,
+      },
+    }));
+    expect(r.out).toContain("step 's1' is demo/DT part 1 in zh-TW and demo/DT part 2 in en");
+    const kind = lint(corpus({
+      ...DT,
+      en: { frontmatter: `${step('s1', 'F1')}\n${demoStep('s2', 'DT', 2)}`, body: `${block('s1', 'F1')}\n\n${demoBlock('s2', 'DT', 2)}` },
+    }));
+    expect(kind.out).toContain("step 's1' is demo/DT part 1 in zh-TW and playground/F1 in en");
+    const which = lint(corpus({
+      ...DT, demos: { ...DT.demos, parts: '  DT: 2,\n  DV: 2,\n' },
+      en: { frontmatter: `${demoStep('s1', 'DV', 1)}\n${demoStep('s2', 'DV', 2)}`, body: `${demoBlock('s1', 'DV', 1)}\n\n${demoBlock('s2', 'DV', 2)}` },
+    }));
+    expect(which.out).toContain("step 's1' is demo/DT part 1 in zh-TW and demo/DV part 1 in en");
+  });
 });
 
 describe('content_lint playground rules', () => {

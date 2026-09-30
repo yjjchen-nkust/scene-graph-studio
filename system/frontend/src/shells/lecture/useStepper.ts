@@ -43,6 +43,18 @@ export interface StepperStep {
   seconds_budget?: number;
   /** The knowledge point a playground step mounts; two steps sharing one are parts of it. */
   kp?: string;
+  /** The demonstration a demo step replays; two steps sharing one are parts of it. */
+  demo?: string;
+}
+
+/**
+ * What two steps must share for the query, and the knobs in it, to cross between them: the
+ * playground's knowledge point, or the demo's id. The two are namespaced apart, so a demo and a
+ * playground never share knobs by an accident of naming; a step that is neither has no key, and
+ * a step with no key carries nothing.
+ */
+function carryKey(s: StepperStep | undefined): string | undefined {
+  return s?.kp ?? (s?.demo ? `demo:${s.demo}` : undefined);
 }
 
 export interface Stepper {
@@ -81,10 +93,14 @@ function isTextEntry(node: EventTarget | null): boolean {
  * professor who tabs to the presenter button and presses Space must get one of those, not both —
  * a second window *and* a skipped slide. An arrow means nothing to a button, so it stays the
  * deck's; the rule is about the key the focused element consumes, not about focus as such.
+ *
+ * A focused `<video>` or `<audio>` with controls plays or pauses on Space, so it is one of these:
+ * the M0 demos' clip (`demos/ClipPlayer.tsx`).
  */
 function consumesSpace(node: EventTarget | null): boolean {
   if (!(node instanceof HTMLElement)) return false;
   if (node.tagName === 'BUTTON' || node.tagName === 'SUMMARY') return true;
+  if (node.tagName === 'VIDEO' || node.tagName === 'AUDIO') return true;
   if (node.tagName === 'A' && node.hasAttribute('href')) return true;
   if (node instanceof HTMLInputElement) {
     return ['button', 'submit', 'reset', 'checkbox', 'radio', 'file'].includes(node.type);
@@ -141,11 +157,12 @@ export function useStepper(moduleId: string, steps: StepperStep[]): Stepper {
     (next: number) => {
       const target = clamp(next, count);
       if (target === (pendingRef.current ?? posRef.current)) return;
-      // The knobs live in the query (contracts §2.2). Between two parts of one playground they are
-      // the same knobs, so they cross; anywhere else a step opens on its own defaults, as before.
-      const from = steps[pendingRef.current ?? posRef.current]?.kp;
+      // The knobs live in the query (contracts §2.2). Between two parts of one playground, or of
+      // one demo, they are the same knobs, so they cross; anywhere else a step opens on its own
+      // defaults, as before.
+      const from = carryKey(steps[pendingRef.current ?? posRef.current]);
       const current = pendingRef.current === null ? search : pendingSearchRef.current;
-      const carry = from !== undefined && from === steps[target]?.kp ? current : '';
+      const carry = from !== undefined && from === carryKey(steps[target]) ? current : '';
       pendingRef.current = target;
       pendingSearchRef.current = carry;
       navigate(`/lecture/m/${moduleId}/${target}${carry}`);
