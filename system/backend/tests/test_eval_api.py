@@ -130,8 +130,31 @@ def test_a_truncated_mask_is_refused_as_invalid_not_a_crash():
 
 
 def test_masks_of_two_sizes_are_refused_as_invalid_not_a_crash():
-    body = {**BASE, "gt": masked("ground_truth", [4, 4], "08", BASE["gt"]["relationships"]),
-            "pred": masked("model", [5, 5], "0=", BASE["pred"]["relationships"])}
+    """`88` is runs 8 and 8, and `<=` runs 12 and 13: each covers its own mask, so the size is
+    the only thing wrong. `08` and `0=` stopped short and are refused on their own now."""
+    body = {**BASE, "gt": masked("ground_truth", [4, 4], "88", BASE["gt"]["relationships"]),
+            "pred": masked("model", [5, 5], "<=", BASE["pred"]["relationships"])}
+    r = client.post("/api/eval", json=body)
+    assert r.status_code == 422
+    assert r.json()["error"]["code"] == "schema_invalid"
+
+
+def test_a_mask_larger_than_any_frame_is_refused_as_invalid():
+    """Only the ground truth is masked, so boxes are compared and nothing is decoded: this
+    answered 200. With both graphs masked at this size, the decoder asked for about 230 GB
+    (D120's review)."""
+    body = {**BASE, "gt": masked("ground_truth", [100000, 100000], "08",
+                                 BASE["gt"]["relationships"])}
+    r = client.post("/api/eval", json=body)
+    assert r.status_code == 422
+    assert r.json()["error"]["code"] == "schema_invalid"
+
+
+def test_counts_that_overrun_the_mask_are_refused_as_invalid():
+    """`0PPPPPP2` is runs 0 and 2**31 on sixteen pixels. Python read the whole mask as set and the
+    32-bit TypeScript read it as empty, so the two engines scored one request differently."""
+    body = {**BASE, "gt": masked("ground_truth", [4, 4], "0PPPPPP2", BASE["gt"]["relationships"]),
+            "pred": masked("model", [4, 4], "0PPPPPP2", BASE["pred"]["relationships"])}
     r = client.post("/api/eval", json=body)
     assert r.status_code == 422
     assert r.json()["error"]["code"] == "schema_invalid"

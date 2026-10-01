@@ -8,11 +8,17 @@ and a `published_reference` field that never merges with anything. DEVIATIONS D1
 
 from __future__ import annotations
 
+import importlib.machinery
+import sys
+import types
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
 from app.vlm import indvissgg, prompts
+from app.vlm.claude import ClaudeProvider
+from app.vlm.openai_compat import OpenAICompatibleProvider
 
 client = TestClient(create_app())
 PREDICATES = list(prompts.P_DEFAULT)
@@ -403,3 +409,51 @@ def test_an_empty_object_list_reaches_the_pipeline_as_an_ablation(monkeypatch):
     client.post("/api/vlm/indvissgg", json={"ablate": ["O"], "steps": [1]})
     empty, ablated = fake.prompts
     assert empty == ablated
+
+
+# ── what a graph's provenance says (review of 2026-10-01, D120) ────────────────────────────────
+
+
+def _graphs(body: dict) -> list[dict]:
+    return [body["step1"]["graph"], body["step3"]["graph"], *(e["graph"] for e in body["step2"])]
+
+
+def test_the_placeholder_note_is_in_both_languages(monkeypatch):
+    """D39 says the note states it in both languages; `NO_GEOMETRY_ZH` was defined, never sent."""
+    replayed = run(image_ref="isg-fig2-t1", steps=[1, 2, 3])
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: Capturing())
+    live = run(image_ref="isg-fig2-t1", steps=[1, 2, 3])
+    for g in _graphs(replayed) + _graphs(live):
+        assert indvissgg.NO_GEOMETRY_EN in g["provenance"]["note"]
+        assert indvissgg.NO_GEOMETRY_ZH in g["provenance"]["note"]
+
+
+def _claude(monkeypatch) -> ClaudeProvider:
+    """The real class, with `anthropic` stubbed so that construction needs no package."""
+    module = types.ModuleType("anthropic")
+    module.__spec__ = importlib.machinery.ModuleSpec("anthropic", None)
+    monkeypatch.setitem(sys.modules, "anthropic", module)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    return ClaudeProvider(model="claude-opus-5-5")
+
+
+def _compatible(monkeypatch) -> OpenAICompatibleProvider:
+    return OpenAICompatibleProvider(base_url="http://host:8001/v1", model="stamping-vlm")
+
+
+@pytest.mark.parametrize("build", [_claude, _compatible], ids=["claude", "openai-compat"])
+def test_a_live_graph_names_the_model_that_produced_it(monkeypatch, build):
+    """`vlm` is the schema's field for the model id (SRS §3). It said `live`, so a `measured`
+    graph could not be traced to the model that answered. No request leaves the process."""
+    provider = build(monkeypatch)
+    monkeypatch.setattr(provider, "complete", Capturing().complete)
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: provider)
+    for g in _graphs(run(image_ref="isg-fig2-t1", steps=[1, 2, 3])):
+        assert g["provenance"]["fidelity"] == "measured"
+        assert g["provenance"]["vlm"] == provider.model
+
+
+def test_a_replayed_graph_still_names_the_transcript():
+    """The M0 demos' design (§3.3) files a replay under `vlm: 'transcript'`; that stays."""
+    for g in _graphs(run(image_ref="isg-fig2-t1", steps=[1, 2, 3])):
+        assert g["provenance"]["vlm"] == "transcript"

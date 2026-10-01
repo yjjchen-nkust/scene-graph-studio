@@ -85,10 +85,14 @@ def to_graph(
     *,
     image_ref: str,
     dataset: str,
-    live: bool,
+    vlm: str | None,
     note_extra: str = "",
 ) -> SceneGraph:
-    """One graph from one triplet list, with placeholder geometry that admits to being so."""
+    """One graph from one triplet list, with placeholder geometry that admits to being so.
+
+    `vlm` is the id of the model that answered, or None when the exchange was replayed.
+    """
+    live = vlm is not None
     ids: dict[str, int] = {}
     objects: list[dict[str, Any]] = []
     for name in (n for t in triplets for n in (t[0], t[2])):
@@ -107,7 +111,9 @@ def to_graph(
          "score": None}
         for i, (s, p, o) in enumerate(triplets)
     ]
-    note = NO_GEOMETRY_EN + (" " + note_extra if note_extra else "")
+    # Both languages in the one string: `Provenance` has a single `note` (SRS §3), and D39 has it
+    # say so in both. A `note_zh` field would change the type every engine and the frontend share.
+    note = f"{NO_GEOMETRY_EN} {NO_GEOMETRY_ZH}" + (" " + note_extra if note_extra else "")
     return SceneGraph.model_validate({
         "image_id": image_ref,
         "dataset": dataset,
@@ -121,7 +127,9 @@ def to_graph(
             # exchange is a recording of some other run, and calling that measured would make the
             # transcript player a way of manufacturing evidence.
             "fidelity": "measured" if live else "reconstructed",
-            "vlm": "live" if live else "transcript",
+            # The schema's field for the model id (SRS §3). `live` said that a model answered and
+            # not which, so a measured graph could not be traced to it (D120's review).
+            "vlm": vlm if live else "transcript",
             "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
             # A live provider measured the triplets; the boxes are placeholders either way (D120).
             "note": note,
@@ -146,8 +154,15 @@ def published_reference() -> dict[str, Any]:
     }
 
 
-def _is_live(provider: VLMProvider) -> bool:
-    return not isinstance(provider, TranscriptPlayer)
+def _vlm_of(provider: VLMProvider) -> str | None:
+    """None for a replay; otherwise the model id the provider sent with each call.
+
+    Both live providers carry it as `.model`. One without it, such as a test double, is filed under
+    its provider name, which says what answered without inventing a model id.
+    """
+    if isinstance(provider, TranscriptPlayer):
+        return None
+    return getattr(provider, "model", None) or provider.name
 
 
 def criteria_for(image_ref: str) -> tuple[tuple[str, ...], tuple[str, ...], list[dict[str, Any]]]:
@@ -189,7 +204,7 @@ def step1(
     prompt = prompts.step1_prompt(tuple(O), tuple(P), E, ablate=ablate)
     completion = provider.complete(prompt=prompt, image_ref=image_ref, context={})
     graph = to_graph(parse_triplets(completion), image_ref=image_ref, dataset=dataset,
-                     live=_is_live(provider))
+                     vlm=_vlm_of(provider))
     return graph, prompt
 
 
@@ -211,7 +226,7 @@ def step2(
         out.append({
             "expert_index": i,
             "graph": to_graph(parse_triplets(revision_text(completion)), image_ref=image_ref,
-                              dataset=dataset, live=_is_live(provider)),
+                              dataset=dataset, vlm=_vlm_of(provider)),
             "analysis_en": analysis_en,
             "analysis_zh": analysis_zh,
             "prompt_shown": prompt,
@@ -226,7 +241,7 @@ def step3(
     prompt = prompts.step3_prompt(revisions, analyses)
     completion = provider.complete(prompt=prompt, image_ref=image_ref, context={})
     graph = to_graph(parse_triplets(completion), image_ref=image_ref, dataset=dataset,
-                     live=_is_live(provider))
+                     vlm=_vlm_of(provider))
     return graph, prompt
 
 
