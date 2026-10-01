@@ -5236,3 +5236,29 @@ unused; a live graph records no model id.
 builds; `npm run harvest` left no tracked file changed. `npm run test:e2e`, `check:offline` and `check:perf` were not
 run on this branch: the session's permission policy refused the end-to-end run, so the deck's focus fix is held by the
 vitest route test, not yet by the projector suite.
+
+## D121 — `start.ps1` runs on WekaExt's `.venv`, not on `py12`
+
+**Plan:** none. **Decisions:** none new. Asked for by the author on 2026-10-01. `start.ps1` now defaults its
+interpreter to `..\.venv\Scripts\python.exe`, the virtual environment of the WekaExt platform one level above this
+track, so the platform and Scene Graph Studio run in one environment. `-Python` and `SGS_PYTHON` still override the
+default. Without that `.venv` the script warns and falls back to `Resolve-ProjectPython`, whose order (D80) is
+unchanged.
+
+**What this departs from.** D80 made `py12` the interpreter of every front door, and `CLAUDE.md` stated that the
+track reads no environment from outside itself. Both still hold everywhere except `start.ps1`: the npm scripts,
+`npm run ci`, `check:pins` and `fetch-data.ps1` resolve through `tools/py.mjs` and `Resolve-Python.ps1` to `py12`.
+The run and the gate can therefore sit on different interpreters again, which is the condition D80 removed.
+
+**Why that holds today, and what would break it.** Measured on 2026-10-01, WekaExt's `.venv` carries every pin of
+`backend/requirements.txt` and `backend/requirements-infer.txt` at exactly the pinned version: `check:pins` with
+`SGS_PYTHON` set to it reports 9 of 9 required and 5 of 5 optional pins in agreement. A `.venv` built afresh from
+WekaExt's `requirements.txt` would not agree, because WekaExt states lower bounds only; its resolve on the same date
+chose fastapi 0.142.2, transformers 5.18.0 and torch 2.14.1+cu130. `start.ps1` installs this track's requirements
+only when `fastapi`, `uvicorn`, `pydantic` or `PIL` fails to import, or under `-Setup`, so on such a `.venv` the run
+would proceed on unpinned versions, and `-Setup` would move the shared environment's fastapi, pydantic, pillow,
+pyarrow and pytest down to this track's pins, which WekaExt's lower bounds accept.
+
+**Verification.** `start.ps1 -SkipInstall -BackendPort 8010 -FrontendPort 5180` printed `Python 3.12.3
+(C:\dev\WekaExt\.venv\Scripts\python.exe)`, `/api/health` answered, uvicorn ran from that interpreter, and the
+frontend answered 200. `npm run ci` was not rerun: the gate stays on `py12` and nothing it runs changed.

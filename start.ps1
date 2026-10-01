@@ -29,10 +29,11 @@
     Port for the Vite dev server. Default 5173. Sets SGS_FRONTEND_PORT.
 
 .PARAMETER Python
-    Python executable to use. Defaults to the project's global virtual environment py12
-    (Python 3.12, normally C:\Python\pyVenv\py12), which is where the backend requirements are
-    installed. When py12 is absent the script says so and offers the virtual environments it
-    can find on this machine, rather than falling through to whatever "python" resolves to.
+    Python executable to use. Defaults to WekaExt's own virtual environment, ..\.venv beside
+    this track, so Scene Graph Studio runs in the same environment as the platform (D121).
+    SGS_PYTHON, when set, still wins over that default. Without ..\.venv the script says so
+    and falls back to the resolver: the global virtual environment py12, then the menu of
+    virtual environments it can find, never whatever "python" resolves to.
     Sets SGS_PYTHON, so every Python step of the run -- the backend included -- uses it.
 
 .EXAMPLE
@@ -106,11 +107,20 @@ if ($nodeVer -lt $nodeMin) {
 Write-Ok "node $nodeRaw"
 
 # ---- Python -------------------------------------------------------------------------------
-# The backend requirements belong to the global virtual environment py12, so that interpreter
-# is what runs here -- not whatever PATH resolves first, which is how one shell ends up green
-# and the next red. tools/Resolve-Python.ps1 holds the order, and it is the same order
-# tools/py.mjs applies on the Node side; when py12 is missing it warns and offers a choice.
+# The run uses WekaExt's .venv, one level above this track, so the platform and Scene Graph
+# Studio share one environment (D121). -Python and SGS_PYTHON still override it. Without that
+# .venv, tools/Resolve-Python.ps1 applies the order tools/py.mjs applies on the Node side:
+# py12, then a choice offered to the user, never whatever PATH resolves first.
 . (Join-Path $system 'tools/Resolve-Python.ps1')
+if (-not $Python -and -not $env:SGS_PYTHON) {
+    $wekaVenv = [IO.Path]::Combine((Split-Path -Parent $track), '.venv', 'Scripts', 'python.exe')
+    if (Test-Path -LiteralPath $wekaVenv) {
+        $Python = $wekaVenv
+    } else {
+        Write-Warn "WekaExt's .venv was not found at $wekaVenv; falling back to py12."
+        Write-Warn 'Create it with ..\startup.ps1, which installs ..\requirements.txt.'
+    }
+}
 $Python = Resolve-ProjectPython -Requested $Python
 if (-not $Python) {
     Stop-With 'No Python interpreter was chosen, so there is nothing to run the backend on.' `
