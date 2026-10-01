@@ -24,7 +24,7 @@
     "rehype-katex": "^7.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-math": "^6.0.0",
-    "remark-mdx-frontmatter": "^5.2.0",
+    "remark-mdx-frontmatter": "^6.0.0",
     "sgg-metrics": "*",
     "tailwindcss": "4.3.3",
     "ts-fsrs": "5.4.2"

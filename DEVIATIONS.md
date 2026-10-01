@@ -1801,6 +1801,10 @@ has not caught up, and the alternatives are to drop jest-dom's matchers across t
 or to stop type-checking the tests — both of which cost more than a moderate advisory in a tool
 no student runs. Reverted to `vitest@3.2.7` with a clean `npm ci`, and the gate is green.
 
+[**Corrected 2026-10-01 (D119):** `remark-mdx-frontmatter@6.0.0`, published 2026-09-23, parses TOML with
+`smol-toml` instead of `toml`, and the frontend now depends on it; `npm audit --omit=dev` finds no vulnerability.
+The two rows above and the paragraph below describe the tree before D119.]
+
 **`toml` cannot be fixed by upgrading at all.** `remark-mdx-frontmatter@5.2.0` is the latest
 published version and still depends on `toml@^3.0.0`, and every `toml` up to 4.1.2 carries the
 advisory, so there is nothing in range. The only remaining route is to stop using the plugin and
@@ -5102,3 +5106,17 @@ label's trailing marks, up to four non-word characters (`:` and `：` among them
 Over the four recorded transcripts on the NAS (`fig2-corrections.json`, `fig2-pipeline.json`, `m0-demo.json`,
 `mini-isg-step1.json`) the old and the new regex find their labels at the same positions in every one of the 85
 strings that contain `ANALYSIS_`, so no replay changes.
+
+## D119 — `remark-mdx-frontmatter` 6.0.0, which clears the last runtime-dependency advisory
+
+**Plan:** none. **Decisions:** none new. Branch `fix/review-2026-10-01`. D73 left the high `toml` advisory open
+because `remark-mdx-frontmatter@5.2.0` was the latest version and depended on `toml@^3.0.0`, which has no fixed
+version in range. `6.0.0`, published 2026-09-23, parses TOML with `smol-toml@^1.0.0` instead; the frontend's range
+moves from `^5.2.0` to `^6.0.0`, and the lockfile replaces `toml@3.0.0` with `smol-toml@1.9.0`. `npm audit
+--omit=dev` reports no vulnerability, where it reported the two rows of D73's table. The option this repository
+passes, `name: 'meta'`, is unchanged in 6.0.0's types.
+
+**The bundle is byte-identical.** The frontend built with 6.0.0 has the same SHA-256 for every `.js`, `.css` and
+`.html` file under `frontend/dist/` as the build with 5.2.0 on the same sources, so the compiled modules, their
+`meta` exports and the typeset mathematics are unchanged. YAML frontmatter, the only kind the corpus uses, is
+parsed by `yaml` in both versions; the change is confined to TOML, which no module carries.
