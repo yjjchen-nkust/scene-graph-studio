@@ -8,6 +8,7 @@ it says so precisely: which model, why, whether `torch` is here and whether a ch
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from fastapi import APIRouter
@@ -19,6 +20,9 @@ from app.schema import Strict
 from app.settings import DATA_DIR
 
 router = APIRouter()
+
+#: A dataset, model or image id: a name, never a path. Dots are allowed inside one, not `..` alone.
+SEGMENT = re.compile(r"(?!\.\.?$)[A-Za-z0-9_.-]+")
 
 
 class InferRequest(Strict):
@@ -73,9 +77,16 @@ def infer(model: str, req: InferRequest) -> dict[str, Any]:
     )
 
 
+PREDICTIONS = DATA_DIR / "predictions"
+
+
 @router.get("/predictions/{ds}/{model}/{image_id}")
 def prediction(ds: str, model: str, image_id: str) -> dict[str, Any]:
-    path = DATA_DIR / "predictions" / ds / model / f"{image_id}.json"
-    if not path.is_file():
+    # The three segments are joined into a path, so `..` (or `..\` on Windows, which the router's
+    # `[^/]+` admits) would read any `.json` the server can reach. A segment that is not a plain
+    # name, or a path that resolves outside the predictions tree, is a prediction that is not here.
+    path = (PREDICTIONS / ds / model / f"{image_id}.json").resolve()
+    plain = all(SEGMENT.fullmatch(s) for s in (ds, model, image_id))
+    if not plain or not path.is_relative_to(PREDICTIONS.resolve()) or not path.is_file():
         raise ApiError("not_found", 404, {"dataset": ds, "model": model, "image_id": image_id})
     return json.loads(path.read_text(encoding="utf-8"))

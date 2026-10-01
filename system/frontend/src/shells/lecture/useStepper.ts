@@ -83,7 +83,13 @@ function isTextEntry(node: EventTarget | null): boolean {
   // that explicitly opted out.
   if (node.isContentEditable) return true;
   if (node.closest('[contenteditable]:not([contenteditable="false"])') !== null) return true;
-  return node.tagName === 'INPUT' || node.tagName === 'TEXTAREA' || node.tagName === 'SELECT';
+  // An input that takes no typing and no arrow is not a field: a focused checkbox kept the arrows
+  // from the deck, and `consumesSpace` below still gives it Space. A range, a radio group and a
+  // number field move on the arrows, so they keep them.
+  if (node instanceof HTMLInputElement) {
+    return !['button', 'submit', 'reset', 'checkbox', 'file', 'image'].includes(node.type);
+  }
+  return node.tagName === 'TEXTAREA' || node.tagName === 'SELECT';
 }
 
 /**
@@ -206,8 +212,13 @@ export function useStepper(moduleId: string, steps: StepperStep[]): Stepper {
   // The counter carries the step it was counting, and a reading for a different step is read as
   // zero during render. Clearing it from an effect instead would work and would also put one
   // render of the previous step's number on the projector before the correction arrived.
+  //
+  // It is also reset during render whenever the step changes. A step with no budget runs no
+  // interval, so nothing replaced the last reading there, and returning to the budgeted step it
+  // came from resumed that step's count rather than starting a fresh one.
   const stepKey = `${moduleId}:${index}`;
   const [clock, setClock] = useState({ stepKey, seconds: 0 });
+  if (clock.stepKey !== stepKey) setClock({ stepKey, seconds: 0 });
   const elapsed = clock.stepKey === stepKey ? clock.seconds : 0;
 
   useEffect(() => {

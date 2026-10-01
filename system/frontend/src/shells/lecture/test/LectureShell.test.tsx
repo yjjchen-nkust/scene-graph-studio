@@ -89,7 +89,20 @@ describe('LectureShell', () => {
     mount('/lecture/m/m00/0');
 
     fireEvent.click(screen.getByTestId('open-presenter'));
-    expect(open).toHaveBeenCalledWith('/lecture/notes', expect.any(String), expect.any(String));
+    expect(open).toHaveBeenCalledWith('/lecture/notes', expect.any(String));
+    open.mockRestore();
+  });
+
+  it('opens the presenter window by name and without noopener, so a second press reuses it', () => {
+    // With `noopener` the browser ignores the name and every press opened another window.
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    mount('/lecture/m/m00/0');
+
+    fireEvent.click(screen.getByTestId('open-presenter'));
+    expect(open).toHaveBeenCalledTimes(1);
+    const [url, name, features] = open.mock.calls[0]!;
+    expect([url, name]).toEqual(['/lecture/notes', 'sgs-presenter']);
+    expect(String(features ?? '')).not.toContain('noopener');
     open.mockRestore();
   });
 

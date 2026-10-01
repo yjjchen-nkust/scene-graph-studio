@@ -3,7 +3,7 @@ import { useLabParams } from '../../labs/useLabParams';
 import { PlaygroundFrame, Readout, Slider, Toggle } from '../controls';
 import type { PlaygroundProps } from '../mounts';
 import {
-  clamp, flag, formatRatio, harmonic, headShare, measuredHeadShare, predicateLabels, ranked, tailToHead,
+  clamp, flag, formatRatio, harmonic, headShare, measuredHeadShare, predicateLabels, ranked, snap, tailToHead,
 } from '../logic';
 import { VG_FRAMES } from '../slice';
 
@@ -38,7 +38,9 @@ export function LongTailDistribution({ part }: PlaygroundProps = {}) {
     'F7.k': 3,
     'F7.measured': 0,
   });
-  const s = clamp(params['F7.s'], 0, S_MAX);
+  // Snapped, not only clamped: the thumb sits on the 0.05 grid whatever the URL says, and the
+  // label and the readouts must name the setting it shows (D97).
+  const s = snap(params['F7.s'], 0, S_MAX, 0.05);
   const C = Math.round(clamp(params['F7.C'], C_MIN, C_MAX));
   const k = Math.round(clamp(params['F7.k'], 1, C));
   const overlay = part === undefined ? flag(params['F7.measured'], false) : part === 2;

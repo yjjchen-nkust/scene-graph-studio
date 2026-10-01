@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.eval.constraint import apply_constraint, has_ties, rank
 from app.eval.match import to_triplets
@@ -57,6 +57,17 @@ class EvalRequest(Strict):
         if not v:
             raise ValueError("k must not be empty")
         return sorted(set(v))
+
+    @model_validator(mode="after")
+    def _masks_share_one_size(self) -> EvalRequest:
+        """When both graphs carry masks they are compared pixel for pixel, which needs one size.
+        Two sizes raised in `mask_iou`, a 500, after the request had been accepted (D120)."""
+        sizes = {o.mask.size for g in (self.gt, self.pred) for o in g.objects if o.mask}
+        gt_masked = any(o.mask for o in self.gt.objects)
+        pred_masked = any(o.mask for o in self.pred.objects)
+        if gt_masked and pred_masked and len(sizes) > 1:
+            raise ValueError(f"masks must share one size to be compared; got {sorted(sizes)}")
+        return self
 
 
 class MetricValue(BaseModel):

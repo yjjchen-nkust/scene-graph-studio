@@ -70,6 +70,19 @@ describe('the route table', () => {
     expect(router.state.location.pathname).toBe(`/lecture/m/${FIRST}/1`);
   });
 
+  it('keeps a knob mounted and focused when it writes the query string', () => {
+    // M1 s6 is F7's first part. A knob writes its value into the URL, the route re-renders, and
+    // the step's body must survive it: remounted, the slider loses focus to <body> and the next
+    // arrow key moves the deck instead of the knob.
+    const router = open('/lecture/m/m01/5');
+    const knob = screen.getByTestId('F7.s');
+    knob.focus();
+    fireEvent.change(knob, { target: { value: '1.5' } });
+    expect(router.state.location.search).toContain('F7.s=1.5');
+    expect(screen.getByTestId('F7.s')).toBe(knob);
+    expect(document.activeElement).toBe(knob);
+  });
+
   it('mounts the field map', () => {
     open('/map');
     expect(screen.getByTestId('visible-count')).toBeInTheDocument();

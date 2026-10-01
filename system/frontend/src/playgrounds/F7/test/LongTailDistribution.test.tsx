@@ -57,6 +57,17 @@ describe('F7', () => {
     expect(value('F7.head')).toHaveTextContent(/^25\.00%$/);
   });
 
+  it('snaps s from the URL onto the slider\'s step, so the thumb, the label and the readouts agree', () => {
+    // The thumb goes to 0.10 whatever it is handed; clamped only, the label said 0.12 and the
+    // readouts computed with 0.123 (F3 snaps for the same reason, D97).
+    at('?F7.s=0.123&F7.C=4&F7.k=1');
+    expect(screen.getByTestId('F7.s')).toHaveValue('0.1');
+    expect(screen.getByTestId('F7.s').parentElement).toHaveTextContent('0.10');
+    expect(screen.getByTestId('readout-F7.head')).toHaveTextContent('H_1(0.10) / H_4(0.10)');
+    // H_1 / H_4 at s = 0.1, not at s = 0.123 (27.51%).
+    expect(value('F7.head')).toHaveTextContent(/^27\.03%$/);
+  });
+
   it('clamps C to 50 and k to at least 1', () => {
     at('?F7.s=0&F7.C=500&F7.k=0');
     expect(value('F7.head')).toHaveTextContent(/^2\.00%$/);

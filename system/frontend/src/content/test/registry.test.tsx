@@ -164,6 +164,15 @@ describe('the module registry', () => {
     expect(getModule('m99', 'en')).toBeNull();
     expect(getMeta('m99', 'en')).toBeNull();
   });
+
+  it('returns the same steps for the same module and locale, so a re-render keeps each step mounted', () => {
+    // The routes call this on every render. A fresh `Step` component per call is a new element
+    // type to React, which remounts the step's body and drops the focus of the knob that wrote
+    // the query string.
+    expect(getModule('m01', 'en')).toBe(getModule('m01', 'en'));
+    expect(getModule('m01', 'zh-TW')).toBe(getModule('m01', 'zh-TW'));
+    expect(getModule('m01', 'en')).not.toBe(getModule('m01', 'zh-TW'));
+  });
 });
 
 describe('the playground step kind', () => {

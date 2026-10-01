@@ -6,6 +6,7 @@ import { getJson, postJson, useImageGraph, useModels, useSliceImages } from './a
 import { ExportButtons } from '../export/ExportButtons';
 import { LabFrame } from './LabFrame';
 import { TripletBuilder } from './L1/TripletBuilder';
+import { TRIPLET_PARAMS } from './L1/triplets';
 import { GT as L2_GT, PRED as L2_PRED } from './L2/fixture';
 import { MetricExplorer } from './L2/MetricExplorer';
 import { LongTailLab } from './L3/LongTailLab';
@@ -16,7 +17,7 @@ import type { ReplicaRequest, ReplicaResult } from './L5/types';
 import { ProtocolForensics } from './L6/ProtocolForensics';
 import { CaptionToGraph } from './L7/CaptionToGraph';
 import { MiniISGAnnotator } from './L8/MiniISGAnnotator';
-import { useLabParams } from './useLabParams';
+import { useLabParams, type LabParamValue } from './useLabParams';
 
 /**
  * The frame every image-backed lab opens on.
@@ -38,13 +39,22 @@ type PredictionBody = SceneGraph & {
  * The fallback is not written into the URL. `useLabParams` writes a value equal to its default
  * as an absent key, and a lab that wrote the resolved id back would make "the first frame" and
  * "this particular frame" two different links to the same thing.
+ *
+ * `perFrame` holds the lab's parameters that describe one frame, with their defaults, and
+ * `pickFrame` writes them back to those defaults in the same update as the new frame. Every slice
+ * numbers its objects from 1, so an id left behind resolves on the new frame and is scored there.
  */
-function useFrame() {
-  const [params, setParams] = useLabParams({ ds: DEFAULT_DS, img: '' });
+function useFrame(perFrame: Record<string, LabParamValue> = {}) {
+  const [params, setParams] = useLabParams<{ ds: string; img: string } & typeof perFrame>({
+    ds: DEFAULT_DS,
+    img: '',
+    ...perFrame,
+  });
   const images = useSliceImages(params.ds);
   const rows = images.data?.images ?? [];
   const imageId = params.img || rows[0]?.image_id || null;
-  return { ds: params.ds, imageId, rows, images, setParams };
+  const pickFrame = (img: string) => setParams({ ...perFrame, img });
+  return { ds: params.ds, imageId, rows, images, pickFrame };
 }
 
 function FramePicker({
@@ -78,7 +88,7 @@ function FramePicker({
 }
 
 function L1Mount() {
-  const { ds, imageId, rows, images, setParams } = useFrame();
+  const { ds, imageId, rows, images, pickFrame } = useFrame(TRIPLET_PARAMS);
   const graph = useImageGraph(ds, imageId, true);
   const area = useRef<HTMLDivElement>(null);
   const error = images.error ?? graph.error;
@@ -88,11 +98,7 @@ function L1Mount() {
     <LabFrame labId="L1" pending={pending} error={error}>
       {graph.data && (
         <>
-          <FramePicker
-            value={imageId ?? ''}
-            rows={rows}
-            onChange={(img) => setParams({ img })}
-          />
+          <FramePicker value={imageId ?? ''} rows={rows} onChange={pickFrame} />
           <ExportButtons graph={graph.data} targetRef={area} />
           <div ref={area}>
             <TripletBuilder gt={graph.data} imageUrl={graph.data.image_data_url ?? ''} />
@@ -122,7 +128,7 @@ function L3Mount() {
 }
 
 function L4Mount() {
-  const { ds, imageId, rows, images, setParams } = useFrame();
+  const { ds, imageId, rows, images, pickFrame } = useFrame();
   const graph = useImageGraph(ds, imageId, false);
   const models = useModels();
 
@@ -165,7 +171,7 @@ function L4Mount() {
     <LabFrame labId="L4" pending={pending} error={error}>
       {graph.data && (
         <>
-          <FramePicker value={imageId ?? ''} rows={rows} onChange={(img) => setParams({ img })} />
+          <FramePicker value={imageId ?? ''} rows={rows} onChange={pickFrame} />
           <MethodComparator
             gt={graph.data}
             columns={columns}
@@ -195,7 +201,13 @@ function L5Mount() {
 
   return (
     <LabFrame labId="L5" error={run.error}>
-      <IndVisSGGReplica result={run.data ?? null} onRun={(req) => run.mutate(req)} />
+      {/* `variables` and `data` belong to the same mutation, so the result is always shown
+          beside the request that produced it. */}
+      <IndVisSGGReplica
+        result={run.data ?? null}
+        request={run.variables ?? null}
+        onRun={(req) => run.mutate(req)}
+      />
     </LabFrame>
   );
 }
@@ -250,7 +262,11 @@ function L8Mount() {
           <FramePicker value={imageId ?? ''} rows={rows} onChange={(img) => setParams({ img })} />
           <ExportButtons graph={reference.data} targetRef={area} />
           <div ref={area}>
+            {/* Keyed by frame: the working copy is local state seeded from the draft, and a
+                return to a cached frame resolves in one render, so without the key the
+                annotator would keep the last frame's copy. */}
             <MiniISGAnnotator
+              key={imageId}
               draft={drafted}
               reference={reference.data}
               imageUrl={reference.data.image_data_url ?? ''}

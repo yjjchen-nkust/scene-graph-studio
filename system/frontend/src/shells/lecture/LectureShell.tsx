@@ -76,8 +76,9 @@ export function LectureShell({ moduleId, title, steps }: LectureShellProps) {
             type="button"
             data-testid="open-presenter"
             // A named window, so pressing this twice reuses the second screen rather than
-            // stacking a second copy of the notes on top of the first.
-            onClick={() => window.open('/lecture/notes', 'sgs-presenter', 'noopener')}
+            // stacking a second copy of the notes on top of the first. No `noopener`: with it the
+            // browser ignores the name, and the notes are this origin's own page.
+            onClick={() => window.open('/lecture/notes', 'sgs-presenter')}
             className="rounded border px-3 py-1"
             style={{ borderColor: LECTURE_PALETTE.rule, color: LECTURE_PALETTE.muted }}
           >

@@ -359,3 +359,47 @@ def test_under_ablation_the_experts_still_get_the_full_criteria(monkeypatch):
     assert heading not in step1
     assert len(experts) == 3
     assert all(heading in e for e in experts)
+
+
+# ── the endpoint's boundary (review of 2026-10-01, D120) ──────────────────────────────────────
+
+
+def test_a_live_graph_still_says_its_boxes_are_placeholders(monkeypatch):
+    """A live provider measures the triplets, not the boxes, so `measured` keeps D39's note."""
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: Capturing())
+    body = run(image_ref="isg-fig2-t1", steps=[1, 2, 3])
+    graphs = [body["step1"]["graph"], body["step3"]["graph"]]
+    graphs += [e["graph"] for e in body["step2"]]
+    for g in graphs:
+        assert g["provenance"]["fidelity"] == "measured"
+        assert "placeholder" in g["provenance"]["note"].lower()
+
+
+def test_a_dataset_outside_the_schema_is_refused_before_any_call(monkeypatch):
+    """It failed only when the graph was built, after every paid call had been made, as a 500."""
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    r = client.post("/api/vlm/indvissgg", json={"dataset": "coco", "steps": [1]})
+    assert r.status_code == 422
+    assert fake.prompts == []
+
+
+def test_an_uploaded_image_is_refused_rather_than_answered_for_another_frame(monkeypatch):
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    r = client.post("/api/vlm/indvissgg", json={
+        "image_data_url": "data:image/jpeg;base64,/9j/", "steps": [1]})
+    assert r.status_code == 400
+    assert r.json()["error"]["code"] == "bad_request"
+    assert fake.prompts == []
+
+
+def test_an_empty_object_list_reaches_the_pipeline_as_an_ablation(monkeypatch):
+    """`O=[]` became `None`, the default vocabulary, so the request asked for one experiment and
+    ran another. D39: an empty list and `ablate=["O"]` are one prompt."""
+    fake = Capturing()
+    monkeypatch.setattr(indvissgg, "get_provider", lambda name=None: fake)
+    client.post("/api/vlm/indvissgg", json={"O": [], "steps": [1]})
+    client.post("/api/vlm/indvissgg", json={"ablate": ["O"], "steps": [1]})
+    empty, ablated = fake.prompts
+    assert empty == ablated

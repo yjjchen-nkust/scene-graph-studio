@@ -36,7 +36,25 @@ describe('rle', () => {
   });
 });
 
+/**
+ * One metric against its golden value. The type is checked first because `null - 0` is 0, so a
+ * null where the golden value is zero would pass the tolerance; test_golden.py refuses it too.
+ */
+function expectAgreement(have: unknown, want: number | null, label: string) {
+  if (want === null) expect(have, label).toBeNull();
+  else {
+    expect(typeof have, label).toBe('number');
+    expect(Math.abs((have as number) - want), label).toBeLessThan(TOL);
+  }
+}
+
 describe('golden vectors', () => {
+  it('the check refuses a null where a number is expected', () => {
+    expect(() => expectAgreement(null, 0, 'mutated')).toThrow();
+    expect(() => expectAgreement(undefined, 0, 'missing')).toThrow();
+    expect(() => expectAgreement(0, null, 'mutated')).toThrow();
+  });
+
   for (const c of cases) {
     it(c.id, () => {
       const body = evaluate({ gt: c.gt, pred: c.pred, ...c.params });
@@ -44,10 +62,7 @@ describe('golden vectors', () => {
       for (const [metric, byK] of Object.entries(c.expect)) {
         if (metric === 'verdicts' || metric === 'warnings') continue;
         for (const [k, want] of Object.entries(byK as Record<string, number | null>)) {
-          const have = got.get(`${metric}@${k}`);
-          if (want === null) expect(have, `${c.id} ${metric}@${k}`).toBeNull();
-          else expect(Math.abs((have as number) - want), `${c.id} ${metric}@${k}`)
-            .toBeLessThan(TOL);
+          expectAgreement(got.get(`${metric}@${k}`), want, `${c.id} ${metric}@${k}`);
         }
       }
       for (const want of (c.expect.verdicts ?? [])) {
@@ -109,6 +124,37 @@ describe('the constraint key is the ordered object pair (D99)', () => {
   it('a self-pair is a pair', () => {
     const same = [t(1, 'arm', 'near', 'arm', 0.9, 4, 4), t(2, 'arm', 'on', 'arm', 0.8, 4, 4)];
     expect(applyConstraint(rank(same), 'graph', 1)).toHaveLength(1);
+  });
+});
+
+describe('rank breaks every score tie on relationship_id', () => {
+  // `b.score - a.score` is NaN for two infinite scores, which the sort reads as a tie it never
+  // breaks; Python's (-score, relationship_id) key breaks it, so the two engines ranked apart.
+  type T = Parameters<typeof rank>[0][number];
+  const b = { x: 0, y: 0, w: 1, h: 1 };
+  const t = (rid: number, score: number): T => ({
+    index: rid,
+    relationship_id: rid,
+    subject_id: 1,
+    object_id: 2,
+    subject_name: 'man',
+    predicate: 'on',
+    object_name: 'street',
+    subject_bbox: b,
+    object_bbox: b,
+    subject_mask: null,
+    object_mask: null,
+    score,
+  });
+  const ids = (xs: T[]) => xs.map((x) => x.relationship_id);
+
+  it('orders two infinite scores of one sign by relationship_id', () => {
+    expect(ids(rank([t(2, Infinity), t(1, Infinity)]))).toEqual([1, 2]);
+    expect(ids(rank([t(2, -Infinity), t(1, -Infinity)]))).toEqual([1, 2]);
+  });
+
+  it('still puts the higher score first across infinities', () => {
+    expect(ids(rank([t(1, -Infinity), t(2, 0.5), t(3, Infinity)]))).toEqual([3, 2, 1]);
   });
 });
 

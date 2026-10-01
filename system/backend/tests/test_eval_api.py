@@ -111,3 +111,27 @@ def test_per_predicate_counts_the_ground_truth_once_per_k():
     row = body["per_predicate"][0]
     assert row["gt_count"] == 1
     assert row["matched"] == {"20": 1, "50": 1}
+
+
+def masked(kind: str, size: list[int], counts: str, rels: list[dict]) -> dict:
+    g = graph(kind, rels)
+    for o in g["objects"]:
+        o["mask"] = {"counts": counts, "size": size}
+    return g
+
+
+def test_a_truncated_mask_is_refused_as_invalid_not_a_crash():
+    """`P` is a group whose continuation flag promises a next character that never comes."""
+    body = {**BASE, "gt": masked("ground_truth", [4, 4], "P", BASE["gt"]["relationships"]),
+            "pred": masked("model", [4, 4], "P", BASE["pred"]["relationships"])}
+    r = client.post("/api/eval", json=body)
+    assert r.status_code == 422
+    assert r.json()["error"]["code"] == "schema_invalid"
+
+
+def test_masks_of_two_sizes_are_refused_as_invalid_not_a_crash():
+    body = {**BASE, "gt": masked("ground_truth", [4, 4], "08", BASE["gt"]["relationships"]),
+            "pred": masked("model", [5, 5], "0=", BASE["pred"]["relationships"])}
+    r = client.post("/api/eval", json=body)
+    assert r.status_code == 422
+    assert r.json()["error"]["code"] == "schema_invalid"
