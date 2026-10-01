@@ -72,12 +72,27 @@ def test_reltr_is_not_live_without_the_operator_s_own_clone(monkeypatch):
     assert "licence" in row["live_blocked_reason_en"]
 
 
-def test_reltr_is_live_when_all_three_gates_are_open(monkeypatch, tmp_path):
+def test_reltr_is_live_when_all_three_gates_are_open_and_the_path_is_wired(monkeypatch, tmp_path):
+    monkeypatch.setattr(registry, "torch_present", lambda: True)
+    monkeypatch.setattr(registry, "checkpoint_present", lambda model: True)
+    monkeypatch.setattr(registry, "WIRED", frozenset({"reltr"}))
+    monkeypatch.setenv("SGS_RELTR_PATH", str(tmp_path))
+    row = next(m for m in registry.describe_all() if m["id"] == "reltr")
+    assert row["live"] is True
+
+
+def test_reltr_is_not_live_while_its_infer_path_is_unwired(monkeypatch, tmp_path):
+    """With all three gates open, `/api/health` said live and `/api/infer/reltr` answered 503
+    "not wired": D37's two answers to one question, back again."""
     monkeypatch.setattr(registry, "torch_present", lambda: True)
     monkeypatch.setattr(registry, "checkpoint_present", lambda model: True)
     monkeypatch.setenv("SGS_RELTR_PATH", str(tmp_path))
     row = next(m for m in registry.describe_all() if m["id"] == "reltr")
-    assert row["live"] is True
+    assert row["live"] is False
+    assert client.get("/api/health").json()["live_models"] == []
+    r = client.post("/api/infer/reltr", json={"dataset": "placeholder", "image_id": "p1"})
+    assert r.status_code == 503
+    assert r.json()["error"]["detail"]["reason_en"] == registry.NOT_WIRED_EN
 
 
 def test_health_and_models_do_not_disagree_about_what_is_live():
@@ -130,6 +145,18 @@ def test_reltr_without_torch_degrades_with_a_reason(monkeypatch):
 
 def test_predictions_404_when_nothing_is_committed_for_that_triple():
     r = client.get("/api/predictions/placeholder/reltr/no-such-image")
+    assert r.status_code == 404
+    assert r.json()["error"]["code"] == "not_found"
+
+
+@pytest.mark.parametrize("path", [
+    # `..` as a segment reaches `data/content/playground_golden.json`, which exists.
+    "/api/predictions/%2E%2E/content/playground_golden",
+    # Windows reads `\` as a separator, and the router's `[^/]+` lets it through.
+    "/api/predictions/x/y/..%5C..%5C..%5Ccontent%5Cplayground_golden",
+])
+def test_predictions_never_reads_outside_its_own_tree(path):
+    r = client.get(path)
     assert r.status_code == 404
     assert r.json()["error"]["code"] == "not_found"
 

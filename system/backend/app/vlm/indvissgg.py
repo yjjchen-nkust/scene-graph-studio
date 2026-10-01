@@ -123,7 +123,8 @@ def to_graph(
             "fidelity": "measured" if live else "reconstructed",
             "vlm": "live" if live else "transcript",
             "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
-            "note": None if live else note,
+            # A live provider measured the triplets; the boxes are placeholders either way (D120).
+            "note": note,
         },
     })
 

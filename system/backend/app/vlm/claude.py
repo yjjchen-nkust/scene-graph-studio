@@ -41,7 +41,7 @@ class ClaudeProvider:
             )
 
     def complete(self, *, prompt: str, image_ref: str | None, context: dict[str, Any]) -> str:
-        from anthropic import Anthropic  # noqa: PLC0415 - optional dependency, checked above
+        import anthropic  # noqa: PLC0415 - optional dependency, checked above
 
         content: list[dict[str, Any]] = []
         if image_ref is not None:
@@ -60,13 +60,22 @@ class ClaudeProvider:
             )
         content.append({"type": "text", "text": prompt})
 
-        client = Anthropic(api_key=os.environ[ENV_KEY])
-        message = client.messages.create(
-            model=self.model,
-            max_tokens=16000,
-            output_config={"effort": "high"},
-            messages=[{"role": "user", "content": content}],
-        )
+        client = anthropic.Anthropic(api_key=os.environ[ENV_KEY])
+        # The SDK has already retried 429, 5xx and dropped connections by the time it raises, so
+        # what reaches here is a reason to state, not to retry. Unwrapped, it was a 500.
+        try:
+            message = client.messages.create(
+                model=self.model,
+                max_tokens=16000,
+                output_config={"effort": "high"},
+                messages=[{"role": "user", "content": content}],
+            )
+        except anthropic.APIStatusError as exc:
+            raise ProviderUnavailable(
+                f"{self.model} answered HTTP {exc.status_code}: {exc}"
+            ) from exc
+        except anthropic.APIError as exc:
+            raise ProviderUnavailable(f"the Anthropic API could not be reached: {exc}") from exc
         if message.stop_reason == "refusal":
             category = getattr(getattr(message, "stop_details", None), "category", None)
             raise ModelRefused(
@@ -77,4 +86,10 @@ class ClaudeProvider:
             raise ProviderUnavailable(
                 f"{self.model} stopped at max_tokens; a truncated answer is never recorded"
             )
-        return "".join(block.text for block in message.content if block.type == "text")
+        text = "".join(block.text for block in message.content if block.type == "text")
+        if not text.strip():
+            # Parsed, an empty answer is a graph with no triplets: a model that found nothing.
+            raise ProviderUnavailable(
+                f"{self.model} returned no text; an empty answer is never recorded"
+            )
+        return text

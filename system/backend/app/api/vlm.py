@@ -13,7 +13,7 @@ from fastapi import APIRouter
 from pydantic import Field
 
 from app.errors import ApiError
-from app.schema import Strict
+from app.schema import DatasetId, Strict
 from app.vlm import indvissgg
 from app.vlm.provider import ProviderUnavailable, TranscriptMiss
 
@@ -28,7 +28,9 @@ class Example(Strict):
 
 class IndVisSGGRequest(Strict):
     image_data_url: str | None = None
-    dataset: str = "mini-isg"
+    #: Checked here, before any call: the graph's own schema refused an unknown dataset only once
+    #: every step had run, as a 500 after the paid calls (D120).
+    dataset: DatasetId = "mini-isg"
     image_id: str = "isg-fig2-t1"
     O: list[str] = Field(default_factory=list)
     P: list[str] = Field(default_factory=list)
@@ -43,13 +45,22 @@ class IndVisSGGRequest(Strict):
 
 @router.post("/vlm/indvissgg")
 def indvissgg_run(req: IndVisSGGRequest) -> dict[str, Any]:
+    if req.image_data_url is not None:
+        # Nothing here sends an uploaded image to a model or keys a transcript on one, so the run
+        # would answer for `image_id`'s frame: a graph of a picture the student did not send.
+        raise ApiError("bad_request", 400, {
+            "expected": "dataset and image_id; an uploaded image is not supported by this endpoint",
+        })
+    # An omitted list is the frame's default criteria; an empty one is an ablation (D39). `or None`
+    # read both as the default.
+    given = req.model_fields_set
     try:
         return indvissgg.run(
             image_ref=req.image_id,
             dataset=req.dataset,
-            O=req.O or None,
-            P=req.P or None,
-            E=[e.model_dump() for e in req.E] or None,
+            O=req.O if "O" in given else None,
+            P=req.P if "P" in given else None,
+            E=[e.model_dump() for e in req.E] if "E" in given else None,
             n_experts=req.n_experts,
             steps=list(req.steps),
             ablate=list(req.ablate),

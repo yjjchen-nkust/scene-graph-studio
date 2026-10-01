@@ -91,6 +91,10 @@ BY_ID = {m.id: m for m in MODELS}
 #: The one model whose liveness is a property of the machine rather than of the project.
 LIVE_CAPABLE = frozenset({"reltr"})
 
+#: The models whose `/api/infer` path runs. Empty while `reltr_cpu._decode` raises (D41): with all
+#: three gates open, liveness said yes and the endpoint answered 503, which is D37 again (D120).
+WIRED: frozenset[str] = frozenset()
+
 
 def torch_present() -> bool:
     """True when `torch` could be imported. Probed, never imported: NFR-8's cold start."""
@@ -140,6 +144,9 @@ def liveness(model: Model) -> tuple[bool, tuple[str, str] | None]:
     if not package_present(model.id):
         env = EXTERNAL_PACKAGE[model.id]
         return False, (NO_PACKAGE_EN.format(env=env), NO_PACKAGE_ZH.format(env=env))
+    # Last, so that the three gates above still name what this machine lacks.
+    if model.id not in WIRED:
+        return False, (NOT_WIRED_EN, NOT_WIRED_ZH)
     return True, None
 
 

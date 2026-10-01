@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 DatasetId = Literal["vrd", "vg150-sgb", "psg", "indoorvg", "haystack", "mini-isg", "placeholder"]
 Protocol = Literal["predcls", "sgcls", "sgdet"]
@@ -26,6 +26,19 @@ class BBox(Strict):
 class RLEMask(Strict):
     counts: str
     size: tuple[int, int]
+
+    @field_validator("counts")
+    @classmethod
+    def _counts_are_compressed_rle(cls, v: str) -> str:
+        """Every character one 6-bit group (`0` to `o`), and the last one closes its run. A group
+        that promises a next one and is the last was an `IndexError` in the decoder, a 500."""
+        if any(not 48 <= ord(c) <= 111 for c in v):
+            raise ValueError("mask counts must be compressed RLE: characters '0' to 'o' only")
+        if v and (ord(v[-1]) - 48) & 0x20:
+            raise ValueError(
+                "mask counts end inside a run: the last group carries the continuation flag"
+            )
+        return v
 
 
 class SGObject(Strict):

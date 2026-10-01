@@ -161,25 +161,44 @@ class _Block:
 
 
 class _Response:
-    def __init__(self, stop_reason, details=None):
+    def __init__(self, stop_reason, details=None, content=None):
         self.stop_reason = stop_reason
         self.stop_details = details
-        self.content = [_Block("<a, on, b>")]
+        self.content = [_Block("<a, on, b>")] if content is None else content
+
+
+class _APIError(Exception):
+    """The SDK's base class; `APIStatusError` and `APIConnectionError` derive from it."""
+
+
+class _APIStatusError(_APIError):
+    def __init__(self, message, status_code):
+        super().__init__(message)
+        self.status_code = status_code
+
+
+class _APIConnectionError(_APIError):
+    pass
 
 
 class _Recorder:
-    """Stands in for the `anthropic` module: stores every request, answers with `stop_reason`."""
+    """Stands in for the `anthropic` module: stores every request, answers with `stop_reason`,
+    or raises `raises` the way the SDK raises a failed request."""
 
     def __init__(self):
         self.calls = []
         self.stop_reason = "end_turn"
         self.stop_details = None
+        self.content = None
+        self.raises = None
         recorder = self
 
         class Messages:
             def create(self, **kwargs):
                 recorder.calls.append(kwargs)
-                return _Response(recorder.stop_reason, recorder.stop_details)
+                if recorder.raises is not None:
+                    raise recorder.raises
+                return _Response(recorder.stop_reason, recorder.stop_details, recorder.content)
 
         class Anthropic:
             def __init__(self, **kwargs):
@@ -194,6 +213,9 @@ def fake_anthropic(monkeypatch):
     module = types.ModuleType("anthropic")
     module.__spec__ = importlib.machinery.ModuleSpec("anthropic", None)
     module.Anthropic = recorder.Anthropic
+    module.APIError = _APIError
+    module.APIStatusError = _APIStatusError
+    module.APIConnectionError = _APIConnectionError
     monkeypatch.setitem(sys.modules, "anthropic", module)
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
     return recorder
@@ -235,6 +257,26 @@ def test_a_refusal_is_raised_and_never_returned(fake_anthropic, frame_dir):
 def test_a_truncated_answer_is_raised_and_never_returned(fake_anthropic, frame_dir):
     fake_anthropic.stop_reason = "max_tokens"
     with pytest.raises(ProviderUnavailable, match="max_tokens"):
+        ClaudeProvider().complete(prompt="P", image_ref="x", context={})
+
+
+@pytest.mark.parametrize("error, reason", [
+    (_APIStatusError("invalid x-api-key", 401), "401"),
+    (_APIStatusError("rate limited", 429), "429"),
+    (_APIConnectionError("Connection error."), "Connection error"),
+])
+def test_a_failed_request_is_unavailable_with_its_reason(fake_anthropic, frame_dir, error, reason):
+    """An SDK exception left unwrapped reached the client as 500 `internal_error`, with no
+    reason a student could act on (NFR-1)."""
+    fake_anthropic.raises = error
+    with pytest.raises(ProviderUnavailable, match=reason):
+        ClaudeProvider().complete(prompt="P", image_ref="x", context={})
+
+
+def test_an_answer_without_text_is_raised_and_never_returned(fake_anthropic, frame_dir):
+    """An empty string would parse as no triplets, which reads as a model that found nothing."""
+    fake_anthropic.content = []
+    with pytest.raises(ProviderUnavailable, match="no text"):
         ClaudeProvider().complete(prompt="P", image_ref="x", context={})
 
 
