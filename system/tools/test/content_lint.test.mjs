@@ -290,6 +290,62 @@ describe('content_lint demo rules', () => {
     }
   });
 
+  it('reads a <Demo> whatever the order and quoting of its attributes', () => {
+    // MDX 3 compiles every spelling below to the same element: attributes in either order, either
+    // quote, over several lines, and a literal in braces. `Demo` takes `Number(part)`, so
+    // `part={2}` mounts the part `part="2"` does. A reader of one spelling refused all of them.
+    const r = lint(corpus({
+      ...DT,
+      body: `<Step id='s1'>\n\n<Demo part='1' id='DT'/>\n\n</Step>\n\n` +
+        `<Step id="s2">\n\n<Demo\n  id={"DT"}\n  part={2}\n/>\n\n</Step>`,
+    }));
+    expect(r.ok, r.out).toBe(true);
+  });
+
+  it('refuses a <Demo> whose part is not a literal', () => {
+    // An expression is evaluated when the slide renders, which a lint cannot do; it reads literals
+    // and names what it could not read. A bare `part` is JSX's `{true}`, which `Number` turns into
+    // part 1 at run time: a forgotten value that happens to land, refused rather than trusted.
+    const expression = lint(corpus({
+      ...DT, body: `${demoBlock('s1', 'DT', 1)}\n\n<Step id="s2">\n\n<Demo id="DT" part={n} />\n\n</Step>`,
+    }));
+    expect(expression.out).toContain("step 's2' declares demo 'DT' part 2 but its body carries DT part {n}");
+    const bare = lint(corpus({
+      ...DT, body: `<Step id="s1">\n\n<Demo id="DT" part />\n\n</Step>\n\n${demoBlock('s2', 'DT', 2)}`,
+    }));
+    expect(bare.out).toContain("step 's1' declares demo 'DT' part 1 but its body carries DT part {true}");
+  });
+
+  it('counts a <Demo> spelt in another order as the tag it is', () => {
+    // Outside every step, so it renders on every slide; a reader expecting `id` first never saw it.
+    const twice = lint(corpus({ ...DT, body: `${DT.body}\n\n<Demo part="1" id="DT" />` }));
+    expect(twice.out).toContain("demo 'DT' part 1 is mounted more than once in this module");
+    const stray = lint(corpus({ ...DT, body: `${DT.body}\n\n<Demo part='3' id='DT' />` }));
+    expect(stray.out).toContain('the body mounts <Demo id="DT" part="3" />, which no step');
+  });
+
+  it('does not count a <Demo> inside an MDX comment', () => {
+    // `{/* … */}` compiles to nothing: the copy is no second mount, and it does not stand in for
+    // the tag its step lacks.
+    const copy = lint(corpus({ ...DT, body: `${DT.body}\n\n{/* <Demo id="DT" part="1" /> */}` }));
+    expect(copy.ok, copy.out).toBe(true);
+    const only = lint(corpus({
+      ...DT, body: `${demoBlock('s1', 'DT', 1)}\n\n<Step id="s2">\n\n{/*\n<Demo id="DT" part="2" />\n*/}\n\n</Step>`,
+    }));
+    expect(only.out).toContain("step 's2' declares demo 'DT' part 2 but its body carries no <Demo>");
+  });
+
+  it('refuses an HTML comment, which MDX does not compile', () => {
+    // MDX 3 stops at `<!` with "to create a comment in MDX, use `{/* text */}`". The lint names
+    // that, and does not count the tag inside as a second mount.
+    const r = lint(corpus({ ...DT, body: `${DT.body}\n\n<!-- <Demo id="DT" part="1" /> -->` }));
+    expect(r.out).toContain('m00.zh-TW.mdx: the body holds an HTML comment');
+    expect(r.out).not.toContain('mounted more than once');
+    // A comment inside an MDX comment is JavaScript, which MDX compiles.
+    const nested = lint(corpus({ ...DT, body: `${DT.body}\n\n{/* <!-- an aside --> */}` }));
+    expect(nested.ok, nested.out).toBe(true);
+  });
+
   it('refuses a demo step with no seconds_budget', () => {
     const r = lint(corpus({
       ...DT,
@@ -479,6 +535,40 @@ describe('content_lint playground rules', () => {
     expect(whole.out).toContain('the body mounts <Playground kp="F1" />, which no step');
     const third = lint(corpus({ ...SPLIT, body: `${SPLIT.body}\n\n<Playground kp="F1" part="3" />` }));
     expect(third.out).toContain('the body mounts <Playground kp="F1" part="3" />, which no step');
+  });
+
+  it('reads a <Playground> whatever the order and quoting of its attributes', () => {
+    const r = lint(corpus({
+      ...SPLIT,
+      body: `<Step id='s1'>\n\n<Playground part='1' kp='F1' />\n\n</Step>\n\n` +
+        `<Step id="s2">\n\n<Playground\n  kp={'F1'}\n  part={2}\n></Playground>\n\n</Step>`,
+    }));
+    expect(r.ok, r.out).toBe(true);
+  });
+
+  it('counts a <Playground> spelt in another order or quote as the tag it is', () => {
+    // The copy is a declared tag, so only the count over the body can see it on every slide.
+    const twice = lint(corpus({ body: `${block('s1', 'F1')}\n\n<Playground kp='F1' />` }));
+    expect(twice.out).toContain("'F1' is mounted more than once in this module");
+    const stray = lint(corpus({ ...SPLIT, body: `${SPLIT.body}\n\n<Playground part="3" kp="F1" />` }));
+    expect(stray.out).toContain('the body mounts <Playground kp="F1" part="3" />, which no step');
+  });
+
+  it('does not count a <Playground> inside an MDX comment', () => {
+    const r = lint(corpus({
+      body: `${block('s1', 'F1')}\n\n{/* <Playground kp="F2" /> */}\n\n{/*\n<Playground kp="F1" />\n*/}`,
+    }));
+    expect(r.ok, r.out).toBe(true);
+  });
+
+  it('does not count a commented-out part of the four-part contract', () => {
+    // `<Worked>` inside `{/* … */}` renders nothing, so the module teaches three parts of four.
+    const r = lint(corpus({
+      frontmatter: `${step('s1', 'F1')}\n  - id: s2\n    kind: math\n    presenter_notes_LOCALE: "n"`,
+      body: `${block('s1', 'F1')}\n\n<Step id="s2">\n\n<Intuition>a</Intuition>\n\n<Formal>b</Formal>\n\n` +
+        `{/* <Worked>c</Worked> */}\n\n<Implications>d</Implications>\n\n</Step>`,
+    }));
+    expect(r.out).toContain('has a math step but no <Worked>');
   });
 
   it('refuses the same part mounted twice in one module', () => {
