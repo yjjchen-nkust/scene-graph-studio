@@ -69,6 +69,24 @@ describe('FieldMap', () => {
     }
   });
 
+  it('keeps a year field empty while it is retyped, rather than writing 0 into it', () => {
+    // The field showed the URL's value, so clearing it to type a new year wrote `to=0`: the
+    // field read 0 under the cursor and the map hid every paper until the year was complete.
+    mount('/map?to=2024');
+    const to = screen.getByLabelText(/^to$/i) as HTMLInputElement;
+    to.focus();
+    fireEvent.change(to, { target: { value: '' } });
+    expect(to.value).toBe('');
+    expect(query().get('to')).toBeNull();
+    expect(screen.getByTestId('visible-count'))
+      .toHaveTextContent(`${PAPERS.length} / ${PAPERS.length}`);
+
+    fireEvent.change(to, { target: { value: '2023' } });
+    fireEvent.blur(to);
+    expect(to.value).toBe('2023');
+    expect(query().get('to')).toBe('2023');
+  });
+
   it('opens a card and keeps it in the URL', () => {
     mount();
     fireEvent.click(screen.getByTestId('card-indvissgg-2025'));

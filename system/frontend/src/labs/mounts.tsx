@@ -1,9 +1,8 @@
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import type { SceneGraph } from 'sgg-metrics';
 import { useLocale } from '../i18n/useLocale';
-import { getJson, postJson, useImageGraph, useModels, useSliceImages } from './api';
-import { ExportButtons } from '../export/ExportButtons';
+import { getJson, isNotFound, postJson, useImageGraph, useModels, useSliceImages } from './api';
 import { LabFrame } from './LabFrame';
 import { TripletBuilder } from './L1/TripletBuilder';
 import { TRIPLET_PARAMS } from './L1/triplets';
@@ -11,7 +10,7 @@ import { GT as L2_GT, PRED as L2_PRED } from './L2/fixture';
 import { MetricExplorer } from './L2/MetricExplorer';
 import { LongTailLab } from './L3/LongTailLab';
 import { MethodComparator } from './L4/MethodComparator';
-import type { Column } from './L4/types';
+import type { Column, Failure } from './L4/types';
 import { IndVisSGGReplica } from './L5/IndVisSGGReplica';
 import type { ReplicaRequest, ReplicaResult } from './L5/types';
 import { ProtocolForensics } from './L6/ProtocolForensics';
@@ -90,7 +89,6 @@ function FramePicker({
 function L1Mount() {
   const { ds, imageId, rows, images, pickFrame } = useFrame(TRIPLET_PARAMS);
   const graph = useImageGraph(ds, imageId, true);
-  const area = useRef<HTMLDivElement>(null);
   const error = images.error ?? graph.error;
   const pending = !error && (images.isPending || graph.isPending);
 
@@ -99,10 +97,9 @@ function L1Mount() {
       {graph.data && (
         <>
           <FramePicker value={imageId ?? ''} rows={rows} onChange={pickFrame} />
-          <ExportButtons graph={graph.data} targetRef={area} />
-          <div ref={area}>
-            <TripletBuilder gt={graph.data} imageUrl={graph.data.image_data_url ?? ''} />
-          </div>
+          {/* The lab renders its own export: the graph it writes is the student's, not this
+              annotation (PRD §6.6). */}
+          <TripletBuilder gt={graph.data} imageUrl={graph.data.image_data_url ?? ''} />
         </>
       )}
     </LabFrame>
@@ -151,8 +148,20 @@ function L4Mount() {
     })),
   });
 
+  // Live inference is opt-in and, per D-06, RelTR only. A mutation, so its answer is kept: a
+  // graph takes its model's column as `measured`, and a 503 is shown under the button with the
+  // reason the backend gives. Either belongs to the frame it was asked of and to no other.
+  const live = useMutation({
+    mutationFn: (req: { model: string; ds: string; imageId: string | null }) =>
+      postJson<PredictionBody>(`/api/infer/${req.model}`, {
+        dataset: req.ds,
+        image_id: req.imageId,
+      }),
+  });
+  const asked = live.variables?.ds === ds && live.variables.imageId === imageId ? live.variables : null;
+
   const columns: Column[] = available.flatMap((m, i) => {
-    const body = predictions[i]?.data;
+    const body = (asked?.model === m.id ? live.data : undefined) ?? predictions[i]?.data;
     if (!body) return [];
     return [
       {
@@ -164,8 +173,20 @@ function L4Mount() {
     ];
   });
 
+  // A 404 is the backend saying no prediction is committed for this frame; anything else is a
+  // read that failed, and dropping it would let the lab say "none" about a corpus it never saw.
+  const failures: Failure[] = available.flatMap((m, i) => {
+    const failed = predictions[i]?.error;
+    return failed && !isNotFound(failed) ? [{ model: m.id, error: failed }] : [];
+  });
+  const refusal: Failure | null = asked && live.error ? { model: asked.model, error: live.error } : null;
+
   const error = images.error ?? graph.error ?? models.error;
-  const pending = !error && (images.isPending || graph.isPending || models.isPending);
+  // `isLoading`, not `isPending`: a disabled query is pending for ever. Until the reads answer,
+  // an empty comparison would say "no predictions" about reads still under way.
+  const pending =
+    !error &&
+    (images.isPending || graph.isPending || models.isPending || predictions.some((p) => p.isLoading));
 
   return (
     <LabFrame labId="L4" pending={pending} error={error}>
@@ -176,14 +197,9 @@ function L4Mount() {
             gt={graph.data}
             columns={columns}
             models={available}
-            // Live inference is opt-in and, per D-06, RelTR only. The registry already carries
-            // the reason each model cannot run and the lab renders it, so this hands the request
-            // to the backend and lets the 503 say the rest.
-            onInfer={(model) => {
-              void postJson(`/api/infer/${model}`, { dataset: ds, image_id: imageId }).catch(
-                () => undefined,
-              );
-            }}
+            failures={failures}
+            refusal={refusal}
+            onInfer={(model) => live.mutate({ model, ds, imageId })}
           />
         </>
       )}
@@ -234,7 +250,6 @@ function L8Mount() {
   const rows = images.data?.images ?? [];
   const imageId = params.img || rows[0]?.image_id || null;
   const reference = useImageGraph('mini-isg', imageId, true);
-  const area = useRef<HTMLDivElement>(null);
   // The draft is the lab's "before", so it is fetched rather than run: step 1 only, from the
   // authored transcript the frame's own criteria select (D51). Its boxes are placeholders by
   // construction, which is why box adjustment is one of the four correction categories.
@@ -260,19 +275,17 @@ function L8Mount() {
       {reference.data && drafted && (
         <>
           <FramePicker value={imageId ?? ''} rows={rows} onChange={(img) => setParams({ img })} />
-          <ExportButtons graph={reference.data} targetRef={area} />
-          <div ref={area}>
-            {/* Keyed by frame: the working copy is local state seeded from the draft, and a
-                return to a cached frame resolves in one render, so without the key the
-                annotator would keep the last frame's copy. */}
-            <MiniISGAnnotator
-              key={imageId}
-              draft={drafted}
-              reference={reference.data}
-              imageUrl={reference.data.image_data_url ?? ''}
-              predicates={[...new Set(reference.data.relationships.map((r) => r.predicate))].sort()}
-            />
-          </div>
+          {/* Keyed by frame: the working copy is local state seeded from the draft, and a
+              return to a cached frame resolves in one render, so without the key the
+              annotator would keep the last frame's copy. The annotator renders its own export,
+              because the graph it writes is that working copy, not the reference (PRD §6.6). */}
+          <MiniISGAnnotator
+            key={imageId}
+            draft={drafted}
+            reference={reference.data}
+            imageUrl={reference.data.image_data_url ?? ''}
+            predicates={[...new Set(reference.data.relationships.map((r) => r.predicate))].sort()}
+          />
         </>
       )}
     </LabFrame>

@@ -1,6 +1,6 @@
 import { isSceneGraph, type SceneGraph } from 'sgg-metrics';
 import { describe, expect, it } from 'vitest';
-import { perturb, seed } from '../perturb';
+import { corruptible, perturb, seed } from '../perturb';
 
 const GROUND_TRUTH: SceneGraph = {
   image_id: 'ph-001',
@@ -101,6 +101,94 @@ describe('perturb', () => {
     const { graph, kind } = perturb(one, seed(7));
     expect(kind).toBe('reversed');
     expect(graph.relationships[0]).toMatchObject({ subject_id: 2, object_id: 1 });
+  });
+
+  it('never reverses a symmetric predicate, whose reversal is still true', () => {
+    // GROUND_TRUTH's third relation is `person near table`. `table near person` is the same fact,
+    // so an item built on it has no wrong answer and marks the reader wrong for any choice.
+    for (let s = 0; s < 200; s += 1) {
+      const { corruptedIndex, kind } = perturb(GROUND_TRUTH, seed(s));
+      if (GROUND_TRUTH.relationships[corruptedIndex]!.predicate !== 'near') continue;
+      expect(kind, `seed ${s} reversed near`).toBe('predicate');
+    }
+  });
+
+  it('never produces a triplet the ground truth already holds', () => {
+    // Two predicates on one pair, and a relation annotated in both directions: a rewrite of
+    // `holding` to `looking at`, or a reversal of either `watching`, lands on a row that is true.
+    const crowded: SceneGraph = {
+      ...GROUND_TRUTH,
+      objects: [
+        { object_id: 1, names: ['person'], bbox: { x: 40, y: 60, w: 150, h: 340 } },
+        { object_id: 2, names: ['cup'], bbox: { x: 200, y: 240, w: 60, h: 70 } },
+        { object_id: 3, names: ['dog'], bbox: { x: 300, y: 300, w: 120, h: 90 } },
+      ],
+      relationships: [
+        { relationship_id: 1, subject_id: 1, object_id: 2, predicate: 'holding' },
+        { relationship_id: 2, subject_id: 1, object_id: 2, predicate: 'looking at' },
+        { relationship_id: 3, subject_id: 3, object_id: 1, predicate: 'watching' },
+        { relationship_id: 4, subject_id: 1, object_id: 3, predicate: 'watching' },
+      ],
+    };
+    const line = (r: SceneGraph['relationships'][number]) =>
+      `${r.subject_id} ${r.predicate} ${r.object_id}`;
+    const held = new Set(crowded.relationships.map(line));
+    for (let s = 0; s < 200; s += 1) {
+      const { graph, corruptedIndex } = perturb(crowded, seed(s));
+      expect(held.has(line(graph.relationships[corruptedIndex]!)), `seed ${s}`).toBe(false);
+    }
+  });
+
+  it('refuses a graph in which every corruption would still be true', () => {
+    const one: SceneGraph = {
+      ...GROUND_TRUTH,
+      relationships: [{ relationship_id: 1, subject_id: 3, object_id: 1, predicate: 'near' }],
+    };
+    expect(() => perturb(one, seed(7))).toThrow(/no relationship/i);
+  });
+
+  it('leaves alone the relations it is told an earlier item already asked about', () => {
+    for (let s = 0; s < 40; s += 1) {
+      expect(perturb(GROUND_TRUTH, seed(s), new Set([0, 1])).corruptedIndex, `seed ${s}`).toBe(2);
+    }
+  });
+
+  it('keeps its first draw wherever that draw was sound, so a stored item keeps its meaning', () => {
+    // Measured on the generator before symmetric predicates and held triplets were refused. The
+    // FSRS schedule is keyed by item id, so an item that was already a fair question must come
+    // out the same, or a reader's history would attach to a different question. Seed 5 rewrites
+    // the `near` relation: the draw that was always sound there must survive the rule that
+    // refuses its reversal, which is a matter of drawing the same random numbers in the same order.
+    const before: Record<number, string> = {
+      0: '0 predicate 2 holding 1',
+      1: '0 reversed 1 on 2',
+      5: '2 predicate 3 holding 1',
+      8: '1 predicate 3 near 2',
+      11: '1 reversed 2 holding 3',
+      24: '2 predicate 3 on 1',
+    };
+    for (const [s, expected] of Object.entries(before)) {
+      const { graph, corruptedIndex, kind } = perturb(GROUND_TRUTH, seed(Number(s)));
+      const r = graph.relationships[corruptedIndex]!;
+      const drawn = `${corruptedIndex} ${kind} ${r.subject_id} ${r.predicate} ${r.object_id}`;
+      expect(drawn, `seed ${s}`).toBe(expected);
+    }
+  });
+});
+
+describe('corruptible', () => {
+  it('lists the relations that admit at least one corruption a reader can tell is wrong', () => {
+    const near: SceneGraph = {
+      ...GROUND_TRUTH,
+      relationships: [
+        { relationship_id: 1, subject_id: 3, object_id: 1, predicate: 'near' },
+        { relationship_id: 2, subject_id: 2, object_id: 1, predicate: 'on' },
+      ],
+    };
+    // `person near table` can be rewritten to `on`; `cup on table` can be rewritten to `near`
+    // and reversed. A lone `near` could only be reversed, and that is no corruption at all.
+    expect(corruptible(near)).toEqual([0, 1]);
+    expect(corruptible({ ...near, relationships: near.relationships.slice(0, 1) })).toEqual([]);
   });
 });
 

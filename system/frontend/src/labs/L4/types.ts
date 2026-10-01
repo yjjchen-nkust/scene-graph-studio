@@ -23,3 +23,9 @@ export interface Column {
   /** Required by D-07 whenever `fidelity` is not `measured`, and rendered without a click. */
   note: string | null;
 }
+
+/** A request about one model that failed, carried with the failure so its reason can be shown. */
+export interface Failure {
+  model: string;
+  error: unknown;
+}

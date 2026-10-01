@@ -24,12 +24,38 @@ function isLocale(value: unknown): value is Locale {
  */
 let current: Locale = read('lang', isLocale, 'zh-TW');
 
-export function setLocale(next: Locale): void {
+// `index.html` ships `lang="zh-TW"`, the default. A stored English preference has to say so from
+// the first paint: only `setLocale` wrote the attribute, so an English page told the browser, a
+// screen reader and the hyphenator that it was Chinese until the toggle was pressed again.
+document.documentElement.lang = current;
+
+function adopt(next: Locale): void {
   current = next;
-  write('lang', next);
   document.documentElement.lang = next;
   listeners.forEach((fn) => fn());
 }
+
+export function setLocale(next: Locale): void {
+  write('lang', next);
+  adopt(next);
+}
+
+/**
+ * A preference written by another window of this origin.
+ *
+ * Every window holds its own `current`, read once at load, so the presenter window kept the
+ * locale it opened in while the deck changed. The position reaches it over `sgs-presenter`, but
+ * the locale is not the deck's to send: the toggle lives on the home and status pages, the deck
+ * holds none, and contracts §2.4 fixes the position message's shape. The preference is a stored
+ * slot, and the browser fires `storage` in every window of the origin except the one that wrote,
+ * which is exactly the set that has to be told. The slot is read again on any key: the event
+ * names the key with the private `sgs:v1:` prefix, and the read is one small parse. Where storage
+ * is blocked nothing is written and nothing is heard, and each window keeps its own choice.
+ */
+window.addEventListener('storage', () => {
+  const next = read('lang', isLocale, current);
+  if (next !== current) adopt(next);
+});
 
 /**
  * There is no fallback locale. A missing key renders as its own name in development and

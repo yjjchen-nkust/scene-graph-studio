@@ -125,6 +125,7 @@
   "l4.latency": "實測延遲",
   "l4.latency_unmeasured": "本機尚未量測延遲。",
   "l4.run_live": "執行即時推論",
+  "l4.prediction_failed": "無法讀取本影格之預測結果，此情形不等同於未收錄預測。",
   "l3.heading": "L3 — 長尾實驗",
   "l3.subheading": "曾令全領域難堪的頻率基線，於瀏覽器中即時擬合並計分。",
   "l3.lambda": "混合係數 λ（0 為僅用先驗，1 為僅用視覺模型）",

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ModuleStep } from '../../../content/registry';
@@ -160,6 +160,26 @@ describe('PresenterWindow', () => {
 
     expect(await screen.findByTestId('next-absent')).toBeInTheDocument();
     expect(screen.queryByTestId('presenter-idle')).not.toBeInTheDocument();
+  });
+
+  it('follows a locale chosen in another window', async () => {
+    // The notes are a second window with its own copy of the preference, read once at load, so a
+    // professor who switched the deck to 繁體中文 kept English notes until the notes were reloaded.
+    // The choice reaches this window as the `storage` event the browser fires in every window of
+    // the origin but the one that wrote it.
+    render(<PresenterWindow resolve={() => ({ title: 'Why scene graphs', steps: STEPS })} />);
+    post({ moduleId: 'm00', stepIndex: 0, remainingSeconds: 120 });
+    expect(await screen.findByTestId('notes')).toHaveTextContent('Hold on the three photographs');
+
+    act(() => {
+      localStorage.setItem('sgs:v1:lang', '"zh-TW"');
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: 'sgs:v1:lang', newValue: '"zh-TW"' }),
+      );
+    });
+    // The step carries an English note only, so 繁體中文 says there is none, in Chinese.
+    expect(screen.getByTestId('notes-absent')).toHaveTextContent('本步驟尚未撰寫備註。');
+    expect(screen.getByText('講者備註')).toBeInTheDocument();
   });
 
   it('says so when the lecture is on a module it cannot resolve', async () => {

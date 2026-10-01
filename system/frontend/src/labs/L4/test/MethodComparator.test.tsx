@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { setLocale } from '../../../i18n/useLocale';
+import { ApiFailure } from '../../api';
 import { GT, TWO_STAGE } from '../../L6/fixture';
 import { MethodComparator } from '../MethodComparator';
 import type { Column, ModelRow } from '../types';
@@ -114,5 +115,70 @@ describe('MethodComparator', () => {
       expect(readout.textContent).toContain('R@20');
       expect(readout.textContent).toContain('sgdet');
     }
+  });
+
+  /** The tier every figure in a column's readout carries, one entry per figure. */
+  const tiers = (model: string) =>
+    [
+      ...within(screen.getByTestId(`column-${model}`))
+        .getByTestId('metrics')
+        .querySelectorAll('[data-fidelity]'),
+    ].map((el) => el.getAttribute('data-fidelity'));
+
+  it('tags a figure computed on a reconstructed prediction reconstructed, not measured', () => {
+    // D-07: `measured` is reserved for a model's own output. The engine tags what it computes
+    // `measured`, which is true of the computation and false of a recall over a hand-built graph.
+    mount();
+    expect(tiers('psgformer')).toEqual(['reconstructed', 'reconstructed']);
+    expect(tiers('reltr')).toEqual(['measured', 'measured']);
+  });
+
+  it('takes the weaker tier when the ground truth is not measured either', () => {
+    const gt = { ...GT, provenance: { kind: 'user', fidelity: 'reconstructed', note: 'Drawn.' } } as const;
+    mount({ gt });
+    expect(tiers('reltr')).toEqual(['reconstructed', 'reconstructed']);
+  });
+
+  it('says why a prediction could not be read, rather than counting it as none', () => {
+    const error = new ApiFailure(500, 'internal_error', 'An unexpected error occurred.', '發生未預期的錯誤。');
+    mount({ columns: [], failures: [{ model: 'psgformer', error }] });
+    expect(screen.getByTestId('prediction-failed-psgformer')).toHaveTextContent('An unexpected error occurred.');
+    expect(screen.getByTestId('prediction-failed-psgformer')).toHaveTextContent('PSGFormer');
+    // "No predictions are committed" is a statement about the corpus, and nothing was learned
+    // about the corpus: the read failed.
+    expect(screen.queryByTestId('no-columns')).toBeNull();
+  });
+
+  it('shows the live run’s refusal under its button, with the reason the 503 gives', () => {
+    const error = new ApiFailure(
+      503,
+      'inference_unavailable',
+      'Live inference is not available for this model on this machine.',
+      '此機器無法對本模型執行即時推論。',
+      {
+        model: 'reltr',
+        reason_en: 'No RelTR checkpoint is present under data/checkpoints/reltr/.',
+        reason_zh: 'data/checkpoints/reltr/ 下沒有 RelTR 檢查點。',
+        torch_present: true,
+        checkpoint_present: false,
+      },
+    );
+    mount({ refusal: { model: 'reltr', error } });
+    const shown = within(screen.getByTestId('column-reltr')).getByTestId('refused-reltr');
+    expect(shown).toHaveTextContent('Live inference is not available');
+    expect(shown).toHaveTextContent('No RelTR checkpoint is present');
+    expect(screen.queryByTestId('refused-psgformer')).toBeNull();
+  });
+
+  it('gives the refusal’s reason in the locale on screen', () => {
+    setLocale('zh-TW');
+    const error = new ApiFailure(503, 'inference_unavailable', 'Not here.', '此機器無法對本模型執行即時推論。', {
+      reason_en: 'No checkpoint.',
+      reason_zh: '沒有檢查點。',
+    });
+    mount({ refusal: { model: 'reltr', error } });
+    const shown = screen.getByTestId('refused-reltr');
+    expect(shown).toHaveTextContent('沒有檢查點。');
+    expect(shown).not.toHaveTextContent('No checkpoint.');
   });
 });

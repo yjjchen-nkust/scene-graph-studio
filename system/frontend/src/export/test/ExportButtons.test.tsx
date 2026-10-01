@@ -4,6 +4,7 @@ import type { SceneGraph } from 'sgg-metrics';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { setLocale } from '../../i18n/useLocale';
 import { downloadText, ExportButtons, exportFilename } from '../ExportButtons';
+import { isSelfContained } from '../svg';
 import { fromVisualGenome } from '../vgJson';
 
 const GRAPH: SceneGraph = {
@@ -76,29 +77,51 @@ describe('ExportButtons', () => {
     expect(fromVisualGenome(JSON.parse(decode(seen[0]!.href)))).toEqual(GRAPH);
   });
 
-  it('offers and downloads the SVG when an overlay is present', () => {
-    function Host() {
-      const area = useRef<HTMLDivElement>(null);
-      return (
-        <div>
-          <ExportButtons graph={GRAPH} targetRef={area} />
-          <div ref={area}>
-            <svg viewBox="0 0 10 10">
-              <rect data-testid="box" x="1" y="1" width="2" height="2" />
-            </svg>
-          </div>
+  /** The buttons before the overlay, as a lab lays them out: the ref is attached after them. */
+  function Host({ imageUrl }: { imageUrl?: string }) {
+    const area = useRef<HTMLDivElement>(null);
+    return (
+      <div>
+        <ExportButtons graph={GRAPH} targetRef={area} imageUrl={imageUrl} />
+        <div ref={area}>
+          <svg viewBox="0 0 10 10">
+            <rect data-testid="box" x="1" y="1" width="2" height="2" />
+          </svg>
         </div>
-      );
-    }
-    // Two renders: the ref is null on the first pass, which is the case that would otherwise
-    // hide the button for ever.
-    const { rerender } = render(<Host />);
-    rerender(<Host />);
+      </div>
+    );
+  }
+
+  it('offers the SVG export once the overlay mounts, without waiting for another render', () => {
+    // The ref is null while the buttons render for the first time. Read then, it hid the button
+    // until something unrelated rendered the buttons again, which on a lab nobody touches is
+    // never. One `render`, and no `rerender`, is the case.
+    render(<Host />);
 
     const seen = captureDownloads();
     fireEvent.click(screen.getByTestId('export-svg'));
     expect(seen[0]!.name).toBe('mini-isg_isg-001.svg');
     expect(decode(seen[0]!.href)).toContain('<rect');
     expect(decode(seen[0]!.href)).not.toContain('data-testid');
+  });
+
+  it('puts the photograph in the SVG, beneath the boxes', () => {
+    // The overlay on screen is an <img> with an <svg> over it; serialising the <svg> alone
+    // exports boxes over nothing.
+    render(<Host imageUrl="data:image/png;base64,iVBORw0KGgo=" />);
+    const seen = captureDownloads();
+    fireEvent.click(screen.getByTestId('export-svg'));
+    const svg = decode(seen[0]!.href);
+    expect(svg).toMatch(/<svg[^>]*><image[^>]+href="data:image\/png;base64,iVBORw0KGgo="/);
+    expect(isSelfContained(svg)).toBe(true);
+  });
+
+  it('embeds only a data: URI, because any other address will not travel with the file', () => {
+    render(<Host imageUrl="/images/isg-001.jpg" />);
+    const seen = captureDownloads();
+    fireEvent.click(screen.getByTestId('export-svg'));
+    const svg = decode(seen[0]!.href);
+    expect(svg).not.toContain('<image');
+    expect(isSelfContained(svg)).toBe(true);
   });
 });

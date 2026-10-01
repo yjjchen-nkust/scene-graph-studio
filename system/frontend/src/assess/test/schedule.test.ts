@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadSchedule } from '../../store/persist';
-import { cardsDue, gradeItem, RATING, resetSchedule } from '../schedule';
+import { cardsDue, gradeItem, isDue, RATING, resetSchedule } from '../schedule';
 
 const NOW = new Date('2026-09-18T09:00:00.000Z');
 
@@ -35,12 +35,32 @@ describe('gradeItem', () => {
     expect(new Date(second.due).getTime()).toBeGreaterThan(new Date(first.due).getTime());
   });
 
+  it('does not grade an item again before it is due', () => {
+    // Measured with this scheduler: a right answer to a new item is due ten minutes later, a
+    // learning step. Graded again at once it was due in two days, and a third time in three, so
+    // a reader clicking through a page they know pushed the card out with no review in between.
+    const first = gradeItem('a', RATING.good, NOW).cards['a']!;
+    const early = new Date(new Date(first.due).getTime() - 1000);
+    expect(gradeItem('a', RATING.good, NOW).cards['a']).toEqual(first);
+    expect(gradeItem('a', RATING.good, early).cards['a']).toEqual(first);
+    expect(loadSchedule().cards['a']).toEqual(first);
+  });
+
   it('never throws when storage is blocked; the session still schedules', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('quota');
     });
     expect(() => gradeItem('a', RATING.good, NOW)).not.toThrow();
     vi.restoreAllMocks();
+  });
+});
+
+describe('isDue', () => {
+  it('holds for an item never answered, and for one whose review has come due', () => {
+    expect(isDue('a', NOW)).toBe(true);
+    const due = new Date(gradeItem('a', RATING.again, NOW).cards['a']!.due);
+    expect(isDue('a', NOW)).toBe(false);
+    expect(isDue('a', due)).toBe(true);
   });
 });
 
