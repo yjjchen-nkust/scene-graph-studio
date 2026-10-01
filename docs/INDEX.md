@@ -44,7 +44,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-29-playgrounds-m5.md` | M5's corrections, the slice ordered and the six beliefs, T1 and T2, their golden cases, M5 s3, s5 and s6 | **executed** |
 | `superpowers/plans/2026-09-29-m0-demos.md` | The live VLM provider's frame, the clip, D-T and D-V recorded and derived, the demo components, the lint rules, M0 s7 to s15, the Chromium checks | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D117. Every departure from plan, with its reason.** | live |
+| `../DEVIATIONS.md` | **D1…D119. Every departure from plan, with its reason.** | live |
 | `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28), the M4 playgrounds (§29), the M5 playgrounds (§30) and the M0 demos (§31)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | The freeze, its release by D-23, and every correction made under it | live |
@@ -478,6 +478,23 @@ frozen-page lints clean, standalone current (254 equations), frontend builds. `n
 107 passed across the keyboard walkthrough, the playgrounds, the demos and the three projector resolutions. `npm run
 check:offline`: 9 passed, re-run 2026-09-30 on the torch-free interpreter. `npm run
 check:perf`, 2026-09-30, on branch `feat/m0-demos`: 33 passed, NFR-8 measured over five labs and sixteen playgrounds and two demos, plus the D75 selection guard. `npm run check:pins`: 9 of 9 and 5 of 5 agree.
+[**Corrected 2026-10-01 (D118):** the `npm run ci` counts above precede the review's fixes in `0f887ca`. The
+branch merged as `b5eca93` on 2026-09-30, and on that commit, re-run 2026-10-01, `npm run ci` counts **359 pytest**
+and 7 skipped, i18n 506 keys and **1236 vitest** in 83 files; `npm run test:e2e` 107, `npm run check:offline` 9 and
+`npm run check:perf` 33 passed.]
+
+**Two minors of the M0 demos' review, 2026-10-01.** Content lint's rule 4 accepted the artefact path
+`demos/..\x`, which Windows resolves outside `data/demos/`; it now reads `\` as `/` before it normalises. The
+analysis-label regex that `0f887ca` shared between `revision_text` and `parse_analysis` required a label to stand
+alone on its line, so a label followed by its paragraph ended no revision and the analysis's quoted triplets became
+revision rows again; the regex now ends at a word boundary after the tag. Each fix has a test that failed first. The
+four recorded transcripts find their labels at the same positions under either regex, so no replay changes. See
+D118. The same branch moves the frontend to `remark-mdx-frontmatter@6.0.0`, which parses TOML with `smol-toml` and
+so clears the `toml` advisory D73 could not; the production build is byte-identical to 5.2.0's, and
+`npm audit --omit=dev` finds no vulnerability. See D119. **Verification.** `npm run ci` green, 2026-10-01, on
+branch `fix/review-2026-10-01` with D119: **360 pytest** and 7 skipped, parity 21 agree, i18n 506 keys, **1236
+vitest** in 83 files, ruff clean, content lint clean, standalone current (254 equations), frontend builds;
+`npm run test:e2e` 107, `npm run check:offline` 9 and `npm run check:perf` 33 passed.
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in

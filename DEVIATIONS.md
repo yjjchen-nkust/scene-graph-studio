@@ -1801,6 +1801,10 @@ has not caught up, and the alternatives are to drop jest-dom's matchers across t
 or to stop type-checking the tests — both of which cost more than a moderate advisory in a tool
 no student runs. Reverted to `vitest@3.2.7` with a clean `npm ci`, and the gate is green.
 
+[**Corrected 2026-10-01 (D119):** `remark-mdx-frontmatter@6.0.0`, published 2026-09-23, parses TOML with
+`smol-toml` instead of `toml`, and the frontend now depends on it; `npm audit --omit=dev` finds no vulnerability.
+The two rows above and the paragraph below describe the tree before D119.]
+
 **`toml` cannot be fixed by upgrading at all.** `remark-mdx-frontmatter@5.2.0` is the latest
 published version and still depends on `toml@^3.0.0`, and every `toml` up to 4.1.2 carries the
 advisory, so there is nothing in range. The only remaining route is to stop using the plugin and
@@ -5079,3 +5083,40 @@ reversed.
   running; the badge and marks tests wait for visibility, not for `img.decode()`.
 - `DEMO_LONGEST` in the projector suite chooses its states by rules over the recordings; each rule was checked
   against a full sweep, and a new recording needs that check again.
+
+## D118 — two minors the M0 demos' final review left open: rule 4's backslash, and a label on its paragraph's line
+
+**Plan:** none. **Decisions:** none new. Branch `fix/review-2026-10-01`, cut from `main` at `b5eca93`. Both were
+found by the review that closed D112 to D117 and left for a later branch; D117's list of deferred minors does not
+name them.
+
+**Rule 4 accepted `demos/..\x` on Windows.** The rule normalised the artefact's path with `posix.normalize`, for
+which `\` is an ordinary character, so `demos/..\vlm\m0-demo.json` began with `demos/` and passed, while
+`existsSync` on Windows reads `\` as a separator and opened `data/vlm/m0-demo.json`. The rule now reads `\` as `/`
+before it normalises. `refuses a demo whose artefact lies outside data/demos/` carries the backslash path as a
+fourth case; before the change that case failed with the lint's output empty.
+
+**An analysis label had to stand alone on its line.** `0f887ca` gave `revision_text` and `parse_analysis` one label
+regex, anchored at both ends of the line. Before it, `revision_text` ended the revision at any line beginning
+`ANALYSIS_`; after it, a completion that writes `ANALYSIS_EN: Deleted <hand, near, wrench>.` on one line was read
+whole as the revision, and the quoted triplet became a revision row, which is the defect D115 corrected. The regex
+now requires a word boundary after the two-letter tag in place of the line's end, and a section begins after the
+label's trailing marks, up to four non-word characters (`:` and `：` among them).
+`test_a_label_with_its_paragraph_on_the_same_line_ends_the_revision` failed on the revision before the change.
+Over the four recorded transcripts on the NAS (`fig2-corrections.json`, `fig2-pipeline.json`, `m0-demo.json`,
+`mini-isg-step1.json`) the old and the new regex find their labels at the same positions in every one of the 85
+strings that contain `ANALYSIS_`, so no replay changes.
+
+## D119 — `remark-mdx-frontmatter` 6.0.0, which clears the last runtime-dependency advisory
+
+**Plan:** none. **Decisions:** none new. Branch `fix/review-2026-10-01`. D73 left the high `toml` advisory open
+because `remark-mdx-frontmatter@5.2.0` was the latest version and depended on `toml@^3.0.0`, which has no fixed
+version in range. `6.0.0`, published 2026-09-23, parses TOML with `smol-toml@^1.0.0` instead; the frontend's range
+moves from `^5.2.0` to `^6.0.0`, and the lockfile replaces `toml@3.0.0` with `smol-toml@1.9.0`. `npm audit
+--omit=dev` reports no vulnerability, where it reported the two rows of D73's table. The option this repository
+passes, `name: 'meta'`, is unchanged in 6.0.0's types.
+
+**The bundle is byte-identical.** The frontend built with 6.0.0 has the same SHA-256 for every `.js`, `.css` and
+`.html` file under `frontend/dist/` as the build with 5.2.0 on the same sources, so the compiled modules, their
+`meta` exports and the typeset mathematics are unchanged. YAML frontmatter, the only kind the corpus uses, is
+parsed by `yaml` in both versions; the change is confined to TOML, which no module carries.

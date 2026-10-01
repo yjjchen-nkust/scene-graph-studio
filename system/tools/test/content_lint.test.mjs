@@ -269,8 +269,11 @@ describe('content_lint demo rules', () => {
   });
 
   it('refuses a demo whose artefact lies outside data/demos/', () => {
-    // The file exists and carries a provenance, so only the location check can refuse it.
-    for (const path of ['vlm/transcripts/m0-demo.json', 'demos/../vlm/m0-demo.json', '../elsewhere.json']) {
+    // The file exists and carries a provenance, so only the location check can refuse it. The
+    // backslash form leaves demos/ on Windows, where existsSync reads `\` as a separator.
+    for (const path of [
+      'vlm/transcripts/m0-demo.json', 'demos/../vlm/m0-demo.json', '../elsewhere.json', 'demos/..\\vlm\\m0-demo.json',
+    ]) {
       const r = lint(corpus({
         ...DT,
         demos: { ...DT.demos, artefacts: `  DT: '${path}',\n` },

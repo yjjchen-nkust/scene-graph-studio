@@ -48,10 +48,12 @@ def parse_triplets(completion: str) -> list[tuple[str, str, str]]:
     return [(m.group(1), m.group(2), m.group(3)) for m in TRIPLET_RE.finditer(completion)]
 
 
-# A label line: `ANALYSIS_EN` or `ANALYSIS_ZH` alone on a line, with up to four non-word characters
-# around it (`### ANALYSIS_EN`, `**ANALYSIS_EN**`, `ANALYSIS_EN:`). `revision_text` and
-# `parse_analysis` share it, so the revision ends exactly where the first analysis begins.
-_ANALYSIS_LABEL_RE = re.compile(r"^[^\w\n]{0,4}ANALYSIS_([A-Z]{2})[^\w\n]{0,4}$", re.M)
+# A label: `ANALYSIS_EN` or `ANALYSIS_ZH` at the start of a line, with up to four non-word
+# characters around it (`### ANALYSIS_EN`, `**ANALYSIS_EN**`, `ANALYSIS_EN:`). The paragraph may
+# follow on the same line (`ANALYSIS_EN: Deleted …`), and its section begins after the label's
+# trailing marks. `revision_text` and `parse_analysis` share it, so the revision ends exactly where
+# the first analysis begins.
+_ANALYSIS_LABEL_RE = re.compile(r"^[^\w\n]{0,4}ANALYSIS_([A-Z]{2})\b[^\w\n]{0,4}", re.M)
 
 
 def revision_text(completion: str) -> str:
