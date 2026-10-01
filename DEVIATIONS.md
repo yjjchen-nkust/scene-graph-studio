@@ -5120,3 +5120,119 @@ passes, `name: 'meta'`, is unchanged in 6.0.0's types.
 `.html` file under `frontend/dist/` as the build with 5.2.0 on the same sources, so the compiled modules, their
 `meta` exports and the typeset mathematics are unchanged. YAML frontmatter, the only kind the corpus uses, is
 parsed by `yaml` in both versions; the change is confined to TOML, which no module carries.
+
+## D120 — the review of 2026-10-01: the API's boundary, the deck's focus, the labs' frame state, and a tie no engine broke alike
+
+**Plan:** none. **Decisions:** none new. Branch `fix/sgs-review-2026-10-01-b`, cut from `main` at `da99228`. Four
+reviewers read the backend, the two metric engines with the labs, the frontend shell, and the playgrounds, demos and
+tools, and reported 39 findings with reproductions, one of them twice. Twenty-three are fixed here, each with a test
+that failed first for the stated reason; fifteen are left open, with three residues of fixed ones, and listed at the
+end.
+
+**The backend's boundary.**
+
+- *`GET /api/predictions/{ds}/{model}/{image_id}` read any `.json` the server could reach.* The three segments were
+  joined into a path unchecked: `%2E%2E` as `ds` reached `data/content/`, and on Windows `..%5C` passed the router's
+  `[^/]+` and climbed out of `data/` altogether; both answered 200 with the file. A segment must now be a plain name
+  and the path must resolve inside `data/predictions/`. `test_predictions_never_reads_outside_its_own_tree`, two
+  cases, answered 200 before the change.
+- *RelTR was live with nothing to serve it.* With `torch`, any file under `data/checkpoints/reltr/` and
+  `SGS_RELTR_PATH` set, `/api/health` listed `reltr` while `/api/infer/reltr` answered 503 "not wired", because
+  `_decode` is deliberately unimplemented (D41). That is D37's two answers to one question. `registry.WIRED` is a
+  fourth condition, checked after the three gates so their reasons still name what the machine lacks, and it is empty.
+  `test_reltr_is_not_live_while_its_infer_path_is_unwired` is new; the old "live when all three gates are open" test
+  now also opens `WIRED`.
+- *A failed Claude request was a 500.* `messages.create` exceptions reached the client as `internal_error`. The SDK
+  has already retried 429, 5xx and connection failures by then, so a status error and an `APIError` now become
+  `ProviderUnavailable`, which the endpoint answers as 503 `vlm_unavailable` with the reason; an answer without text
+  is refused like a truncated one, since parsed it is a graph with no triplets.
+  `test_a_failed_request_is_unavailable_with_its_reason` (401, 429, connection) and
+  `test_an_answer_without_text_is_raised_and_never_returned` failed before. No live call was made; D112's caveat stands.
+- *A live VLM graph dropped D39's note.* `to_graph` wrote `note: None` when the provider was live, so a `measured`
+  graph carried 1×1 placeholder boxes with nothing saying so. The note is now written either way.
+  `test_a_live_graph_still_says_its_boxes_are_placeholders`.
+- *`POST /api/vlm/indvissgg` accepted what it then ignored or failed on.* A `dataset` outside `DatasetId` failed when
+  the first graph was built, after the provider calls, as a 500; it is now the request's own type, a 422 before any
+  call. An `image_data_url` was accepted and the run answered for `image_id`'s frame; it is now 400 `bad_request`.
+  `O: []` was read as `None`, the default vocabulary, though D39 makes an empty list an ablation; an omitted list and
+  an empty one are now told apart by `model_fields_set`. The frontend sends none of the three, so no lab changes.
+- *`POST /api/eval` crashed on a mask it had accepted.* `counts: "P"` ends in a group whose continuation flag promises
+  another, an `IndexError` in the decoder; a GT and a prediction masked at two sizes raised in `mask_iou`. Both were
+  500. `RLEMask.counts` must now be compressed RLE (characters `0` to `o`, the last closing its run) and, when both
+  graphs carry masks, `EvalRequest` requires one size. Both are 422 `schema_invalid`. A mask's size is not tied to its
+  graph's `width` and `height`, because the golden vectors hold 4×4 masks on 200×200 graphs (6 of the 648 masks on
+  the NAS).
+
+**The lecture deck.**
+
+- *A knob that wrote the query string remounted its own step.* `getModule` built a new `Only` component on every
+  call and both routes called it on every render, so React saw a new component type, destroyed the step's subtree
+  and dropped focus to `<body>`; the next arrow key moved the deck, and a mouse drag on a slider was cut off. The
+  steps are now built once per module and locale. `keeps a knob mounted and focused when it writes the query string`
+  renders `/lecture/m/m01/5` through `ROUTES` and failed on a detached input.
+- *A focused checkbox kept the arrows from the deck.* `isTextEntry` counted every `INPUT`, so `consumesSpace`'s
+  checkbox branch could never be reached. Button, submit, reset, checkbox, file and image inputs are no longer fields;
+  a range, a radio group and a number field keep the arrows.
+- *The section clock resumed on a return.* A step with no budget runs no interval, so the reading of the budgeted
+  step before it survived, and returning showed 50 s left of 60. The clock is reset during render whenever the step
+  changes.
+- *Each press of the presenter button opened another window.* `window.open(..., 'sgs-presenter', 'noopener')`: with
+  `noopener` the browser ignores the name. The notes are this origin's own page, so the feature is dropped.
+
+**The labs and the engines.**
+
+- *L1 scored the last frame's triplets on the next.* Picking a frame wrote `img` alone; `t`, `s`, `o`, `p` and `sub`
+  stayed, and since every slice numbers its objects from 1 they resolved on the new frame. `useFrame` now resets a
+  lab's per-frame parameters with the frame (`TRIPLET_PARAMS` for L1).
+- *L8 showed the last frame's working copy.* The annotator seeds local state from the draft and a cached frame
+  resolves in one render, so nothing remounted it; it is now keyed by frame.
+- *L5 discarded every edit to an example and sent the defaults.* `onChange` ignored `patch.E`; E is now a URL
+  parameter beside O and P, validated on read. The editor also trimmed every keystroke, so "knocking on" could not be
+  typed and a cleared list snapped back to the defaults mid-edit; each field now keeps its raw text while focused. The
+  "criteria supplied" label followed the checkboxes rather than the run on screen; it now reads the mutation's
+  `variables`, since the response does not echo the ablation.
+- *Two infinite scores were never tie-broken in TypeScript.* `rank` subtracted scores, `Infinity - Infinity` is NaN,
+  and the sort read it as a tie it then never broke on the id; Python's tuple key did. Two `1e999` scores with ids
+  [2, 1] gave R@20 0 in TypeScript and 1.0 in Python. Scores are now compared. This was the only disagreement a
+  9,000-case cross-engine fuzz found.
+- *The golden checks accepted `null` for 0.* `Math.abs(null - 0)` is 0, so `engine.test.ts` and `tools/parity.mjs`
+  passed a TypeScript `null` wherever Python said 0, which is 8 values in the vectors; `test_golden.py` already
+  refused it. Both now require a number. A scratch copy that nulls those 8 values passed parity before and fails now.
+
+**The playgrounds and the tools.**
+
+- *`decimals` rounded ties both ways.* It rounded through `toFixed`, which rounds the binary value: 0.615 printed
+  0.61 while 0.875 printed 0.88. T2 prints 96 two-place ties over its settings and 33 went down, among them object 6
+  at w = 0.05, t = 1. The shift is now made in decimal on the ten-place string, and a tie rounds up.
+- *F7's `s` was clamped but not snapped* (D97's fix for F3): `?F7.s=0.123` put the thumb at 0.10, the label at 0.12
+  and the readouts at 0.123. It is now snapped to the 0.05 step.
+- *Content lint accepted a repeated `<Demo>` and a repeated step id.* A second `<Demo id="DT" part="1" />` outside
+  every `<Step>` renders on every slide, and playgrounds already had the rule; a step id declared twice made
+  `stepBody` check the second step against the first's body, and quiz keys collide. Both are refused, and each test
+  fails again with its rule disabled.
+- *`node tools/kp_latex.mjs E3` printed nothing on Windows and exited 0.* The CLI guard compared `import.meta.url`
+  with `file://` and a Windows path, which never match; it now uses `pathToFileURL`, as `py.mjs` does.
+  `tools/test/kp_latex.test.mjs` runs the CLI as a subprocess.
+
+**Left open, with the reviewers' evidence on file.** Lab and shell: the Visual Genome export is not readable by
+`visual_genome` 1.1.1's own reader (objects lack `synsets`, relationships carry nested records where it reads ids,
+and `sgs_mask` is an unexpected keyword), so D66's claim that the driver ignores `sgs_` fields is false for objects;
+`MetricReadout` rounds published figures to one place, so 58 of 174 frozen leaderboard values print other than
+published (12.98 as 13.0); `itemsFor` can draw one quiz item twice in a checkpoint and marks the reversal of a
+symmetric predicate (`near`) wrong; a quiz remount grades the same answer again; the knowledge index's and field
+map's URL-controlled inputs lose the caret under the router's transition, and probably IME composition;
+`ExportButtons` reads its target ref during render, so the SVG button appears only after an unrelated render, and the
+SVG carries no photograph; the presenter window does not follow a locale change and `<html lang>` is not set at load;
+L4's live-inference button discards the 503 that explains it, and failed prediction fetches vanish as "no
+predictions"; L4 tags figures computed on reconstructed predictions `measured`; L1 counts "matched" at K = 100 beside
+R@20; the JSON export writes the ground truth rather than the student's graph. Tools: lint tag matching depends on
+attribute order and quoting and counts commented-out tags, and refuses `part={1}`; `start.mjs` kills only uvicorn's
+reloader on Windows; the offline and perf checks use fixed ports without checking them free. Backend: a mask's size
+has no upper bound, and `decode` builds an H×W list; the no-geometry note is English only and `NO_GEOMETRY_ZH` is
+unused; a live graph records no model id.
+
+**Verification.** `npm run ci` green, 2026-10-01, on this branch: **373 pytest** and 7 skipped, parity 21 agree, i18n
+506 keys, **1257 vitest** in 84 files, ruff clean, content lint clean, standalone current (254 equations), frontend
+builds; `npm run harvest` left no tracked file changed. `npm run test:e2e`, `check:offline` and `check:perf` were not
+run on this branch: the session's permission policy refused the end-to-end run, so the deck's focus fix is held by the
+vitest route test, not yet by the projector suite.

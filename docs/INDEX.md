@@ -44,7 +44,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-29-playgrounds-m5.md` | M5's corrections, the slice ordered and the six beliefs, T1 and T2, their golden cases, M5 s3, s5 and s6 | **executed** |
 | `superpowers/plans/2026-09-29-m0-demos.md` | The live VLM provider's frame, the clip, D-T and D-V recorded and derived, the demo components, the lint rules, M0 s7 to s15, the Chromium checks | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D119. Every departure from plan, with its reason.** | live |
+| `../DEVIATIONS.md` | **D1…D120. Every departure from plan, with its reason.** | live |
 | `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28), the M4 playgrounds (§29), the M5 playgrounds (§30) and the M0 demos (§31)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | The freeze, its release by D-23, and every correction made under it | live |
@@ -495,6 +495,22 @@ so clears the `toml` advisory D73 could not; the production build is byte-identi
 branch `fix/review-2026-10-01` with D119: **360 pytest** and 7 skipped, parity 21 agree, i18n 506 keys, **1236
 vitest** in 83 files, ruff clean, content lint clean, standalone current (254 equations), frontend builds;
 `npm run test:e2e` 107, `npm run check:offline` 9 and `npm run check:perf` 33 passed.
+
+**The review of 2026-10-01, a second pass.** Four reviewers read the backend, the engines with the labs, the shell,
+and the playgrounds with the tools: 39 findings, 23 fixed, each with a test that failed first. The API no longer
+reads a prediction path outside `data/predictions/` (`..` and, on Windows, `..\` answered 200 with any `.json`),
+answers a failed Claude request as 503 rather than 500, refuses a malformed or mismatched mask as 422, refuses an
+unknown dataset and an uploaded image on the VLM endpoint, keeps D39's note on a live graph, and reports RelTR
+unavailable while its infer path is unwired. A knob no longer remounts its step and hands the next arrow key to the
+deck; the section clock restarts on a return; one presenter window is reused. L1 and L8 no longer carry the last
+frame's state; L5 sends edited examples and lets "knocking on" be typed. TypeScript breaks a tie between two infinite
+scores as Python does, the only disagreement a 9,000-case fuzz found, and the golden checks no longer accept `null`
+for 0. T2 rounds ties up, F7 snaps `s`, the lint refuses a repeated `<Demo>` and a repeated step id, and
+`kp_latex.mjs` runs on Windows. Fifteen findings are left open and listed in D120, among them a Visual Genome export
+the driver cannot read and leaderboard figures rounded from their published precision. **Verification.** `npm run
+ci` green, 2026-10-01, on branch `fix/sgs-review-2026-10-01-b` with D120: **373 pytest** and 7 skipped, parity 21
+agree, i18n 506 keys, **1257 vitest** in 84 files, ruff clean, content lint clean, standalone current (254
+equations), frontend builds. `npm run test:e2e`, `check:offline` and `check:perf` were not run on this branch.
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in
