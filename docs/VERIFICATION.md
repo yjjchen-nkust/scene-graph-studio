@@ -2080,3 +2080,33 @@ Run alone before the records were written, `the records carry the M0 demos` fail
 heading. It holds D112 to D117 in the heading form, the counts of CLAUDE.md, INDEX and README from below, the
 spec and the plan listed as executed, the `demo` kind named beside the playground with `DEMO_PARTS`, and INDEX's
 note count attributed to D117.
+
+---
+
+## 32. The findings D120 left open, measured 2026-10-01
+
+D120 fixed 23 review findings and could not run the projector suite, the offline check or the perf check on them.
+D122 fixes the seventeen items D120 left open. The table records both: the "before" column is `main` at `8998cac`,
+which holds D120 and D121, and the "after" column is branch `fix/sgs-review-2026-10-01-c` with D122. Every command
+ran with py12 resolved by `tools/py.mjs`, exit 0, and no `vite preview` left on port 4173 between runs.
+
+| Step | Before (`8998cac`) | After (D122) |
+|---|---|---|
+| harvest | 93 knowledge points, 27 live; 26 formulas and 23 derivations | the same |
+| pytest | 373 passed, 7 skipped | **395 passed, 7 skipped** |
+| vitest | 1257 passed in 84 files | **1327 passed in 89 files** |
+| parity | 21 cases agree | 21 cases agree |
+| i18n parity | 506 keys | **507 keys** (`l4.prediction_failed`) |
+| content lint | clean | clean; tags read as MDX compiles them, and an HTML comment refused |
+| frozen lints, standalone | clean; 254 equations, 1063 KB | the same |
+| frontend build | 824 modules | **825 modules** (`pages/useFieldDraft.ts`) |
+| `npm run test:e2e` | **107 passed**, 1.9 min; the first run on D120's changes | **107 passed**, 2.0 min |
+| `npm run check:perf` | not run | **33 passed**, 32.1 s; the sixteen playgrounds 31.8 to 34.7 ms, D-T 32.6 ms, D-V 33.0 ms, cold starts 287 to 552 ms |
+| `npm run check:offline -- --python .offline-venv/Scripts/python` | not run | **9 passed**, 30.3 s |
+| `npm run check:pins` | 9 of 9 and 5 of 5 agree | the same |
+
+The before-column run of the projector suite closes D120's open check: its deck-focus fix, held until then by a
+vitest route test alone, passes the keyboard walkthrough at all three resolutions. After each run the working tree
+held only the branch's own changes, and nothing under `data/` appeared in `git status`. The mask rule's admission of
+every mask on the NAS is a pytest test (`test_every_mask_on_the_nas_is_admitted`, 648 of 648), and the IoU of all
+5,901 same-frame PSG mask pairs was compared old against new once, by hand, with no difference.

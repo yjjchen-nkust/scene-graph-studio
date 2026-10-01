@@ -58,8 +58,8 @@ interface ApiError {
 | 422 | `dangling_reference` | A relationship names a `subject_id` or `object_id` absent from `objects`. SRS §3's invariant. `detail` lists every offending `relationship_id`. |
 | 422 | `schema_invalid` | Pydantic validation failure. `detail` carries Pydantic's error list. |
 | 422 | `slice_images_missing` | The annotations exist but the image file is absent. `detail` names the slice bundle to unpack and the `verify_bundle.py` command. |
-| 503 | `inference_unavailable` | Live inference requested for a model that cannot run here. `detail` carries `{model, reason, torch_present, checkpoint_present}`. |
-| 503 | `vlm_unavailable` | Live VLM requested with no provider configured. `detail` names the `.env` key. |
+| 503 | `inference_unavailable` | Live inference requested for a model that cannot run here. `detail` carries `{model, reason_en, reason_zh, torch_present, checkpoint_present}` (amended 2026-10-01, D122: the reason is stated in both languages, as §1.7 already said, and the backend never sent a single `reason`). |
+| 503 | `vlm_unavailable` | Live VLM requested with no provider configured, or a request the provider refused or failed. `detail` carries `{provider, reason}`, the reason naming the `.env` key where one is missing (amended 2026-10-01, D122). |
 
 NFR-1 requires degradation with a visible reason and never a stack trace. A FastAPI exception handler converts every unhandled exception to `500 internal_error` with a fixed bilingual message and logs the traceback server-side only.
 
