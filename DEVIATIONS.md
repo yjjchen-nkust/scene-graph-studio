@@ -5079,3 +5079,26 @@ reversed.
   running; the badge and marks tests wait for visibility, not for `img.decode()`.
 - `DEMO_LONGEST` in the projector suite chooses its states by rules over the recordings; each rule was checked
   against a full sweep, and a new recording needs that check again.
+
+## D118 — two minors the M0 demos' final review left open: rule 4's backslash, and a label on its paragraph's line
+
+**Plan:** none. **Decisions:** none new. Branch `fix/review-2026-10-01`, cut from `main` at `b5eca93`. Both were
+found by the review that closed D112 to D117 and left for a later branch; D117's list of deferred minors does not
+name them.
+
+**Rule 4 accepted `demos/..\x` on Windows.** The rule normalised the artefact's path with `posix.normalize`, for
+which `\` is an ordinary character, so `demos/..\vlm\m0-demo.json` began with `demos/` and passed, while
+`existsSync` on Windows reads `\` as a separator and opened `data/vlm/m0-demo.json`. The rule now reads `\` as `/`
+before it normalises. `refuses a demo whose artefact lies outside data/demos/` carries the backslash path as a
+fourth case; before the change that case failed with the lint's output empty.
+
+**An analysis label had to stand alone on its line.** `0f887ca` gave `revision_text` and `parse_analysis` one label
+regex, anchored at both ends of the line. Before it, `revision_text` ended the revision at any line beginning
+`ANALYSIS_`; after it, a completion that writes `ANALYSIS_EN: Deleted <hand, near, wrench>.` on one line was read
+whole as the revision, and the quoted triplet became a revision row, which is the defect D115 corrected. The regex
+now requires a word boundary after the two-letter tag in place of the line's end, and a section begins after the
+label's trailing marks, up to four non-word characters (`:` and `：` among them).
+`test_a_label_with_its_paragraph_on_the_same_line_ends_the_revision` failed on the revision before the change.
+Over the four recorded transcripts on the NAS (`fig2-corrections.json`, `fig2-pipeline.json`, `m0-demo.json`,
+`mini-isg-step1.json`) the old and the new regex find their labels at the same positions in every one of the 85
+strings that contain `ANALYSIS_`, so no replay changes.

@@ -702,8 +702,9 @@ for (const [demo, uses] of [...demoUses].sort()) {
   let defect = null;
   if (!artefact) {
     defect = 'DEMO_ARTEFACTS names no artefact for it';
-  } else if (!posix.normalize(artefact).startsWith('demos/')) {
+  } else if (!posix.normalize(artefact.replaceAll('\\', '/')).startsWith('demos/')) {
     // Spec §5 rule 4: a recording lies under data/demos/, and `../` or an absolute path leaves it.
+    // existsSync on Windows reads `\` as a separator, so `demos/..\x` leaves it too.
     defect = `its artefact '${artefact}' does not lie under demos/ (relative to data/)`;
   } else if (!existsSync(`../data/${artefact}`)) {
     defect = `its artefact data/${artefact} does not exist`;

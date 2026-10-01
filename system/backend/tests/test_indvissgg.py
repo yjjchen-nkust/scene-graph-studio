@@ -323,6 +323,20 @@ def test_decorated_labels_are_parsed_and_end_the_revision(en, zh):
     )
 
 
+def test_a_label_with_its_paragraph_on_the_same_line_ends_the_revision():
+    # Before the shared label regex, any line beginning `ANALYSIS_` ended the revision; a label
+    # followed by its paragraph must still end it, or the quoted triplet becomes a revision row.
+    completion = (
+        "<hand, holding, beam>\nANALYSIS_EN: Deleted <hand, near, wrench>.\n"
+        "ANALYSIS_ZH：刪除 <hand, near, wrench>。"
+    )
+    assert indvissgg.revision_text(completion) == "<hand, holding, beam>\n"
+    assert indvissgg.parse_analysis(completion) == (
+        "Deleted <hand, near, wrench>.",
+        "刪除 <hand, near, wrench>。",
+    )
+
+
 def test_a_completion_without_labels_is_read_whole():
     completion = "<hand, holding, beam>\n<beam, on, workbench>"
     assert indvissgg.revision_text(completion) == completion
