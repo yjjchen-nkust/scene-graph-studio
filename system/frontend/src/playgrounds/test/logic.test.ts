@@ -986,4 +986,15 @@ describe('M5: beliefs under averaging', () => {
     expect(decimals(0.1 + 0.2, 4)).toBe('0.3000');
     expect(decimals(-0, 4)).toBe('0.0000');
   });
+
+  it('rounds every tie up, whichever way its binary value leans', () => {
+    // `toFixed` rounds the binary value, so 0.615 printed 0.61 while 0.875 printed 0.88. T2 prints
+    // 0.615 for object #6 on the relations graph at w = 0.05, t = 1.
+    expect(decimals(0.615, 2)).toBe('0.62');
+    expect(decimals(0.145, 2)).toBe('0.15');
+    expect(decimals(0.825, 2)).toBe('0.83');
+    expect(decimals(0.875, 2)).toBe('0.88');
+    // A value `Number` would print in exponent form must not reach the shift as `1e-7e4`.
+    expect(decimals(1e-7, 4)).toBe('0.0000');
+  });
 });

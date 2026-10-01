@@ -131,16 +131,28 @@ export function getMeta(id: string, locale: Locale): ModuleMeta | null {
  * genuinely its own React node rather than a slice of a rendered blob. Splitting the compiled
  * output by heading instead would make the step boundaries depend on how the author happened to
  * format the prose, and a translator adding a subheading would silently change the lecture.
+ *
+ * Built once per module and locale and kept. The routes call this on every render, and an `Only`
+ * made afresh is a new component type to React, so a knob writing the query string remounted its
+ * own step: the focused knob was destroyed and the next arrow key moved the deck. `FILES` is
+ * fixed at build time, so the cache never goes stale.
  */
+const BUILT = new Map<string, ModuleStep[]>();
+
 export function getModule(id: string, locale: Locale): ModuleStep[] | null {
-  const found = FILES[`./${id}.${locale}.mdx`];
+  const key = `${id}.${locale}`;
+  const cached = BUILT.get(key);
+  if (cached) return cached;
+  const found = FILES[`./${key}.mdx`];
   if (!found) return null;
   const Body = found.default;
-  return found.meta.steps.map((step) => {
+  const steps = found.meta.steps.map((step) => {
     const Only = ({ id: stepId, children }: StepProps) =>
       stepId === step.id ? <>{children}</> : null;
     // `Playground` and `Demo` join `Step` here rather than being imported by each MDX file: see
     // `Playground`'s own docstring.
     return { ...step, node: <Body components={{ Step: Only, Playground, Demo }} /> };
   });
+  BUILT.set(key, steps);
+  return steps;
 }

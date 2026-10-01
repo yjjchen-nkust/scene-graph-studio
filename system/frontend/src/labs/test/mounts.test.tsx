@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -57,17 +57,15 @@ const ROUTED: Record<string, unknown> = {
   },
   '/api/datasets/placeholder/images': {
     dataset: 'placeholder',
-    image_count: 1,
-    images: [
-      {
-        image_id: 'ph-001',
-        width: 640,
-        height: 480,
-        object_count: 2,
-        relationship_count: 1,
-        present: true,
-      },
-    ],
+    image_count: 2,
+    images: ['ph-001', 'ph-002'].map((image_id) => ({
+      image_id,
+      width: 640,
+      height: 480,
+      object_count: 2,
+      relationship_count: 1,
+      present: true,
+    })),
   },
   '/api/models': {
     models: [
@@ -89,8 +87,9 @@ const ROUTED: Record<string, unknown> = {
 };
 
 function body(url: string): unknown {
-  if (url.startsWith('/api/datasets/placeholder/images/ph-001')) {
-    return { ...FRAME, image_data_url: 'data:image/png;base64,iVBORw0KGgo=' };
+  const frame = /^\/api\/datasets\/placeholder\/images\/(ph-00[12])/.exec(url);
+  if (frame) {
+    return { ...FRAME, image_id: frame[1], image_data_url: 'data:image/png;base64,iVBORw0KGgo=' };
   }
   if (url.startsWith('/api/predictions/')) {
     return {
@@ -125,6 +124,61 @@ function stubDeadBackend() {
     'fetch',
     vi.fn(async () => {
       throw new TypeError('Failed to fetch');
+    }),
+  );
+}
+
+/** Two mini-ISG frames whose objects differ, and a step-1 draft for whichever one is posted. */
+function stubMiniIsg() {
+  const graph = (image_id: string, names: string[]) => ({
+    image_id,
+    dataset: 'mini-isg',
+    width: 640,
+    height: 480,
+    objects: names.map((name, i) => ({
+      object_id: i + 1,
+      names: [name],
+      bbox: { x: 100 * i, y: 0, w: 80, h: 80 },
+      mask: null,
+    })),
+    relationships: [{ relationship_id: 1, subject_id: 1, object_id: 2, predicate: 'holding' }],
+  });
+  const frames: Record<string, ReturnType<typeof graph>> = {
+    'isg-a': graph('isg-a', ['hand', 'wrench']),
+    'isg-b': graph('isg-b', ['worker', 'panel']),
+  };
+  const answer = (found: unknown) => ({ ok: true, status: 200, json: async () => found });
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string, init?: RequestInit) => {
+      if (url === '/api/datasets/mini-isg/images') {
+        return answer({
+          dataset: 'mini-isg',
+          image_count: 2,
+          images: Object.keys(frames).map((image_id) => ({
+            image_id,
+            width: 640,
+            height: 480,
+            object_count: 2,
+            relationship_count: 1,
+            present: true,
+          })),
+        });
+      }
+      if (url.startsWith('/api/datasets/mini-isg/images/')) {
+        const id = url.slice('/api/datasets/mini-isg/images/'.length).split('?')[0]!;
+        return answer({ ...frames[id], image_data_url: 'data:image/png;base64,iVBORw0KGgo=' });
+      }
+      if (url === '/api/vlm/indvissgg') {
+        const id = (JSON.parse(String(init?.body)) as { image_id: string }).image_id;
+        return answer({
+          step1: { graph: frames[id], prompt_shown: '' },
+          step2: [],
+          step3: null,
+          provider_used: 'transcript',
+        });
+      }
+      return { ok: false, status: 404, json: async () => ({}) };
     }),
   );
 }
@@ -205,6 +259,45 @@ describe('/lab/:labId', () => {
     const router = open('/lab/L1?img=ph-001&ds=placeholder');
     await screen.findByTestId('frame-picker');
     expect(router.state.location.search).toContain('img=ph-001');
+  });
+
+  it('L1 drops the triplets of the old frame when another frame is picked', async () => {
+    // Every slice numbers its objects from 1, so `2-on-1` left in the URL resolves on the new
+    // frame and is scored there as a submission nobody made on it.
+    const router = open('/lab/L1?img=ph-001&t=2-on-1&sub=1&s=1&o=2&p=near');
+    expect(await screen.findByTestId('recall')).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId('frame-picker'), { target: { value: 'ph-002' } });
+    await waitFor(() =>
+      expect(Object.fromEntries(new URLSearchParams(router.state.location.search))).toEqual({
+        img: 'ph-002',
+      }),
+    );
+    expect(await screen.findByTestId('frame-picker')).toHaveValue('ph-002');
+    expect(screen.queryByTestId('recall')).not.toBeInTheDocument();
+    expect(screen.getByTestId('built-count')).toHaveTextContent('0');
+  });
+
+  it('L8 shows the working copy of the frame on screen after a return to it', async () => {
+    // Both of A's queries are cached on the way back, so they resolve in the same render and
+    // the annotator would keep B's working copy and B's objects unless it is remounted.
+    stubMiniIsg();
+    open('/lab/L8?img=isg-a');
+    const subjects = () =>
+      within(screen.getByTestId('add-subject'))
+        .getAllByRole('option')
+        .map((o) => o.textContent);
+    expect(await screen.findByTestId('triplet-1')).toHaveTextContent('hand');
+
+    fireEvent.change(screen.getByTestId('frame-picker'), { target: { value: 'isg-b' } });
+    await waitFor(() => expect(screen.getByTestId('triplet-1')).toHaveTextContent('worker'));
+    fireEvent.click(screen.getByTestId('delete'));
+    expect(screen.queryByTestId('triplet-1')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId('frame-picker'), { target: { value: 'isg-a' } });
+    await waitFor(() => expect(screen.getByTestId('frame-picker')).toHaveValue('isg-a'));
+    expect(subjects()).toEqual(['—', 'hand', 'wrench']);
+    expect(screen.getByTestId('triplet-1')).toHaveTextContent('hand');
+    expect(screen.getByTestId('correction-count')).toHaveTextContent('0');
   });
 
   it('L5 does not run anything until it is asked to', async () => {

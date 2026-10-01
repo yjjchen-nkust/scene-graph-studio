@@ -784,12 +784,17 @@ export function degreeWeightedMean(lists: readonly (readonly number[])[], b0: re
 }
 
 /**
- * `value` rounded to `places` decimals, the tie settled before the rounding rather than by it: a
- * value one ulp either side of an exact tie, such as `0.32499999999999996` for `0.325`, first
- * snaps to ten decimal places -- enough to absorb one ulp of binary floating-point error, not
- * enough to move a value that genuinely differs at the tenth place -- so both sides of the tie
- * print the same digit.
+ * `value` rounded to `places` decimals, a tie rounded up, and the tie settled before the rounding
+ * rather than by it: a value one ulp either side of an exact tie, such as `0.32499999999999996`
+ * for `0.325`, first snaps to ten decimal places -- enough to absorb one ulp of binary
+ * floating-point error, not enough to move a value that genuinely differs at the tenth place -- so
+ * both sides of the tie print the same digit.
+ *
+ * The shift is made in decimal, by an exponent appended to that ten-place string, because
+ * `toFixed` rounds the binary value: 0.615 printed 0.61 and 0.875 printed 0.88. The string and not
+ * `Number` of it, which writes a small value as `1e-7` and would make the shift `1e-7e4`, NaN.
  */
 export function decimals(value: number, places: number): string {
-  return Number(value.toFixed(10)).toFixed(places);
+  const n = Math.round(Number(`${value.toFixed(10)}e${places}`));
+  return (n / 10 ** places).toFixed(places);
 }

@@ -41,7 +41,10 @@ for (const c of cases) {
 
   for (const [key, want] of Object.entries(py.metrics)) {
     const have = ts.metrics[key];
-    const agree = want === null ? have === null : Math.abs(have - want) < TOL;
+    // The type first: `null - 0` is 0, so a null against a zero would pass the tolerance.
+    const agree = want === null
+      ? have === null
+      : typeof have === 'number' && Math.abs(have - want) < TOL;
     if (!agree) failures.push(`${c.id} ${key}: python=${want} typescript=${have}`);
   }
   if (JSON.stringify(py.verdicts) !== JSON.stringify(ts.verdicts)) {

@@ -226,6 +226,13 @@ describe('content_lint demo rules', () => {
     expect(r.out).toContain('the body mounts <Demo id="DT" part="3" />, which no step');
   });
 
+  it('refuses a <Demo> mounted more than once in one module', () => {
+    // The copy sits outside every `<Step>`, so each step still carries exactly its own tag and the
+    // tag is a declared one: only a count over the whole body sees it rendered on every slide.
+    const r = lint(corpus({ ...DT, body: `${DT.body}\n\n<Demo id="DT" part="1" />` }));
+    expect(r.out).toContain("demo 'DT' part 1 is mounted more than once in this module");
+  });
+
   it('refuses demo parts apart, out of order, or fewer than DEMO_PARTS gives', () => {
     // Every step is well formed on its own, so only the corpus-wide judgement can see it.
     const apart = lint(corpus({
@@ -387,6 +394,15 @@ describe('content_lint playground rules', () => {
       body: `${block('s1', 'F1')}\n\n${block('s2', 'F1')}`,
     }));
     expect(r.out).toContain("'F1' is mounted more than once in this module");
+  });
+
+  it('refuses a step id declared twice in one module', () => {
+    // The playground step finds its tag and a prose step's body is not read, so no other rule has
+    // anything to say; `stepBody` reads the first `<Step id="s1">` for both.
+    const r = lint(corpus({
+      frontmatter: `${step('s1', 'F1')}\n  - id: s1\n    kind: prose\n    presenter_notes_LOCALE: "n"`,
+    }));
+    expect(r.out).toContain("step id 's1' is declared more than once");
   });
 
   it('refuses the same kp mounted by two modules', () => {

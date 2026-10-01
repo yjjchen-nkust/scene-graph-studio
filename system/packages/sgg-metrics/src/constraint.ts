@@ -7,9 +7,12 @@ export function rank(preds: Triplet[]): Triplet[] {
   const unscored = preds.filter((p) => p.score === null);
   // Explicit comparison on (-score, relationship_id). Array.sort stability alone is not the
   // contract; the tuple key is, and the Python side sorts on the same tuple. NFR-4.
+  // Scores are compared, not subtracted: Infinity - Infinity is NaN, which the sort reads as a
+  // tie and then never breaks on the id.
   scored.sort((a, b) => {
-    const byScore = (b.score as number) - (a.score as number);
-    if (byScore !== 0) return byScore;
+    const sa = a.score as number;
+    const sb = b.score as number;
+    if (sa !== sb) return sb > sa ? 1 : -1;
     return a.relationship_id - b.relationship_id;
   });
   return [...scored, ...unscored];

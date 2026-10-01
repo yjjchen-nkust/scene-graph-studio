@@ -9,7 +9,13 @@ import { SceneGraphView } from '../../graph/SceneGraphView';
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../useLabParams';
 import type { Triplet } from './triplets';
-import { DEFAULT_PARAMS, decodeTriplets, encodeTriplets, studentGraph } from './triplets';
+import {
+  DEFAULT_PARAMS,
+  TRIPLET_PARAMS,
+  decodeTriplets,
+  encodeTriplets,
+  studentGraph,
+} from './triplets';
 
 export interface TripletBuilderProps {
   gt: SceneGraph;
@@ -31,13 +37,7 @@ export interface TripletBuilderProps {
  */
 export function TripletBuilder({ gt, imageUrl, predicates }: TripletBuilderProps) {
   const { t } = useLocale();
-  const [params, setParams] = useLabParams({
-    s: null as string | null,
-    o: null as string | null,
-    p: null as string | null,
-    t: '',
-    sub: 0,
-  });
+  const [params, setParams] = useLabParams(TRIPLET_PARAMS);
 
   const subject = params.s === null ? undefined : Number(params.s);
   const object = params.o === null ? undefined : Number(params.o);

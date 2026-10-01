@@ -1,3 +1,4 @@
+import { useState, type ChangeEvent } from 'react';
 import { useLocale } from '../../i18n/useLocale';
 import type { Example, Triplet } from './types';
 
@@ -23,27 +24,53 @@ export function TECEditor({
 }) {
   const { t } = useLocale();
 
+  // The raw text of a field while it is being typed in. Shown from the parsed value instead, a
+  // trailing space or newline would be trimmed before the next word arrived and a cleared list
+  // would refill with the defaults. Each keystroke still reports the parsed value, so a run gets
+  // what is typed; blur hands the field back to the parsed value.
+  const [typing, setTyping] = useState<Record<string, string>>({});
+  const typed = (id: string, parsed: string, report: (raw: string) => void) => ({
+    value: typing[id] ?? parsed,
+    onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const raw = e.target.value;
+      setTyping((all) => ({ ...all, [id]: raw }));
+      report(raw);
+    },
+    onBlur: () =>
+      setTyping((all) => {
+        const rest = { ...all };
+        delete rest[id];
+        return rest;
+      }),
+  });
+
   const list = (key: 'O' | 'P', values: string[], label: string) => (
     <label className="block space-y-1">
       <span className="text-sm font-medium text-slate-700">{label}</span>
       <textarea
         data-testid={`edit-${key}`}
         className="h-32 w-full rounded border border-slate-300 p-2 font-mono text-sm"
-        value={values.join('\n')}
-        onChange={(e) =>
+        {...typed(key, values.join('\n'), (raw) =>
           onChange({
-            [key]: e.target.value
+            [key]: raw
               .split('\n')
               .map((x) => x.trim())
               .filter(Boolean),
-          })
-        }
+          }),
+        )}
       />
     </label>
   );
 
   const patchExample = (i: number, patch: Partial<Example>) =>
     onChange({ E: E.map((ex, j) => (j === i ? { ...ex, ...patch } : ex)) });
+
+  // A triplet is reported only once it has three named parts: the request takes a triple, and
+  // "worker, knocking" on its way to "worker, knocking on, panel" is not one.
+  const patchTriplet = (i: number, raw: string) => {
+    const parts = raw.split(',').map((x) => x.trim());
+    if (parts.length === 3 && parts.every(Boolean)) patchExample(i, { triplet: parts as Triplet });
+  };
 
   return (
     <section className="grid gap-4 md:grid-cols-2">
@@ -70,12 +97,9 @@ export function TECEditor({
               <input
                 data-testid={`example-${i}-triplet`}
                 className="flex-1 rounded border border-slate-300 px-2 py-1 font-mono"
-                value={ex.triplet.join(', ')}
-                onChange={(e) =>
-                  patchExample(i, {
-                    triplet: e.target.value.split(',').map((x) => x.trim()) as Triplet,
-                  })
-                }
+                {...typed(`example-${i}-triplet`, ex.triplet.join(', '), (raw) =>
+                  patchTriplet(i, raw),
+                )}
               />
             </div>
             <textarea

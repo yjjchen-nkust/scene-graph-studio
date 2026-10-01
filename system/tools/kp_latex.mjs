@@ -10,6 +10,7 @@
 //         node tools/kp_latex.mjs E3 math      the formula alone
 //         node tools/kp_latex.mjs E3 deriv 1   the second derivation block
 import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 const MATH = JSON.parse(readFileSync('../data/content/math.json', 'utf-8'));
 const DERIV = JSON.parse(readFileSync('../data/content/deriv.json', 'utf-8'));
@@ -43,7 +44,9 @@ export function display(body) {
   return `$$\n${body}\n$$`;
 }
 
-if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, '/')}`) {
+// `pathToFileURL`, as `py.mjs` does: `file://` and a Windows path make `file://C:/…`, never this
+// module's `file:///C:/…`, and the command printed nothing there and exited 0.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const [id, which, index] = process.argv.slice(2);
   const pick = which === 'deriv' ? derivOf(id) : which === 'math' ? mathOf(id) : [...mathOf(id), ...derivOf(id)];
   const chosen = index === undefined ? pick : [pick[Number(index)]];

@@ -25,6 +25,33 @@ const E_DEFAULT: Example[] = [
   },
 ];
 
+/**
+ * `E` from the URL, or null when it is absent or not a list of examples. The link is user input,
+ * so a hand-edited value that is not one falls back to the default rather than reaching the run.
+ */
+function decodeExamples(raw: string): Example[] | null {
+  if (!raw) return null;
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  const isExample = (ex: unknown): ex is Example => {
+    const e = ex as Partial<Example> | null;
+    return (
+      typeof e === 'object' &&
+      e !== null &&
+      (e.kind === 'positive' || e.kind === 'negative') &&
+      Array.isArray(e.triplet) &&
+      e.triplet.length === 3 &&
+      e.triplet.every((x) => typeof x === 'string') &&
+      typeof e.analysis === 'string'
+    );
+  };
+  return Array.isArray(value) && value.every(isExample) ? value : null;
+}
+
 /** Every prompt is readable. The paper's whole claim is that the prompt's arguments move R@20. */
 function Prompt({ id, text, label }: { id: string; text: string; label: string }) {
   return (
@@ -48,9 +75,12 @@ function Prompt({ id, text, label }: { id: string; text: string; label: string }
  */
 export function IndVisSGGReplica({
   result,
+  request,
   onRun,
 }: {
   result: ReplicaResult | null;
+  /** The request that produced `result`. The backend does not echo it. */
+  request: ReplicaRequest | null;
   onRun: (req: ReplicaRequest) => void;
 }) {
   const { locale, t } = useLocale();
@@ -61,6 +91,7 @@ export function IndVisSGGReplica({
     provider: 'transcript' as string,
     O: '' as string,
     P: '' as string,
+    E: '' as string,
   });
 
   const ablate = useMemo(
@@ -72,6 +103,7 @@ export function IndVisSGGReplica({
   );
   const O = params.O ? params.O.split('|') : O_DEFAULT;
   const P = params.P ? params.P.split('|') : P_DEFAULT;
+  const E = useMemo(() => decodeExamples(params.E) ?? E_DEFAULT, [params.E]);
   const nExperts = (EXPERT_COUNTS as readonly number[]).includes(params.n)
     ? (params.n as 1 | 2 | 3 | 5)
     : 3;
@@ -81,8 +113,11 @@ export function IndVisSGGReplica({
     setParams({ ablate: next.sort().join(',') });
   };
 
+  // The criteria of the run on screen, not of the boxes ticked since: ticking O after a run must
+  // not relabel triplets that were produced with O supplied.
+  const ranAblate = result && request ? request.ablate : ablate;
   const own = {
-    components: ['O', 'P', 'E'].filter((c) => !ablate.includes(c as 'O')).join('+'),
+    components: ['O', 'P', 'E'].filter((c) => !ranAblate.includes(c as 'O')).join('+'),
     // The last step that ran, which is what the student just looked at. Step 3 when the whole
     // pipeline ran, step 1 when only it was asked for.
     triplets: tripletsOf(result?.step3?.graph ?? result?.step1?.graph),
@@ -100,11 +135,12 @@ export function IndVisSGGReplica({
       <TECEditor
         O={O}
         P={P}
-        E={E_DEFAULT}
+        E={E}
         onChange={(patch) =>
           setParams({
             ...(patch.O ? { O: patch.O.join('|') } : {}),
             ...(patch.P ? { P: patch.P.join('|') } : {}),
+            ...(patch.E ? { E: JSON.stringify(patch.E) } : {}),
           })
         }
       />
@@ -151,7 +187,7 @@ export function IndVisSGGReplica({
             onRun({
               O,
               P,
-              E: E_DEFAULT,
+              E,
               n_experts: nExperts,
               ablate,
               provider: params.provider === 'claude' ? 'claude' : 'transcript',

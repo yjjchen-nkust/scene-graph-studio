@@ -407,6 +407,18 @@ for (const [id, locales] of [...modules].sort()) {
     // twice from the same source is two places for the offset arithmetic to drift.
     const body = source.slice(source.indexOf('\n---', 4) + 4);
 
+    // A step id names one step. `stepBody` reads the first `<Step id="…">` only, so a second step
+    // of the same id is checked against the first one's body, and the shells and the checkpoint
+    // quiz key on the id. The locale check above compares positions and passes a repeat in both.
+    const stepIds = new Set();
+    for (const step of meta.steps ?? []) {
+      if (stepIds.has(step.id)) {
+        problems.push(`${file}: step id '${step.id}' is declared more than once in this module's ` +
+                      `frontmatter. Every step has its own id.`);
+      }
+      stepIds.add(step.id);
+    }
+
     for (const step of meta.steps ?? []) {
       if (step[FOREIGN[locale]] !== undefined) {
         problems.push(
@@ -574,6 +586,19 @@ for (const [id, locales] of [...modules].sort()) {
         if (!declaredDemos.has(tag)) {
           problems.push(`${file}: the body mounts ${tag}, which no step in this module's ` +
                         `frontmatter declares (rule 2). Every demo part is a step.`);
+        }
+      }
+      // A second copy of a declared tag outside every `<Step>` passes both directions above, since
+      // each step still carries exactly its own, and renders on every slide. Counted over the body.
+      const seen = new Map();
+      for (const t of demoTagsOf(body)) {
+        const key = demoTagText(t.id, t.part);
+        seen.set(key, { ...t, count: (seen.get(key)?.count ?? 0) + 1 });
+      }
+      for (const { id: demo, part, count } of seen.values()) {
+        if (count > 1) {
+          problems.push(`${file}: demo '${demo}'${partText(part)} is mounted more than once in this ` +
+                        `module (rule 2)`);
         }
       }
     }

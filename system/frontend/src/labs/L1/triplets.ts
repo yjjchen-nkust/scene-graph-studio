@@ -23,6 +23,18 @@ export const DEFAULT_PARAMS = {
   mask_pairing: 'single_mpo',
 } as const satisfies Omit<EvalRequest, 'gt' | 'pred'>;
 
+/**
+ * The search parameters `TripletBuilder` keeps, with their defaults. All of them name one
+ * frame's objects by id, so a frame change writes every one back to its default (`L1Mount`).
+ */
+export const TRIPLET_PARAMS = {
+  s: null as string | null,
+  o: null as string | null,
+  p: null as string | null,
+  t: '',
+  sub: 0,
+};
+
 const SEPARATOR = ',';
 
 /** `1-on-2,3-near-4`. The predicate sits in the middle because an id cannot contain a hyphen. */

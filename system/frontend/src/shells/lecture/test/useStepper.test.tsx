@@ -176,6 +176,27 @@ describe('useStepper', () => {
     }
   });
 
+  it('restarts the budget on returning to a step through one with no budget', () => {
+    // s2 has no budget, so no interval runs there and nothing replaces s1's reading. Coming back
+    // to s1 showed 50 s where coming back through a budgeted step showed 60.
+    vi.useFakeTimers();
+    try {
+      mount('/lecture/m/m00/0');
+      act(() => {
+        vi.advanceTimersByTime(10_000);
+      });
+      expect(screen.getByTestId('remaining').textContent).toBe('50');
+
+      fireEvent.keyDown(window, { key: 'ArrowRight' });
+      expect(index()).toBe(1);
+      fireEvent.keyDown(window, { key: 'ArrowLeft' });
+      expect(index()).toBe(0);
+      expect(screen.getByTestId('remaining').textContent).toBe('60');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('does not lose a keypress that arrives before the previous one has rendered', () => {
     // A held arrow key repeats about thirty times a second, and a professor advancing two slides
     // quickly presses faster than React commits. Both presses were computed from the same
@@ -357,6 +378,35 @@ describe('useStepper keyboard policy', () => {
     fireEvent.keyDown(window, { key: 'ArrowRight', ctrlKey: true });
     fireEvent.keyDown(window, { key: 'ArrowRight', metaKey: true });
     expect(Number(screen.getByTestId('index').textContent)).toBe(0);
+  });
+
+  it('gives the arrows to the deck and Space to a focused checkbox', () => {
+    // A checkbox is an INPUT and takes no typing. Read as text entry it kept the arrows from the
+    // deck, and `consumesSpace`'s checkbox branch could never be reached. Every `Toggle` knob is one.
+    function Checkbox() {
+      const stepper = useStepper('m00', STEPS);
+      return (
+        <div>
+          <output data-testid="index">{stepper.index}</output>
+          <input type="checkbox" data-testid="box" />
+        </div>
+      );
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/lecture/m/m00/0']}>
+        <Routes>
+          <Route path="/lecture/m/:moduleId/:stepIndex" element={<Checkbox />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const box = screen.getByTestId('box');
+    box.focus();
+    fireEvent.keyDown(box, { key: ' ' });
+    expect(Number(screen.getByTestId('index').textContent)).toBe(0);
+    fireEvent.keyDown(box, { key: 'ArrowRight' });
+    expect(Number(screen.getByTestId('index').textContent)).toBe(1);
   });
 
   it('ignores keys while a contenteditable region has focus', () => {

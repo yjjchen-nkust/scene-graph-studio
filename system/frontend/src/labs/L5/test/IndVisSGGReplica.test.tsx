@@ -6,7 +6,7 @@ import { AblationReplay } from '../AblationReplay';
 import { IndVisSGGReplica } from '../IndVisSGGReplica';
 import { TABLE3 } from '../tables';
 import { TECEditor } from '../TECEditor';
-import type { OwnRun, ReplicaResult } from '../types';
+import type { OwnRun, ReplicaRequest, ReplicaResult } from '../types';
 
 beforeEach(() => {
   setLocale('en');
@@ -57,14 +57,31 @@ const RESULT: ReplicaResult = {
   provider_used: 'transcript',
 };
 
-function mount(result: ReplicaResult | null, onRun = vi.fn()) {
+/** The request that produced RESULT: nothing ablated. */
+const RAN: ReplicaRequest = {
+  O: ['worker', 'workbench', 'terminals'],
+  P: ['near', 'installing', 'on'],
+  E: [],
+  n_experts: 3,
+  ablate: [],
+  provider: 'transcript',
+};
+
+function mount(
+  result: ReplicaResult | null,
+  onRun = vi.fn(),
+  request: ReplicaRequest | null = result ? RAN : null,
+) {
   const view = render(
     <MemoryRouter initialEntries={['/lab/L5']}>
-      <IndVisSGGReplica result={result} onRun={onRun} />
+      <IndVisSGGReplica result={result} request={request} onRun={onRun} />
     </MemoryRouter>,
   );
   return { ...view, onRun };
 }
+
+/** The request of the first run asked for. */
+const sent = (onRun: ReturnType<typeof vi.fn>) => onRun.mock.calls[0]![0] as ReplicaRequest;
 
 describe('TECEditor', () => {
   it('edits O and P as lists and reports the change', () => {
@@ -216,5 +233,53 @@ describe('IndVisSGGReplica', () => {
     mount(null);
     expect(screen.getByTestId('idle')).toBeTruthy();
     expect(screen.queryByTestId('provider-used')).toBeNull();
+  });
+
+  it('sends an edited example with the run rather than the default one', () => {
+    const { onRun } = mount(null);
+    fireEvent.change(screen.getByTestId('example-0-analysis'), {
+      target: { value: 'The hand strikes the panel twice.' },
+    });
+    fireEvent.click(screen.getByTestId('run'));
+    expect(sent(onRun).E[0]!.analysis).toBe('The hand strikes the panel twice.');
+  });
+
+  it('lets a predicate of two words be typed one keystroke at a time', () => {
+    const { onRun } = mount(null);
+    const box = screen.getByTestId('edit-P') as HTMLTextAreaElement;
+    fireEvent.change(box, { target: { value: 'knocking ' } });
+    fireEvent.change(box, { target: { value: `${box.value}on` } });
+    expect(box).toHaveValue('knocking on');
+    fireEvent.click(screen.getByTestId('run'));
+    expect(sent(onRun).P).toEqual(['knocking on']);
+  });
+
+  it('lets an example triplet of two-word parts be typed one keystroke at a time', () => {
+    const { onRun } = mount(null);
+    const box = screen.getByTestId('example-1-triplet') as HTMLInputElement;
+    fireEvent.change(box, { target: { value: 'worker, knocking ' } });
+    fireEvent.change(box, { target: { value: `${box.value}on, panel` } });
+    expect(box).toHaveValue('worker, knocking on, panel');
+    fireEvent.click(screen.getByTestId('run'));
+    expect(sent(onRun).E[1]!.triplet).toEqual(['worker', 'knocking on', 'panel']);
+  });
+
+  it('keeps a cleared list empty while it is retyped, and settles it on blur', () => {
+    mount(null);
+    const box = screen.getByTestId('edit-O');
+    fireEvent.change(box, { target: { value: '' } });
+    expect(box).toHaveValue('');
+    fireEvent.change(box, { target: { value: ' robot \n\n arm' } });
+    expect(box).toHaveValue(' robot \n\n arm');
+    fireEvent.blur(box);
+    expect(box).toHaveValue('robot\narm');
+  });
+
+  it('labels the run on screen with the criteria it ran with, not the boxes ticked since', () => {
+    mount(RESULT);
+    const own = screen.getByTestId('panel-own');
+    expect(within(own).getByText('O+P+E')).toBeTruthy();
+    fireEvent.click(screen.getByTestId('ablate-O'));
+    expect(within(own).getByText('O+P+E')).toBeTruthy();
   });
 });
