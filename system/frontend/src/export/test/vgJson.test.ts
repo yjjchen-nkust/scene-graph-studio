@@ -1,6 +1,6 @@
 import type { SceneGraph } from 'sgg-metrics';
 import { describe, expect, it } from 'vitest';
-import { fromVisualGenome, toVisualGenome } from '../vgJson';
+import { fromVisualGenome, toVisualGenome, type VgDocument } from '../vgJson';
 
 const GRAPH: SceneGraph = {
   image_id: '2317469',
@@ -23,7 +23,85 @@ const GRAPH: SceneGraph = {
   provenance: { kind: 'model', fidelity: 'measured', model: 'reltr' },
 };
 
+/**
+ * The `visual_genome` driver's local reader, reduced to the keys it reads.
+ *
+ * `local.py`'s `map_object` renames `object_id` to `id`, pops `attributes`, renames `w`/`h`, and
+ * then calls `Object(**obj)`, whose constructor is `(id, x, y, width, height, names, synsets)`: a
+ * missing key and an extra key both raise. `parse_graph_local` reads a relationship's
+ * `subject_id`, `object_id`, `predicate`, `relationship_id` and `synsets` by name and ignores the
+ * rest, and reads a top-level `attributes` as attribute records. The package is not installed
+ * here, so the contract is restated rather than imported, and it throws the driver's errors.
+ */
+function readLikeTheDriver(document: unknown) {
+  const data = JSON.parse(JSON.stringify(document)) as {
+    objects: Record<string, unknown>[];
+    relationships: Record<string, unknown>[];
+    attributes?: unknown;
+  };
+  const constructorKeys = ['height', 'id', 'names', 'synsets', 'width', 'x', 'y'];
+  const objects = new Map<unknown, Record<string, unknown>>();
+  for (const raw of data.objects) {
+    const obj: Record<string, unknown> = { ...raw, id: raw.object_id };
+    delete obj.object_id;
+    delete obj.attributes;
+    if ('w' in obj) {
+      obj.width = obj.w;
+      obj.height = obj.h;
+      delete obj.w;
+      delete obj.h;
+    }
+    const keys = Object.keys(obj).sort();
+    const extra = keys.filter((k) => !constructorKeys.includes(k));
+    const missing = constructorKeys.filter((k) => !keys.includes(k));
+    if (extra.length) {
+      throw new TypeError(`Object() got an unexpected keyword argument '${extra[0]}'`);
+    }
+    if (missing.length) {
+      throw new TypeError(`Object() missing required argument: '${missing[0]}'`);
+    }
+    objects.set(obj.id, obj);
+  }
+  const relationships = data.relationships.map((rel) => {
+    for (const key of ['subject_id', 'object_id', 'predicate', 'relationship_id', 'synsets']) {
+      if (!(key in rel)) throw new Error(`KeyError: '${key}'`);
+    }
+    return {
+      id: rel.relationship_id,
+      subject: objects.get(rel.subject_id) ?? null,
+      predicate: rel.predicate,
+      object: objects.get(rel.object_id) ?? null,
+    };
+  });
+  return { objects: [...objects.values()], relationships, attributes: data.attributes };
+}
+
 describe('toVisualGenome', () => {
+  it("is read by the visual_genome driver's own reader, key for key", () => {
+    // D66 said the driver ignores every `sgs_` field. It does on the image and on a
+    // relationship; on an object it does not, because the object is built with `Object(**obj)`.
+    const masked: SceneGraph = {
+      ...GRAPH,
+      dataset: 'psg',
+      objects: [
+        { ...GRAPH.objects[0]!, mask: { counts: 'abc123', size: [600, 800] } },
+        GRAPH.objects[1]!,
+      ],
+    };
+    const read = readLikeTheDriver(toVisualGenome(masked));
+    expect(read.objects.map((o) => Object.keys(o).sort())).toEqual([
+      ['height', 'id', 'names', 'synsets', 'width', 'x', 'y'],
+      ['height', 'id', 'names', 'synsets', 'width', 'x', 'y'],
+    ]);
+    // An object with no WordNet synsets still carries the key the constructor requires.
+    expect(read.objects[1]!.synsets).toEqual([]);
+    expect(read.relationships).toEqual([
+      { id: 1, subject: read.objects[1], predicate: 'on', object: read.objects[0] },
+    ]);
+    // A top-level `attributes` is read as attribute records; the export has none to give it.
+    expect(read.attributes).toBeUndefined();
+  });
+
   it('round-trips through the Visual Genome driver shape without loss', () => {
     const vg = toVisualGenome(GRAPH);
     expect(fromVisualGenome(vg)).toEqual(GRAPH);
@@ -49,11 +127,27 @@ describe('toVisualGenome', () => {
     expect(object).not.toHaveProperty('bbox');
   });
 
-  it('carries the relationship as subject and object records, as the driver expects', () => {
+  it('names the two ends of a relationship by id, which is what the driver reads', () => {
     const [relationship] = toVisualGenome(GRAPH).relationships;
-    expect(relationship!.subject.object_id).toBe(2);
-    expect(relationship!.object.object_id).toBe(1);
-    expect(relationship!.predicate).toBe('on');
+    expect(relationship).toMatchObject({
+      subject_id: 2,
+      object_id: 1,
+      predicate: 'on',
+      synsets: [],
+    });
+    expect(relationship).not.toHaveProperty('subject');
+    expect(relationship).not.toHaveProperty('object');
+  });
+
+  it('keeps the mask off the object, where the driver would refuse it', () => {
+    const vg = toVisualGenome({
+      ...GRAPH,
+      dataset: 'psg',
+      objects: [{ ...GRAPH.objects[0]!, mask: { counts: 'abc123', size: [600, 800] } }],
+      relationships: [],
+    });
+    expect(vg.objects[0]).not.toHaveProperty('sgs_mask');
+    expect(vg.sgs_masks).toEqual({ '1': { counts: 'abc123', size: [600, 800] } });
   });
 
   it('keeps the provenance in a namespaced field the driver ignores', () => {
@@ -91,6 +185,58 @@ describe('toVisualGenome', () => {
 describe('fromVisualGenome', () => {
   it('rejects a document that is not this shape rather than producing a half graph', () => {
     expect(() => fromVisualGenome({ objects: [] } as never)).toThrow();
+  });
+
+  it('still reads a file in the nested form this export wrote before', () => {
+    // Exported files are on students' disks: relationships carrying two whole object records,
+    // the mask as `sgs_mask` on its object, and no `synsets` on an object that had none.
+    const earlier: VgDocument = {
+      image_id: '2317469',
+      width: 800,
+      height: 600,
+      objects: [
+        {
+          object_id: 1,
+          names: ['table'],
+          x: 60,
+          y: 300,
+          width: 420,
+          height: 110,
+          sgs_mask: { counts: 'abc123', size: [600, 800] },
+        },
+        { object_id: 2, names: ['cup'], x: 200, y: 240, width: 60, height: 70 },
+      ],
+      relationships: [
+        {
+          relationship_id: 1,
+          predicate: 'on',
+          subject: { object_id: 2, names: ['cup'], x: 200, y: 240, width: 60, height: 70 },
+          object: { object_id: 1, names: ['table'], x: 60, y: 300, width: 420, height: 110 },
+          sgs_score: 0.91,
+        },
+      ],
+      sgs_dataset: 'psg',
+      sgs_provenance: { kind: 'model', fidelity: 'measured', model: 'reltr' },
+    };
+    expect(fromVisualGenome(earlier)).toEqual({
+      image_id: '2317469',
+      dataset: 'psg',
+      width: 800,
+      height: 600,
+      objects: [
+        {
+          object_id: 1,
+          names: ['table'],
+          bbox: { x: 60, y: 300, w: 420, h: 110 },
+          mask: { counts: 'abc123', size: [600, 800] },
+        },
+        { object_id: 2, names: ['cup'], bbox: { x: 200, y: 240, w: 60, h: 70 } },
+      ],
+      relationships: [
+        { relationship_id: 1, subject_id: 2, object_id: 1, predicate: 'on', score: 0.91 },
+      ],
+      provenance: { kind: 'model', fidelity: 'measured', model: 'reltr' },
+    });
   });
 
   it('reads a file that another tool wrote, without the namespaced field', () => {

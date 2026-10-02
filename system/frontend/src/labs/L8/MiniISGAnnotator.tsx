@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { SceneGraph } from 'sgg-metrics';
+import { ExportButtons } from '../../export/ExportButtons';
 import { ImageOverlay } from '../../graph/ImageOverlay';
 import { useLocale } from '../../i18n/useLocale';
 import { applyEdit, blank, tally } from './corrections';
@@ -37,6 +38,10 @@ function triplets(graph: SceneGraph) {
  *   drafted one they are comparing against.
  * * **It does not present the projection as a measurement.** Forty frames times two hundred and
  *   fifty is arithmetic, stated as arithmetic, beside a count that is real.
+ *
+ * The export writes the working copy, the graph the student made (PRD §6.6), so it is rendered
+ * here, where that copy lives. Its provenance is the copy's own: the draft's until the first
+ * correction, the annotator's from then on (`corrections.ts`, D-07).
  */
 export function MiniISGAnnotator({
   draft,
@@ -56,6 +61,7 @@ export function MiniISGAnnotator({
   // has overlapping boxes, so "the object under the pointer" is ambiguous exactly where the
   // annotator is most likely to be working.
   const [adjusting, setAdjusting] = useState('');
+  const overlayArea = useRef<HTMLDivElement>(null);
 
   const counts = tally(state);
   const rows = triplets(state.graph);
@@ -75,13 +81,14 @@ export function MiniISGAnnotator({
 
   return (
     <div className="space-y-6">
+      <ExportButtons graph={state.graph} targetRef={overlayArea} imageUrl={imageUrl} />
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold text-slate-900">{t('l8.heading')}</h1>
         <p className="text-sm text-slate-600">{t('l8.subheading')}</p>
       </header>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className="space-y-2">
+        <div ref={overlayArea} className="space-y-2">
           <ImageOverlay
             imageUrl={imageUrl}
             width={draft.width}

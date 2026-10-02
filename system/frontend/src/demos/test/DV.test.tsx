@@ -112,7 +112,8 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
     expect(lines).toContain(format);
     expect(lines.indexOf(format)).toBe(lines.length - 1);
     // O and P as chips, one to a term, in the prompt's order.
-    expect(VLM.O).toHaveLength(12);
+    // O_DEMO: O_ISG's twelve classes with `hand` split into the worker's two (D124).
+    expect(VLM.O).toHaveLength(13);
     expect(VLM.P).toHaveLength(7);
     expect([...screen.getByTestId('dv-o').querySelectorAll('li')].map((li) => li.textContent)).toEqual(VLM.O);
     expect([...screen.getByTestId('dv-p').querySelectorAll('li')].map((li) => li.textContent)).toEqual(VLM.P);
@@ -185,12 +186,13 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
       flagged += outside;
       cleanup();
     }
-    // The recording's own terms outside O (left_hand, right_hand at 96 s) are among them.
-    expect(flagged).toBeGreaterThan(0);
+    // D114's recording wrote `left_hand` and `right_hand` at 96 s, outside O; D124's O names both
+    // hands and none of its 50 completions leaves O or P, so the hand-made row below is the case.
+    expect(flagged).toBe(0);
 
     // A predicate outside P, which the recording does not hold.
     const f = frameOf('m0-demo-090');
-    fixture.frames.set('m0-demo-090', { ...f, draft: [['hand', 'tightening', 'nut'], ...f.draft] });
+    fixture.frames.set('m0-demo-090', { ...f, draft: [['left hand', 'tightening', 'nut'], ...f.draft] });
     renderPart(2);
     const first = items('dv-draft')[0]!;
     expect([...first.querySelectorAll('[data-testid="dv-flag"]')].map((x) => x.textContent)).toEqual(['∉ P']);
@@ -312,6 +314,20 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
     expect(items('dv-added').map((li) => li.getAttribute('data-triplet'))).toEqual([key(extra)]);
   });
 
+  // D124's recording writes analyses of up to 657 characters in Chinese (D114's longest was 280):
+  // expert 3 at 90 s reviews every row of its draft. At 1024×768 that ran 157 px past the panel,
+  // so the analysis scrolls within its own box, as part 1's whole prompt does (D116), and takes
+  // focus so the keyboard can scroll it.
+  it('part 3 holds a long analysis in a box of its own that the keyboard can scroll', () => {
+    setLocale(locale);
+    renderPart(3, '?DV.frame=m0-demo-090&DV.expert=3');
+    const box = screen.getByTestId('dv-analysis');
+    expect(box.textContent).toBe(frameOf('m0-demo-090').experts[2]![field(locale)]);
+    expect(box).toHaveAttribute('tabindex', '0');
+    expect(box.className).toMatch(/max-h-\[[\d.]+vh\]/);
+    expect(box.className).toContain('overflow-y-auto');
+  });
+
   it('part 3 states an absent analysis in the displayed locale and never shows the other', () => {
     setLocale(locale);
     const f = frameOf('m0-demo-098');
@@ -343,29 +359,30 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
 
   it('part 3 states an expert that changed nothing', () => {
     setLocale(locale);
-    // Recorded: expert 1 at 88 s returned the draft's rows exactly.
-    const recorded = frameOf('m0-demo-088');
-    expect(recorded.experts[0]!.revision).toEqual(recorded.draft);
-    renderPart(3, '?DV.frame=m0-demo-088&DV.expert=1');
+    // Recorded: expert 3 at 98 s returned the draft's rows exactly (D124; expert 1 at 88 s did
+    // in D114's recording).
+    const recorded = frameOf('m0-demo-098');
+    expect(recorded.experts[2]!.revision).toEqual(recorded.draft);
+    renderPart(3, '?DV.frame=m0-demo-098&DV.expert=3');
     const sentence = locale === 'en' ? 'No change recorded' : '未錄得任何修訂';
     expect(screen.getByTestId('dv-no-change')).toHaveTextContent(sentence);
     expect(screen.queryByTestId('dv-same-triplets')).toBeNull();
     expect(screen.queryByTestId('dv-deleted')).toBeNull();
     cleanup();
 
-    // By hand: an expert that deleted four rows now returns the draft's rows exactly.
-    const f = frameOf('m0-demo-098');
+    // By hand: an expert that deleted five rows now returns the draft's rows exactly.
+    const f = frameOf('m0-demo-094');
     const revise = (revision: Triplet[]) =>
-      fixture.frames.set('m0-demo-098', {
+      fixture.frames.set('m0-demo-094', {
         ...f,
-        experts: f.experts.map((e) => (e.index === 3 ? { ...e, revision } : e)),
+        experts: f.experts.map((e) => (e.index === 1 ? { ...e, revision } : e)),
       });
     revise([...f.draft]);
-    renderPart(3, '?DV.frame=m0-demo-098&DV.expert=3');
+    renderPart(3, '?DV.frame=m0-demo-094&DV.expert=1');
     expect(screen.getByTestId('dv-no-change')).toHaveTextContent(sentence);
     for (const group of ['rewritten', 'deleted', 'added']) expect(screen.queryByTestId(`dv-${group}`)).toBeNull();
     // The analysis is still the model's own, shown whatever the revision did.
-    expect(screen.getByTestId('dv-analysis').textContent).toBe(f.experts[2]![field(locale)]);
+    expect(screen.getByTestId('dv-analysis').textContent).toBe(f.experts[0]![field(locale)]);
     cleanup();
 
     // The same triplets in another order, or with a row repeated: no triplet changed, and the rows
@@ -375,7 +392,7 @@ describe.each(LOCALES)('D-V in %s', (locale) => {
       [[...f.draft, f.draft[0]!], 'repeats', locale === 'en' ? 'repeated differently' : '重複之列不同'],
     ] as const) {
       revise([...revision]);
-      renderPart(3, '?DV.frame=m0-demo-098&DV.expert=3');
+      renderPart(3, '?DV.frame=m0-demo-094&DV.expert=1');
       expect(screen.queryByTestId('dv-no-change'), kind).toBeNull();
       const same = screen.getByTestId('dv-same-triplets');
       expect(same, kind).toHaveAttribute('data-kind', kind);

@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split, §29 the M4 playgrounds, §30 the M5 playgrounds and §31 the M0 demos), and all 121 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split, §29 the M4 playgrounds, §30 the M5 playgrounds, §31 the M0 demos, §32 the findings D120 left open, §33 the dev server and F2's edges and §34 D-V recorded again), and all 124 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -52,7 +52,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D121` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D124` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
   `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
@@ -100,11 +100,16 @@ cd scene-graph-studio\system ; npm run ci
   corpora, slice images, annotations, manifests, `data/content/`, the golden vectors, the
   predictions and `data/LICENCES.md`. Every reader keeps its `data/` path and reaches the one
   copy through the link; `SGS_DATA_DIR` names another target. `start.ps1` and `fetch-data.ps1`
-  make the link through `system/tools/Connect-DataDirectory.ps1`. **A fresh clone has no
-  `data/`** until one of them runs, and a gate run on a machine without the NAS fails at its
-  first read of it. Vite checks real paths, so `vitest.config.ts` allows the link's target
-  through `data.dir.ts`; the dev server still cannot show the playgrounds' photographs, which
-  it could not before D110 either, and the build can. `sync-data.ps1` (D108) was retired: there
+  make the link through `system/tools/Connect-DataDirectory.ps1`, and so does `devdata pull`
+  (remotex's devdata), which `data.toml` declares it to as the dataset `raw:scene-graph` (D123).
+  **A fresh clone has no `data/`** until one of them runs, and a gate run on a machine without
+  the NAS fails at its first read of it. Vite checks real paths, so `vitest.config.ts` and
+  `frontend/vite.config.ts` allow the link's target through `data.dir.ts`. That target is on D:
+  beside a checkout on C:, and Vite 8.3.0's `/@fs/` reads only its own drive and answers anything
+  else with `index.html` and 200, so the dev server showed no clip and no photograph from
+  `data/` until `fs.plugin.ts`'s `crossDriveFs` served them (D123). **The NAS folder is
+  Synology-replicated** (`D:\Data` holds `.SynologyWorkingDirectory`), and every gate run's
+  harvest writes `data/content/` into it. `sync-data.ps1` (D108) was retired: there
   is no second copy to keep in step. WekaExt's root `.gitignore` has no rule over this tree, so
   every exclusion the track needs is stated locally.
 - **`data/` is one copy, shared by every branch and every checkout.** A branch that changes
@@ -117,6 +122,9 @@ cd scene-graph-studio\system ; npm run ci
   `main` failing two backend tests and L5's Figure 2 replay against the NAS until it merges, and a revert needs the
   old `step2_prompt` text and `rekey_step2_transcripts.py` run against it; the pre-rekey files are in
   `C:\DataRaw\scene-graph\vlm\transcripts-pre-D115\`.
+  D-V's recording again is the third (D124): until it merges, `main` fails its gate against the NAS, which
+  holds the transcript recorded under `O_DEMO`; the files before it are `vlm/transcripts-pre-D124/m0-demo.json`
+  and `demos/m0/pre-D124/indvissgg.json`.
 - **Never `rm -rf data/` in Git Bash.** With the trailing slash it deletes the files on the NAS
   through the link (measured on a scratch junction, D110), and the NAS copy is the only copy.
   `rm -rf data`, `git clean -fdX` and PowerShell `Remove-Item -Recurse` remove the link alone.
@@ -162,10 +170,12 @@ cd scene-graph-studio\system ; npm run ci
   frontmatter, and every tag answering to a step; parts 1 to n on consecutive steps of one module, in order;
   the recorded artefact exists and carries a provenance object; a positive `seconds_budget`. The data are
   under `data/demos/m0/` (the 18.0 s clip, ten frames, `traditional.json`, `indvissgg.json`) and D-V's
-  transcript is `data/vlm/transcripts/m0-demo.json`, all on the NAS. **Every graph a demo produces is filed
+  transcript is `data/vlm/transcripts/m0-demo.json`, all on the NAS. **D-V drafts under `O_DEMO`**, `O_ISG`
+  with `hand` split into `left hand` and `right hand`, and `EXAMPLES_DEMO` (D124); D-T's comparison keeps `O_ISG`. **Every graph a demo produces is filed
   under `mini-isg`** with no `DatasetId` of its own, though its frames are not the slice's (D113). D-V was
-  recorded on the author's own vLLM server, `stamping-vlm` (`Qwen/Qwen3.8-27B`), through
-  `app/vlm/openai_compat.py` and not on the Anthropic API (D114); its graphs are `reconstructed`, and no label
+  recorded through `app/vlm/openai_compat.py` and not on the Anthropic API (D114), on the author's pro6000
+  (`Qwen/Qwen3.8-27B`) until D124, and since then on the A6000 (`Qwen/Qwen3.8-27B-FP8`, vLLM 0.21.0 in
+  `/mnt/data/yenming/sgs-vlm`, started by its `serve.sh`); its graphs are `reconstructed`, and no label
   says "measured" of a replay. The projector suite holds every demo part to 1024×768 in 繁體中文 only, and
   three parts run past it in English (D117). M0's lab and checkpoint are s16 and s17 since the nine demo
   steps were inserted, so a quiz schedule stored under `m00:s8:*` is orphaned (D117).

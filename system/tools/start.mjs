@@ -8,11 +8,11 @@
 // slice, or a port still held by a previous run.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { createServer } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { pickPython } from './py.mjs';
+import { portFree, stopTree } from './servers.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 // data/ and docs/ stayed at the track root when the machinery moved under system/.
@@ -37,15 +37,6 @@ function die(what, fix) {
   console.error(`\n${c.red('cannot start')}  ${what}`);
   console.error(`${c.dim('  fix:')} ${fix}\n`);
   process.exit(1);
-}
-
-function portFree(port) {
-  return new Promise((resolve) => {
-    const s = createServer();
-    s.once('error', () => resolve(false));
-    s.once('listening', () => s.close(() => resolve(true)));
-    s.listen(port, '127.0.0.1');
-  });
 }
 
 // ---- preflight -------------------------------------------------------------
@@ -137,16 +128,13 @@ function start(name, command, args, extraEnv = {}, cwd = ROOT) {
 }
 
 let shuttingDown = false;
+// Each child goes with everything it started. `child.kill()` ended py12's launcher alone on
+// Windows, and the interpreter under it, uvicorn's reloader, kept the backend port answering
+// after `npm start` had exited (measured on 2026-10-01, `tools/servers.mjs`).
 function shutdown(code = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
-  for (const child of children) {
-    try {
-      child.kill();
-    } catch {
-      // Already gone.
-    }
-  }
+  for (const child of children) stopTree(child);
   setTimeout(() => process.exit(code), 300);
 }
 

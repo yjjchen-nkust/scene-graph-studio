@@ -22,6 +22,7 @@ import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 
 import { pythonPath } from './py.mjs';
+import { PREVIEW_PORT, parsePort, refusePorts, stopTree } from './servers.mjs';
 
 const args = process.argv.slice(2);
 const flag = (name, fallback) => {
@@ -37,7 +38,7 @@ const PYTHON = (() => {
   const value = flag('--python', pythonPath());
   return /[\\/]/.test(value) ? resolve(value) : value;
 })();
-const PORT = flag('--port', '8112');
+const PORT = parsePort(flag('--port', '8112'));
 
 function die(message, hint) {
   console.error(`\nperf check: ${message}`);
@@ -45,12 +46,23 @@ function die(message, hint) {
   process.exit(1);
 }
 
+if (PORT === null) die(`--port '${flag('--port')}' is not a port number`);
+
+// Both ports are tested before the backend starts. A backend that cannot bind its port exits,
+// and the health poll below then times someone else's server as this one; the preview port is
+// playwright.config.ts's, which Playwright refuses only after the backend is up.
+const busy = await refusePorts([
+  { port: PORT, role: 'the backend cannot bind it and the check would time whatever answers there', move: '--port <n>' },
+  { port: PREVIEW_PORT, role: 'Playwright cannot start the preview server the measurements run on' },
+]);
+if (busy) die(busy);
+
 console.log('perf check — NFR-8');
 console.log(`  backend  : ${PYTHON} -m uvicorn on 127.0.0.1:${PORT}, against the repository data/`);
 
 const backend = spawn(
   PYTHON,
-  ['-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', PORT, '--log-level', 'warning'],
+  ['-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', String(PORT), '--log-level', 'warning'],
   { cwd: 'backend', env: process.env, stdio: 'inherit' },
 );
 
@@ -58,7 +70,7 @@ let stopped = false;
 function stop() {
   if (stopped) return;
   stopped = true;
-  backend.kill();
+  stopTree(backend);
 }
 process.on('exit', stop);
 process.on('SIGINT', () => process.exit(130));
@@ -94,7 +106,7 @@ await new Promise((resolve, reject) => {
 // `offline_check.mjs` gives: Node will not spawn a `.cmd` without a shell.
 const cli = createRequire(import.meta.url).resolve('@playwright/test/cli');
 const playwright = spawnSync(process.execPath, [cli, 'test', 'e2e/perf.spec.ts'], {
-  env: { ...process.env, SGS_BACKEND_PORT: PORT, SGS_PERF: '1' },
+  env: { ...process.env, SGS_BACKEND_PORT: String(PORT), SGS_PERF: '1' },
   stdio: 'inherit',
 });
 if (playwright.error) {

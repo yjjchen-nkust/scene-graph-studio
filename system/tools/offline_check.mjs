@@ -20,7 +20,11 @@
  * scratch copy is built by `make_placeholders.py`, which every clone can run.
  *
  * Usage:
- *   node tools/offline_check.mjs --python <path to a torch-free interpreter>
+ *   node tools/offline_check.mjs --python <path to a torch-free interpreter> [--port <n>]
+ *
+ * `--port` moves the backend off 8111. The preview server's 4173 is playwright.config.ts's and
+ * does not move. Both are tested before anything starts: a backend that cannot bind its port
+ * exits, and the health poll below would then read whatever else answers there as this check's.
  *
  * With no `--python`, the interpreter on PATH is used and the script refuses to continue if
  * `torch` is importable from it, naming what to do instead. It refuses rather than warning
@@ -32,6 +36,8 @@ import { createRequire } from 'node:module';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+
+import { PREVIEW_PORT, parsePort, refusePorts, stopTree } from './servers.mjs';
 
 // The one Python step that deliberately does NOT use the project interpreter. py12 carries
 // torch (2.9.1+cpu), and condition 1 below is that torch is not importable, so resolving to it
@@ -60,6 +66,17 @@ function die(message, hint) {
   if (hint) console.error(hint);
   process.exit(1);
 }
+
+const portFlag = args.indexOf('--port');
+const PORT = parsePort(portFlag >= 0 ? args[portFlag + 1] : '8111');
+if (PORT === null) die(`--port '${args[portFlag + 1]}' is not a port number`);
+
+// ---- the ports, before anything is started or seeded --------------------------------------
+const busy = await refusePorts([
+  { port: PORT, role: 'the backend cannot bind it and the check would read whatever answers there', move: '--port <n>' },
+  { port: PREVIEW_PORT, role: 'Playwright cannot start the preview server the walkthrough runs on' },
+]);
+if (busy) die(busy);
 
 // ---- condition 1: torch is not importable -----------------------------------------------
 const probe = spawnSync(
@@ -140,12 +157,12 @@ console.log(`  slices      : placeholder only, generated just now`);
 // ---- run ---------------------------------------------------------------------------------
 const backend = spawn(
   PYTHON,
-  ['-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', '8111', '--log-level', 'warning'],
+  ['-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', String(PORT), '--log-level', 'warning'],
   { cwd: 'backend', env, stdio: 'inherit' },
 );
 
 function stop() {
-  backend.kill();
+  stopTree(backend);
   if (!KEEP) rmSync(scratch, { recursive: true, force: true });
 }
 process.on('exit', stop);
@@ -155,7 +172,7 @@ await new Promise((resolve, reject) => {
   const started = Date.now();
   const poll = setInterval(async () => {
     try {
-      const r = await fetch('http://127.0.0.1:8111/api/health');
+      const r = await fetch(`http://127.0.0.1:${PORT}/api/health`);
       if (r.ok) {
         clearInterval(poll);
         const body = await r.json();
@@ -171,14 +188,14 @@ await new Promise((resolve, reject) => {
   }, 300);
 }).catch((error) => die(error.message));
 
-console.log(`  backend     : 127.0.0.1:8111, torch_present false\n`);
+console.log(`  backend     : 127.0.0.1:${PORT}, torch_present false\n`);
 
 // `node node_modules/@playwright/test/cli.js`, not `npx playwright`: Node refuses to spawn a
 // `.cmd` without a shell since the 2024 argument-injection fix, and `shell: true` on Windows
 // would put this script's paths through cmd quoting for no benefit.
 const cli = createRequire(import.meta.url).resolve('@playwright/test/cli');
 const playwright = spawnSync(process.execPath, [cli, 'test', 'e2e/offline.spec.ts'], {
-  env: { ...env, SGS_BACKEND_PORT: '8111', SGS_OFFLINE: '1' },
+  env: { ...env, SGS_BACKEND_PORT: String(PORT), SGS_OFFLINE: '1' },
   stdio: 'inherit',
 });
 if (playwright.error) die(`could not run Playwright: ${playwright.error.message}`);

@@ -15,6 +15,7 @@ import {
   type Branch,
   type PaperCardData,
 } from './papers';
+import { useFieldDraft } from './useFieldDraft';
 
 /**
  * The field as nine columns, one per branch, with `predecessor` drawn as a line.
@@ -37,6 +38,15 @@ function PaperColumns() {
     scored: 0,
     open: '' as string,
   });
+  // The years are typed, so they keep their raw text while focused (see `useFieldDraft`). An
+  // emptied field is no bound, the default, rather than `Number('')`: written as 0, `to` hid
+  // every paper while a year was retyped.
+  const from = useFieldDraft(String(params.from), (raw) =>
+    setParams({ from: raw === '' ? YEAR_MIN : Number(raw) }),
+  );
+  const to = useFieldDraft(String(params.to), (raw) =>
+    setParams({ to: raw === '' ? YEAR_MAX : Number(raw) }),
+  );
 
   const visible = useMemo(() => {
     return PAPERS.filter((p) => {
@@ -81,8 +91,7 @@ function PaperColumns() {
             type="number"
             min={YEAR_MIN}
             max={YEAR_MAX}
-            value={params.from}
-            onChange={(e) => setParams({ from: Number(e.target.value) })}
+            {...from}
             className="w-24 rounded border border-slate-300 px-2 py-1"
           />
         </label>
@@ -93,8 +102,7 @@ function PaperColumns() {
             type="number"
             min={YEAR_MIN}
             max={YEAR_MAX}
-            value={params.to}
-            onChange={(e) => setParams({ to: Number(e.target.value) })}
+            {...to}
             className="w-24 rounded border border-slate-300 px-2 py-1"
           />
         </label>

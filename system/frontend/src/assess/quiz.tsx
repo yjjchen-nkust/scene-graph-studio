@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { SceneGraph, SGRelationship } from 'sgg-metrics';
 import { useLocale } from '../i18n/useLocale';
-import { perturb, seed, type CorruptionKind } from './perturb';
-import { gradeItem, RATING } from './schedule';
+import { corruptible, perturb, seed, type CorruptionKind } from './perturb';
+import { gradeItem, isDue, RATING } from './schedule';
 
 export interface QuizItem {
   /** `module:step:n`. Stable across runs, because it is the key the FSRS schedule stores. */
@@ -30,9 +30,15 @@ function hash(text: string): number {
 /**
  * The items for one checkpoint.
  *
- * Capped at one per relationship: a fourth item over a three-relation graph would repeat a
- * corruption the reader has just answered, and a quiz that repeats itself trains recall of the
- * item rather than of the thing.
+ * One per relationship, and never two on one: a second item on a relation the reader has just
+ * answered repeats the question, and a quiz that repeats itself trains recall of the item rather
+ * than of the thing. Each item was once seeded alone, which let two items of one checkpoint
+ * corrupt the same relation, sometimes in the same way. Each now tells `perturb` the relations
+ * the items before it took, so item `n` is still a function of its id and the graph, by way of
+ * items `0` to `n − 1` of the same checkpoint.
+ *
+ * Capped at the relations that can be made false at all (`corruptible`): a symmetric relation in
+ * a graph with no other predicate has no false version, and asking about it would throw.
  */
 export function itemsFor(
   moduleId: string,
@@ -40,15 +46,27 @@ export function itemsFor(
   gt: SceneGraph,
   count: number,
 ): QuizItem[] {
-  const n = Math.min(count, gt.relationships.length);
+  const n = Math.min(count, corruptible(gt).length);
   const items: QuizItem[] = [];
+  const asked = new Set<number>();
   for (let i = 0; i < n; i += 1) {
     const id = `${moduleId}:${stepId}:${i}`;
-    const { graph, corruptedIndex, kind } = perturb(gt, seed(hash(id)));
+    const { graph, corruptedIndex, kind } = perturb(gt, seed(hash(id)), asked);
+    asked.add(corruptedIndex);
     items.push({ id, graph, corruptedIndex, kind, original: gt.relationships[corruptedIndex]! });
   }
   return items;
 }
+
+/**
+ * The answers given since the page loaded, by item id, for every checkpoint the page shows.
+ *
+ * Module scope so a remount finds them, and no further: a reload forgets them, and the schedule's
+ * due date then decides alone. Persisting them would need the item's content stored beside its
+ * pick, because an item id outlives a change to the generator and an index into a changed item
+ * would show the reader an answer they never gave.
+ */
+const ANSWERED = new Map<string, number>();
 
 function triplet(graph: SceneGraph, r: SGRelationship): string {
   const nameOf = (id: number) =>
@@ -64,19 +82,39 @@ function triplet(graph: SceneGraph, r: SGRelationship): string {
  * ask whether a reader can adjudicate a triplet against a picture of the scene, and it cannot
  * ask anything about the module's prose.
  *
- * An answer is graded once, and the options are disabled the moment one is given. That is the
- * whole mechanism — there was briefly a second guard inside the handler as well, and it was
- * removed when a mutation showed no test could reach it: the disabled attribute had already
- * stopped the click. Two mechanisms for one rule means one of them is untested.
+ * An answer is graded once, and the options are disabled the moment one is given. Within one
+ * mount that is the whole mechanism — there was briefly a second guard inside the handler as
+ * well, and it was removed when a mutation showed no test could reach it: the disabled attribute
+ * had already stopped the click. Two mechanisms for one rule means one of them is untested.
  *
  * Re-reading a checkpoint is not a second review, and counting it as one would let a reader push
- * a card out by clicking through a page they already know.
+ * a card out by clicking through a page they already know. The disabled attribute does not
+ * survive a remount: leaving the page and coming back offered every item afresh and graded it
+ * again. Across mounts the rule is the schedule's, not this component's: `gradeItem` does not
+ * grade an item before it is due. What this component adds is display: the answers given in this
+ * page's lifetime are kept in `answered`, and an item still not due opens on its earlier answer.
  */
-export function Quiz({ items }: { items: QuizItem[] }) {
+export function Quiz({
+  items,
+  answered = ANSWERED,
+}: {
+  items: QuizItem[];
+  /** The page's answers by item id. Injectable so each test starts from a fresh page. */
+  answered?: Map<string, number>;
+}) {
   const { t } = useLocale();
   const [index, setIndex] = useState(0);
-  const [picked, setPicked] = useState<number | null>(null);
-  const [graded, setGraded] = useState<Record<string, boolean>>({});
+  // Read once, at mount. An earlier answer is shown only while its item is not due: once it is,
+  // FSRS is asking for a review, and the item opens for one.
+  const [picks, setPicks] = useState<Record<string, number>>(() => {
+    const now = new Date();
+    return Object.fromEntries(
+      items.flatMap((i) => {
+        const earlier = answered.get(i.id);
+        return earlier !== undefined && !isDue(i.id, now) ? [[i.id, earlier]] : [];
+      }),
+    );
+  });
 
   if (items.length === 0) {
     return (
@@ -87,7 +125,7 @@ export function Quiz({ items }: { items: QuizItem[] }) {
   }
 
   if (index >= items.length) {
-    const right = Object.values(graded).filter(Boolean).length;
+    const right = items.filter((i) => picks[i.id] === i.corruptedIndex).length;
     return (
       <section className="rounded border border-slate-200 p-4">
         <p data-testid="quiz-score" className="text-slate-800">
@@ -98,13 +136,13 @@ export function Quiz({ items }: { items: QuizItem[] }) {
   }
 
   const item = items[index]!;
+  const picked = picks[item.id] ?? null;
   const correct = picked === item.corruptedIndex;
 
   function answer(choice: number) {
-    setPicked(choice);
-    const right = choice === item.corruptedIndex;
-    setGraded((prev) => ({ ...prev, [item.id]: right }));
-    gradeItem(item.id, right ? RATING.good : RATING.again, new Date());
+    setPicks((prev) => ({ ...prev, [item.id]: choice }));
+    answered.set(item.id, choice);
+    gradeItem(item.id, choice === item.corruptedIndex ? RATING.good : RATING.again, new Date());
   }
 
   return (
@@ -157,10 +195,7 @@ export function Quiz({ items }: { items: QuizItem[] }) {
           <button
             type="button"
             data-testid="next"
-            onClick={() => {
-              setIndex(index + 1);
-              setPicked(null);
-            }}
+            onClick={() => setIndex(index + 1)}
             className="mt-3 rounded border border-slate-300 px-3 py-1"
           >
             {t('quiz.next')}

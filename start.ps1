@@ -112,10 +112,12 @@ Write-Ok "node $nodeRaw"
 # .venv, tools/Resolve-Python.ps1 applies the order tools/py.mjs applies on the Node side:
 # py12, then a choice offered to the user, never whatever PATH resolves first.
 . (Join-Path $system 'tools/Resolve-Python.ps1')
+$sharedVenv = $false
 if (-not $Python -and -not $env:SGS_PYTHON) {
     $wekaVenv = [IO.Path]::Combine((Split-Path -Parent $track), '.venv', 'Scripts', 'python.exe')
     if (Test-Path -LiteralPath $wekaVenv) {
         $Python = $wekaVenv
+        $sharedVenv = $true
     } else {
         Write-Warn "WekaExt's .venv was not found at $wekaVenv; falling back to py12."
         Write-Warn 'Create it with ..\startup.ps1, which installs ..\requirements.txt.'
@@ -144,6 +146,22 @@ if (-not $SkipInstall) {
         if ($LASTEXITCODE -ne 0) { Stop-With 'pip install failed.' 'Read the error above.' }
     } else {
         Write-Ok 'python packages present'
+    }
+}
+
+# ---- The shared environment against this track's pins (D121, D122) ------------------------
+# WekaExt's requirements.txt states lower bounds only, so its .venv agrees with this track's
+# pins by circumstance rather than by construction, and the import check above passes on any
+# version. A drift is said here, before the run, not found later in a figure that the gate's
+# py12 does not reproduce. A warning, not a stop: D121 chose the shared environment.
+if ($sharedVenv) {
+    $pinReport = & $Python (Join-Path $system 'backend/scripts/check_pins.py')
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warn "WekaExt's .venv disagrees with this track's pins; the run uses versions the gate did not measure:"
+        $pinReport | ForEach-Object { Write-Warn "  $_" }
+        Write-Warn 'Rerun with -Python <path to py12> for the measured environment (D121).'
+    } else {
+        Write-Ok "WekaExt's .venv agrees with this track's pins"
     }
 }
 

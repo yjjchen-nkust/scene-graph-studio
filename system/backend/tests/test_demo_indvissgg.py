@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from app.schema import SceneGraph
-from app.vlm import indvissgg, transcript
+from app.vlm import indvissgg, prompts, transcript
 from app.vlm import openai_compat as oc
 from app.vlm.provider import ProviderUnavailable, VLMProvider, exchange_key
 from app.vlm.transcript import TranscriptPlayer
@@ -63,6 +63,44 @@ def test_the_provenance_names_the_served_weights_and_the_settings() -> None:
     assert "one seeded sample" in block["note_en"]
     assert "seed 由各筆 exchange 之 key 推得" in block["note_zh"]
     assert "獨立" in block["note_zh"]
+
+
+def test_the_provenance_names_the_server_the_calls_went_to() -> None:
+    # D114 was recorded on pro6000 and its note said so; D124 is recorded on the A6000, and a
+    # note naming the wrong machine would misplace every completion in the file.
+    block = rec.provenance_for(StampingFake(), server="A6000")
+    assert "A6000" in block["note_en"] and "A6000" in block["note_zh"]
+    assert "pro6000" not in block["note_en"] and "pro6000" not in block["note_zh"]
+
+
+def test_the_demo_names_each_hand_and_no_bare_hand() -> None:
+    # D124: COCO's `person` and O_ISG's `hand` both leave the two hands one class; the demo asks
+    # for the worker's left and right hand, and nothing else in O_ISG changes.
+    assert prompts.O_DEMO[:2] == ("left hand", "right hand")
+    assert "hand" not in prompts.O_DEMO
+    assert prompts.O_DEMO[2:] == tuple(o for o in prompts.O_ISG if o != "hand")
+
+
+def test_the_demo_examples_stay_inside_the_demo_vocabulary() -> None:
+    kinds = [ex["kind"] for ex in prompts.EXAMPLES_DEMO]
+    assert kinds == ["positive", "negative"]
+    for ex in prompts.EXAMPLES_DEMO:
+        subject, predicate, obj = ex["triplet"]
+        assert subject in prompts.O_DEMO and obj in prompts.O_DEMO
+        # The negative example is the out-of-vocabulary predicate, as in EXAMPLES_ISG.
+        assert (predicate in prompts.P_ISG) == (ex["kind"] == "positive")
+
+
+def test_a_demo_frame_is_drafted_and_replayed_under_the_demo_criteria() -> None:
+    provider = rec.RecordingProvider(FakeProvider())
+    rec.record_frame(FRAME, provider)
+    expected = prompts.step1_prompt(prompts.O_DEMO, prompts.P_ISG, prompts.EXAMPLES_DEMO)
+    assert provider.exchanges[0]["prompt"] == expected
+    # The endpoint replays a demo frame under the criteria it was recorded with, or it asks for
+    # a key no transcript holds.
+    assert indvissgg.criteria_for(FRAME) == (prompts.O_DEMO, prompts.P_ISG, prompts.EXAMPLES_DEMO)
+    # The mini-ISG bench keeps its own.
+    assert indvissgg.criteria_for("isg-001") == (prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG)
 
 
 def test_a_server_failure_stops_the_run_before_the_first_call(

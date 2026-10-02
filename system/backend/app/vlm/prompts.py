@@ -73,6 +73,38 @@ EXAMPLES_ISG: list[dict[str, Any]] = [
 ]
 
 
+# ── the M0 demonstration ──────────────────────────────────────────────────────────────────────
+#
+# D-V, M0's IndVisSGG demonstration, drafts the ten IndustReal frames under `O_ISG` with its one
+# `hand` split into the worker's two (D124). Both hands are in nearly every frame, doing different
+# things, and one class for both made `<hand, holding, axle>` true of whichever hand held it and
+# left the graph unable to say which; COCO's `person` in D-T is coarser still. The recording of
+# D114 already wrote `left_hand` and `right_hand` once, unasked and out of the vocabulary.
+
+#: The object set O of the M0 demonstration: `O_ISG`, with `hand` replaced by each hand.
+O_DEMO: tuple[str, ...] = ("left hand", "right hand", *(o for o in O_ISG if o != "hand"))
+
+#: The examples E of the M0 demonstration. The positive one states the rule for telling the hands
+#: apart, because the frames are seen through the worker's own eyes; the negative one is
+#: `EXAMPLES_ISG`'s out-of-vocabulary predicate.
+EXAMPLES_DEMO: list[dict[str, Any]] = [
+    {
+        "kind": "positive",
+        "triplet": ["right hand", "assembling", "assembly"],
+        "analysis": (
+            "The frame is seen through the worker's own eyes, so the worker's right hand is the "
+            "one on the right of the image unless the arms cross. It is working on the partly "
+            "built model; `right hand` is in O and `assembling` is in P."
+        ),
+    },
+    {
+        "kind": "negative",
+        "triplet": ["left hand", "tightening", "nut"],
+        "analysis": "`tightening` is not in P, so this triplet cannot be scored at all.",
+    },
+]
+
+
 def _bullets(items: tuple[str, ...] | list[str]) -> str:
     return "\n".join(f"- {x}" for x in items)
 

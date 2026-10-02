@@ -4,6 +4,7 @@ import { getMeta } from '../content/registry';
 import { useLocale } from '../i18n/useLocale';
 import { useLabParams } from '../labs/useLabParams';
 import { CLUSTERS, POINTS, teachingOf } from './knowledge';
+import { useFieldDraft } from './useFieldDraft';
 
 /**
  * The 93 knowledge points as an index, one group per cluster, each pointing at the module that
@@ -17,6 +18,8 @@ export function KnowledgeIndex() {
   const { locale, t } = useLocale();
   const en = locale === 'en';
   const [params, setParams] = useLabParams({ cluster: '' as string, q: '' as string });
+  // The filter reads the URL; the field shows what is being typed (see `useFieldDraft`).
+  const search = useFieldDraft(params.q, (raw) => setParams({ q: raw }));
 
   const visible = useMemo(() => {
     const needle = params.q.trim().toLowerCase();
@@ -55,8 +58,7 @@ export function KnowledgeIndex() {
           <span className="text-slate-600">{t('map.search')}</span>
           <input
             type="search"
-            value={params.q}
-            onChange={(e) => setParams({ q: e.target.value })}
+            {...search}
             className="w-56 rounded border border-slate-300 px-2 py-1"
           />
         </label>

@@ -11,6 +11,12 @@ Constraint = Literal["graph", "none", "semi"]
 MaskPairing = Literal["single_mpo", "multi_mpo"]
 Fidelity = Literal["measured", "reconstructed", "published"]
 
+#: The most pixels a mask may cover: a 4096 × 4096 frame, 2.02 times a 4K UHD one. The largest
+#: mask on the NAS is 640 × 633 and the widest slice frame 1280 × 1024. The bound is on the area
+#: because that is what a bitmap of the mask costs, so a 1 × 100001 strip is admitted (D120's
+#: review).
+MASK_PIXELS_MAX = 4096 * 4096
+
 
 class Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -39,6 +45,42 @@ class RLEMask(Strict):
                 "mask counts end inside a run: the last group carries the continuation flag"
             )
         return v
+
+    @field_validator("size")
+    @classmethod
+    def _size_is_a_frame(cls, v: tuple[int, int]) -> tuple[int, int]:
+        """Positive sides and at most `MASK_PIXELS_MAX` pixels. Unbounded, a request at
+        100000 × 100000 asked the decoder for about 230 GB; `(-2, -2)` was a mask of four pixels."""
+        height, width = v
+        if height < 1 or width < 1:
+            raise ValueError(f"mask size must be positive on both sides; got {list(v)}")
+        if height * width > MASK_PIXELS_MAX:
+            raise ValueError(
+                f"mask size {list(v)} covers {height * width} pixels; at most "
+                f"{MASK_PIXELS_MAX} (4096 × 4096) are accepted"
+            )
+        return v
+
+    @model_validator(mode="after")
+    def _runs_cover_the_mask(self) -> RLEMask:
+        """Every run non-negative and the runs summing to `height * width`, as a COCO mask's do
+        and every one of the 648 masks on the NAS does. Anything else the engines read by rules
+        of their own: `0PPPPPP2`, a run of 2**31 on sixteen pixels, was a full mask in Python and
+        an empty one in the 32-bit TypeScript (D120's review). It also bounds every run by
+        `MASK_PIXELS_MAX`. A model validator, because the rule needs both fields."""
+        from app.eval.rle import decode_counts  # noqa: PLC0415 - rle imports this module
+
+        runs = decode_counts(self.counts)
+        negative = [i for i, run in enumerate(runs) if run < 0]
+        if negative:
+            raise ValueError(f"mask counts hold a negative run at positions {negative}")
+        height, width = self.size
+        if sum(runs) != height * width:
+            raise ValueError(
+                f"mask counts must cover the mask exactly: the runs sum to {sum(runs)} pixels "
+                f"and size {list(self.size)} has {height * width}"
+            )
+        return self
 
 
 class SGObject(Strict):

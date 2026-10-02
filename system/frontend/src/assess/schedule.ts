@@ -64,8 +64,32 @@ function toCard(stored: StoredCard | undefined, now: Date): Card {
   };
 }
 
+/** The one definition of due, shared by grading, the quiz and the list of due cards. */
+function hasComeDue(card: StoredCard | undefined, now: Date): boolean {
+  return card === undefined || new Date(card.due).getTime() <= now.getTime();
+}
+
+/**
+ * Whether an item is open for review at `now`: never answered, or answered and come due.
+ *
+ * An item with no card is due, as `createEmptyCard` makes it: a new card's `due` is the instant
+ * it is created.
+ */
+export function isDue(itemId: string, now: Date): boolean {
+  return hasComeDue(loadSchedule().cards[itemId], now);
+}
+
 /**
  * Grade one item and return the whole schedule, saved.
+ *
+ * **An item that is not yet due is not graded**, and the schedule comes back unchanged. FSRS sets
+ * the next review at `due`, and an answer before then is a review the scheduler did not ask for.
+ * Counting it is what let a reader push a card out by clicking through a page they knew: measured
+ * here, a right answer to a new item is due in ten minutes, a learning step; graded again at once
+ * it was due in two days, and a third time in three. The rule is the due date rather than the
+ * session or the calendar day: a session ends at a reload, which would count the same answer
+ * again, and a day would refuse the learning steps, a wrong answer's re-ask one minute later
+ * among them, which are reviews FSRS does ask for.
  *
  * `now` is a parameter rather than read from the clock so the tests can place a review on the
  * day the previous one came due. A scheduler tested only at the current instant is tested on one
@@ -73,6 +97,7 @@ function toCard(stored: StoredCard | undefined, now: Date): Card {
  */
 export function gradeItem(itemId: string, rating: ItemRating, now: Date): Schedule {
   const schedule = loadSchedule();
+  if (!hasComeDue(schedule.cards[itemId], now)) return schedule;
   const card = toCard(schedule.cards[itemId], now);
   const { card: next } = scheduler.next(card, now, rating as Grade);
   const updated: Schedule = {
@@ -87,7 +112,7 @@ export function gradeItem(itemId: string, rating: ItemRating, now: Date): Schedu
 export function cardsDue(now: Date): string[] {
   const { cards } = loadSchedule();
   return Object.entries(cards)
-    .filter(([, card]) => new Date(card.due).getTime() <= now.getTime())
+    .filter(([, card]) => hasComeDue(card, now))
     .sort(([idA, a], [idB, b]) => {
       const byDue = new Date(a.due).getTime() - new Date(b.due).getTime();
       return byDue !== 0 ? byDue : idA.localeCompare(idB);

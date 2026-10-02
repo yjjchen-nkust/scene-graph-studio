@@ -1,11 +1,44 @@
 import { useMemo } from 'react';
-import type { SceneGraph } from 'sgg-metrics';
+import type { Fidelity, SceneGraph } from 'sgg-metrics';
 import { evaluate } from 'sgg-metrics';
 import { MetricReadout } from '../../components/MetricReadout';
-import { useLocale } from '../../i18n/useLocale';
-import type { Column, ModelRow } from './types';
+import { useLocale, type Locale } from '../../i18n/useLocale';
+import { ApiFailure, messageOf } from '../api';
+import type { Column, Failure, ModelRow } from './types';
 
 const K = 20;
+
+/**
+ * The tier of a figure computed from a ground truth and a prediction: the weaker of the two.
+ *
+ * The engine tags every value `measured`, which is true of the comparison it ran and says nothing
+ * of the graphs it was handed; only the caller knows those. A recall over a reconstructed
+ * prediction is a reconstructed figure, and `measured` is the one tier D-07 reserves for a
+ * model's own output. `published` is a figure quoted from a paper, which one computed here never
+ * is, so anything short of two measured graphs is `reconstructed`.
+ */
+function computedFidelity(gt: SceneGraph, column: Column): Fidelity {
+  return gt.provenance?.fidelity === 'measured' && column.fidelity === 'measured'
+    ? 'measured'
+    : 'reconstructed';
+}
+
+/**
+ * The live run's refusal: the backend's sentence, then the reason its `detail` gives.
+ *
+ * The 503's message says only that the model cannot run here; what blocks it, `torch`, the
+ * checkpoint or the wiring, is in `detail.reason_en` and `reason_zh` (contracts §1.1 names it
+ * `reason`, which is read as well). The registry's reason on the column was true when the page
+ * loaded, and this one is true now.
+ */
+function refusalText(error: unknown, locale: Locale): string {
+  const detail = error instanceof ApiFailure ? (error.detail as Record<string, unknown> | null) : null;
+  const reason = detail?.[locale === 'en' ? 'reason_en' : 'reason_zh'] ?? detail?.reason;
+  const message = messageOf(error, locale);
+  if (typeof reason !== 'string' || !reason) return message;
+  // Chinese sentences close on 。 and are not spaced apart.
+  return locale === 'en' ? `${message} ${reason}` : `${message}${reason}`;
+}
 
 /**
  * L4 — one frame, several methods, one ground truth.
@@ -20,17 +53,26 @@ const K = 20;
  * `/api/health`'s torch flag; liveness needs `torch` *and* a checkpoint (DEVIATIONS D37), and the
  * registry already states the reason in both languages. Asking a second source would reproduce
  * exactly the disagreement D37 records.
+ *
+ * **A failed read is not an absent prediction.** `failures` are the models whose prediction could
+ * not be read, a 404 excepted, and each is listed with its reason; "nothing to compare" is said
+ * only when no column and no failure is left. `refusal` is the live run's failure, shown under
+ * the button that asked for it.
  */
 export function MethodComparator({
   gt,
   columns,
   models,
   onInfer,
+  failures = [],
+  refusal = null,
 }: {
   gt: SceneGraph;
   columns: Column[];
   models: ModelRow[];
   onInfer: (model: string) => void;
+  failures?: Failure[];
+  refusal?: Failure | null;
 }) {
   const { locale, t } = useLocale();
   const en = locale === 'en';
@@ -48,19 +90,42 @@ export function MethodComparator({
           iou_thresh: 0.5,
           mask_pairing: 'single_mpo',
         });
-        return { column, metrics: body.metrics.filter((m) => m.metric === 'R' || m.metric === 'mR') };
+        const fidelity = computedFidelity(gt, column);
+        return {
+          column,
+          metrics: body.metrics
+            .filter((m) => m.metric === 'R' || m.metric === 'mR')
+            .map((m) => ({ ...m, fidelity })),
+        };
       }),
     [columns, gt],
   );
+
+  const failed =
+    failures.length > 0 ? (
+      <ul data-testid="prediction-failures" className="space-y-1 rounded border border-amber-300
+        bg-amber-50 p-3 text-sm text-amber-900">
+        {failures.map(({ model, error }) => (
+          <li key={model} data-testid={`prediction-failed-${model}`}>
+            <span className="font-semibold">{byId.get(model)?.name ?? model}</span>
+            {en
+              ? `: ${t('l4.prediction_failed')} ${messageOf(error, locale)}`
+              : `：${t('l4.prediction_failed')}${messageOf(error, locale)}`}
+          </li>
+        ))}
+      </ul>
+    ) : null;
 
   if (columns.length === 0) {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-semibold text-slate-900">{t('l4.heading')}</h1>
-        <p data-testid="no-columns" className="rounded border border-slate-200 bg-slate-50 p-4
-          text-sm text-slate-600">
-          {t('l4.no_columns')}
-        </p>
+        {failed ?? (
+          <p data-testid="no-columns" className="rounded border border-slate-200 bg-slate-50 p-4
+            text-sm text-slate-600">
+            {t('l4.no_columns')}
+          </p>
+        )}
       </div>
     );
   }
@@ -71,6 +136,8 @@ export function MethodComparator({
         <h1 className="text-2xl font-semibold text-slate-900">{t('l4.heading')}</h1>
         <p className="text-sm text-slate-600">{t('l4.subheading')}</p>
       </header>
+
+      {failed}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {scored.map(({ column, metrics }) => {
@@ -137,6 +204,12 @@ export function MethodComparator({
                 {model && !model.live ? (
                   <p data-testid={`blocked-${column.model}`} className="text-xs text-slate-600">
                     {(en ? model.live_blocked_reason_en : model.live_blocked_reason_zh) ?? ''}
+                  </p>
+                ) : null}
+                {refusal?.model === column.model ? (
+                  <p data-testid={`refused-${column.model}`} role="alert"
+                    className="text-xs text-amber-900">
+                    {refusalText(refusal.error, locale)}
                   </p>
                 ) : null}
               </footer>

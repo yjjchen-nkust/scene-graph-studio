@@ -14,11 +14,18 @@ export interface Triplet {
  * on detection they never performed, and a low number would say nothing about the relation
  * reasoning the exercise is about. The constraint is `graph`, the strictest reading, so a student
  * cannot raise their score by proposing several predicates for one pair.
+ *
+ * One K, the one the lab reports. The engine counts `matched_count` and draws its verdicts at the
+ * largest K it is asked for, so with 20, 50 and 100 the page set a count at K = 100 beside R@20,
+ * and a triplet the student ranked 21st was drawn and counted as a match that R@20 did not
+ * count. Asked for 20 alone, the count is R@20's numerator and the diff shows what R@20 saw.
  */
+export const RECALL_K = 20;
+
 export const DEFAULT_PARAMS = {
   protocol: 'predcls',
   constraint: 'graph',
-  k: [20, 50, 100],
+  k: [RECALL_K],
   iou_thresh: 0.5,
   mask_pairing: 'single_mpo',
 } as const satisfies Omit<EvalRequest, 'gt' | 'pred'>;

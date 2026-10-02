@@ -2080,3 +2080,95 @@ Run alone before the records were written, `the records carry the M0 demos` fail
 heading. It holds D112 to D117 in the heading form, the counts of CLAUDE.md, INDEX and README from below, the
 spec and the plan listed as executed, the `demo` kind named beside the playground with `DEMO_PARTS`, and INDEX's
 note count attributed to D117.
+
+---
+
+## 32. The findings D120 left open, measured 2026-10-01
+
+D120 fixed 23 review findings and could not run the projector suite, the offline check or the perf check on them.
+D122 fixes the seventeen items D120 left open. The table records both: the "before" column is `main` at `8998cac`,
+which holds D120 and D121, and the "after" column is branch `fix/sgs-review-2026-10-01-c` with D122. Every command
+ran with py12 resolved by `tools/py.mjs`, exit 0, and no `vite preview` left on port 4173 between runs.
+
+| Step | Before (`8998cac`) | After (D122) |
+|---|---|---|
+| harvest | 93 knowledge points, 27 live; 26 formulas and 23 derivations | the same |
+| pytest | 373 passed, 7 skipped | **395 passed, 7 skipped** |
+| vitest | 1257 passed in 84 files | **1327 passed in 89 files** |
+| parity | 21 cases agree | 21 cases agree |
+| i18n parity | 506 keys | **507 keys** (`l4.prediction_failed`) |
+| content lint | clean | clean; tags read as MDX compiles them, and an HTML comment refused |
+| frozen lints, standalone | clean; 254 equations, 1063 KB | the same |
+| frontend build | 824 modules | **825 modules** (`pages/useFieldDraft.ts`) |
+| `npm run test:e2e` | **107 passed**, 1.9 min; the first run on D120's changes | **107 passed**, 2.0 min |
+| `npm run check:perf` | not run | **33 passed**, 32.1 s; the sixteen playgrounds 31.8 to 34.7 ms, D-T 32.6 ms, D-V 33.0 ms, cold starts 287 to 552 ms |
+| `npm run check:offline -- --python .offline-venv/Scripts/python` | not run | **9 passed**, 30.3 s |
+| `npm run check:pins` | 9 of 9 and 5 of 5 agree | the same |
+
+The before-column run of the projector suite closes D120's open check: its deck-focus fix, held until then by a
+vitest route test alone, passes the keyboard walkthrough at all three resolutions. After each run the working tree
+held only the branch's own changes, and nothing under `data/` appeared in `git status`. The mask rule's admission of
+every mask on the NAS is a pytest test (`test_every_mask_on_the_nas_is_admitted`, 648 of 648), and the IoU of all
+5,901 same-frame PSG mask pairs was compared old against new once, by hand, with no difference.
+
+---
+
+## 33. The dev server and F2's edges, measured 2026-10-02
+
+D123. The "before" column is the branch at `5b1985a` (D122), as §32 measured it.
+
+| Step | Before (`5b1985a`) | After (D123) |
+|---|---|---|
+| pytest | 395 passed, 7 skipped | the same |
+| vitest | 1327 passed in 89 files | **1354 passed in 92 files** (`dev_server`, `fs_plugin`, F2's `drawing`) |
+| parity, i18n, content, frozen, standalone | 21 agree; 507 keys; clean | the same |
+| `npm run test:e2e` | 107 passed | **107 passed**, 2.0 min |
+| `npm run check:perf` | 33 passed | **33 passed**, 30.3 s; F2 34.4 ms, cold starts 238 to 526 ms |
+
+Under `npm start`, in the Browser pane, before the change: both demo clips reported
+`DEMUXER_ERROR_COULD_NOT_OPEN`, the dev server answering `/@fs/D:/Data/DataRaw/scene-graph/demos/m0/clip.mp4` with
+`index.html` (status 200), and D-T's frame photograph was broken. After it: both clips loaded, 18.0 s and 1280 px
+wide, and none of the twelve photographs on M0's study page was broken. F2 at 1024×768 in 繁體中文 on
+`/lecture/m/m00/4`: the drawing 735 × 240 px, the visual 282 px and the step 21 px past the panel by default, as
+before; with `table on person` and `person on table` built, two curves with heads, and with direction discarded one
+line without a head beside |E| = 1. With F2 unclipped, the projector suite passed 107 again, and at 800 × 566 the
+list of three edges stands wholly inside the visual.
+
+---
+
+## 34. D-V recorded again, measured 2026-10-02
+
+D124. D-V's 50 calls under `O_DEMO`, `P_ISG` and `EXAMPLES_DEMO`, through `record_demo_indvissgg.py --server A6000`,
+against vLLM on the A6000.
+
+| Item | Value |
+|---|---|
+| Server | vLLM 0.21.0, torch 2.11.0+cu130, `/mnt/data/yenming/sgs-vlm/venv`; driver 580.173.02; one RTX A6000, 47.4 GiB |
+| Weights | `Qwen/Qwen3.8-27B-FP8`, snapshot `017b9c7af6b5689d5dd426a76e0bc077eb5ca20a`, 29 GB on disk, 28.9 GiB loaded |
+| Served as | `qwen3.8-27b-fp8` on the Tailscale address, port 8002; 4 sequences, 8,192 batched tokens, no video, 16,384-token context, `VLLM_USE_FLASHINFER_SAMPLER=0` |
+| KV cache | 12.6 GiB, 179,541 tokens |
+| Sampling | D114's: temperature 0.7, top_p 0.8, top_k 20, presence_penalty 1.5, max_tokens 2048, thinking disabled, seed per exchange key |
+| Calls | 50 in 579.6 s; the server stopped afterwards, the card back at 9 MiB |
+| Transcript | `vlm/transcripts/m0-demo.json`, 148,394 bytes, SHA-256 `6e30e234d8822020ebe5fccd845605daf0bcbff84af1b37a5d9bc5dda3463103` |
+| Derived | `demos/m0/indvissgg.json`, 85,163 bytes, SHA-256 `9859d7b3373f4cb2425042eb8e55b46d92b47716e01acde265070e721c88e426`; `traditional.json` unchanged, 48,604 bytes |
+| Kept | `vlm/transcripts-pre-D124/m0-demo.json` (`504531…`) and `demos/m0/pre-D124/indvissgg.json` (`c2bee30…`), §31's files |
+
+Per frame, D-V's draft rows, the three experts' revision rows and the summary's rows:
+
+| Frame | 088 | 090 | 092 | 094 | 096 | 098 | 100 | 102 | 104 | 106 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Draft | 10 | 8 | 7 | 10 | 9 | 11 | 11 | 10 | 9 | 8 |
+| Revisions | 9/9/9 | 7/7/6 | 6/6/6 | 6/8/7 | 8/8/8 | 10/10/11 | 10/10/10 | 10/10/10 | 7/7/7 | 6/7/7 |
+| Summary | 8 | 6 | 6 | 6 | 8 | 10 | 9 | 10 | 7 | 6 |
+
+No term of the 50 completions is outside O or P (two were, in §31's). Every summary names both hands. Two revisions
+change nothing (98 s expert 3, 102 s expert 2) and 9 add a triplet; the summaries carry 5 rows their drafts lacked,
+each in some expert's revision. The longest analysis is 657 characters in Chinese and 1,568 in English (§31's: 280
+and 734). Checked by eye against the frames at 90, 92, 94, 96 and 100 s: each hand is named correctly in all five; at
+94 s both hands hold a black wheel on a grey axle, written `block`.
+
+| Step | Result |
+|---|---|
+| `npm run ci` | green; 399 pytest and 7 skipped, **1356 vitest** in 92 files, parity 21 agree, i18n 507 keys, content lint clean |
+| `npm run test:e2e` | **107 passed**, 2.6 min; before part 3's scroll box, D-V part 3 at 90 s, expert 3, ran 157 px past 1024×768 in 繁體中文, and part 1 ran 13 px past while s11 named the hands |
+| `npm run check:perf` | **33 passed**, 35.8 s; D-T 32.7 ms, D-V 32.5 ms |

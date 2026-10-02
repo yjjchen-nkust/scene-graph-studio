@@ -17,3 +17,7 @@ __pycache__/
 test-results/
 playwright-report/
 .offline-venv/
+# ===== BEGIN devdata-managed =====
+/data
+/.devdata/
+# ===== END devdata-managed =====

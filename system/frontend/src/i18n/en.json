@@ -125,6 +125,7 @@
   "l4.latency": "Measured latency",
   "l4.latency_unmeasured": "Latency has not been measured on this machine.",
   "l4.run_live": "Run live inference",
+  "l4.prediction_failed": "the prediction for this frame could not be read, which is not the same as there being none.",
   "l3.heading": "L3 — Long-Tail Lab",
   "l3.subheading": "The frequency baseline that humiliated the field, fitted and scored live in the browser.",
   "l3.lambda": "Blend λ (0 = prior only, 1 = visual only)",

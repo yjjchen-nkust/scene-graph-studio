@@ -104,6 +104,17 @@ export function postJson<T>(url: string, body: unknown): Promise<T> {
   });
 }
 
+/**
+ * Whether a failure says the thing asked for is not there: a 404 `not_found` in the error model.
+ *
+ * For a committed prediction that is an answer, "none for this frame". Every other failure, a dead
+ * backend, a 500, a proxy's 404 page, is a reason no answer could be had, and reading it as
+ * "none" states something about the corpus that nobody learned.
+ */
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiFailure && error.status === 404 && error.code === 'not_found';
+}
+
 /** The sentence to show, in the locale on screen. Never empty, whatever it is handed. */
 export function messageOf(error: unknown, locale: Locale): string {
   if (error instanceof ApiFailure) return locale === 'en' ? error.messageEn : error.messageZh;

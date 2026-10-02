@@ -5262,3 +5262,275 @@ pyarrow and pytest down to this track's pins, which WekaExt's lower bounds accep
 **Verification.** `start.ps1 -SkipInstall -BackendPort 8010 -FrontendPort 5180` printed `Python 3.12.3
 (C:\dev\WekaExt\.venv\Scripts\python.exe)`, `/api/health` answered, uvicorn ran from that interpreter, and the
 frontend answered 200. `npm run ci` was not rerun: the gate stays on `py12` and nothing it runs changed.
+
+## D122 — the findings D120 left open, the RLE engines' memory and width, and D121's drift made visible
+
+**Plan:** none. **Decisions:** none new. Branch `fix/sgs-review-2026-10-01-c`, cut from `main` at `8998cac`. D120
+left fifteen findings open with three residues of fixed ones, seventeen items in all. Every one was reproduced, and
+every one is fixed here with a test that failed first for the stated reason. Fixing them found two further defects in
+the TypeScript RLE decoder, fixed with them. `start.ps1` now reports the hazard D121 named.
+
+**The backend.**
+
+- *A mask's size had no bound, and `decode` wrote out more than the mask.* `POST /api/eval` accepted a mask of size
+  [100000, 100000], and `mask_iou`'s peak memory grew about 23 bytes per pixel (91.6 MiB at 2000²). The finding
+  understated it: `decode` wrote out every run before cutting to the mask, so a 4×4 mask whose seven-character counts
+  encode a run of 2²⁴ peaked at 256 MiB, which no bound on `size` stops. A mask now has both sides at least 1 and an
+  area of at most 4096 × 4096 = 16,777,216 pixels (`MASK_PIXELS_MAX`), and its decoded runs must be non-negative and
+  sum to exactly H × W; either violation is 422 `schema_invalid`. The bound is on area because `test_rle.py` already
+  builds a 1 × 100001 mask. `decode` writes H × W pixels, and `mask_iou` sweeps the two masks' foreground intervals, so
+  its cost follows the runs, not the pixels. Results are unchanged: all 5,901 same-frame mask pairs of the PSG slice
+  give the same IoU (123.4 s before, 3.0 s after), and all 648 masks on the NAS (26 golden, 622 PSG, the largest
+  640 × 633) are admitted. Hand-written counts that relied on implicit background padding, `"08"` on 4×4, are now
+  refused; the frontend never calls `/api/eval`.
+- *The no-geometry note was English only.* D39 says the note "says so in both languages", and `NO_GEOMETRY_ZH` was
+  unused from its first commit. `Provenance` has one `note` and is strict, so the note now carries both sentences
+  in one string rather than gaining a `note_zh` field the contract does not have. No page shows this note today.
+- *A live graph recorded no model id.* `provenance.vlm` was the literal `"live"`; SRS §3 defines it as the model
+  identifier when `kind` is `vlm`, and it is now that: the Claude provider's `model` (`claude-sonnet-5` by
+  default), or the served name on the OpenAI-compatible provider (`stamping-vlm`, not the weights, which only
+  `served_root()`'s extra request names). A replay still records `"transcript"`.
+
+**The TypeScript engine.** `rle.ts` claimed to mirror `rle.py` line for line, and after the change above it no
+longer did. `decode` pushed one pixel per run unit too: a 2²⁴ run on a 4×4 mask took 465 ms and 518 MiB.
+`decodeCounts` and `encodeCounts` also accumulated with 32-bit bit operations, so `0PPPPPP2`, a run of 2³¹, read
+as −2,147,483,648, and its IoU against a full 4×4 mask was 0 in TypeScript and 1.0 in Python. The accumulation is
+now arithmetic and agrees with Python for every value below 2⁵³; `decode` and `maskIou` work over clipped intervals
+as Python's do; the header says what is true, including the one difference left below the schema (counts that end
+inside a group raise in Python and read the group as zero in TypeScript). With the schema's rules, no input the API
+accepts reaches 32 bits. Parity is still 21 agree.
+
+**The labs and the export.**
+
+- *The Visual Genome export was not readable by the driver.* Checked against a transcription of the driver's
+  `parse_graph_local`, `map_object` and `Object.__init__` from its source, run under py12, since the `visual_genome`
+  wheel is installed nowhere here and was not installed: the old file failed on `unexpected keyword argument
+  'sgs_mask'`, then on the missing `synsets`, then on `KeyError: 'subject_id'`. An object now carries the driver's
+  keys and `synsets` always (`[]` where the graph has none); a relationship carries `subject_id`, `object_id` and
+  `synsets` rather than two nested records; masks move to a top-level `sgs_masks` keyed by object id, which the
+  reader never reads. `sgs_score` stays on the relationship, which the reader reads by key and does not splat. D66 is
+  wrong in three places: the driver does not ignore an extra key on an object, it reads a relationship's ends by id,
+  and it skips a dangling relationship and counts it rather than failing on a null subject. The import reads both the
+  new form and the old one; an empty `synsets` reads back as absent.
+- *The SVG button waited for an unrelated render, and the SVG carried no photograph.* `ExportButtons` read its target
+  ref during render, when the overlay's ref was still null. It now finds the overlay in an effect, so the button
+  appears one frame after the first paint, and passes the frame to `exportSvg` as D66 says it does, only as a
+  `data:` URI, since any other address would not travel with the file.
+- *The JSON export wrote the ground truth.* L1Mount exported `graph.data` and L8Mount the reference, while PRD §6.6
+  says "any constructed graph". The export is now rendered inside each lab: L1 writes the student's triplets over the
+  frame's boxes as `kind: 'user'`, `fidelity: 'measured'`, submitted or not; L8 writes the working copy under its own
+  provenance, the draft's until the first counted correction and `corrections.ts`'s from then on.
+- *L1 counted "matched" at K = 100 beside R@20.* The engine counts at the largest K it is asked for, and L1 asked for
+  20, 50 and 100 to show one. It now asks for 20 alone (`RECALL_K`), so the count, the diff's colours and R@20 agree,
+  and a triplet ranked 21st is drawn as not evaluated rather than as a match. No module names another K for L1.
+- *L4 discarded the 503 and read a failed fetch as "no predictions".* The live run is a mutation: its 503 is shown
+  under its button with `detail.reason_en` or `reason_zh`, and a graph it returns takes its model's column as
+  `measured`, for the frame it was asked of only. A prediction read that fails other than with a 404 `not_found` is
+  listed with its reason (`l4.prediction_failed`), and the lab waits for the reads before saying there are none.
+  Live inference cannot be reached on a real backend while `registry.WIRED` is empty (D120), so these paths are held
+  by stubbed tests only. Contracts §1.1 named the 503's reason `reason`; the backend has always sent `reason_en` and
+  `reason_zh`, as §1.7 says, and §1.1 is amended to say so, with `vlm_unavailable`'s `{provider, reason}`.
+- *L4 tagged figures on reconstructed predictions `measured`.* The engine tags every value `measured`, which is true
+  of the comparison and says nothing of its inputs. A figure is now `measured` only when the ground truth and the
+  prediction both are, and `reconstructed` otherwise; every slice's ground truth is `measured`, and the committed
+  predictions are `reconstructed`.
+- *`MetricReadout` rounded published figures to one place.* The 174 are the 87 figures of `leaderboards.json` and
+  the 87 `reported` values of `papers.json`; 58 printed otherwise than published (12.98 as 13.0, 16.25 as 16.3), and
+  none does now. Neither file states a precision, and parsing JSON turns `16.0` into 16, so a `published` figure
+  prints every decimal place its number carries, never fewer than one. A source printing `12.90` would lose its zero,
+  and the corpus test, which compares every rendered figure with the literal in its file, would fail. The shift to a
+  percentage is made in decimal on the ten-place string and rounded by `decimals`, as D120 did for T2, so a computed
+  figure, still at one place, now rounds a tie up: over every a/b with b ≤ 400, 23 of 80,600 print differently, all
+  exact ties (23/80 printed 28.7 and prints 28.8).
+
+**The study and lecture shells.**
+
+- *A checkpoint asked about one relation twice, and marked a true reversal wrong.* On the checkpoint graph at three
+  items, 11 of the 15 checkpoints corrupted one relation twice, two pairs of items were identical, and four items
+  reversed `man near window`, which is still true. A corruption is now never one the graph would still hold:
+  `SYMMETRIC_PREDICATES` (`near`, `next to`, `beside`, `aligned with`, `and`, from the corpus and the slices) are not
+  reversed, and a corruption equal to a triplet the graph already holds, compared by the names the reader sees, is not
+  drawn. One checkpoint asks about each relation once at most. The first draw is the old procedure with the same
+  random numbers, kept wherever it was sound, so **30 of the 45 schedule keys keep their meaning and 15 do not**:
+  m00:s17:2, m01:s13:1, m01:s13:2, m02:s8:2, m03:s11:2, m04:s19:1, m05:s9:2, m07:s5:2, m08:s5:1, m09:s4:2,
+  m10:s6:1, m10:s6:2, m11:s10:2, m13:s5:2, m14:s7:1. None is orphaned, but a card stored under one now schedules a
+  different question. A test pins all 45 items.
+- *A remount graded the same answer again.* `Quiz` kept its grades in component state. Measured on ts-fsrs 5.4.2, a
+  right answer to a new item is due in ten minutes; graded again at once it was due in two days, and a third time in
+  three. `gradeItem` now leaves a card that is not yet due unchanged, and a remounted checkpoint shows the earlier
+  answer. The rule is the due date: a session ends at a reload, which would count the answer again, and a calendar
+  day would refuse the learning steps FSRS asks for, a wrong answer's re-ask a minute later among them.
+- *The knowledge index's and the field map's fields lost the caret.* React Router 7.18 applies a navigation inside
+  `startTransition`, so React restored the old value after each keystroke and the transition wrote the new one at the
+  end: a key typed at position 2 of "sce" left the caret at 4, and `q` was written mid-composition. `useFieldDraft`
+  keeps the raw text while the field has focus, as L5's editor does since D120, writes the URL beside it, and writes
+  nothing while an input method composes. An emptied year field now means no bound; it wrote `to=0` and hid every
+  paper.
+- *The presenter window kept its locale, and `<html lang>` was not set at load.* With English stored the page
+  declared `zh-TW` until the toggle was pressed. The attribute is now set when the locale module loads, and a
+  `storage` listener adopts a locale another window of the origin writes, so the presenter follows the deck. The
+  presenter channel was not used: the deck holds no toggle, and contracts §2.4 fixes its message.
+
+**The tools.**
+
+- *The content lint read one spelling of a tag.* It matched `<Demo id="…" part="…"` and `<Playground kp="…"` in one
+  order and one quote, counted tags inside comments, and refused `part={1}`, which MDX compiles and the runtime
+  mounts as part 1 (`Number(part)`); measured with `@mdx-js/mdx` 3.1.1 and the build's remark plugins. Tags are now
+  read as MDX compiles them, in any order or quote, over several lines, with a literal in braces; a bare `part` is
+  refused, though the runtime reads it as part 1, because a forgotten value is likelier than a meant one. Every body
+  rule reads the body with `{/* … */}` removed, the four-part contract included. **A new rule** refuses an HTML
+  comment in a body, which MDX 3 does not compile. Each new behaviour, removed in turn, failed a test. Tags quoted in
+  inline code or a fenced block are still counted; the corpus has none.
+- *`start.mjs` left the backend running on Windows.* The backend there is three processes: py12's `python.exe` is a
+  venv launcher, its child is the interpreter running uvicorn's reloader, and the server is the reloader's child.
+  `child.kill()` ended the launcher alone, and after `npm start` exited, port 8031 still answered. `tools/servers.mjs`
+  ends the tree with `taskkill /pid <pid> /T /F` on Windows and keeps `kill()` elsewhere; `start.mjs`,
+  `offline_check.mjs` and `perf_check.mjs` all use it.
+- *The offline and perf checks used fixed ports unchecked.* Both now refuse a held backend port or 4173 before they
+  start anything, naming the port and how to free or move it. A port is free only if a bind on 127.0.0.1 succeeds and
+  a connection there is refused: on Windows the bind succeeds beside a process listening on 0.0.0.0 or ::, which then
+  answers the connection. `start.mjs` uses the same probe. `offline_check.mjs` gains `--port`, default 8111. 4173 is
+  fixed in `playwright.config.ts` and cannot yet be moved.
+
+**The shared environment.** `start.ps1` on WekaExt's `.venv` (D121) installs nothing unless an import fails, so a
+`.venv` whose versions had drifted from this track's pins ran silently. When the default `.venv` is the interpreter,
+the script now runs `check_pins.py` and, on disagreement, lists each pin and the version found, then continues: D121
+chose the shared environment, and the warning does not reverse that. Measured: the `.venv` agrees, 9 of 9 required
+and 5 of 5 optional; `C:\Python\pyVenv\env11` put through the same block listed 3 required and 2 optional drifts.
+The script parses under PowerShell 5.1 and 7.
+
+**Left open.** A predicate can be rewritten into a synonym (`near` to `next to`); the checkpoint graph holds no such
+pair. The field map's selects and checkboxes still read the URL directly; they have no caret and end correct. Locale
+sync between windows needs storage, and where it is blocked each window keeps its own. An answer given before its
+card is due is not counted and nothing on screen says so. `openai-compat` cannot be chosen through
+`IndVisSGGRequest.provider`. A tag quoted in code is counted by the lint. 4173 cannot be moved.
+
+**Verification.** On `main` at `8998cac`, before any change: `npm run ci` green (373 pytest and 7 skipped, 1257
+vitest), and `npm run test:e2e` **107 passed**, the first run of the projector suite on D120's changes, which closes
+the check D120 could not run. On this branch, 2026-10-01: `npm run ci` green, **395 pytest** and 7 skipped, parity 21
+agree, i18n 507 keys, **1327 vitest** in 89 files, ruff clean, content lint clean, standalone current (254
+equations), frontend builds; `npm run harvest` left no tracked file changed. `npm run test:e2e` **107 passed**,
+`npm run check:perf` **33 passed** with every interaction inside its budget, and `npm run check:offline` over
+`.offline-venv` **9 passed**. VERIFICATION §32 records the four runs.
+
+## D123 — the dev server serves data/ across drives, F2 draws its edges, and devdata declares data/
+
+**Plan:** none. **Decisions:** none new. Asked for by the author on 2026-10-02, from the Browser pane, on branch
+`fix/sgs-review-2026-10-01-c` after D122.
+
+**The clip and the photographs under `npm start`.** Both demos' first parts said 「無法載入影片（clip.mp4）」, and the
+frame photograph beneath D-T's was a broken image, as was every photograph a playground imports from `data/`; the
+build showed them all. The `<video>` reported `DEMUXER_ERROR_COULD_NOT_OPEN`, and the body the dev server returned
+for `/@fs/D:/Data/DataRaw/scene-graph/demos/m0/clip.mp4` was the application's `index.html`, status 200. Two causes,
+each sufficient alone:
+
+- `frontend/vite.config.ts` set no `server.fs.allow`, so Vite's default, the workspace root `system/`, excluded
+  `data/`, its sibling. `vitest.config.ts` has allowed the link's target since D110; the dev server never did.
+- `data/` links to `C:\DataRaw\scene-graph`, itself a link to `D:\Data\DataRaw\scene-graph`, and Vite 8.3.0's
+  `serveRawFsMiddleware` drops a `/@fs/` path's drive letter and reads from the root of its own drive: it looked
+  for `C:\Data\DataRaw\scene-graph\demos\m0\clip.mp4`, found nothing, and fell through to `index.html`. With the
+  allow list fixed alone, the test still received HTML.
+
+The allow list now restates the workspace root and adds `dataDirectory()`. `system/fs.plugin.ts` registers
+`crossDriveFs`, a development-only middleware ahead of Vite's own that serves a `/@fs/` file on another drive than
+the server's, inside the allow list, requested with no query, honouring byte ranges; everything else goes on to
+Vite, which serves its own drive and refuses what lies outside the list. A request with a query is a module request
+that Vite's transform middleware answers and reads across drives correctly: the first version answered
+`leaderboards.json?import` raw and the page rendered blank, which is now a test. `tools/test/dev_server.test.mjs`
+starts the dev server from its config and asks for the clip, a byte range of it, a frame, a photograph and a JSON
+module; each but the module failed before, and all fail again with `data/` taken out of the list.
+`tools/test/fs_plugin.test.mjs` holds the decision and the range arithmetic, a `..` climb and a sibling prefix
+refused.
+
+**F2 draws its edges.** M0 s5's six objects were a row of buttons, and an edge the student added appeared only as a
+line of text beneath them: a graph none of whose edges was drawn. The buttons now sit round an ellipse in a box
+10 em tall, measured after every render so that a curve reaches each button's outline, which moves as a button names
+its role. One `<svg>` beneath them draws one curve per edge |E| counts, keyed as `tripletKey` keys it under the
+direction setting, so with direction discarded two opposite arrows become one line without a head, the merge the
+step teaches, drawn. Edges between one pair bend apart, 28 px between neighbours at their middle, and the chosen
+pair shows as a dashed edge until it is added. The drawing carries no text and is `aria-hidden`: a label scaled by a
+viewBox falls below the 18 px floor (D98), so the predicates stay in the list, which a screen reader reads. The
+buttons keep their DOM order, so the keyboard walk is unchanged. At 1024×768 in 繁體中文 the box takes the height
+F2's stacked readouts already took: the visual is 282 px and the step runs 21 px past the panel, both as before.
+`F2/test/drawing.test.ts` (8 tests) and four new tests in `TripletCombinatorics.test.tsx` failed before. At a
+narrow width the drawing pushed the list of edges under the frame's 46vh clip (in the Browser pane at 800 × 566 its
+top stood at 452 px and the clip at 446), and the list is the only place the predicates are written, so F2 now passes
+`clip={false}` (D93); at 1024×768 its default state already stood below the clip, 282 px under 353 px.
+
+**devdata.** `data.toml` at WekaExt's root (`project = "WekaExt"`) and in this track declare `data/` as the dataset
+`raw:scene-graph`, and `devdata init` wrote the managed `.gitignore` blocks. `devdata status` reports it `linked`:
+D110's junction is the link devdata makes. Nothing is retired: the spec's §10.1 step 6 waits for a second machine,
+and its §10.2 gives WekaExt's wave a plan of its own. Three facts about this track meet that plan:
+
+- `devdata lint` finds 38 tracked lines that spell a root path: 29 in Markdown records, this file among them, and 9
+  in code, among them `Connect-DataDirectory.ps1`'s default target and two records tests.
+- The track writes into its dataset, which the spec's decision 4.1 makes a read-only input: every gate run's harvest
+  writes `data/content/`, and the placeholder slice, the demos' derived files and the VLM recordings are written
+  there too. `D:\Data` holds `.SynologyWorkingDirectory`, so each of those writes is replicated.
+- Data that changes with code, the golden vectors, `playground_golden.json`, the transcripts keyed by their prompts
+  and `data/content/`, 656 KB in `content/`, `golden/` and `vlm/`, is one copy for every branch under latest-only (decision 4.2), which D111 and
+  D115 already met: `main` failed its gate until a branch merged, and a revert needed hand edits on the NAS.
+
+**Verification.** On this branch, 2026-10-02: `npm run ci` green, 395 pytest and 7 skipped, parity 21 agree, i18n
+507 keys, **1354 vitest** in 92 files, ruff clean, content lint clean, standalone current, frontend builds;
+`npm run test:e2e` **107 passed**, again after the clip, and `npm run check:perf` **33 passed**, F2's direction toggle at 34.4 ms against
+its 100 ms budget. In the Browser pane under `npm start`, both clips load (18.0 s, 1280 px wide) and the twelve
+photographs of M0's study page render. VERIFICATION §33 records the runs.
+
+## D124 — D-V names each hand, and is recorded again on the A6000
+
+**Plan:** none. **Decisions:** none new. Asked for by the author on 2026-10-02, after seeing D-T's COCO labels on
+the clip: "Can you identify left hand and right hand?" Branch `fix/sgs-review-2026-10-01-c` after D123.
+
+**Why.** D-T labels both hands `person` and the parts `remote`, `cell phone`, `toothbrush`; that is its purpose, the
+closed vocabulary measured (11 of `O_ISG`'s 12 classes have no COCO class), and D-T is unchanged. D-V drafted under
+`O_ISG`, whose one `hand` left `<hand, holding, axle>` true of whichever hand held it, and D114's recording wrote
+`left_hand` and `right_hand` once, unasked and outside O, at 96 s. The demonstration now asks for them.
+
+**The criteria.** `prompts.O_DEMO` is `O_ISG` with `hand` replaced by `left hand` and `right hand`, 13 classes;
+`EXAMPLES_DEMO` keeps `EXAMPLES_ISG`'s shape, and its positive example states the rule for telling the hands apart:
+the frames are seen through the worker's own eyes, so the right hand is the one on the right of the image unless the
+arms cross. P is still `P_ISG`. `indvissgg.criteria_for` gives a demo frame this triple and a mini-ISG frame
+`O_ISG`'s, so the endpoint replays each family under the prompt it was recorded with; `record_demo_indvissgg.py` and
+`build_demo_m0.py` use it for D-V, and D-T's comparison column keeps `O_ISG`. The recorder's provenance note names
+the machine (`--server`), which D114's note fixed as pro6000.
+
+**The recording.** The author asked for the job to run on the A6000 rather than pro6000. That card has 47.4 GiB,
+and the full-precision weights D114 used, `Qwen/Qwen3.8-27B`, are 55.6 GB; the author chose
+`Qwen/Qwen3.8-27B-FP8` (30.9 GB, Apache-2.0) over a different model, after the shared cache's
+`Qwen3-VL-30B-A3B-Thinking-FP8` proved a 12 KB stub with no weights. vLLM 0.21.0, pro6000's version, was installed
+into `/mnt/data/yenming/sgs-vlm/venv` with torch 2.11.0+cu130, the weights into `/mnt/data/yenming/sgs-vlm/hf`
+(29 GB), nothing on the root disk (20 GB free). Two starts failed: FlashInfer's sampler compiles a kernel with
+`nvcc` and the host has no CUDA toolkit, so `VLLM_USE_FLASHINFER_SAMPLER=0` selects vLLM's PyTorch sampler; then the
+profiling run, at the default 256 sequences, a dummy video and 32,768 tokens, ran out of memory beside 28.9 GiB of
+weights. Served at four sequences, no video and a 16,384-token context, it held 12.6 GiB of KV cache (179,541
+tokens). The sampling settings, the seeds and `max_tokens` are D114's, thinking still disabled. The 50 calls took
+579.6 s, and the server was stopped after them. A first unrecorded call on 96 s gave `<left hand, holding, wheel>`
+and `<right hand, reaching for, nut>` in 5.8 s.
+
+**What it holds.** No term of the 50 completions is outside O or P, and every one of the ten summaries names both
+hands. Against the frames, five of them looked at by eye (90, 92, 94, 96 and 100 s): the left hand, with the watch,
+and the right hand, with the bracelet, are named correctly in all five; at 94 s both hands hold a black wheel on a grey
+axle and the summary writes `block`, the same wheel it called `wheel` at 92 s. The analyses are longer than D114's:
+up to 657 characters in Chinese (280 before) and 1,568 in English (734), expert 3 at 90 s reviewing every row of
+its draft. 9 of the 30 revisions add a triplet, so the experts no longer only delete, and the summaries carry 5 rows
+their drafts lacked, each one an expert added.
+
+**What changed with it.** M0's D-V prose and presenter notes (s11 to s15, both locales) are rewritten from the new
+recording, and the records test holds each figure as before; its claims about the out-of-vocabulary hands of 96 s
+are replaced by claims that no term leaves O or P, that every summary names both hands, that the summaries' extra
+rows are the experts', and that one wheel is named twice. D-V part 3's analysis now scrolls within its own box,
+focusable, as part 1's whole prompt does (D116): the 657-character analysis ran the part 157 px past 1024×768 in
+繁體中文. s11's sentence does not name the hands, because the extra line ran part 1 13 px past the same panel; the
+notes say it. `DV.test.tsx` follows the recording: O has 13 classes, no recorded draft is flagged, and the expert
+that changed nothing is expert 3 at 98 s.
+
+**The shared data, a third time.** The recording and its derived file are on the NAS, which every branch reads
+(D111, D115). Until this branch merges, `main` fails its gate against the NAS: its `criteria_for` asks for keys
+recorded under `O_ISG`, its build check expects `O_ISG` in `indvissgg.json`, and its D-V tests expect 12 classes.
+D114/D115's files are kept: `data/vlm/transcripts-pre-D124/m0-demo.json` (SHA-256 `504531…`) and
+`data/demos/m0/pre-D124/indvissgg.json` (`c2bee30…`), and a revert copies them back.
+
+**Verification.** On this branch, 2026-10-02: `npm run ci` green, **399 pytest** and 7 skipped, **1356 vitest** in
+92 files, parity 21 agree, i18n 507 keys, content lint clean, frontend builds; `npm run test:e2e` **107 passed** and
+`npm run check:perf` **33 passed**, D-V at 32.5 ms. VERIFICATION §34 records the recording and the runs.

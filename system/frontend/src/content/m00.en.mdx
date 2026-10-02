@@ -78,31 +78,31 @@ steps:
     demo: DV
     part: 1
     seconds_budget: 60
-    presenter_notes_en: "One minute. The clip is D-T's; D-V keeps its own frame choice and opens on t₁. The prompt's parts are the paper's TEC prompt: INFORMATION, the triplet extraction criteria O, P and E, and the output format. Say once that this E is the paper's set of examples, not the relation set E of s4; M11 returns to the collision. Open the whole prompt only if asked. The text of the next four steps was produced by `stamping-vlm`, the weights Qwen/Qwen3.8-27B on the author's own server, recorded in advance and replayed here. It is neither GPT-4V nor Gemini, the models the paper tested, and each completion is one seeded sample, not the model's only answer."
+    presenter_notes_en: "One minute. The clip is D-T's; D-V keeps its own frame choice and opens on t₁. The prompt's parts are the paper's TEC prompt: INFORMATION, the triplet extraction criteria O, P and E, and the output format. Say once that this E is the paper's set of examples, not the relation set E of s4; M11 returns to the collision. Open the whole prompt only if asked. O is `O_ISG` with its one `hand` replaced by the worker's left hand and right hand, so that a triplet says which hand acts, and the positive example states the rule: the frames are seen through the worker's own eyes. The text of the next four steps was produced by the weights Qwen/Qwen3.8-27B-FP8, a quantised build of the model, served on the author's lab machine, recorded in advance and replayed here. It is neither GPT-4V nor Gemini, the models the paper tested, and each completion is one seeded sample, not the model's only answer."
   - id: s12
     kind: demo
     demo: DV
     part: 2
     seconds_budget: 60
-    presenter_notes_en: "One minute. Stay on t₁: 10 rows, against D-T's 1,500 candidates for the same frame. The model writes the triplets it judges present and enumerates nothing; the count is what one completion returned, 8 to 13 rows over the ten frames. The cost is in calls: five a frame (the draft, three experts and the summary), 50 for the clip. Then pick 96 s: the draft writes `left_hand` and `right_hand`, which are not in O, and the panel flags both rows. The prompt states the vocabulary; the model may still leave it. No predicate outside P occurs in any of the 50 completions."
+    presenter_notes_en: "One minute. Stay on t₁: 8 rows, against D-T's 1,500 candidates for the same frame. The model writes the triplets it judges present and enumerates nothing; the count is what one completion returned, 7 to 11 rows over the ten frames. The cost is in calls: five a frame (the draft, three experts and the summary), 50 for the clip. Then pick 96 s: ⟨left hand, holding, wheel⟩ and ⟨right hand, reaching for, nut⟩ say which hand does what, which one `hand` could not. An earlier recording, whose O held one `hand`, wrote `left_hand` and `right_hand` at this frame unasked, outside O. No term outside O or P occurs in any of the 50 completions."
   - id: s13
     kind: demo
     demo: DV
     part: 3
     seconds_budget: 120
-    presenter_notes_en: "Two minutes. Pick 94 s and step through the experts with the Expert control. Expert 1 deletes three triplets, ⟨block, on, workbench⟩, ⟨brace, on, workbench⟩ and ⟨beam, near, brace⟩; expert 2 deletes only ⟨block, on, workbench⟩; expert 3 deletes ⟨block, on, workbench⟩ and ⟨beam, near, brace⟩. Read one analysis aloud: it is model output, shown as recorded, and it gives a reason for each deletion. Then pick 98 s, expert 2: its analysis says it added ⟨wheel, attached to, assembly⟩, and its rows hold no such triplet. The analysis is the model's account of its revision; the rows are the revision. At 96 s expert 2 is one of the six that changed nothing, and no expert replaced `left_hand` with `hand`."
+    presenter_notes_en: "Two minutes. Pick 94 s and step through the experts with the Expert control. Expert 1 deletes five triplets and adds ⟨beam, inserted into, block⟩; expert 2 deletes three and adds the same triplet; expert 3 deletes three and adds none. All three delete ⟨left hand, near, beam⟩ and ⟨right hand, near, beam⟩. Read one analysis aloud: it is model output, shown as recorded. The analysis is the model's account of its revision; the rows are the revision. At 98 s expert 3 and at 102 s expert 2 changed nothing."
   - id: s14
     kind: demo
     demo: DV
     part: 4
     seconds_budget: 60
-    presenter_notes_en: "One minute. Read t₁'s summary, then pick others: the next step lists only the three keyframes, so the other seven summaries appear only here. The list is grouped by subject and carries no boxes, because the method returns no geometry. Over the ten frames the summary only removes rows from the draft. It adds none, keeps every triplet no expert deleted and drops every triplet two or three experts deleted; a triplet one expert deleted is dropped at 88, 102 and 106 s and kept at 94, 98 and 104 s, so the recording shows no fixed rule for a single dissent. In the table, D-V's summaries use all seven predicates of `P_ISG`, with `on` still the most frequent, and D-T's 224 rows are all `on`. Whether a triplet is true of the frame is for the room to judge; the demo computes no score. If time is short, read t₁'s summary and the table, and leave the other frames."
+    presenter_notes_en: "One minute. Read t₁'s summary, then pick others: the next step lists only the three keyframes, so the other seven summaries appear only here. The list is grouped by subject and carries no boxes, because the method returns no geometry. Over the ten frames the summary keeps every triplet no expert deleted and drops every triplet two or three experts deleted; a triplet one expert deleted is dropped at 88, 94 and 100 s and kept at 94 and 96 s, so the recording shows no fixed rule for a single dissent. It also carries 5 rows the drafts lacked, each one an expert added. In the table, D-V's summaries use all seven predicates of `P_ISG`, with `on` still the most frequent, and D-T's 224 rows are all `on`. At 94 s both hands hold a black wheel on a grey axle, and the summary writes `block`: the hands are named correctly and the part is not. Whether a triplet is true of the frame is for the room to judge; the demo computes no score. If time is short, read t₁'s summary and the table, and leave the other frames."
   - id: s15
     kind: demo
     demo: DV
     part: 5
     seconds_budget: 120
-    presenter_notes_en: "Two minutes, and the step that needs the most care. The bands set out Figure 6's comparison on this clip: t₁, t₂ and t₃ at 90, 96 and 102 s, each triplet kept, added (solid blue rule) or removed (dotted rule). From t₁ to t₂, 2 triplets are kept, 8 added and 7 removed. Then the table: D-V's |Δ| exceeds D-T's on 6 of the 9 steps, and D-T's is 0 from 104 to 106 s. Say what this does and does not show. D-T changes only when a label appears or disappears, or falls to a single detection or rises from one, as `remote` did at 90 s; a low D-T figure means the detector named the same labels, not that the scene held still. D-V restates each frame from nothing: Eqs. (2) to (4) take the frame V_t alone, and no equation takes the frame before. Its fixed vocabulary keeps the words within O and P, with one exception: at 96 s the model wrote `left_hand` and `right_hand`. That leaves 94 to 96 s unaffected, 15 of 16 either way, and raises 96 to 98 s: 11 of 14 as recorded, against 9 of 13 had the model written `hand`. Within the vocabulary the model may still name one part by two classes in two frames, and the table cannot tell that from a change of relation. Do not claim that IndVisSGG is temporally coherent: its equations do not provide it, and this is one recording on one clip, one seeded sample per call, from a model other than the paper's."
+    presenter_notes_en: "Two minutes, and the step that needs the most care. The bands set out Figure 6's comparison on this clip: t₁, t₂ and t₃ at 90, 96 and 102 s, each triplet kept, added (solid blue rule) or removed (dotted rule). From t₁ to t₂, 1 triplet is kept, 7 added and 5 removed. Then the table: D-V's |Δ| exceeds D-T's on 6 of the 9 steps, and D-T's is 0 from 104 to 106 s. Say what this does and does not show. D-T changes only when a label appears or disappears, or falls to a single detection or rises from one, as `remote` did at 90 s; a low D-T figure means the detector named the same labels, not that the scene held still. D-V restates each frame from nothing: Eqs. (2) to (4) take the frame V_t alone, and no equation takes the frame before. Its fixed vocabulary keeps every word of the 50 completions within O and P, and with each hand in O, every summary names both hands. Within the vocabulary the model may still name one part by two classes in two frames: the wheel the left hand holds is a `wheel` at 92 s and a `block` at 94 s, and the table cannot tell that from a change of relation. Do not claim that IndVisSGG is temporally coherent: its equations do not provide it, and this is one recording on one clip, one seeded sample per call, from a model other than the paper's."
   - id: s16
     kind: lab
     lab: L1
@@ -295,7 +295,7 @@ Every D-T relation is `on` between two COCO labels, so its triplets change only 
 
 ## The TEC prompt of IndVisSGG
 
-The paper's method has a vision-language model write triplets from 12 object classes, 7 predicates and two examples. This replays a model other than the paper's.
+The paper's method has a vision-language model write triplets from 13 object classes, 7 predicates and two examples. This replays a model other than the paper's.
 
 <Demo id="DV" part="1" />
 
@@ -305,7 +305,7 @@ The paper's method has a vision-language model write triplets from 12 object cla
 
 ## The step-1 draft from one call
 
-Step 1 is one call a frame: 10 triplets at t₁, where D-T enumerated 1,500 candidates. Terms outside the prompt's vocabulary are flagged, in this recording only at 96 s.
+Step 1 is one call a frame: 8 triplets at t₁, where D-T enumerated 1,500 candidates. Terms outside the prompt's vocabulary are flagged; this recording has none.
 
 <Demo id="DV" part="2" />
 
@@ -315,7 +315,7 @@ Step 1 is one call a frame: 10 triplets at t₁, where D-T enumerated 1,500 cand
 
 ## Three expert revisions
 
-Step 2 returns the draft to the model as three experts, with the frame and the criteria. In this recording the experts only delete, and 6 of their 30 revisions change nothing.
+Step 2 returns the draft to the model as three experts, with the frame and the criteria. In this recording 9 of their 30 revisions add a triplet, and 2 change nothing.
 
 <Demo id="DV" part="3" />
 
@@ -325,7 +325,7 @@ Step 2 returns the draft to the model as three experts, with the frame and the c
 
 ## The step-3 summary
 
-Step 3 turns the revisions and analyses into 7 to 12 triplets a frame, with no boxes. D-V's summaries use all 7 `P_ISG` predicates; D-T used only `on`.
+Step 3 turns the revisions and analyses into 6 to 10 triplets a frame, with no boxes. D-V's summaries use all 7 `P_ISG` predicates; D-T used only `on`.
 
 <Demo id="DV" part="4" />
 

@@ -137,6 +137,104 @@ function scalar(raw) {
   return text;
 }
 
+// ---- reading tags as MDX reads them ---------------------------------------
+// Until 2026-10-01 every tag here was found by a regex over one spelling, `<Demo id="…"
+// part="…"`, and MDX 3 compiles more than that spelling (measured with `@mdx-js/mdx` 3.1.1 and
+// this build's remark plugins): attributes in either order, in either quote, over several lines,
+// and a value in braces. A tag spelt otherwise was mounted on the slide and invisible to the lint,
+// so a second copy outside every step passed, and a step whose own tag was merely spelt otherwise
+// was refused. The regex also counted tags inside comments, which mount nothing. Tags quoted in
+// inline code or a fenced block, which render as text, are still counted; the corpus has none.
+
+/** `{/* … *\/}`, an MDX expression holding only a comment, which compiles to nothing. */
+const MDX_COMMENT = /\{\s*\/\*[\s\S]*?\*\/\s*\}/g;
+/** `<!-- … -->`, which MDX 3 refuses to compile at all. */
+const HTML_COMMENT = /<!--[\s\S]*?-->/g;
+/** A JSX attribute name, read from where the last attribute ended. */
+const ATTR_NAME = /[A-Za-z_$][\w$.:-]*/y;
+const NUMBER_LITERAL = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i;
+const STRING_LITERAL = /^(["'`])([^"'`\\]*)\1$/;
+
+const skipSpace = (text, i) => {
+  while (i < text.length && /\s/.test(text[i])) i += 1;
+  return i;
+};
+
+/** The index of the `}` that closes the `{` at `start`, or -1. */
+function braceEnd(text, start) {
+  let depth = 0;
+  for (let i = start; i < text.length; i += 1) {
+    if (text[i] === '{') depth += 1;
+    else if (text[i] === '}' && (depth -= 1) === 0) return i;
+  }
+  return -1;
+}
+
+/**
+ * One attribute value as written: a quoted string, or an expression in braces.
+ *
+ * Only a literal can be read without running the module, so a string in either quote, and a
+ * number or a string in braces, give `{ value }`; anything else gives `{ source }`, the braces
+ * included, which matches no step and is what the message shows.
+ */
+function attributeValue(written) {
+  if (written[0] !== '{') return { value: written.slice(1, -1) };
+  const inner = written.slice(1, -1).trim();
+  if (NUMBER_LITERAL.test(inner)) return { value: Number(inner) };
+  const string = STRING_LITERAL.exec(inner);
+  return string ? { value: string[2] } : { source: written };
+}
+
+/**
+ * Every opening `<name …>` tag in `text`, with where it starts and its attributes by name.
+ *
+ * A bare attribute is JSX's `{true}`. `Number(true)` is 1, so the runtime mounts part 1 for a bare
+ * `part`; the lint reads it as the expression it is and refuses it, since a value forgotten is
+ * more likely than a value meant. A spread `{…x}` cannot be read and is skipped.
+ */
+function jsxTags(text, name) {
+  const tags = [];
+  for (const open of text.matchAll(new RegExp(`<${name}(?=[\\s/>])`, 'g'))) {
+    const attrs = new Map();
+    let i = open.index + open[0].length;
+    for (;;) {
+      i = skipSpace(text, i);
+      if (text[i] === '{') {
+        const end = braceEnd(text, i);
+        if (end < 0) break;
+        i = end + 1;
+        continue;
+      }
+      ATTR_NAME.lastIndex = i;
+      const attr = ATTR_NAME.exec(text)?.[0];
+      // `/>`, `>` or the end of the text: the attributes are over.
+      if (!attr) break;
+      i = skipSpace(text, ATTR_NAME.lastIndex);
+      if (text[i] !== '=') {
+        attrs.set(attr, { source: '{true}' });
+        continue;
+      }
+      i = skipSpace(text, i + 1);
+      const quote = text[i];
+      const end = quote === '{' ? braceEnd(text, i)
+        : quote === '"' || quote === "'" ? text.indexOf(quote, i + 1) : -1;
+      if (end < 0) break;
+      attrs.set(attr, attributeValue(text.slice(i, end + 1)));
+      i = end + 1;
+    }
+    tags.push({ at: open.index, attrs });
+  }
+  return tags;
+}
+
+/** A naming attribute (`kp`, `id`) as a string, or as written when it is no literal. */
+const nameOf = (attr) => (attr === undefined ? undefined : 'value' in attr ? String(attr.value) : attr.source);
+/**
+ * A `part` as the runtime reads it, `Number(part)`, so `part="2"` and `part={2}` are one part.
+ * Absent stays absent; an expression stays its source, a string no part number ever equals.
+ */
+const partOf = (attr) => (attr === undefined ? undefined : 'value' in attr ? Number(attr.value) : attr.source);
+
 /**
  * The slice of an MDX body inside one `<Step id="...">`, bounded by its own closing tag.
  *
@@ -146,13 +244,16 @@ function scalar(raw) {
  * filtered to admit one id, so anything outside a `Step` block has no filter over it and renders
  * on every slide of the module. Attributing it to the preceding step made rule 5 report content
  * as correctly placed when it was about to appear seven times.
+ *
+ * The step is found by reading its tag, so `<Step id='s1'>` is found as `<Step id="s1">` is.
  */
 function stepBody(body, stepId) {
-  const open = body.indexOf(`<Step id="${stepId}">`);
-  if (open < 0) return '';
-  const close = body.indexOf('</Step>', open + 1);
-  const next = body.indexOf('<Step id="', open + 1);
-  const end = [close, next].filter((i) => i >= 0);
+  const steps = jsxTags(body, 'Step');
+  const k = steps.findIndex((s) => nameOf(s.attrs.get('id')) === stepId);
+  if (k < 0) return '';
+  const open = steps[k].at;
+  const close = body.slice(open + 1).search(/<\/Step\s*>/);
+  const end = [close < 0 ? -1 : open + 1 + close, steps[k + 1]?.at ?? -1].filter((i) => i >= 0);
   return body.slice(open, end.length ? Math.min(...end) : body.length);
 }
 
@@ -225,9 +326,13 @@ const REGISTERED = new Set(mountTable('PLAYGROUND_MOUNTS').map(([kp]) => kp));
 // How many consecutive steps each split playground spans (contracts §2.4, 2026-09-26). A point
 // absent from the table is one step, and a step naming a part of it is refused.
 const PARTS = new Map(mountTable('PLAYGROUND_PARTS').map(([kp, n]) => [kp, Number(n)]));
-/** `<Playground kp="…" part="…" />`, the part optional. */
-const TAG = /<Playground\s+kp="([^"]+)"(?:\s+part="([^"]*)")?/g;
+/** Every `<Playground kp="…" part="…" />` of `text`, in any spelling MDX compiles, the part optional. */
+const playgroundTagsOf = (text) =>
+  jsxTags(text, 'Playground').map(({ attrs }) => ({ kp: nameOf(attrs.get('kp')), part: partOf(attrs.get('part')) }));
 const partText = (part) => (part === undefined ? '' : ` part ${part}`);
+/** A part as a tag attribute in a message: a number in quotes, as the corpus writes it; an expression as written. */
+const partAttrText = (part) =>
+  part === undefined ? '' : typeof part === 'number' ? ` part="${part}"` : ` part=${part}`;
 
 // The registered demos, read from their own mount file for the same reason. `mounts.tsx` there
 // writes each table one entry to a line (two spaces, a two-letter id, a colon, the value, a comma)
@@ -240,11 +345,10 @@ const demoTable = (name) =>
 const DEMO_MOUNT_IDS = new Set(demoTable('DEMO_MOUNTS').map(([id]) => id));
 const DEMO_PARTS = new Map(demoTable('DEMO_PARTS').map(([id, n]) => [id, Number(n)]));
 const DEMO_ARTEFACTS = new Map(demoTable('DEMO_ARTEFACTS'));
-/** `<Demo id="…" part="…" />`, the part read as written so that a missing one is a mismatch. */
-const DEMO_TAG = /<Demo\s+id="([^"]+)"(?:\s+part="([^"]*)")?/g;
+/** Every `<Demo id="…" part="…" />` of `text`, in any spelling MDX compiles; a missing part is a mismatch. */
 const demoTagsOf = (text) =>
-  [...text.matchAll(DEMO_TAG)].map((m) => ({ id: m[1], part: m[2] === undefined ? undefined : Number(m[2]) }));
-const demoTagText = (id, part) => `<Demo id="${id}"${part === undefined ? '' : ` part="${part}"`} />`;
+  jsxTags(text, 'Demo').map(({ attrs }) => ({ id: nameOf(attrs.get('id')), part: partOf(attrs.get('part')) }));
+const demoTagText = (id, part) => `<Demo id="${id}"${partAttrText(part)} />`;
 
 const PLAYGROUND_GOLDEN = JSON.parse(
   readFileSync('../data/content/playground_golden.json', 'utf-8'),
@@ -405,7 +509,19 @@ for (const [id, locales] of [...modules].sort()) {
 
     // Hoisted above the step loop: the playground rules read the body too, and computing it
     // twice from the same source is two places for the offset arithmetic to drift.
-    const body = source.slice(source.indexOf('\n---', 4) + 4);
+    //
+    // Every rule reads the body as MDX compiles it, comments removed: a tag, a step or a part of
+    // the four-part contract inside `{/* … */}` renders nothing, and counting it passed a step
+    // whose only tag was commented out. An HTML comment fails the build itself (MDX 3: "to create
+    // a comment in MDX, use `{/* text */}`"), so it is refused here, where the message is plain,
+    // rather than first met as a parse error in the frontend build. One inside an MDX comment is
+    // JavaScript and compiles, so it is looked for after those are gone.
+    const written = source.slice(source.indexOf('\n---', 4) + 4).replace(MDX_COMMENT, ' ');
+    if (written.includes('<!--')) {
+      problems.push(`${file}: the body holds an HTML comment, which MDX does not compile. Write ` +
+                    `{/* … */} instead; a tag inside either is not counted as mounted.`);
+    }
+    const body = written.replace(HTML_COMMENT, ' ');
 
     // A step id names one step. `stepBody` reads the first `<Step id="…">` only, so a second step
     // of the same id is checked against the first one's body, and the shells and the checkpoint
@@ -536,10 +652,8 @@ for (const [id, locales] of [...modules].sort()) {
             });
           }
           mountedBy.set(step.kp, uses);
-          const tagsOf = (text) =>
-            [...text.matchAll(TAG)].map((m) => ({ kp: m[1], part: m[2] === undefined ? undefined : Number(m[2]) }));
-          const tags = tagsOf(body);
-          const inStep = tagsOf(stepBody(body, step.id));
+          const tags = playgroundTagsOf(body);
+          const inStep = playgroundTagsOf(stepBody(body, step.id));
           if (inStep.length !== 1 || inStep[0].kp !== step.kp || inStep[0].part !== step.part) {
             const carried = inStep.map((t) => `${t.kp}${partText(t.part)}`).join(', ');
             problems.push(`${file}: step '${step.id}' declares kp '${step.kp}'${partText(step.part)} ` +
@@ -562,11 +676,11 @@ for (const [id, locales] of [...modules].sort()) {
     // its point and its part: keyed by the point alone, a whole tag for a split playground, or a
     // part it does not have, answered to the steps that declare its parts (D96).
     {
-      const tagText = (kp, part) => `<Playground kp="${kp}"${part === undefined ? '' : ` part="${part}"`} />`;
+      const tagText = (kp, part) => `<Playground kp="${kp}"${partAttrText(part)} />`;
       const declared = new Set(
         (meta.steps ?? []).filter((s) => s.kind === 'playground' && s.kp).map((s) => tagText(s.kp, s.part)),
       );
-      const inBody = [...body.matchAll(TAG)].map((m) => tagText(m[1], m[2] === undefined ? undefined : Number(m[2])));
+      const inBody = playgroundTagsOf(body).map((t) => tagText(t.kp, t.part));
       for (const tag of [...new Set(inBody)]) {
         if (!declared.has(tag)) {
           problems.push(`${file}: the body mounts ${tag}, which no step in ` +

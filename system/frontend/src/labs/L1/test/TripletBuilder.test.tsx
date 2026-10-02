@@ -211,6 +211,42 @@ describe('TripletBuilder', () => {
     expect(Number(view.getAttribute('data-verdicts'))).toBeGreaterThan(0);
   });
 
+  it('counts the matches the recall beside it counts, at the same K', async () => {
+    // Seven objects give 42 ordered pairs, enough for twenty wrong triplets on twenty pairs
+    // ahead of the one right one: the graph constraint keeps one predicate per pair, so twenty
+    // guesses on one pair would collapse to one and the right triplet would rank second.
+    const wide: SceneGraph = {
+      ...GT,
+      objects: Array.from({ length: 7 }, (_, i) => ({
+        object_id: i + 1,
+        names: [`thing${i + 1}`],
+        bbox: { x: 25 * i, y: 10, w: 20, h: 20 },
+      })),
+      relationships: [{ relationship_id: 1, subject_id: 1, object_id: 2, predicate: 'on' }],
+    };
+    const pairs: string[] = [];
+    for (let s = 1; s <= 7 && pairs.length < 20; s += 1) {
+      for (let o = 1; o <= 7 && pairs.length < 20; o += 1) {
+        if (s !== o && !(s === 1 && o === 2)) pairs.push(`${s}-near-${o}`);
+      }
+    }
+    const t = [...pairs, '1-on-2'].join(',');
+    render(
+      <MemoryRouter initialEntries={[`/lab/L1?t=${t}&sub=1`]}>
+        <TripletBuilder gt={wide} imageUrl="/images/2317469.jpg" />
+      </MemoryRouter>,
+    );
+    // The right triplet is 21st: outside R@20, inside K = 100. The count sits beside R@20 and
+    // over the ground-truth count, so it is the numerator of R@20 and must read as one.
+    const readout = await screen.findByTestId('recall');
+    expect(readout.textContent).toContain('R@20');
+    expect(screen.getByTestId('gt-count')).toHaveTextContent('1');
+    expect(screen.getByTestId('matched-count')).toHaveTextContent('0');
+    // And the diff says what the count says: the 21st edge is not drawn as a match that
+    // nothing on the page counts.
+    expect(screen.getByTestId('edge-21')).not.toHaveAttribute('data-verdict', 'match');
+  });
+
   it('survives a predicate the slice does not contain, without scoring it as a match', () => {
     // `t` comes from the address bar, so it is user input: a hand-edited predicate must not
     // become a triplet the engine is asked to believe.
