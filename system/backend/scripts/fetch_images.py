@@ -26,7 +26,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.datasets.loader import DATASETS  # noqa: E402
-from app.settings import DATA_DIR  # noqa: E402
+from app.settings import DATA_DIR, require_data_dir  # noqa: E402
 
 TIMEOUT = 30
 USER_AGENT = "scene-graph-studio/0.1 (teaching material; one image per manifest entry)"
@@ -50,6 +50,7 @@ def fetch_one(url: str, dest: Path, expected_sha256: str) -> tuple[bool, str]:
 
 
 def main() -> int:
+    require_data_dir()
     ap = argparse.ArgumentParser(description="Fetch slice images by identifier.")
     ap.add_argument("--dataset", required=True, choices=sorted(DATASETS))
     ap.add_argument(

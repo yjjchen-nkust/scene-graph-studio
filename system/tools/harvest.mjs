@@ -20,9 +20,10 @@
 // Paths are relative to system/, where npm runs. data/ stayed at the track root.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { DATA_DIR, requireDataDir } from './data_dir.mjs';
 
 const SRC = 'web/knowledge-map';
-const OUT = '../data/content';
+const OUT = `${DATA_DIR}/content`;
 
 function skipString(text, start) {
   const quote = text[start];
@@ -103,6 +104,14 @@ if (problems.length) {
   process.exit(1);
 }
 
+// Through the link only: `recursive` would otherwise make data/ itself, a real directory where the
+// link belongs (D125).
+try {
+  requireDataDir();
+} catch (error) {
+  console.error(`harvest refused: ${error.message}`);
+  process.exit(1);
+}
 mkdirSync(OUT, { recursive: true });
 writeFileSync(`${OUT}/kp.json`, `${JSON.stringify(kp, null, 2)}\n`);
 writeFileSync(`${OUT}/math.json`, `${JSON.stringify(MATH, null, 2)}\n`);

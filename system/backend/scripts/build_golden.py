@@ -18,7 +18,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.eval.rle import encode_counts  # noqa: E402
-from app.settings import DATA_DIR  # noqa: E402
+from app.settings import DATA_DIR, require_data_dir  # noqa: E402
 
 Box = tuple[float, float, float, float]
 
@@ -866,6 +866,7 @@ cases.append({
 })
 
 
+require_data_dir()
 out = DATA_DIR / "golden" / "vectors.json"
 out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text(

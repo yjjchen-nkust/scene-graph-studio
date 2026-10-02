@@ -27,7 +27,7 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.datasets.licences import require_annotations_commit  # noqa: E402
-from app.settings import DATA_DIR  # noqa: E402
+from app.settings import DATA_DIR, require_data_dir  # noqa: E402
 
 W, H = 640, 480
 GROUND = (244, 244, 246)
@@ -113,6 +113,7 @@ def draw(frame: Frame) -> Image.Image:
 
 
 def build() -> None:
+    require_data_dir()
     require_annotations_commit("placeholder")
     out = DATA_DIR / "slices" / "placeholder"
     (out / "images").mkdir(parents=True, exist_ok=True)

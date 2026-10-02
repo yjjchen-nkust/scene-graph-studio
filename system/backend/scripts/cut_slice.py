@@ -26,12 +26,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.datasets.adapters import LAYOUTS, image_bytes, read_dataset  # noqa: E402
 from app.datasets.licences import gates_for, require_annotations_commit  # noqa: E402
 from app.datasets.loader import selection_ok, top_predicates  # noqa: E402
-from app.settings import CORPUS_ROOT, DATA_DIR  # noqa: E402
+from app.settings import CORPUS_ROOT, DATA_DIR, require_data_dir  # noqa: E402
 
 DEFAULT_N = {"vg150-sgb": 80, "psg": 50, "vrd": 40, "indoorvg": 20, "haystack": 10}
 
 
 def main() -> None:
+    require_data_dir()
     ap = argparse.ArgumentParser(description="Cut a teaching slice from a local corpus.")
     ap.add_argument("--dataset", required=True, choices=sorted(LAYOUTS))
     ap.add_argument("--n", type=int, default=None)

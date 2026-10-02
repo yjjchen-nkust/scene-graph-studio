@@ -22,7 +22,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.settings import DATA_DIR  # noqa: E402
+from app.settings import DATA_DIR, require_data_dir  # noqa: E402
 from app.vlm import indvissgg  # noqa: E402
 from app.vlm.openai_compat import (  # noqa: E402
     MAX_TOKENS,
@@ -168,6 +168,7 @@ def record_frame(image_ref: str, provider: RecordingProvider) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    require_data_dir()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--force", action="store_true", help="overwrite an existing transcript")
     parser.add_argument(
