@@ -138,6 +138,49 @@ describe('F2', () => {
     expect(screen.getByTestId('readout-F2.candidates-value')).toHaveTextContent('480');
   });
 
+  // The edges were a list beneath six buttons until 2026-10-02: a graph whose edges were never
+  // drawn. The drawing counts what |E| counts, so the picture and the readout cannot disagree.
+  it('draws every edge it counts, each with its arrowhead', () => {
+    mount();
+    expect(screen.queryAllByTestId(/^f2-edge-/)).toHaveLength(0);
+    addEdge('1', '2', 'on');
+    addEdge('2', '1', 'on');
+    addEdge('3', '4', 'near');
+    const edges = screen.getAllByTestId(/^f2-edge-/);
+    expect(edges).toHaveLength(3);
+    expect(screen.getByTestId('readout-F2.built-value')).toHaveTextContent('3');
+    for (const edge of edges) expect(edge).toHaveAttribute('marker-end');
+  });
+
+  it('draws two opposite arrows as one line once direction is discarded', () => {
+    mount();
+    addEdge('1', '2', 'on');
+    addEdge('2', '1', 'on');
+    fireEvent.click(screen.getByLabelText('Directed arrows'));
+    const edges = screen.getAllByTestId(/^f2-edge-/);
+    expect(edges).toHaveLength(1);
+    expect(edges[0]).not.toHaveAttribute('marker-end');
+    expect(screen.getByTestId('readout-F2.built-value')).toHaveTextContent('1');
+  });
+
+  it('draws the chosen pair as a pending edge until it is added', () => {
+    mount();
+    fireEvent.click(screen.getByTestId('node-1'));
+    expect(screen.queryByTestId('f2-pending')).toBeNull();
+    fireEvent.click(screen.getByTestId('node-2'));
+    expect(screen.getByTestId('f2-pending')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add edge' }));
+    expect(screen.queryByTestId('f2-pending')).toBeNull();
+    expect(screen.getAllByTestId(/^f2-edge-/)).toHaveLength(1);
+  });
+
+  it('keeps the drawing out of the accessibility tree, since the list beneath says the same', () => {
+    mount();
+    addEdge('1', '2', 'on');
+    expect(screen.getByTestId('f2-edges')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByText(/table —on→ person/)).toBeInTheDocument();
+  });
+
   it('does not take focus when it mounts', () => {
     mount();
     expect(document.activeElement).toBe(document.body);

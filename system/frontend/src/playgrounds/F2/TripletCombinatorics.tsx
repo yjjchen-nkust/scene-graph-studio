@@ -1,9 +1,29 @@
-import { useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { useLocale } from '../../i18n/useLocale';
 import { useLabParams } from '../../labs/useLabParams';
 import { Choice, PlaygroundFrame, Readout, Toggle } from '../controls';
 import { candidateSpace, flag, tripletKey, type Triplet } from '../logic';
 import { FRAMES, PREDICATES, SLICE_PREDICATE_COUNT } from '../slice';
+import { drawnEdges, edgePath, nodePlace, type Box } from './drawing';
+
+/** slate-700 for a built edge, slate-500 dashed for the pair chosen and not yet added (NFR-5: shape as well as hue). */
+const INK = '#334155';
+const PENDING = '#64748b';
+/** Pixels kept between a node and the edge of the drawing. */
+const MARGIN = 2;
+
+interface Layout {
+  w: number;
+  h: number;
+  boxes: Record<number, Box>;
+}
+
+const sameLayout = (a: Layout | null, b: Layout) =>
+  a !== null && a.w === b.w && a.h === b.h &&
+  Object.entries(b.boxes).every(([id, box]) => {
+    const was = a.boxes[Number(id)];
+    return was !== undefined && was.x === box.x && was.y === box.y && was.hw === box.hw && was.hh === box.hh;
+  });
 
 /**
  * F2 — 三元組與 G=(V,E,T).
@@ -16,6 +36,14 @@ import { FRAMES, PREDICATES, SLICE_PREDICATE_COUNT } from '../slice';
  * cytoscape onto a canvas, and a canvas node is not a DOM element, so it cannot be a `<button>`.
  * Spec §4.2 requires every knob to be reachable from the keyboard, and check 8 walks the whole
  * lecture without a mouse.
+ *
+ * So the nodes stay buttons, set round an ellipse, and the edges are drawn beneath them in one
+ * `<svg>`: one curve per edge |E| counts, so the drawing and the readout cannot disagree, with
+ * arrowheads while direction is kept and none once it is discarded, when two opposite arrows
+ * become the one line the merge leaves (2026-10-02, D123; until then the edges were only the list
+ * beneath six buttons). The drawing carries no text: a label scaled by a viewBox falls below the
+ * 18 px floor (D98), so the predicates stay in the list, which is also what a screen reader reads,
+ * and the drawing is hidden from it.
  *
  * The direction toggle is the substantive control. Discarding direction halves the candidate
  * space and merges any pair of edges that differed only by their order, and the panel names
@@ -93,6 +121,58 @@ export function TripletCombinatorics() {
   const nameOf = (id: number) =>
     frame.objects.find((o) => o.object_id === id)?.names[0] ?? String(id);
 
+  const arrow = `${useId()}-arrow`;
+  const area = useRef<HTMLDivElement>(null);
+  const [layout, setLayout] = useState<Layout | null>(null);
+  const [, setResized] = useState(0);
+
+  // Measured after every render and before paint, because a node's width changes with the role
+  // it names (`table · subject`) and with the font, and an edge must reach the node's outline.
+  // Each node keeps its outer side at the drawing's edge: a pill that widens grows inward. State
+  // is set only when something moved, so the render this causes measures the same and stops.
+  useLayoutEffect(() => {
+    const box = area.current;
+    if (!box || box.clientWidth === 0 || box.clientHeight === 0) return;
+    const w = box.clientWidth;
+    const h = box.clientHeight;
+    const nodes = [...box.querySelectorAll<HTMLElement>('[data-node]')];
+    const boxes: Record<number, Box> = {};
+    nodes.forEach((node, i) => {
+      const hw = node.offsetWidth / 2;
+      const hh = node.offsetHeight / 2;
+      const angle = Math.PI + (2 * Math.PI * i) / nodes.length;
+      boxes[Number(node.dataset.node)] = {
+        x: w / 2 + (w / 2 - hw - MARGIN) * Math.cos(angle),
+        y: h / 2 + (h / 2 - hh - MARGIN) * Math.sin(angle),
+        hw,
+        hh,
+      };
+    });
+    const next = { w, h, boxes };
+    setLayout((prev) => (sameLayout(prev, next) ? prev : next));
+  });
+
+  // A resize of the panel or of a node (a webfont arriving) is not a render, so it asks for one.
+  useLayoutEffect(() => {
+    const box = area.current;
+    if (!box || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => setResized((n) => n + 1));
+    observer.observe(box);
+    for (const node of box.querySelectorAll('[data-node]')) observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  // Before the first measurement, and in jsdom, where nothing is laid out: the ellipse in
+  // percentages, so the drawing still holds one curve per edge.
+  const boxOf = (id: number): Box => {
+    const measured = layout?.boxes[id];
+    if (measured) return measured;
+    const place = nodePlace(frame.objects.findIndex((o) => o.object_id === id), frame.objects.length);
+    return { x: place.left, y: place.top, hw: 6, hh: 4 };
+  };
+  const edges = drawnEdges(built, directed);
+  const pending = subject !== null && object !== null ? edgePath(boxOf(subject), boxOf(object), 0) : null;
+
   const controls = (
     <>
       <Choice
@@ -141,21 +221,69 @@ export function TripletCombinatorics() {
   return (
     <PlaygroundFrame title="F2" controls={controls}>
       <div className="flex flex-col gap-4 lg:flex-row">
-        <div className="flex flex-1 flex-wrap gap-2">
-          {frame.objects.map((o) => {
+        {/* `lg:flex-1`, not `flex-1`: in the narrow column layout a zero basis would collapse a
+            box whose children are all positioned absolutely. */}
+        <div ref={area} data-testid="f2-graph" className="relative h-[10em] w-full min-w-0 lg:w-auto lg:flex-1">
+          <svg
+            data-testid="f2-edges"
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 h-full w-full"
+            viewBox={layout ? `0 0 ${layout.w} ${layout.h}` : '0 0 100 100'}
+            preserveAspectRatio="none"
+          >
+            <defs>
+              {[['', INK], ['-pending', PENDING]].map(([suffix, colour]) => (
+                <marker key={suffix} id={`${arrow}${suffix}`} viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill={colour} />
+                </marker>
+              ))}
+            </defs>
+            {edges.map((edge, i) => (
+              <path
+                key={edge.key}
+                data-testid={`f2-edge-${i}`}
+                d={edgePath(boxOf(edge.subject_id), boxOf(edge.object_id), edge.bend).d}
+                fill="none"
+                stroke={INK}
+                strokeWidth={2}
+                markerEnd={directed ? `url(#${arrow})` : undefined}
+              >
+                <title>
+                  {edge.merged.map((tri) => `${nameOf(tri.subject_id)} ${tri.predicate} ${nameOf(tri.object_id)}`).join(t('playground.and'))}
+                </title>
+              </path>
+            ))}
+            {pending && (
+              <path
+                data-testid="f2-pending"
+                d={pending.d}
+                fill="none"
+                stroke={PENDING}
+                strokeWidth={2}
+                strokeDasharray="6 5"
+                markerEnd={directed ? `url(#${arrow}-pending)` : undefined}
+              />
+            )}
+          </svg>
+          {frame.objects.map((o, i) => {
             const role =
               o.object_id === subject ? 'subject' : o.object_id === object ? 'object' : 'none';
+            const measured = layout?.boxes[o.object_id];
+            const place = nodePlace(i, frame.objects.length);
             return (
               <button
                 key={o.object_id}
                 type="button"
                 data-testid={`node-${o.object_id}`}
+                data-node={o.object_id}
                 data-role={role}
                 onClick={() => pick(o.object_id)}
+                style={measured ? { left: measured.x, top: measured.y } : { left: `${place.left}%`, top: `${place.top}%` }}
                 className={
                   role === 'none'
-                    ? 'rounded-full border border-slate-400 bg-white px-4 py-2 text-[1em]'
-                    : 'rounded-full border-2 border-slate-900 bg-slate-900 px-4 py-2 text-[1em] text-white'
+                    ? 'absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-slate-400 bg-white px-4 py-2 text-[1em]'
+                    : 'absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border-2 border-slate-900 bg-slate-900 px-4 py-2 text-[1em] text-white'
                 }
               >
                 {/* The role is spelled out, not only coloured: NFR-5 forbids hue as the only
