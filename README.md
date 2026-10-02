@@ -82,7 +82,7 @@ SGS_BACKEND_PORT=8010 SGS_FRONTEND_PORT=5180 npm start
 
 **A fresh clone needs the NAS, and nothing more (D109, D110).** Git carries nothing under
 `data/`, and no data file lives in the checkout: `start.ps1` makes `data/` a link to
-`C:\DataRaw\scene-graph` (or to `SGS_DATA_DIR`), and stops and says so when that directory is
+the NAS at `raw:WekaExt/scene-graph-studio`, as `devdata pull` does (or to `SGS_DATA_DIR`), and stops and says so when that directory is
 unreachable. Beyond that no data of any kind is needed: the placeholder slice, six synthetic
 frames, is enough to run every lab. Nothing is downloaded, and nothing needs a GPU.
 
@@ -178,7 +178,7 @@ dataset.**
 Nothing under `data/` is committed (D109): not the corpora or slice images, and not the
 slices' annotations and manifests, the placeholder frames, `data/content/`, the golden vectors,
 the predictions or `data/LICENCES.md` either. `.gitignore` ignores the whole directory, and
-`data/` is a directory junction to `C:\DataRaw\scene-graph` on the NAS, the one copy every
+`data/` is a directory junction to `raw:WekaExt/scene-graph-studio` on the NAS, the one copy every
 reader reaches (D110). `SGS_DATA_DIR` names another target; `start.ps1` and `fetch-data.ps1`
 make the link. A harvest, a cut or a fetch writes straight to the NAS, so there is nothing to
 copy afterwards. To remove the link, `rmdir data` or `rm -rf data`, never `rm -rf data/`: with

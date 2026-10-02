@@ -22,8 +22,8 @@ machine, and only then are `Connect-DataDirectory.ps1`, `fetch-data.ps1`'s link 
 
 ### Task 1: Move the NAS folder and relink
 
-- Stop every process reading `data/` (the dev server). Rename `C:\DataRaw\scene-graph` to
-  `C:\DataRaw\WekaExt\scene-graph-studio` (one volume, so a rename, not a copy). Never `rm -rf data/`.
+- Stop every process reading `data/` (the dev server). Rename the `raw` root's
+  `scene-graph` to `WekaExt/scene-graph-studio` (one volume, so a rename, not a copy). Never `rm -rf data/`.
 - `data.toml`: `source = "raw:WekaExt/scene-graph-studio"`. `devdata pull` replaces the junction (`wrong-target`);
   `devdata status` reports `linked`.
 - Verify: `npm run ci` green; hashes of the D124 transcript and derived file unchanged.

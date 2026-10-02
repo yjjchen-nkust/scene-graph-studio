@@ -71,7 +71,7 @@ export function byteRange(
  * Vite 8.3.0's own `/@fs/` handler drops the drive letter and reads from the root of the server's
  * drive, so on Windows a file on D: is looked for on C:, is not found, and the request falls
  * through to the application's `index.html` with status 200. data/ is a link to the NAS (D110),
- * whose real path on the author's machine is `D:\Data\DataRaw\scene-graph` beside a checkout on
+ * whose real path on the author's machine is a folder on D: beside a checkout on
  * C:, so D-T's and D-V's clip reported a demuxer error and every photograph imported from data/
  * was a broken image under `npm start`, while the build, which bundles them, showed them all.
  *

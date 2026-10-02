@@ -69,7 +69,7 @@ if (!existsSync(join(ROOT, 'node_modules'))) {
 if (!existsSync(join(TRACK, 'data/LICENCES.md'))) {
   die(
     'data/ is absent or its link does not reach the NAS (D110)',
-    'run .\\start.ps1 once, which links data/ to C:\\DataRaw\\scene-graph or SGS_DATA_DIR',
+    'run devdata pull at the track root, or .\\start.ps1 once, which links data/ to the NAS (D125)',
   );
 }
 

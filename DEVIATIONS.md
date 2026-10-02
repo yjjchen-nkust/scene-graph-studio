@@ -2157,12 +2157,12 @@ surroundings an argument, not to add a second machine.
 
 ## D84 — the suite was red in the configuration where the adapters are actually tested
 
-`SGS_CORPUS_ROOT` points at `C:\DataRaw` on the author's machine, which is how the four adapter
+`SGS_CORPUS_ROOT` points at the `raw` root on the author's machine, which is how the four adapter
 tests written against the real corpora run at all; without it they skip with "no corpus on this
 machine". With it set, `test_data_dir_follows_its_environment_variable` fails:
 
 ```
-assert WindowsPath('C:/DataRaw') == (WindowsPath('…/test_data_dir_follows_its_envi0') / '_raw')
+assert WindowsPath('<the raw root>') == (WindowsPath('…/test_data_dir_follows_its_envi0') / '_raw')
 ```
 
 The test sets `SGS_DATA_DIR` to a scratch directory and asserts that the corpus root defaults
@@ -4221,7 +4221,7 @@ and from `ci`, that CLAUDE.md names eleven steps, and that neither file exists.
 ## D108 — the data git does not carry moves through the NAS, by `sync-data.ps1`
 
 **Plan:** none. **Decisions:** the author's, on 2026-09-29: "for scene-graph-studio, the data
-should not go to github. Please use NAS: C:\DataRaw\scene-graph to sync the untracked data."
+should not go to github. Please use NAS: [raw:scene-graph] to sync the untracked data."
 Branch `chore/sgs-data-nas-sync`, from `main` at `eb68d64`.
 
 [**Retired 2026-09-29 (D110):** `sync-data.ps1` is gone; `data/` is a link to the NAS, and there
@@ -4237,13 +4237,13 @@ files and 2.5 MB that the licence gates cleared and the gate reads. What git ign
 `data/` moves through the NAS: on this machine `data/_raw/industreal/` (2 files, 4.619 GB) and the
 images of four slices, `indoorvg`, `mini-isg`, `psg` and `vg150-sgb` (190 files, 25.3 MB). None of
 it had reached the remote; `.gitignore` already excluded all of it. The corpora at
-`C:\DataRaw\psg`, `C:\DataRaw\vg150-sgb` and `C:\DataRaw\indoorvg`, which `SGS_CORPUS_ROOT` names,
+`raw:psg`, `raw:vg150-sgb` and `raw:indoorvg`, which `SGS_CORPUS_ROOT` names,
 were already on that drive and were not touched.
 
 **What was added.** `sync-data.ps1` at the track root, beside `fetch-data.ps1`. `-Status`, the
 default, compares this checkout with the NAS group by group and names the direction each group
 needs; `-Push` and `-Pull` copy with robocopy; `-DryRun` lists and copies nothing. The NAS
-directory stands for `data/` and defaults to `C:\DataRaw\scene-graph`; `SGS_DATA_NAS` or `-Nas`
+directory stands for `data/` and defaults to `raw:scene-graph`; `SGS_DATA_NAS` or `-Nas`
 overrides it. The copied set is what `git ls-files --others --ignored --exclude-standard` reports
 under `data/`, so a new ignore rule extends it with no edit to the script.
 `data/predictions/.latency.json` is left out, because each machine reports its own timings in
@@ -4325,7 +4325,7 @@ dated records keep their text, and now read "present in `data/`".
   nor the gate runs. Once `data/` is pulled, NFR-1's offline requirement holds as before.
 - **CI.** `.gitea/workflows/scene-graph-studio.yml` checks out the repository and runs
   `npm run ci`; with no `data/` the gate fails at its first read of it, and a runner in Docker
-  cannot reach `C:\DataRaw`. The workflow has no runner yet, so nothing is red today. It is left
+  cannot reach the `raw` root. The workflow has no runner yet, so nothing is red today. It is left
   as it was: whether CI gets its data another way or is retired is the author's decision.
 - **The other machine.** A `git pull` that brings this commit deletes the 65 files from that
   working tree, because git removes what a merged commit removes; `.\sync-data.ps1 -Pull`
@@ -4354,26 +4354,26 @@ named in `start.ps1` before its first install.
 
 **Plan:** none. **Decisions:** the author's, on 2026-09-29, after D109's merge at `5d010e5`:
 "remove the files under scene-graph-studio\data and point all data access to
-C:\DataRaw\scene-graph". Branch `chore/sgs-data-link-nas`, from `main` at `5d010e5`.
+[raw:scene-graph]". Branch `chore/sgs-data-link-nas`, from `main` at `5d010e5`.
 
 **How the request was met, and why this way.** Before the removal all 257 files under `data/`
 were compared with the NAS copy by SHA-256, with no difference; the directory was then deleted
-and `data/` made a directory junction to `C:\DataRaw\scene-graph`. Every reader keeps its
+and `data/` made a directory junction to `raw:scene-graph`. Every reader keeps its
 `data/` path and reaches the one copy: the backend's `DATA_DIR`, the Node tools, the PowerShell
 scripts, the tests and the frontend's build-time imports. Rewriting each reader to a configured
 absolute path founders on the last: fourteen static JSON imports and one `import.meta.glob` take
 their types from a path `tsc` must follow, and a `paths` entry in `tsconfig` would fix the NAS
 location in a file with no override. The link is therefore the one place the location is
 decided. `system/tools/Connect-DataDirectory.ps1` makes it, to `SGS_DATA_DIR` when that is set
-and to `C:\DataRaw\scene-graph` otherwise, as a junction, or as a symbolic link for a
+and to `raw:scene-graph` otherwise, as a junction, or as a symbolic link for a
 `\\server\share` target, which a junction cannot reach. It creates and never deletes or moves:
 a real `data/` directory, a link to another target and an unreachable target each return a
 sentence instead. `start.ps1` calls it before any install and `fetch-data.ps1` before any read;
 `tools/start.mjs` stops with the same instruction when `data/LICENCES.md` does not resolve.
 
 **Vite checks real paths.** With the link in place, the frontend suites that import from `data/`
-failed to collect on `Denied ID D:/Data/DataRaw/scene-graph/slices/placeholder/images/ph-001.png?url`:
-`C:\DataRaw` is itself a link to `D:\Data\DataRaw`, and the guard compares the resolved path with
+failed to collect on `Denied ID`, naming the real path of `slices/placeholder/images/ph-001.png?url`:
+the `raw` root is itself a link to a folder on D:, and the guard compares the resolved path with
 `server.fs.allow`. `system/data.dir.ts` resolves the link, and `vitest.config.ts` allows its
 target beside `..`; the suites then passed, 1019 tests in 74 files, and `tsc -b` over the
 frontend was clean. The production build does not apply the guard.
@@ -4972,7 +4972,7 @@ and `test_the_three_corrections_the_paper_names_are_all_playable` fail, and L5's
 `step2_prompt` text restored and `rekey_step2_transcripts.py` run against it, because the script rebuilds
 from the current prompt only. The pre-rekey files are kept in the workspace at
 `.superpowers/sdd/2026-09-29-m0-demos/backup-fig2-pipeline.json` and `backup-fig2-corrections.json`, which git
-ignores and which are scratch; a durable copy is at `C:\DataRaw\scene-graph\vlm\transcripts-pre-D115\`, a
+ignores and which are scratch; a durable copy is at `data/vlm/transcripts-pre-D115/`, a
 sibling of `transcripts/` that the transcript player does not load (SHA-256 of `fig2-pipeline.json`:
 `3d12d9432888f1d494622282e3fff6e18186af971f75d458eb94de512838844e`; of `fig2-corrections.json`:
 `1a47b087972e1c459d09a9542893b8eba7598606b88adc3826da76ec2eb4db03`). Keep that directory after the
@@ -5421,12 +5421,12 @@ equations), frontend builds; `npm run harvest` left no tracked file changed. `np
 **The clip and the photographs under `npm start`.** Both demos' first parts said 「無法載入影片（clip.mp4）」, and the
 frame photograph beneath D-T's was a broken image, as was every photograph a playground imports from `data/`; the
 build showed them all. The `<video>` reported `DEMUXER_ERROR_COULD_NOT_OPEN`, and the body the dev server returned
-for `/@fs/D:/Data/DataRaw/scene-graph/demos/m0/clip.mp4` was the application's `index.html`, status 200. Two causes,
+for the clip's `/@fs/` URL, its real path on D:, was the application's `index.html`, status 200. Two causes,
 each sufficient alone:
 
 - `frontend/vite.config.ts` set no `server.fs.allow`, so Vite's default, the workspace root `system/`, excluded
   `data/`, its sibling. `vitest.config.ts` has allowed the link's target since D110; the dev server never did.
-- `data/` links to `C:\DataRaw\scene-graph`, itself a link to `D:\Data\DataRaw\scene-graph`, and Vite 8.3.0's
+- `data/` links to `raw:scene-graph`, whose root is itself a link to a folder on D:, and Vite 8.3.0's
   `serveRawFsMiddleware` drops a `/@fs/` path's drive letter and reads from the root of its own drive: it looked
   for `C:\Data\DataRaw\scene-graph\demos\m0\clip.mp4`, found nothing, and fell through to `index.html`. With the
   allow list fixed alone, the test still received HTML.

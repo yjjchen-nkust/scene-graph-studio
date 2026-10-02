@@ -95,8 +95,8 @@ cd scene-graph-studio\system ; npm run ci
   that writes into a tracked path means adding its path there too. Nothing under `data/` is
   tracked since D109, so the six `data/` rules of D89 and D91 are gone; the Python generators
   still write LF (`newline=""`).
-- **`data/` is a directory junction to `C:\DataRaw\scene-graph`, and no data file lives in the
-  checkout (D109, D110).** `.gitignore` ignores `/data/` whole, so git carries none of it:
+- **`data/` is a directory junction to the NAS, at `raw:WekaExt/scene-graph-studio` (`data.toml`,
+  D125), and no data file lives in the checkout but the CI fixture (D109, D110).** `.gitignore` ignores `/data/` whole, so git carries none of it:
   corpora, slice images, annotations, manifests, `data/content/`, the golden vectors, the
   predictions and `data/LICENCES.md`. Every reader keeps its `data/` path and reaches the one
   copy through the link; `SGS_DATA_DIR` names another target. `start.ps1` and `fetch-data.ps1`
@@ -121,7 +121,7 @@ cd scene-graph-studio\system ; npm run ci
   The M0 demos branch is the second: its rekey of `fig2-pipeline.json` and `fig2-corrections.json` (D115) leaves
   `main` failing two backend tests and L5's Figure 2 replay against the NAS until it merges, and a revert needs the
   old `step2_prompt` text and `rekey_step2_transcripts.py` run against it; the pre-rekey files are in
-  `C:\DataRaw\scene-graph\vlm\transcripts-pre-D115\`.
+  `data/vlm/transcripts-pre-D115/`.
   D-V's recording again is the third (D124): until it merges, `main` fails its gate against the NAS, which
   holds the transcript recorded under `O_DEMO`; the files before it are `vlm/transcripts-pre-D124/m0-demo.json`
   and `demos/m0/pre-D124/indvissgg.json`.

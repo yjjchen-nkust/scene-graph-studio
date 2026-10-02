@@ -310,7 +310,7 @@ def test_data_dir_follows_its_environment_variable(monkeypatch, tmp_path):
     import importlib
 
     monkeypatch.setenv("SGS_DATA_DIR", str(tmp_path))
-    # `SGS_CORPUS_ROOT` is set on the author's machine -- `C:\DataRaw`, per docs/INDEX §5 -- and
+    # `SGS_CORPUS_ROOT` is set on the author's machine -- the `raw` root, per docs/INDEX §5 -- and
     # it takes precedence over the default below. Without this line the test asserts the ambient
     # environment rather than the rule, and it fails on the one machine that has the corpora.
     monkeypatch.delenv("SGS_CORPUS_ROOT", raising=False)

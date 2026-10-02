@@ -806,10 +806,10 @@ describe('the playground step kind', () => {
       atLeast(text, /D1…D(\d+)/, 108, name);
     }
     atLeast(claude, /all (\d+) logged deviations/, 108, 'CLAUDE.md deviations');
-    // The directory the author named, in both readers. The script itself was retired by D110,
-    // whose test requires it gone.
+    // The directory the author named, in both readers, by its devdata source since D125. The
+    // script itself was retired by D110, whose test requires it gone.
     for (const [name, text] of [['CLAUDE.md', claude], ['README', readme]]) {
-      expect(text, name).toContain('C:\\DataRaw\\scene-graph');
+      expect(text, name).toContain('raw:WekaExt/scene-graph-studio');
     }
     // README's commands are commands: a `\f` meant as `.\fetch` had been written as a form feed.
     expect(readme).not.toContain('\f');
@@ -839,7 +839,8 @@ describe('the playground step kind', () => {
     // No attribute rule over a directory git no longer tracks, and no line that is not a rule.
     const rules = attributes.filter((line) => line.trim() && !line.startsWith('#'));
     expect(rules.filter((line) => line.startsWith('data/'))).toEqual([]);
-    for (const line of rules) expect(line, line).toMatch(/^\S+\s+\S+=\S+$/);
+    // A rule sets an attribute to a value, or unsets one (`-text`, the CI fixture's, D125).
+    for (const line of rules) expect(line, line).toMatch(/^\S+\s+(?:\S+=\S+|-[\w-]+)$/);
     // A fresh clone gets its data/ before anything is installed: a pull at D109, a link since D110.
     expect(start.indexOf('Connect-DataDirectory -Track')).toBeGreaterThan(-1);
     expect(start.indexOf('Connect-DataDirectory -Track')).toBeLessThan(start.indexOf('npm install'));
@@ -868,7 +869,9 @@ describe('the playground step kind', () => {
     expect(lstatSync(at('../../../../../data')).isSymbolicLink()).toBe(true);
     expect(existsSync(at('../../../../../sync-data.ps1'))).toBe(false);
     // One target, overridable, made by the two entry scripts, and the helper deletes nothing.
-    expect(connect).toContain("'C:\\DataRaw\\scene-graph'");
+    // Since D125 the target is read from devdata's roots file and data.toml, never spelt.
+    expect(connect).toContain('roots.toml');
+    expect(connect).toContain('data.toml');
     expect(connect).toContain('SGS_DATA_DIR');
     expect(connect).not.toContain('Remove-Item');
     for (const script of ['start.ps1', 'fetch-data.ps1']) {

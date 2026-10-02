@@ -440,7 +440,7 @@ environment states nothing about the other, and "green on my machine" was being 
 passed — every POSIX assertion, which is the coverage that did not exist before.
 
 **A second finding, from running the suite the way the author's own machine is configured.**
-`SGS_CORPUS_ROOT` is set to `C:\DataRaw` on this box (INDEX §5), and with it set
+`SGS_CORPUS_ROOT` is set to the `raw` root on this box (INDEX §5), and with it set
 `test_data_dir_follows_its_environment_variable` fails: it asserts that `SGS_DATA_DIR` moves the
 corpus root underneath it, which holds only when no corpus root is named. The four adapter tests
 that exercise the real corpora are skipped without that variable, so the configuration in which
@@ -450,7 +450,7 @@ clears the variable, and a second test states the other half of the rule — an 
 both. See DEVIATIONS D84.
 
 **Re-run, 2026-09-19, on `py12`:** `npm run ci` exits 0 — **266 pytest passed, 7 skipped**, and
-**271 passed, 2 skipped** with `SGS_CORPUS_ROOT=C:\DataRaw`, which had been 1 failed before this
+**271 passed, 2 skipped** with `SGS_CORPUS_ROOT` at the `raw` root, which had been 1 failed before this
 change; **527 vitest across 45 files**; parity 13/13; i18n 198 keys; content lint clean; `ruff`
 clean; frontend build 741 modules. `npm run test:e2e` 26 passed [**corrected 2026-09-20: 27.**
 Counted from the spec files at that commit: 9 lecture tests plus 6 projector tests over 3 panel
@@ -2126,7 +2126,7 @@ D123. The "before" column is the branch at `5b1985a` (D122), as §32 measured it
 | `npm run check:perf` | 33 passed | **33 passed**, 30.3 s; F2 34.4 ms, cold starts 238 to 526 ms |
 
 Under `npm start`, in the Browser pane, before the change: both demo clips reported
-`DEMUXER_ERROR_COULD_NOT_OPEN`, the dev server answering `/@fs/D:/Data/DataRaw/scene-graph/demos/m0/clip.mp4` with
+`DEMUXER_ERROR_COULD_NOT_OPEN`, the dev server answering the clip's `/@fs/` URL, its real path on D:, with
 `index.html` (status 200), and D-T's frame photograph was broken. After it: both clips loaded, 18.0 s and 1280 px
 wide, and none of the twelve photographs on M0's study page was broken. F2 at 1024×768 in 繁體中文 on
 `/lecture/m/m00/4`: the drawing 735 × 240 px, the visual 282 px and the step 21 px past the panel by default, as
