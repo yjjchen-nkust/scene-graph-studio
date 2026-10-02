@@ -5476,3 +5476,61 @@ and its §10.2 gives WekaExt's wave a plan of its own. Three facts about this tr
 `npm run test:e2e` **107 passed**, again after the clip, and `npm run check:perf` **33 passed**, F2's direction toggle at 34.4 ms against
 its 100 ms budget. In the Browser pane under `npm start`, both clips load (18.0 s, 1280 px wide) and the twelve
 photographs of M0's study page render. VERIFICATION §33 records the runs.
+
+## D124 — D-V names each hand, and is recorded again on the A6000
+
+**Plan:** none. **Decisions:** none new. Asked for by the author on 2026-10-02, after seeing D-T's COCO labels on
+the clip: "Can you identify left hand and right hand?" Branch `fix/sgs-review-2026-10-01-c` after D123.
+
+**Why.** D-T labels both hands `person` and the parts `remote`, `cell phone`, `toothbrush`; that is its purpose, the
+closed vocabulary measured (11 of `O_ISG`'s 12 classes have no COCO class), and D-T is unchanged. D-V drafted under
+`O_ISG`, whose one `hand` left `<hand, holding, axle>` true of whichever hand held it, and D114's recording wrote
+`left_hand` and `right_hand` once, unasked and outside O, at 96 s. The demonstration now asks for them.
+
+**The criteria.** `prompts.O_DEMO` is `O_ISG` with `hand` replaced by `left hand` and `right hand`, 13 classes;
+`EXAMPLES_DEMO` keeps `EXAMPLES_ISG`'s shape, and its positive example states the rule for telling the hands apart:
+the frames are seen through the worker's own eyes, so the right hand is the one on the right of the image unless the
+arms cross. P is still `P_ISG`. `indvissgg.criteria_for` gives a demo frame this triple and a mini-ISG frame
+`O_ISG`'s, so the endpoint replays each family under the prompt it was recorded with; `record_demo_indvissgg.py` and
+`build_demo_m0.py` use it for D-V, and D-T's comparison column keeps `O_ISG`. The recorder's provenance note names
+the machine (`--server`), which D114's note fixed as pro6000.
+
+**The recording.** The author asked for the job to run on the A6000 rather than pro6000. That card has 47.4 GiB,
+and the full-precision weights D114 used, `Qwen/Qwen3.8-27B`, are 55.6 GB; the author chose
+`Qwen/Qwen3.8-27B-FP8` (30.9 GB, Apache-2.0) over a different model, after the shared cache's
+`Qwen3-VL-30B-A3B-Thinking-FP8` proved a 12 KB stub with no weights. vLLM 0.21.0, pro6000's version, was installed
+into `/mnt/data/yenming/sgs-vlm/venv` with torch 2.11.0+cu130, the weights into `/mnt/data/yenming/sgs-vlm/hf`
+(29 GB), nothing on the root disk (20 GB free). Two starts failed: FlashInfer's sampler compiles a kernel with
+`nvcc` and the host has no CUDA toolkit, so `VLLM_USE_FLASHINFER_SAMPLER=0` selects vLLM's PyTorch sampler; then the
+profiling run, at the default 256 sequences, a dummy video and 32,768 tokens, ran out of memory beside 28.9 GiB of
+weights. Served at four sequences, no video and a 16,384-token context, it held 12.6 GiB of KV cache (179,541
+tokens). The sampling settings, the seeds and `max_tokens` are D114's, thinking still disabled. The 50 calls took
+579.6 s, and the server was stopped after them. A first unrecorded call on 96 s gave `<left hand, holding, wheel>`
+and `<right hand, reaching for, nut>` in 5.8 s.
+
+**What it holds.** No term of the 50 completions is outside O or P, and every one of the ten summaries names both
+hands. Against the frames, five of them looked at by eye (90, 92, 94, 96 and 100 s): the left hand, with the watch,
+and the right hand, with the bracelet, are named correctly in all five; at 94 s both hands hold a black wheel on a grey
+axle and the summary writes `block`, the same wheel it called `wheel` at 92 s. The analyses are longer than D114's:
+up to 657 characters in Chinese (280 before) and 1,568 in English (734), expert 3 at 90 s reviewing every row of
+its draft. 9 of the 30 revisions add a triplet, so the experts no longer only delete, and the summaries carry 5 rows
+their drafts lacked, each one an expert added.
+
+**What changed with it.** M0's D-V prose and presenter notes (s11 to s15, both locales) are rewritten from the new
+recording, and the records test holds each figure as before; its claims about the out-of-vocabulary hands of 96 s
+are replaced by claims that no term leaves O or P, that every summary names both hands, that the summaries' extra
+rows are the experts', and that one wheel is named twice. D-V part 3's analysis now scrolls within its own box,
+focusable, as part 1's whole prompt does (D116): the 657-character analysis ran the part 157 px past 1024×768 in
+繁體中文. s11's sentence does not name the hands, because the extra line ran part 1 13 px past the same panel; the
+notes say it. `DV.test.tsx` follows the recording: O has 13 classes, no recorded draft is flagged, and the expert
+that changed nothing is expert 3 at 98 s.
+
+**The shared data, a third time.** The recording and its derived file are on the NAS, which every branch reads
+(D111, D115). Until this branch merges, `main` fails its gate against the NAS: its `criteria_for` asks for keys
+recorded under `O_ISG`, its build check expects `O_ISG` in `indvissgg.json`, and its D-V tests expect 12 classes.
+D114/D115's files are kept: `data/vlm/transcripts-pre-D124/m0-demo.json` (SHA-256 `504531…`) and
+`data/demos/m0/pre-D124/indvissgg.json` (`c2bee30…`), and a revert copies them back.
+
+**Verification.** On this branch, 2026-10-02: `npm run ci` green, **399 pytest** and 7 skipped, **1356 vitest** in
+92 files, parity 21 agree, i18n 507 keys, content lint clean, frontend builds; `npm run test:e2e` **107 passed** and
+`npm run check:perf` **33 passed**, D-V at 32.5 ms. VERIFICATION §34 records the recording and the runs.
