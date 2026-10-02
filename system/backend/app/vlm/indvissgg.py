@@ -175,7 +175,8 @@ def criteria_for(image_ref: str) -> tuple[tuple[str, ...], tuple[str, ...], list
     answers 503 for every frame in it.
 
     A third family, `m0-demo-NNN`, is the ten M0 demonstration frames cut from IndustReal; their
-    transcript was recorded under the same `O_ISG`, `P_ISG` and `EXAMPLES_ISG`.
+    transcript is recorded under `O_DEMO`, `P_ISG` and `EXAMPLES_DEMO`, which name each hand
+    (D124).
 
     The manifests are the discriminator rather than a prefix rule, because they are the
     authoritative lists of what was cut. A frame nobody has heard of gets the paper's vocabulary and
@@ -184,16 +185,16 @@ def criteria_for(image_ref: str) -> tuple[tuple[str, ...], tuple[str, ...], list
     """
     from app.datasets.loader import slice_dir  # noqa: PLC0415 - avoids an import cycle
 
-    cut: set[str] = set()
+    demo = DATA_DIR / "demos" / "m0" / "MANIFEST.json"
+    if demo.is_file():
+        frames = json.loads(demo.read_text(encoding="utf-8"))["frames"]
+        if image_ref in {row["image_id"] for row in frames}:
+            return prompts.O_DEMO, prompts.P_ISG, prompts.EXAMPLES_DEMO
     manifest = slice_dir("mini-isg") / "MANIFEST.json"
     if manifest.is_file():
         listed = json.loads(manifest.read_text(encoding="utf-8"))["images"]
-        cut |= {row["image_id"] for row in listed}
-    demo = DATA_DIR / "demos" / "m0" / "MANIFEST.json"
-    if demo.is_file():
-        cut |= {row["image_id"] for row in json.loads(demo.read_text(encoding="utf-8"))["frames"]}
-    if image_ref in cut:
-        return prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG
+        if image_ref in {row["image_id"] for row in listed}:
+            return prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG
     return prompts.O_DEFAULT, prompts.P_DEFAULT, EXAMPLES
 
 

@@ -197,10 +197,12 @@ def test_an_expert_count_the_paper_did_not_measure_is_refused(n):
     assert r.status_code == 422
 
 
-def test_criteria_for_the_m0_demo_frames_is_the_isg_triple() -> None:
-    isg = (prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG)
-    assert indvissgg.criteria_for("m0-demo-096") == isg
-    assert indvissgg.criteria_for("m0-demo-999") != isg
+def test_criteria_for_the_m0_demo_frames_is_the_demo_triple() -> None:
+    # The ISG triple until D124, when the demo split `hand` into the worker's two hands.
+    demo = (prompts.O_DEMO, prompts.P_ISG, prompts.EXAMPLES_DEMO)
+    assert indvissgg.criteria_for("m0-demo-096") == demo
+    assert indvissgg.criteria_for("m0-demo-999") != demo
+    assert indvissgg.criteria_for("isg-001") == (prompts.O_ISG, prompts.P_ISG, prompts.EXAMPLES_ISG)
 
 
 # ── the expert prompt carries the criteria and asks for labelled analyses (D115) ──────────────

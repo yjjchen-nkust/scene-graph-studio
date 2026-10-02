@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.datasets.loader import load_slice  # noqa: E402
 from app.settings import DATA_DIR  # noqa: E402
 from app.vlm import indvissgg  # noqa: E402
-from app.vlm.prompts import EXAMPLES_ISG, O_ISG, P_ISG, step1_prompt  # noqa: E402
+from app.vlm.prompts import EXAMPLES_DEMO, O_DEMO, O_ISG, P_ISG, step1_prompt  # noqa: E402
 from scripts.record_demo_traditional import (  # noqa: E402
     MODEL,
     O_ISG_COCO,
@@ -173,10 +173,11 @@ def build_indvissgg() -> dict[str, Any]:
     return {
         "$schema_version": 1,
         "provenance": transcript["provenance"],
-        "O": list(O_ISG),
+        # D-V's own criteria, which name each hand (D124); D-T's column above keeps O_ISG.
+        "O": list(O_DEMO),
         "P": list(P_ISG),
-        "E": EXAMPLES_ISG,
-        "prompt_step1": step1_prompt(list(O_ISG), list(P_ISG), EXAMPLES_ISG),
+        "E": EXAMPLES_DEMO,
+        "prompt_step1": step1_prompt(list(O_DEMO), list(P_ISG), EXAMPLES_DEMO),
         "calls_per_frame": CALLS_PER_FRAME,
         "frames": frames,
     }

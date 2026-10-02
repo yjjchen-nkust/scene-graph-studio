@@ -1158,14 +1158,9 @@ describe('the demo step kind', () => {
       const o = outsideVocabulary(t, VLM.O, VLM.P);
       return [o.subject && t[0], o.predicate && t[1], o.object && t[2]].filter((x): x is string => Boolean(x));
     }));
-    // The recording's two terms outside O (held to be the only ones, below), read as the O term
-    // they name, so the notes can state what the wording did to D-V's churn.
-    const asHand = (ts: readonly Triplet[]) => distinct(ts.map((t) =>
-      t.map((term) => (term === 'left_hand' || term === 'right_hand' ? 'hand' : term)) as unknown as Triplet));
     const between = relations.slice(1).map((_, i) => ({
       dt: churn(relations[i]!, relations[i + 1]!),
       dv: churn(summaries[i]!, summaries[i + 1]!),
-      dvAsHand: churn(asHand(summaries[i]!), asHand(summaries[i + 1]!)),
     }));
     const keyframes = KEYFRAME_IDS.map((id) => distinct(VLM.frames.find((f) => f.image_id === id)!.summary));
     const causes = frames.map((f) => fallbackCauses(f, TRADITIONAL.class_map));
@@ -1199,19 +1194,41 @@ describe('the demo step kind', () => {
     const t1 = frames.findIndex((f) => f.image_id === KEYFRAME_IDS[0]);
     const first = between[0]!;
     const last = between[between.length - 1]!;
-    // The recording's only out-of-vocabulary terms are the two `asHand` reads, on one frame.
-    expect([...new Set(outside.flat())].sort()).toEqual(['left_hand', 'right_hand']);
-    const withOutside = outside.flatMap((terms, i) => (terms.length > 0 ? [i] : []));
-    expect(withOutside).toHaveLength(1);
-    const oov = withOutside[0]!;
-    // Part 2 flags the terms of each draft, so "only at 96 s" is held to the drafts too: every
-    // draft term outside O or P is on that frame, and on no other.
-    expect([...new Set(draftOutside.flat())].sort()).toEqual(['left_hand', 'right_hand']);
-    expect(draftOutside.flatMap((terms, i) => (terms.length > 0 ? [i] : []))).toEqual([oov]);
-    const into = between[oov - 1]!;
-    const out = between[oov]!;
-    // "Either way": the step into that frame counts the same whichever word the model wrote.
-    expect([into.dvAsHand.delta, into.dvAsHand.union]).toEqual([into.dv.delta, into.dv.union]);
+    // "This recording has none" and "every word of the 50 completions within O and P": no term
+    // of a draft, a revision or a summary outside the vocabulary. D114's recording, whose O held
+    // one `hand`, wrote `left_hand` and `right_hand` at 96 s; D124's O names both (D124).
+    expect(outside.flat()).toEqual([]);
+    expect(draftOutside.flat()).toEqual([]);
+    for (const f of VLM.frames) {
+      for (const e of f.experts) {
+        for (const t of e.revision) {
+          const o = outsideVocabulary(t, VLM.O, VLM.P);
+          expect([o.subject, o.predicate, o.object], `${f.image_id} expert ${e.index}`).toEqual([false, false, false]);
+        }
+      }
+    }
+    // "Every summary names both hands".
+    for (const [i, s] of summaries.entries()) {
+      for (const hand of ['left hand', 'right hand']) {
+        expect(s.some((t) => t[0] === hand || t[2] === hand), `${frames[i]!.t} s ${hand}`).toBe(true);
+      }
+    }
+    const t2 = frames.findIndex((f) => f.image_id === KEYFRAME_IDS[1]);
+    // The rows a summary carries that its draft lacked, each one some expert added.
+    const extra = VLM.frames.flatMap((f) => f.summary.filter((t) => !f.draft.some((d) => tripletKey(d) === tripletKey(t)))
+      .map((t) => f.experts.some((e) => e.revision.some((r) => tripletKey(r) === tripletKey(t)))));
+    expect(extra.every(Boolean)).toBe(true);
+    // The revisions that add a triplet the draft lacked.
+    const adding = VLM.frames.flatMap((f) => f.experts.filter((e) =>
+      e.revision.some((r) => !f.draft.some((d) => tripletKey(d) === tripletKey(r))))).length;
+    // One part by two classes in two frames: the left hand's `wheel` written `block` a frame later.
+    const holds = (i: number, part: string) =>
+      summaries[i]!.some((t) => tripletKey(t) === tripletKey(['left hand', 'holding', part] as Triplet));
+    const renamed = summaries.findIndex((_, i) => i + 1 < summaries.length && holds(i, 'wheel') && holds(i + 1, 'block'));
+    expect(renamed).toBeGreaterThanOrEqual(0);
+    // "Both hands hold ... and the summary writes `block`".
+    const bothBlock = summaries.findIndex((s) => ['left hand', 'right hand'].every((hand) =>
+      s.some((t) => tripletKey(t) === tripletKey([hand, 'holding', 'block'] as Triplet))));
     // "One of the two smallest frames".
     const smallest = n.indexOf(Math.min(...n));
     expect(n.filter((k) => k === n[smallest])).toHaveLength(2);
@@ -1284,24 +1301,28 @@ describe('the demo step kind', () => {
       // D-V part 2: one call's rows at t₁ against D-T's candidates; the range; the frame outside O.
       ['en', 's12', 'body', /(\d+) triplets at t₁, where D-T enumerated ([\d,]+) candidates/, [draft1, candidates1]],
       ['zh-TW', 's12', 'body', /t₁ 為 (\d+) 個，D-T 於同一影格則列舉 ([\d,]+) 個候選/, [draft1, candidates1]],
-      ['en', 's12', 'body', /only at (\d+) s/, [time(oov)]],
-      ['zh-TW', 's12', 'body', /僅見於 (\d+) s/, [time(oov)]],
       ['en', 's12', 'notes', /Stay on t₁: (\d+) rows, against D-T's ([\d,]+) candidates/, [draft1, candidates1]],
       ['zh-TW', 's12', 'notes', /維持 t₁：共 (\d+) 列，同一影格 D-T 則有 ([\d,]+) 個候選/, [draft1, candidates1]],
       ['en', 's12', 'notes', /(\d+) to (\d+) rows over the ten frames/, [Math.min(...drafts), Math.max(...drafts)]],
       ['zh-TW', 's12', 'notes', /十個影格介於 (\d+) 至 (\d+) 列/, [Math.min(...drafts), Math.max(...drafts)]],
-      ['en', 's12', 'notes', /(\d+) for the clip\. Then pick (\d+) s/, [calls, time(oov)]],
-      ['zh-TW', 's12', 'notes', /整段片段共 (\d+) 次。接著選取 (\d+) s/, [calls, time(oov)]],
-      // D-V part 3: the revisions that changed nothing.
-      ['en', 's13', 'body', /(\d+) of their (\d+) revisions change nothing/, [unchanged, revisions.length]],
-      ['zh-TW', 's13', 'body', /(\d+) 份修訂中有 (\d+) 份未作任何變更/, [revisions.length, unchanged]],
+      ['en', 's12', 'notes', /(\d+) for the clip\. Then pick (\d+) s/, [calls, time(t2)]],
+      ['zh-TW', 's12', 'notes', /整段片段共 (\d+) 次。接著選取 (\d+) s/, [calls, time(t2)]],
+      // D-V part 3: the revisions that add a triplet, and those that changed nothing.
+      ['en', 's13', 'body', /(\d+) of their (\d+) revisions add a triplet, and (\d+) change nothing/,
+        [adding, revisions.length, unchanged]],
+      ['zh-TW', 's13', 'body', /(\d+) 份修訂中，有 (\d+) 份新增三元組，有 (\d+) 份未作任何變更/,
+        [revisions.length, adding, unchanged]],
       // D-V part 4: the summaries' size, the predicates they use, and the single dissents.
       ['en', 's14', 'body', /into (\d+) to (\d+) triplets a frame[^.]*\. D-V's summaries use all (\d+)/,
         [Math.min(...rows), Math.max(...rows), used]],
       ['zh-TW', 's14', 'body', /彙整 (\d+) 至 (\d+) 個三元組[^。]*。十個影格中，D-V 用及 `P_ISG` 全部 (\d+) 個/,
         [Math.min(...rows), Math.max(...rows), used]],
-      ['en', 's14', 'notes', /dropped at (\d+), (\d+) and (\d+) s and kept at (\d+), (\d+) and (\d+) s/, [...dropped, ...kept]],
-      ['zh-TW', 's14', 'notes', /於 (\d+)、(\d+)、(\d+) s 遭刪除，於 (\d+)、(\d+)、(\d+) s 則獲保留/, [...dropped, ...kept]],
+      ['en', 's14', 'notes', /dropped at (\d+), (\d+) and (\d+) s and kept at (\d+) and (\d+) s/, [...dropped, ...kept]],
+      ['zh-TW', 's14', 'notes', /於 (\d+)、(\d+)、(\d+) s 遭刪除，於 (\d+)、(\d+) s 則獲保留/, [...dropped, ...kept]],
+      ['en', 's14', 'notes', /It also carries (\d+) rows the drafts lacked/, [extra.length]],
+      ['zh-TW', 's14', 'notes', /彙整另含草稿所無之 (\d+) 列/, [extra.length]],
+      ['en', 's14', 'notes', /At (\d+) s both hands hold a black wheel on a grey axle, and the summary writes `block`/, [time(bothBlock)]],
+      ['zh-TW', 's14', 'notes', /(\d+) s 中雙手所持者為裝於灰色軸上之黑色車輪，彙整卻寫為 `block`/, [time(bothBlock)]],
       ['en', 's14', 'notes', /D-T's (\d+) rows are all `on`/, [fallback]],
       ['zh-TW', 's14', 'notes', /D-T 之 (\d+) 筆全數為 `on`/, [fallback]],
       // D-V part 5: the steps where D-V's churn exceeds D-T's; the keyframes; the wording at 96 s.
@@ -1309,7 +1330,7 @@ describe('the demo step kind', () => {
       ['zh-TW', 's15', 'body', /之 (\d+) 步中，D-V 有 (\d+) 步變動大於 D-T/, [between.length, above]],
       ['en', 's15', 'notes', /t₁, t₂ and t₃ at (\d+), (\d+) and (\d+) s/, kfTimes],
       ['zh-TW', 's15', 'notes', /t₁、t₂、t₃ 分別為 (\d+)、(\d+)、(\d+) s/, kfTimes],
-      ['en', 's15', 'notes', /From t₁ to t₂, (\d+) triplets are kept, (\d+) added and (\d+) removed/,
+      ['en', 's15', 'notes', /From t₁ to t₂, (\d+) triplets? (?:is|are) kept, (\d+) added and (\d+) removed/,
         [kf.kept.length, kf.added.length, kf.removed.length]],
       ['zh-TW', 's15', 'notes', /t₁ 至 t₂ 保留 (\d+) 個、新增 (\d+) 個、移除 (\d+) 個/, [kf.kept.length, kf.added.length, kf.removed.length]],
       ['en', 's15', 'notes', /exceeds D-T's on (\d+) of the (\d+) steps, and D-T's is (\d+) from (\d+) to (\d+) s/,
@@ -1318,16 +1339,8 @@ describe('the demo step kind', () => {
         [between.length, above, time(8), time(9), last.dt.delta]],
       ['en', 's15', 'notes', /as `remote` did at (\d+) s/, [time(1)]],
       ['zh-TW', 's15', 'notes', /如 (\d+) s 之 `remote`/, [time(1)]],
-      ['en', 's15', 'notes', /at (\d+) s the model wrote `left_hand`/, [time(oov)]],
-      ['zh-TW', 's15', 'notes', /唯一例外為 (\d+) s 模型寫出 `left_hand`/, [time(oov)]],
-      ['en', 's15', 'notes', /leaves (\d+) to (\d+) s unaffected, (\d+) of (\d+) either way/,
-        [time(oov - 1), time(oov), into.dv.delta, into.dv.union]],
-      ['zh-TW', 's15', 'notes', /(\d+) 至 (\d+) s 不受影響，兩種寫法之 \|Δ\| 與 \|∪\| 皆為 (\d+) 與 (\d+)/,
-        [time(oov - 1), time(oov), into.dv.delta, into.dv.union]],
-      ['en', 's15', 'notes', /raises (\d+) to (\d+) s: (\d+) of (\d+) as recorded, against (\d+) of (\d+) had the model written `hand`/,
-        [time(oov), time(oov + 1), out.dv.delta, out.dv.union, out.dvAsHand.delta, out.dvAsHand.union]],
-      ['zh-TW', 's15', 'notes', /(\d+) 至 (\d+) s 則受影響，錄得 (\d+) 與 (\d+)，若模型寫為 `hand` 則為 (\d+) 與 (\d+)/,
-        [time(oov), time(oov + 1), out.dv.delta, out.dv.union, out.dvAsHand.delta, out.dvAsHand.union]],
+      ['en', 's15', 'notes', /a `wheel` at (\d+) s and a `block` at (\d+) s/, [time(renamed), time(renamed + 1)]],
+      ['zh-TW', 's15', 'notes', /於 (\d+) s 記為 `wheel`，於 (\d+) s 則記為 `block`/, [time(renamed), time(renamed + 1)]],
     ];
     for (const [locale, step, field, pattern, expected] of claims) {
       const where = `${locale} ${step} ${field}: ${pattern.source}`;
@@ -1363,17 +1376,22 @@ describe('the demo step kind', () => {
       // Why D-T's pairs fell back, per frame and over the ten frames.
       ...causes.flatMap((c) => [c.unmapped, c.unseen]),
       total(causes.map((c) => c.unmapped)), total(causes.map((c) => c.unseen)),
-      // Churn between neighbouring frames, both pipelines, and D-V's with its two
-      // out-of-vocabulary terms read as `hand`; the steps, and those where D-V's exceeds D-T's.
-      ...between.flatMap(({ dt, dv, dvAsHand }) => [...counts(dt), ...counts(dv), ...counts(dvAsHand)]),
+      // Churn between neighbouring frames, both pipelines; the steps, and those where D-V's
+      // exceeds D-T's.
+      ...between.flatMap(({ dt, dv }) => [...counts(dt), ...counts(dv)]),
       between.length, between.filter(({ dt, dv }) => dv.delta > dt.delta).length,
       // From keyframe to keyframe, as D-V's part 5 marks them.
       ...keyframes.slice(1).flatMap((k, i) => counts(churn(keyframes[i]!, k))),
-      // D-V: rows each draft emitted and each summary holds; calls per frame, experts, frames, calls.
+      // D-V: rows each draft emitted and each summary holds; calls per frame, experts, frames, calls;
+      // the rows the summaries carry that the drafts lacked (D124).
+      VLM.frames.reduce((k, f) => k + f.summary.filter((t) => !f.draft.some((d) => tripletKey(d) === tripletKey(t))).length, 0),
       ...VLM.frames.flatMap((f) => [f.draft.length, f.summary.length, f.experts.length]),
       VLM.calls_per_frame, VLM.frames.length, VLM.calls_per_frame * VLM.frames.length,
-      // The experts' revisions, and those that returned the draft's rows unchanged.
+      // The experts' revisions, those that returned the draft's rows unchanged, and those that added
+      // a triplet the draft lacked (D124).
       revisions.length, revisions.filter((r) => r === 'identical').length,
+      VLM.frames.flatMap((f) => f.experts.filter((e) =>
+        e.revision.some((r) => !f.draft.some((d) => tripletKey(d) === tripletKey(r))))).length,
     ];
     const allowed = new Set(figures.map(countText));
     // Not figures: each is removed, with its reason, before the numbers are read.
@@ -1387,7 +1405,7 @@ describe('the demo step kind', () => {
       [/Figure \d\b|圖 ?\d/g, "the paper's figure number"],
       [/n\(n − 1\)/g, 'the formula for the ordered pairs'],
       [/VG-150/g, "the dataset's name"],
-      [/GPT-4V|Qwen\/Qwen3\.8-27B/g, "a model's name"],
+      [/GPT-4V|Qwen\/Qwen3\.8-27B(?:-FP8)?/g, "a model's name"],
     ];
     for (const locale of ['en', 'zh-TW'] as const) {
       const steps = getMeta('m00', locale)!.steps.filter((s) => s.kind === 'demo');

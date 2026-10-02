@@ -31,7 +31,7 @@ from app.vlm.openai_compat import (  # noqa: E402
     TOP_K,
     TOP_P,
 )
-from app.vlm.prompts import EXAMPLES_ISG, O_ISG, P_ISG  # noqa: E402
+from app.vlm.prompts import EXAMPLES_DEMO, O_DEMO, P_ISG  # noqa: E402
 from app.vlm.provider import VLMProvider, exchange_key  # noqa: E402
 
 MODEL = "claude-opus-5-5"  # the `claude` provider's model; `openai-compat` names its own
@@ -43,8 +43,8 @@ MANIFEST = DATA_DIR / "demos" / "m0" / "MANIFEST.json"
 CASES = ("step1", "expert1", "expert2", "expert3", "step3")
 
 SOURCE = (
-    "the ten frames of 01_assy_0_1.mp4 at 88 to 106 s, drafted under O_ISG, P_ISG and "
-    "EXAMPLES_ISG, five calls per frame (step 1, three experts, step 3)"
+    "the ten frames of 01_assy_0_1.mp4 at 88 to 106 s, drafted under O_DEMO, P_ISG and "
+    "EXAMPLES_DEMO, five calls per frame (step 1, three experts, step 3)"
 )
 
 _CLAUDE_NOTES = {
@@ -64,11 +64,11 @@ _CLAUDE_NOTES = {
 }
 
 
-def _compat_notes(model: str, root: str | None) -> dict[str, str]:
+def _compat_notes(model: str, root: str | None, server: str) -> dict[str, str]:
     weights = root or "weights not reported by the server"
     return {
         "note_en": (
-            f"The model `{model}`, the weights {weights} served by vLLM on the author's pro6000 "
+            f"The model `{model}`, the weights {weights} served by vLLM on the author's {server} "
             f"server and reached over Tailscale, was shown each frame with the prompt recorded "
             f"beside it, and its completion is recorded here verbatim, apart from the `</think>` "
             f"strip and surrounding whitespace. The calls were made by the application's own "
@@ -86,7 +86,7 @@ def _compat_notes(model: str, root: str | None) -> dict[str, str]:
         ),
         "note_zh": (
             f"本檔各筆 completion 係將各影格連同其旁所錄之提示送入模型 `{model}`（權重 {weights}，"
-            f"由作者之 pro6000 伺服器以 vLLM 提供，經 Tailscale 連線）後之輸出，除去 `</think>` "
+            f"由作者之 {server} 伺服器以 vLLM 提供，經 Tailscale 連線）後之輸出，除去 `</think>` "
             f"及其前文與首尾空白外，逐字記錄。呼叫由本應用程式自身之 provider"
             f"（`app/vlm/openai_compat.py`）發出，並附上該影格，關閉 thinking，"
             f"temperature 為 {TEMPERATURE}，top_p 為 {TOP_P}，top_k 為 {TOP_K}，"
@@ -101,10 +101,10 @@ def _compat_notes(model: str, root: str | None) -> dict[str, str]:
     }
 
 
-def provenance_for(provider: Any) -> dict[str, Any]:
-    """The transcript's provenance block for the provider that made the calls."""
+def provenance_for(provider: Any, server: str = "pro6000") -> dict[str, Any]:
+    """The transcript's provenance block for the provider that made the calls, on `server`."""
     if provider.name == "openai-compat":
-        notes = _compat_notes(provider.model, provider.served_root())
+        notes = _compat_notes(provider.model, provider.served_root(), server)
     else:
         notes = _CLAUDE_NOTES
     return {
@@ -150,15 +150,15 @@ class RecordingProvider:
 
 
 def record_frame(image_ref: str, provider: RecordingProvider) -> None:
-    """The same order and inputs as `indvissgg.run`, with the ISG criteria and no ablation."""
+    """The same order and inputs as `indvissgg.run`, with the demo criteria and no ablation."""
     provider.start(image_ref)
     graph, _ = indvissgg.step1(
-        image_ref=image_ref, dataset="mini-isg", O=list(O_ISG), P=list(P_ISG),
-        E=EXAMPLES_ISG, ablate=frozenset(), provider=provider,
+        image_ref=image_ref, dataset="mini-isg", O=list(O_DEMO), P=list(P_ISG),
+        E=EXAMPLES_DEMO, ablate=frozenset(), provider=provider,
     )
     experts = indvissgg.step2(
         image_ref=image_ref, dataset="mini-isg", draft=indvissgg.triplets_of(graph),
-        n_experts=N_EXPERTS, provider=provider, O=O_ISG, P=P_ISG, E=EXAMPLES_ISG,
+        n_experts=N_EXPERTS, provider=provider, O=O_DEMO, P=P_ISG, E=EXAMPLES_DEMO,
     )
     indvissgg.step3(
         image_ref=image_ref, dataset="mini-isg",
@@ -173,6 +173,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--provider", choices=("claude", "openai-compat"), default="openai-compat",
         help="claude needs ANTHROPIC_API_KEY; openai-compat needs SGS_VLM_BASE_URL, SGS_VLM_MODEL",
+    )
+    parser.add_argument(
+        "--server", default="pro6000",
+        help="the machine serving openai-compat, named in the provenance note "
+        "(D114: pro6000; D124: A6000)",
     )
     args = parser.parse_args(argv)
 
@@ -192,7 +197,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"server {inner.base_url}, model {inner.model}, served root {inner.served_root()}")
 
     # Built before the first call: a server failure here must not come after fifty calls.
-    provenance = provenance_for(inner)
+    provenance = provenance_for(inner, args.server)
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     provider = RecordingProvider(inner)
     started = time.monotonic()

@@ -106,7 +106,16 @@ export function Part3({ frame, expert }: { frame: VlmFrame; expert: number }) {
         {analysis === '' ? (
           <p data-testid="dv-analysis-none">{t('demo.dv.analysis_none')}</p>
         ) : (
-          <p data-testid="dv-analysis" className="whitespace-pre-line">{analysis}</p>
+          // Its own scroll, as part 1's whole prompt (D116): D124's analyses run to 657 characters
+          // in Chinese, and at 1024×768 the longest ran the part 157 px past the panel. Focusable,
+          // so the keyboard can scroll it: the stepper keeps ← and → and yields ↑ and ↓.
+          <p
+            data-testid="dv-analysis"
+            tabIndex={0}
+            className="max-h-[36vh] overflow-y-auto whitespace-pre-line rounded border border-slate-300 bg-white p-1"
+          >
+            {analysis}
+          </p>
         )}
       </div>
     </div>
