@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split, §29 the M4 playgrounds, §30 the M5 playgrounds, §31 the M0 demos and §32 the findings D120 left open), and all 122 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split, §29 the M4 playgrounds, §30 the M5 playgrounds, §31 the M0 demos, §32 the findings D120 left open and §33 the dev server and F2's edges), and all 123 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -52,7 +52,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D122` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D123` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
   `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
@@ -100,11 +100,16 @@ cd scene-graph-studio\system ; npm run ci
   corpora, slice images, annotations, manifests, `data/content/`, the golden vectors, the
   predictions and `data/LICENCES.md`. Every reader keeps its `data/` path and reaches the one
   copy through the link; `SGS_DATA_DIR` names another target. `start.ps1` and `fetch-data.ps1`
-  make the link through `system/tools/Connect-DataDirectory.ps1`. **A fresh clone has no
-  `data/`** until one of them runs, and a gate run on a machine without the NAS fails at its
-  first read of it. Vite checks real paths, so `vitest.config.ts` allows the link's target
-  through `data.dir.ts`; the dev server still cannot show the playgrounds' photographs, which
-  it could not before D110 either, and the build can. `sync-data.ps1` (D108) was retired: there
+  make the link through `system/tools/Connect-DataDirectory.ps1`, and so does `devdata pull`
+  (remotex's devdata), which `data.toml` declares it to as the dataset `raw:scene-graph` (D123).
+  **A fresh clone has no `data/`** until one of them runs, and a gate run on a machine without
+  the NAS fails at its first read of it. Vite checks real paths, so `vitest.config.ts` and
+  `frontend/vite.config.ts` allow the link's target through `data.dir.ts`. That target is on D:
+  beside a checkout on C:, and Vite 8.3.0's `/@fs/` reads only its own drive and answers anything
+  else with `index.html` and 200, so the dev server showed no clip and no photograph from
+  `data/` until `fs.plugin.ts`'s `crossDriveFs` served them (D123). **The NAS folder is
+  Synology-replicated** (`D:\Data` holds `.SynologyWorkingDirectory`), and every gate run's
+  harvest writes `data/content/` into it. `sync-data.ps1` (D108) was retired: there
   is no second copy to keep in step. WekaExt's root `.gitignore` has no rule over this tree, so
   every exclusion the track needs is stated locally.
 - **`data/` is one copy, shared by every branch and every checkout.** A branch that changes

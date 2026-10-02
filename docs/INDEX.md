@@ -44,8 +44,8 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-29-playgrounds-m5.md` | M5's corrections, the slice ordered and the six beliefs, T1 and T2, their golden cases, M5 s3, s5 and s6 | **executed** |
 | `superpowers/plans/2026-09-29-m0-demos.md` | The live VLM provider's frame, the clip, D-T and D-V recorded and derived, the demo components, the lint rules, M0 s7 to s15, the Chromium checks | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D122. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28), the M4 playgrounds (§29), the M5 playgrounds (§30), the M0 demos (§31) and the findings D120 left open (§32)** | live |
+| `../DEVIATIONS.md` | **D1…D123. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28), the M4 playgrounds (§29), the M5 playgrounds (§30), the M0 demos (§31), the findings D120 left open (§32) and the dev server and F2's edges (§33)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | The freeze, its release by D-23, and every correction made under it | live |
 
@@ -530,6 +530,16 @@ whole process tree on Windows; the offline and perf checks refuse a held port. `
 `fix/sgs-review-2026-10-01-c` with D122: **395 pytest** and 7 skipped, parity 21 agree, i18n 507 keys, **1327
 vitest** in 89 files, ruff clean, content lint clean, standalone current (254 equations), frontend builds;
 `npm run test:e2e` 107, `npm run check:perf` 33 and `npm run check:offline` 9 passed (VERIFICATION §32).
+
+**The dev server, F2's edges and devdata, 2026-10-02.** Under `npm start` neither demo could load its clip and every
+photograph imported from `data/` was broken, though the build showed them: the dev server's allow list left out
+`data/`, and Vite 8.3.0's `/@fs/` reads only its own drive, while `data/` resolves to D: beside a checkout on C:.
+`frontend/vite.config.ts` now allows the link's target and `fs.plugin.ts` serves a file on another drive. F2 draws
+the edges the student adds, one curve per edge |E| counts, opposite arrows merging into one headless line when
+direction is discarded, in the height its readouts already took. `data.toml` declares `data/` to remotex's devdata
+as the dataset `raw:scene-graph`, which `devdata status` reports linked; nothing is retired yet. See D123.
+**Verification.** `npm run ci` green, 2026-10-02, on branch `fix/sgs-review-2026-10-01-c` with D123: 395 pytest and 7
+skipped, **1353 vitest** in 92 files; `npm run test:e2e` 107 and `npm run check:perf` 33 passed (VERIFICATION §33).
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in

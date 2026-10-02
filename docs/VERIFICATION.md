@@ -2110,3 +2110,25 @@ vitest route test alone, passes the keyboard walkthrough at all three resolution
 held only the branch's own changes, and nothing under `data/` appeared in `git status`. The mask rule's admission of
 every mask on the NAS is a pytest test (`test_every_mask_on_the_nas_is_admitted`, 648 of 648), and the IoU of all
 5,901 same-frame PSG mask pairs was compared old against new once, by hand, with no difference.
+
+---
+
+## 33. The dev server and F2's edges, measured 2026-10-02
+
+D123. The "before" column is the branch at `5b1985a` (D122), as §32 measured it.
+
+| Step | Before (`5b1985a`) | After (D123) |
+|---|---|---|
+| pytest | 395 passed, 7 skipped | the same |
+| vitest | 1327 passed in 89 files | **1353 passed in 92 files** (`dev_server`, `fs_plugin`, F2's `drawing`) |
+| parity, i18n, content, frozen, standalone | 21 agree; 507 keys; clean | the same |
+| `npm run test:e2e` | 107 passed | **107 passed**, 2.0 min |
+| `npm run check:perf` | 33 passed | **33 passed**, 30.3 s; F2 34.4 ms, cold starts 238 to 526 ms |
+
+Under `npm start`, in the Browser pane, before the change: both demo clips reported
+`DEMUXER_ERROR_COULD_NOT_OPEN`, the dev server answering `/@fs/D:/Data/DataRaw/scene-graph/demos/m0/clip.mp4` with
+`index.html` (status 200), and D-T's frame photograph was broken. After it: both clips loaded, 18.0 s and 1280 px
+wide, and none of the twelve photographs on M0's study page was broken. F2 at 1024×768 in 繁體中文 on
+`/lecture/m/m00/4`: the drawing 735 × 240 px, the visual 282 px and the step 21 px past the panel by default, as
+before; with `table on person` and `person on table` built, two curves with heads, and with direction discarded one
+line without a head beside |E| = 1.

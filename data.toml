@@ -1,0 +1,10 @@
+# devdata entries for this subproject: see spec section 6.2 (Project manifest).
+#
+# One dataset: data/, the junction to the NAS that D110 made, under the machine root `raw`
+# (C:\DataRaw on the author's machine). `devdata pull` makes the same link that start.ps1 and
+# fetch-data.ps1 make through system/tools/Connect-DataDirectory.ps1; both stay until a second
+# machine has passed with devdata alone (spec section 10.1, step 6; D123).
+[entries.data]
+kind   = "dataset"
+path   = "data"
+source = "raw:scene-graph"

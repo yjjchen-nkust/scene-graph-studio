@@ -5412,3 +5412,64 @@ agree, i18n 507 keys, **1327 vitest** in 89 files, ruff clean, content lint clea
 equations), frontend builds; `npm run harvest` left no tracked file changed. `npm run test:e2e` **107 passed**,
 `npm run check:perf` **33 passed** with every interaction inside its budget, and `npm run check:offline` over
 `.offline-venv` **9 passed**. VERIFICATION §32 records the four runs.
+
+## D123 — the dev server serves data/ across drives, F2 draws its edges, and devdata declares data/
+
+**Plan:** none. **Decisions:** none new. Asked for by the author on 2026-10-02, from the Browser pane, on branch
+`fix/sgs-review-2026-10-01-c` after D122.
+
+**The clip and the photographs under `npm start`.** Both demos' first parts said 「無法載入影片（clip.mp4）」, and the
+frame photograph beneath D-T's was a broken image, as was every photograph a playground imports from `data/`; the
+build showed them all. The `<video>` reported `DEMUXER_ERROR_COULD_NOT_OPEN`, and the body the dev server returned
+for `/@fs/D:/Data/DataRaw/scene-graph/demos/m0/clip.mp4` was the application's `index.html`, status 200. Two causes,
+each sufficient alone:
+
+- `frontend/vite.config.ts` set no `server.fs.allow`, so Vite's default, the workspace root `system/`, excluded
+  `data/`, its sibling. `vitest.config.ts` has allowed the link's target since D110; the dev server never did.
+- `data/` links to `C:\DataRaw\scene-graph`, itself a link to `D:\Data\DataRaw\scene-graph`, and Vite 8.3.0's
+  `serveRawFsMiddleware` drops a `/@fs/` path's drive letter and reads from the root of its own drive: it looked
+  for `C:\Data\DataRaw\scene-graph\demos\m0\clip.mp4`, found nothing, and fell through to `index.html`. With the
+  allow list fixed alone, the test still received HTML.
+
+The allow list now restates the workspace root and adds `dataDirectory()`. `system/fs.plugin.ts` registers
+`crossDriveFs`, a development-only middleware ahead of Vite's own that serves a `/@fs/` file on another drive than
+the server's, inside the allow list, requested with no query, honouring byte ranges; everything else goes on to
+Vite, which serves its own drive and refuses what lies outside the list. A request with a query is a module request
+that Vite's transform middleware answers and reads across drives correctly: the first version answered
+`leaderboards.json?import` raw and the page rendered blank, which is now a test. `tools/test/dev_server.test.mjs`
+starts the dev server from its config and asks for the clip, a byte range of it, a frame, a photograph and a JSON
+module; each but the module failed before, and all fail again with `data/` taken out of the list.
+`tools/test/fs_plugin.test.mjs` holds the decision and the range arithmetic, a `..` climb and a sibling prefix
+refused.
+
+**F2 draws its edges.** M0 s5's six objects were a row of buttons, and an edge the student added appeared only as a
+line of text beneath them: a graph none of whose edges was drawn. The buttons now sit round an ellipse in a box
+10 em tall, measured after every render so that a curve reaches each button's outline, which moves as a button names
+its role. One `<svg>` beneath them draws one curve per edge |E| counts, keyed as `tripletKey` keys it under the
+direction setting, so with direction discarded two opposite arrows become one line without a head, the merge the
+step teaches, drawn. Edges between one pair bend apart, 28 px between neighbours at their middle, and the chosen
+pair shows as a dashed edge until it is added. The drawing carries no text and is `aria-hidden`: a label scaled by a
+viewBox falls below the 18 px floor (D98), so the predicates stay in the list, which a screen reader reads. The
+buttons keep their DOM order, so the keyboard walk is unchanged. At 1024×768 in 繁體中文 the box takes the height
+F2's stacked readouts already took: the visual is 282 px and the step runs 21 px past the panel, both as before.
+`F2/test/drawing.test.ts` (8 tests) and four new tests in `TripletCombinatorics.test.tsx` failed before.
+
+**devdata.** `data.toml` at WekaExt's root (`project = "WekaExt"`) and in this track declare `data/` as the dataset
+`raw:scene-graph`, and `devdata init` wrote the managed `.gitignore` blocks. `devdata status` reports it `linked`:
+D110's junction is the link devdata makes. Nothing is retired: the spec's §10.1 step 6 waits for a second machine,
+and its §10.2 gives WekaExt's wave a plan of its own. Three facts about this track meet that plan:
+
+- `devdata lint` finds 38 tracked lines that spell a root path: 29 in Markdown records, this file among them, and 9
+  in code, among them `Connect-DataDirectory.ps1`'s default target and two records tests.
+- The track writes into its dataset, which the spec's decision 4.1 makes a read-only input: every gate run's harvest
+  writes `data/content/`, and the placeholder slice, the demos' derived files and the VLM recordings are written
+  there too. `D:\Data` holds `.SynologyWorkingDirectory`, so each of those writes is replicated.
+- Data that changes with code, the golden vectors, `playground_golden.json`, the transcripts keyed by their prompts
+  and `data/content/`, 656 KB in `content/`, `golden/` and `vlm/`, is one copy for every branch under latest-only (decision 4.2), which D111 and
+  D115 already met: `main` failed its gate until a branch merged, and a revert needed hand edits on the NAS.
+
+**Verification.** On this branch, 2026-10-02: `npm run ci` green, 395 pytest and 7 skipped, parity 21 agree, i18n
+507 keys, **1353 vitest** in 92 files, ruff clean, content lint clean, standalone current, frontend builds;
+`npm run test:e2e` **107 passed**, and `npm run check:perf` **33 passed**, F2's direction toggle at 34.4 ms against
+its 100 ms budget. In the Browser pane under `npm start`, both clips load (18.0 s, 1280 px wide) and the twelve
+photographs of M0's study page render. VERIFICATION §33 records the runs.
