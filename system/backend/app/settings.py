@@ -19,3 +19,19 @@ TRACK_ROOT = ROOT.parent
 # corpora out of the way, is a destructive operation in the service of a test.
 DATA_DIR = Path(os.environ.get("SGS_DATA_DIR", TRACK_ROOT / "data"))
 CORPUS_ROOT = Path(os.environ.get("SGS_CORPUS_ROOT", DATA_DIR / "_raw"))
+
+
+def require_data_dir() -> Path:
+    """`DATA_DIR`, for a script about to write under it, or a stop that names the remedy.
+
+    data/ is the link to the NAS that `devdata pull` makes (D110, D125). A writer that ran without
+    it would create a real directory in its place, which devdata reports as `occupied`, and what
+    it wrote would reach no NAS and no other checkout: rule 10.4 of the devdata spec. Read at call
+    time, so a test that moves `DATA_DIR` moves the check with it.
+    """
+    if not DATA_DIR.is_dir():
+        raise SystemExit(
+            f"{DATA_DIR} is absent. data/ is the link to the NAS that `devdata pull` makes; run "
+            f"`devdata pull` at the track root (or set SGS_DATA_DIR). Nothing was written."
+        )
+    return DATA_DIR

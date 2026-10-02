@@ -14,3 +14,9 @@ system/web/brief/index.html   eol=lf
 # needs the same, and its path listed above. The block also held a stray line reading `" to`,
 # where the backslash-n of its comment had been written as a line break; git read it as a
 # pattern.
+
+# The CI fixture (D125) holds copies of NAS files, byte for byte: `tools/fixture.mjs` compares them
+# with data/, `build_demo_m0.py --check` and the manifests' SHA-256 values compare their bytes, and
+# the harvest rewrites `content/` in place on every gate run. autocrlf would turn its JSON into
+# CRLF on a Windows checkout, so no file under it is treated as text.
+fixtures/data/** -text

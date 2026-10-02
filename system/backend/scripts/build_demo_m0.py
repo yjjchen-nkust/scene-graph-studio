@@ -22,7 +22,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.datasets.loader import load_slice  # noqa: E402
-from app.settings import DATA_DIR  # noqa: E402
+from app.settings import DATA_DIR, require_data_dir  # noqa: E402
 from app.vlm import indvissgg  # noqa: E402
 from app.vlm.prompts import EXAMPLES_DEMO, O_DEMO, O_ISG, P_ISG, step1_prompt  # noqa: E402
 from scripts.record_demo_traditional import (  # noqa: E402
@@ -184,6 +184,7 @@ def build_indvissgg() -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    require_data_dir()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true", help="compare, write nothing")
     args = parser.parse_args(argv)

@@ -1,0 +1,233 @@
+{
+  "image_id": "m0-demo-096",
+  "dataset": "mini-isg",
+  "width": 1280,
+  "height": 720,
+  "objects": [
+    {
+      "object_id": 0,
+      "names": [
+        "person"
+      ],
+      "bbox": {
+        "x": 166.60250854492188,
+        "y": 57.417572021484375,
+        "w": 531.2429504394531,
+        "h": 650.6908264160156
+      },
+      "mask": null,
+      "attributes": [],
+      "synsets": []
+    },
+    {
+      "object_id": 1,
+      "names": [
+        "person"
+      ],
+      "bbox": {
+        "x": 281.3519592285156,
+        "y": 90.6619644165039,
+        "w": 964.0678405761719,
+        "h": 577.6607894897461
+      },
+      "mask": null,
+      "attributes": [],
+      "synsets": []
+    },
+    {
+      "object_id": 2,
+      "names": [
+        "remote"
+      ],
+      "bbox": {
+        "x": 528.3067016601562,
+        "y": 291.18255615234375,
+        "w": 684.4423217773438,
+        "h": 406.6033935546875
+      },
+      "mask": null,
+      "attributes": [],
+      "synsets": []
+    },
+    {
+      "object_id": 3,
+      "names": [
+        "remote"
+      ],
+      "bbox": {
+        "x": 410.6372985839844,
+        "y": 96.18956756591797,
+        "w": 224.22262573242188,
+        "h": 163.75055694580078
+      },
+      "mask": null,
+      "attributes": [],
+      "synsets": []
+    },
+    {
+      "object_id": 4,
+      "names": [
+        "knife"
+      ],
+      "bbox": {
+        "x": 503.2380676269531,
+        "y": 369.85552978515625,
+        "w": 213.22836303710938,
+        "h": 80.18133544921875
+      },
+      "mask": null,
+      "attributes": [],
+      "synsets": []
+    }
+  ],
+  "relationships": [
+    {
+      "relationship_id": 0,
+      "subject_id": 0,
+      "object_id": 1,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 1,
+      "subject_id": 0,
+      "object_id": 2,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 2,
+      "subject_id": 0,
+      "object_id": 3,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 3,
+      "subject_id": 0,
+      "object_id": 4,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 4,
+      "subject_id": 1,
+      "object_id": 0,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 5,
+      "subject_id": 1,
+      "object_id": 2,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 6,
+      "subject_id": 1,
+      "object_id": 3,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 7,
+      "subject_id": 1,
+      "object_id": 4,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 8,
+      "subject_id": 2,
+      "object_id": 0,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 9,
+      "subject_id": 2,
+      "object_id": 1,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 10,
+      "subject_id": 2,
+      "object_id": 3,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 11,
+      "subject_id": 2,
+      "object_id": 4,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 12,
+      "subject_id": 3,
+      "object_id": 0,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 13,
+      "subject_id": 3,
+      "object_id": 1,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 14,
+      "subject_id": 3,
+      "object_id": 2,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 15,
+      "subject_id": 3,
+      "object_id": 4,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 16,
+      "subject_id": 4,
+      "object_id": 0,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 17,
+      "subject_id": 4,
+      "object_id": 1,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 18,
+      "subject_id": 4,
+      "object_id": 2,
+      "predicate": "on",
+      "score": null
+    },
+    {
+      "relationship_id": 19,
+      "subject_id": 4,
+      "object_id": 3,
+      "predicate": "on",
+      "score": null
+    }
+  ],
+  "provenance": {
+    "kind": "model",
+    "fidelity": "measured",
+    "model": "fasterrcnn-r50fpn-coco+freq-vg150sgb",
+    "vlm": null,
+    "generated_at": "2026-09-29T14:49:34Z",
+    "note": "Faster R-CNN ResNet-50 FPN, COCO_V1 weights, detections with score >= 0.5; every ordered pair takes the predicate most frequent for its class pair over the vg150-sgb slice's 80 frames (FREQ in form), or `on` when the pair is unseen or a class is not a slice class."
+  }
+}

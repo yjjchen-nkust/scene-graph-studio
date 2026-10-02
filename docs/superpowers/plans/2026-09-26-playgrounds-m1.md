@@ -97,7 +97,7 @@ If any figure differs, stop: the golden cases in Task 7 and the spec's reconcili
 
 ```bash
 sha256sum /c/DataRaw/vg150-sgb/README.md /c/DataRaw/vg150-sgb/annotations/val-00000-of-00001.parquet
-node tools/py.mjs -c "import pyarrow.parquet as pq; print(pq.ParquetFile('C:/DataRaw/vg150-sgb/annotations/val-00000-of-00001.parquet').metadata.num_rows)"
+node tools/py.mjs -c "import os, pyarrow.parquet as pq; print(pq.ParquetFile(os.path.join(os.environ['SGS_CORPUS_ROOT'], 'vg150-sgb/annotations/val-00000-of-00001.parquet')).metadata.num_rows)"
 ```
 
 Expected:
@@ -180,7 +180,7 @@ Every `quote` below was copied from the source; where the source wraps a sentenc
       "label_zh": "SGG-Benchmark 發布版本 v2（現行；本機語料）",
       "figures": {
         "train": { "value": 68538, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| train |  68 538 |  730 270           |  405 822   | 10 815                      |" },
-        "val": { "value": 5000, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| val   |   5 000 |   62 754           |   33 203   | 0 (all have ≥1 relation)    |", "measured": { "command": "node tools/py.mjs -c \"import pyarrow.parquet as pq; print(pq.ParquetFile('C:/DataRaw/vg150-sgb/annotations/val-00000-of-00001.parquet').metadata.num_rows)\"", "sha256": "66830fb049a10616d08a3ebfd5c5f24db8002452224dd186a525ebdeaefea0e6", "rows": 5000, "date": "2026-09-26" } },
+        "val": { "value": 5000, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| val   |   5 000 |   62 754           |   33 203   | 0 (all have ≥1 relation)    |", "measured": { "command": "node tools/py.mjs -c \"import os, pyarrow.parquet as pq; print(pq.ParquetFile(os.path.join(os.environ['SGS_CORPUS_ROOT'], 'vg150-sgb/annotations/val-00000-of-00001.parquet')).metadata.num_rows)\"", "sha256": "66830fb049a10616d08a3ebfd5c5f24db8002452224dd186a525ebdeaefea0e6", "rows": 5000, "date": "2026-09-26" } },
         "test": { "value": 31876, "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "| test  |  31 876 |  352 330           |  183 640   | 5 430                       |" },
         "val_from": { "value": "trainval", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Changelog", "quote": "`val` is now exactly the standard Neural-Motifs / Scene-Graph-Benchmark 5,000-image validation set (all with ≥1 annotated relation), disjoint from both `train` and `test`" },
         "zero_relation": { "value": "kept", "source": "vg150-sgb card", "url": "https://huggingface.co/datasets/maelic/VG150-coco-format", "locator": "Dataset statistics", "quote": "Images with zero relations are kept" }
@@ -200,7 +200,7 @@ The card's quotes are checked against the file on disk; a quote that is not a su
 
 ```bash
 node -e "
-const fs=require('fs');const card=fs.readFileSync('C:/DataRaw/vg150-sgb/README.md','utf8').replace(/\s+/g,' ');
+const fs=require('fs');const card=fs.readFileSync(process.env.SGS_CORPUS_ROOT+'/vg150-sgb/README.md','utf8').replace(/\s+/g,' ');
 const j=JSON.parse(fs.readFileSync('../data/content/vg150_splits.json','utf8'));
 let bad=0;for(const r of j.releases){for(const f of [...Object.values(r.figures),...r.notes]){if(f.source!=='vg150-sgb card')continue;const q=f.quote.replace(/\s+/g,' ');if(!card.includes(q)){bad++;console.log('NOT IN CARD',r.id,q)}}}
 console.log('card quotes checked, mismatches:',bad)"

@@ -82,7 +82,7 @@ SGS_BACKEND_PORT=8010 SGS_FRONTEND_PORT=5180 npm start
 
 **A fresh clone needs the NAS, and nothing more (D109, D110).** Git carries nothing under
 `data/`, and no data file lives in the checkout: `start.ps1` makes `data/` a link to
-`C:\DataRaw\scene-graph` (or to `SGS_DATA_DIR`), and stops and says so when that directory is
+the NAS at `raw:WekaExt/scene-graph-studio`, as `devdata pull` does (or to `SGS_DATA_DIR`), and stops and says so when that directory is
 unreachable. Beyond that no data of any kind is needed: the placeholder slice, six synthetic
 frames, is enough to run every lab. Nothing is downloaded, and nothing needs a GPU.
 
@@ -178,7 +178,7 @@ dataset.**
 Nothing under `data/` is committed (D109): not the corpora or slice images, and not the
 slices' annotations and manifests, the placeholder frames, `data/content/`, the golden vectors,
 the predictions or `data/LICENCES.md` either. `.gitignore` ignores the whole directory, and
-`data/` is a directory junction to `C:\DataRaw\scene-graph` on the NAS, the one copy every
+`data/` is a directory junction to `raw:WekaExt/scene-graph-studio` on the NAS, the one copy every
 reader reaches (D110). `SGS_DATA_DIR` names another target; `start.ps1` and `fetch-data.ps1`
 make the link. A harvest, a cut or a fetch writes straight to the NAS, so there is nothing to
 copy afterwards. To remove the link, `rmdir data` or `rm -rf data`, never `rm -rf data/`: with
@@ -328,13 +328,13 @@ kept up to date; `docs/VERIFICATION.md` records the nine checks of design §6 wi
 was run and its outcome. All nine have been run and passed; check 6 was first recorded as
 **not run** (D69) and passed on 2026-09-18.
 
-`npm run ci` is green on py12: 395 Python tests (7 skipped for a corpus this machine may not
-have), 1356 TypeScript tests across 92 files, parity 21/21, i18n 507 keys in both locales,
+`npm run ci` is green on py12: 404 Python tests (7 skipped for a corpus this machine may not
+have), 1364 TypeScript tests across 95 files, parity 21/21, i18n 507 keys in both locales,
 content lint clean, frozen-page lints clean, and the frontend builds, measured 2026-10-01 on
-branch `fix/sgs-review-2026-10-01-c` (D122 to D124). `npm run test:e2e` is 107 passed,
+branch `fix/sgs-review-2026-10-01-c` (D122 to D125). `npm run test:e2e` is 107 passed,
 `npm run check:perf` is 33, which also measures the two demonstrations, and
 `npm run check:offline` is 9, all three measured on the same branch the same day;
-`docs/VERIFICATION.md` §32 to §34 record those runs, §31 the M0 demos' runs, §15
+`docs/VERIFICATION.md` §32 to §35 record those runs, §31 the M0 demos' runs, §15
 to §30 the sixteen before it, and §14 the earlier run that reconciled
 three documents carrying three different counts.
 

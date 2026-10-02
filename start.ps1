@@ -13,7 +13,8 @@
     NFR-1: the application runs with no corpora and no bundle. The placeholder slice is
     generated locally and every lab is demonstrable on it. Real slices are a separate,
     optional step -- see .\fetch-data.ps1. It does need data/, which is a link this script
-    makes to the NAS, C:\DataRaw\scene-graph or SGS_DATA_DIR (D110).
+    makes to the NAS, where data.toml's source names it under devdata's machine roots, or to
+    SGS_DATA_DIR (D110, D125); `devdata pull` makes the same link.
 
 .PARAMETER Setup
     Force the install steps even if they appear done. Use after pulling changes that touch
@@ -87,9 +88,9 @@ Write-Host ''
 . (Join-Path $system 'tools/Connect-DataDirectory.ps1')
 $dataProblem = Connect-DataDirectory -Track $track
 if ($dataProblem) {
-    Stop-With $dataProblem 'SGS_DATA_DIR names the data directory when it is not C:\DataRaw\scene-graph.'
+    Stop-With $dataProblem 'Run devdata pull at the track root, or set SGS_DATA_DIR to the data directory.'
 }
-Write-Ok "data -> $(Get-DataTarget)"
+Write-Ok "data -> $(Get-DataTarget -Track $track)"
 
 # ---- Node (D-03: >= 22.12 is a hard prerequisite; Vite 8 refuses anything older) ----------
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue

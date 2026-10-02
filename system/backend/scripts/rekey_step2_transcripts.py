@@ -28,7 +28,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.settings import DATA_DIR  # noqa: E402
+from app.settings import DATA_DIR, require_data_dir  # noqa: E402
 from app.vlm.indvissgg import (  # noqa: E402
     criteria_for,
     parse_analysis,
@@ -94,6 +94,7 @@ def render(payload: dict[str, Any]) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    require_data_dir()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true", help="exit 1 if a rewrite would change")
     parser.add_argument("files", nargs="*", type=Path, help="default: the two authored files")

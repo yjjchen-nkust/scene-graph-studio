@@ -2157,12 +2157,12 @@ surroundings an argument, not to add a second machine.
 
 ## D84 — the suite was red in the configuration where the adapters are actually tested
 
-`SGS_CORPUS_ROOT` points at `C:\DataRaw` on the author's machine, which is how the four adapter
+`SGS_CORPUS_ROOT` points at the `raw` root on the author's machine, which is how the four adapter
 tests written against the real corpora run at all; without it they skip with "no corpus on this
 machine". With it set, `test_data_dir_follows_its_environment_variable` fails:
 
 ```
-assert WindowsPath('C:/DataRaw') == (WindowsPath('…/test_data_dir_follows_its_envi0') / '_raw')
+assert WindowsPath('<the raw root>') == (WindowsPath('…/test_data_dir_follows_its_envi0') / '_raw')
 ```
 
 The test sets `SGS_DATA_DIR` to a scratch directory and asserts that the corpus root defaults
@@ -4221,7 +4221,7 @@ and from `ci`, that CLAUDE.md names eleven steps, and that neither file exists.
 ## D108 — the data git does not carry moves through the NAS, by `sync-data.ps1`
 
 **Plan:** none. **Decisions:** the author's, on 2026-09-29: "for scene-graph-studio, the data
-should not go to github. Please use NAS: C:\DataRaw\scene-graph to sync the untracked data."
+should not go to github. Please use NAS: [raw:scene-graph] to sync the untracked data."
 Branch `chore/sgs-data-nas-sync`, from `main` at `eb68d64`.
 
 [**Retired 2026-09-29 (D110):** `sync-data.ps1` is gone; `data/` is a link to the NAS, and there
@@ -4237,13 +4237,13 @@ files and 2.5 MB that the licence gates cleared and the gate reads. What git ign
 `data/` moves through the NAS: on this machine `data/_raw/industreal/` (2 files, 4.619 GB) and the
 images of four slices, `indoorvg`, `mini-isg`, `psg` and `vg150-sgb` (190 files, 25.3 MB). None of
 it had reached the remote; `.gitignore` already excluded all of it. The corpora at
-`C:\DataRaw\psg`, `C:\DataRaw\vg150-sgb` and `C:\DataRaw\indoorvg`, which `SGS_CORPUS_ROOT` names,
+`raw:psg`, `raw:vg150-sgb` and `raw:indoorvg`, which `SGS_CORPUS_ROOT` names,
 were already on that drive and were not touched.
 
 **What was added.** `sync-data.ps1` at the track root, beside `fetch-data.ps1`. `-Status`, the
 default, compares this checkout with the NAS group by group and names the direction each group
 needs; `-Push` and `-Pull` copy with robocopy; `-DryRun` lists and copies nothing. The NAS
-directory stands for `data/` and defaults to `C:\DataRaw\scene-graph`; `SGS_DATA_NAS` or `-Nas`
+directory stands for `data/` and defaults to `raw:scene-graph`; `SGS_DATA_NAS` or `-Nas`
 overrides it. The copied set is what `git ls-files --others --ignored --exclude-standard` reports
 under `data/`, so a new ignore rule extends it with no edit to the script.
 `data/predictions/.latency.json` is left out, because each machine reports its own timings in
@@ -4325,7 +4325,7 @@ dated records keep their text, and now read "present in `data/`".
   nor the gate runs. Once `data/` is pulled, NFR-1's offline requirement holds as before.
 - **CI.** `.gitea/workflows/scene-graph-studio.yml` checks out the repository and runs
   `npm run ci`; with no `data/` the gate fails at its first read of it, and a runner in Docker
-  cannot reach `C:\DataRaw`. The workflow has no runner yet, so nothing is red today. It is left
+  cannot reach the `raw` root. The workflow has no runner yet, so nothing is red today. It is left
   as it was: whether CI gets its data another way or is retired is the author's decision.
 - **The other machine.** A `git pull` that brings this commit deletes the 65 files from that
   working tree, because git removes what a merged commit removes; `.\sync-data.ps1 -Pull`
@@ -4354,26 +4354,26 @@ named in `start.ps1` before its first install.
 
 **Plan:** none. **Decisions:** the author's, on 2026-09-29, after D109's merge at `5d010e5`:
 "remove the files under scene-graph-studio\data and point all data access to
-C:\DataRaw\scene-graph". Branch `chore/sgs-data-link-nas`, from `main` at `5d010e5`.
+[raw:scene-graph]". Branch `chore/sgs-data-link-nas`, from `main` at `5d010e5`.
 
 **How the request was met, and why this way.** Before the removal all 257 files under `data/`
 were compared with the NAS copy by SHA-256, with no difference; the directory was then deleted
-and `data/` made a directory junction to `C:\DataRaw\scene-graph`. Every reader keeps its
+and `data/` made a directory junction to `raw:scene-graph`. Every reader keeps its
 `data/` path and reaches the one copy: the backend's `DATA_DIR`, the Node tools, the PowerShell
 scripts, the tests and the frontend's build-time imports. Rewriting each reader to a configured
 absolute path founders on the last: fourteen static JSON imports and one `import.meta.glob` take
 their types from a path `tsc` must follow, and a `paths` entry in `tsconfig` would fix the NAS
 location in a file with no override. The link is therefore the one place the location is
 decided. `system/tools/Connect-DataDirectory.ps1` makes it, to `SGS_DATA_DIR` when that is set
-and to `C:\DataRaw\scene-graph` otherwise, as a junction, or as a symbolic link for a
+and to `raw:scene-graph` otherwise, as a junction, or as a symbolic link for a
 `\\server\share` target, which a junction cannot reach. It creates and never deletes or moves:
 a real `data/` directory, a link to another target and an unreachable target each return a
 sentence instead. `start.ps1` calls it before any install and `fetch-data.ps1` before any read;
 `tools/start.mjs` stops with the same instruction when `data/LICENCES.md` does not resolve.
 
 **Vite checks real paths.** With the link in place, the frontend suites that import from `data/`
-failed to collect on `Denied ID D:/Data/DataRaw/scene-graph/slices/placeholder/images/ph-001.png?url`:
-`C:\DataRaw` is itself a link to `D:\Data\DataRaw`, and the guard compares the resolved path with
+failed to collect on `Denied ID`, naming the real path of `slices/placeholder/images/ph-001.png?url`:
+the `raw` root is itself a link to a folder on D:, and the guard compares the resolved path with
 `server.fs.allow`. `system/data.dir.ts` resolves the link, and `vitest.config.ts` allows its
 target beside `..`; the suites then passed, 1019 tests in 74 files, and `tsc -b` over the
 frontend was clean. The production build does not apply the guard.
@@ -4972,7 +4972,7 @@ and `test_the_three_corrections_the_paper_names_are_all_playable` fail, and L5's
 `step2_prompt` text restored and `rekey_step2_transcripts.py` run against it, because the script rebuilds
 from the current prompt only. The pre-rekey files are kept in the workspace at
 `.superpowers/sdd/2026-09-29-m0-demos/backup-fig2-pipeline.json` and `backup-fig2-corrections.json`, which git
-ignores and which are scratch; a durable copy is at `C:\DataRaw\scene-graph\vlm\transcripts-pre-D115\`, a
+ignores and which are scratch; a durable copy is at `data/vlm/transcripts-pre-D115/`, a
 sibling of `transcripts/` that the transcript player does not load (SHA-256 of `fig2-pipeline.json`:
 `3d12d9432888f1d494622282e3fff6e18186af971f75d458eb94de512838844e`; of `fig2-corrections.json`:
 `1a47b087972e1c459d09a9542893b8eba7598606b88adc3826da76ec2eb4db03`). Keep that directory after the
@@ -5421,12 +5421,12 @@ equations), frontend builds; `npm run harvest` left no tracked file changed. `np
 **The clip and the photographs under `npm start`.** Both demos' first parts said 「無法載入影片（clip.mp4）」, and the
 frame photograph beneath D-T's was a broken image, as was every photograph a playground imports from `data/`; the
 build showed them all. The `<video>` reported `DEMUXER_ERROR_COULD_NOT_OPEN`, and the body the dev server returned
-for `/@fs/D:/Data/DataRaw/scene-graph/demos/m0/clip.mp4` was the application's `index.html`, status 200. Two causes,
+for the clip's `/@fs/` URL, its real path on D:, was the application's `index.html`, status 200. Two causes,
 each sufficient alone:
 
 - `frontend/vite.config.ts` set no `server.fs.allow`, so Vite's default, the workspace root `system/`, excluded
   `data/`, its sibling. `vitest.config.ts` has allowed the link's target since D110; the dev server never did.
-- `data/` links to `C:\DataRaw\scene-graph`, itself a link to `D:\Data\DataRaw\scene-graph`, and Vite 8.3.0's
+- `data/` links to `raw:scene-graph`, whose root is itself a link to a folder on D:, and Vite 8.3.0's
   `serveRawFsMiddleware` drops a `/@fs/` path's drive letter and reads from the root of its own drive: it looked
   for `C:\Data\DataRaw\scene-graph\demos\m0\clip.mp4`, found nothing, and fell through to `index.html`. With the
   allow list fixed alone, the test still received HTML.
@@ -5534,3 +5534,59 @@ D114/D115's files are kept: `data/vlm/transcripts-pre-D124/m0-demo.json` (SHA-25
 **Verification.** On this branch, 2026-10-02: `npm run ci` green, **399 pytest** and 7 skipped, **1356 vitest** in
 92 files, parity 21 agree, i18n 507 keys, content lint clean, frontend builds; `npm run test:e2e` **107 passed** and
 `npm run check:perf` **33 passed**, D-V at 32.5 ms. VERIFICATION §34 records the recording and the runs.
+
+## D125 — the track's data follows remotex devdata: moved, guarded, fixtured, and named by root
+
+**Plan:** `plans/2026-10-02-devdata-migration.md`, the devdata spec's wave 2 for WekaExt (its §10.2), whose one data
+mechanism is this track's (§10.3). **Decisions:** none of D-01 to D-23; three locked with the author on 2026-10-02:
+move the data to decision 4.5's place, rewrite every line `devdata lint` reports, records included, and link the CI
+fixture with `devdata pull --ci`. Branch `feat/sgs-devdata-migration`, from `main` at `20a3fc7`.
+
+**The location.** The devdata spec's decision 4.5, added the same day, puts project-owned data at
+`<raw>/<project>/<subproject path>`. The NAS folder was renamed in place from `raw:scene-graph` to
+`raw:WekaExt/scene-graph-studio`, one volume, so no copy: 289 files and 5,000,284,186 bytes before and after.
+`data.toml` names the new source, `devdata pull` replaced the junction it reported `wrong-target`, and D-V's
+transcript and derived file kept their SHA-256 values.
+
+**The writers.** Rule 10.4: a generator writes through the link and never creates it. Run without data/,
+`make_placeholders.py` made `data/` a real directory, which devdata reports as `occupied`, and its output then lay
+on no NAS. `app.settings.require_data_dir()` stops with a message naming `devdata pull` and creates nothing, and the
+thirteen backend scripts that write under `DATA_DIR` call it before anything else; `tools/data_dir.mjs` is the
+same rule for the harvest, which now reads `SGS_DATA_DIR` as the backend does. A static test lists the writers and
+refuses a script that writes under `DATA_DIR` without being on the list.
+
+**The fixture.** Decision 4.5 has git track only each linked entry's fixture, linked in its place by
+`devdata pull --ci`. `fixtures/data` holds 127 files, 6.3 MB: what `npm run ci` reads, without the corpora, the
+two papers, the earlier recordings, or the images of vg150-sgb, psg and indoorvg, whose annotations alone the
+D-T prior needs. Every file clears its row of `LICENCES.md`: the placeholder and the predictions over it are this
+repository's own, vg150-sgb contributes annotations only (`annotations_commit` YES), mini-isg and the M0 demos
+are IndustReal under Apache-2.0 with both gates YES. Linked as the runner will link it, the gate is green: 401
+pytest and 10 skipped, 1,359 vitest. `.gitattributes` unsets `text` under it, since its bytes are compared and
+hashed. A tools test holds each fixture file to its NAS copy, byte for byte, outside CI, and fails naming the file
+after a one-byte change; `npm run fixture:refresh` copies the NAS's versions over it and never adds a file.
+
+**The lint.** 54 tracked lines spelt a data root, the 38 counted on 2026-10-02 morning and 16 written since. The
+code: `Connect-DataDirectory.ps1` now reads its target from devdata's roots file and `data.toml`, as
+`devdata pull` does, and its test, run under pwsh, found that `Join-Path` throws when the root's drive is not
+mounted, so the path is combined with `IO.Path`; messages in `start.ps1` and `start.mjs` name `devdata pull`;
+comments and test paths name no machine. The records: a path is written as the entry path, the root by name
+(`raw:scene-graph`, where the data was), or `SGS_CORPUS_ROOT` in the reproduction commands, and two quotations of
+the author's own instructions carry the substitution in brackets. `vg150_splits.json`'s measuring command changed
+identically on the NAS and in the fixture. The D108 and D110 records tests name the source by root, and D109's
+admits an unset attribute. `devdata lint` reports zero.
+
+**The CI link.** The workflow installs remotex and runs `devdata pull --ci` at the track root before `npm run ci`.
+remotex is private: an anonymous request answered 404 from Gitea's API and 401 from git, so the install reads
+the repository secret `REMOTEX_READ_TOKEN` and fails with that reason when it is not set. Until the author sets
+it, the job stops at that step; before D125 it could not pass either, since no `data/` existed on a runner after
+D109. No runner has taken a job since 2026-09-26, so the workflow has not run.
+
+**Left for the author.** The spec's §10.1 steps 5 and 6: on a second machine, `git pull`, `devdata pull` and the
+tests; then `Connect-DataDirectory.ps1`, `fetch-data.ps1`'s link step, `SGS_DATA_DIR` and `SGS_CORPUS_ROOT` are
+retired. The corpora under `data/_raw` and the author's `SGS_CORPUS_ROOT` would then become dataset entries of
+their own. The secret `REMOTEX_READ_TOKEN`: a Gitea access token that reads `CIL-Team/remotex`.
+
+**Verification.** On this branch, 2026-10-02: `npm run ci` green, **404 pytest** and 7 skipped, **1,364 vitest** in
+95 files, parity 21 agree, i18n 507 keys, content lint clean, frontend builds; `npm run test:e2e` **107 passed**;
+against the fixture alone with `CI=true`, 401 pytest and 10 skipped and 1,359 vitest; `devdata lint` exit 0 and
+`devdata status` `linked`. VERIFICATION §35 records the runs.

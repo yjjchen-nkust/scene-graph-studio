@@ -25,7 +25,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.settings import DATA_DIR  # noqa: E402
+from app.settings import DATA_DIR, require_data_dir  # noqa: E402
 from app.vlm import prompts  # noqa: E402
 from app.vlm.provider import exchange_key  # noqa: E402
 
@@ -140,6 +140,7 @@ def dumps(blob: dict[str, Any]) -> str:
 
 
 def main() -> None:
+    require_data_dir()
     authoring = json.loads(AUTHORING.read_text(encoding="utf-8"))
     TRANSCRIPT.parent.mkdir(parents=True, exist_ok=True)
     ANNOTATIONS.parent.mkdir(parents=True, exist_ok=True)

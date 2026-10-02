@@ -20,10 +20,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.datasets.licences import gates_for  # noqa: E402
 from app.datasets.loader import DATASETS  # noqa: E402
-from app.settings import DATA_DIR, ROOT  # noqa: E402
+from app.settings import DATA_DIR, ROOT, require_data_dir  # noqa: E402
 
 
 def main() -> None:
+    require_data_dir()
     cleared: list[str] = []
     skipped: list[str] = []
     for ds in DATASETS:

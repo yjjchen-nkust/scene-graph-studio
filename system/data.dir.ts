@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
  *
  * data/ is a link to the NAS (D110), and Vite's filesystem guard checks the real path of every
  * file it imports, so an allow list naming data/ alone denies each file in it: every suite that
- * imports from it failed to collect on "Denied ID D:/Data/DataRaw/scene-graph/…". When the link does not
+ * imports from it failed to collect on "Denied ID <the link's real target>/…". When the link does not
  * resolve, its own path comes back, so a clone with no data/ fails on the missing file it
  * imports rather than here.
  */

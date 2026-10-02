@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.datasets.loader import load_slice  # noqa: E402
 from app.schema import SceneGraph  # noqa: E402
-from app.settings import DATA_DIR  # noqa: E402
+from app.settings import DATA_DIR, require_data_dir  # noqa: E402
 
 MODEL = "fasterrcnn-r50fpn-coco+freq-vg150sgb"
 THRESHOLD = 0.5
@@ -191,6 +191,7 @@ def _write(path: Path, payload: object) -> None:
 
 
 def main() -> None:
+    require_data_dir()
     import torch
     import torchvision
 

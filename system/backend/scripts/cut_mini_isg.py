@@ -25,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.settings import DATA_DIR  # noqa: E402
+from app.settings import DATA_DIR, require_data_dir  # noqa: E402
 
 ARCHIVE = DATA_DIR / "_raw" / "industreal" / "all_rgb_videos.zip"
 IMAGES = DATA_DIR / "slices" / "mini-isg" / "images"
@@ -72,6 +72,7 @@ def select(names: list[str], wanted: int) -> list[str]:
 
 
 def main() -> None:
+    require_data_dir()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--frames", type=int, default=40)
     args = parser.parse_args()

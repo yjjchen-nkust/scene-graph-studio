@@ -24,7 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.settings import DATA_DIR  # noqa: E402
+from app.settings import DATA_DIR, require_data_dir  # noqa: E402
 
 ARCHIVE = DATA_DIR / "_raw" / "industreal" / "all_rgb_videos.zip"
 LICENCES = DATA_DIR / "LICENCES.md"
@@ -96,6 +96,7 @@ def digest(path: Path) -> tuple[str, int]:
 
 
 def main() -> None:
+    require_data_dir()
     if not licence_row_present():
         raise SystemExit(
             f"{LICENCES} has no `demos-m0` row. Write it first (D-18); "

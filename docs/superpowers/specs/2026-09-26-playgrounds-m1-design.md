@@ -53,7 +53,7 @@ images for training and the remaining 30% for testing." No validation set and no
 is stated. The same paper, §4.1.1, on Table 2: "many predicates have very similar semantic
 meanings, for example, on vs. over and hanging from vs. attached to."
 
-**The `vg150-sgb` dataset card**, `README.md` in the corpus at `C:\DataRaw\vg150-sgb`, published
+**The `vg150-sgb` dataset card**, `README.md` in the corpus at `raw:vg150-sgb`, published
 with the release the project downloaded on 2026-09-16:
 
 * *Changelog:* "the entire train/val pool was placed in `train` with no validation images held
