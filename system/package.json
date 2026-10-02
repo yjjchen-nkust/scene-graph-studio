@@ -29,7 +29,8 @@
     "check:offline": "node tools/offline_check.mjs",
     "check:perf": "node tools/perf_check.mjs",
     "lint:py": "node tools/py.mjs -m ruff check backend tools",
-    "check:pins": "node tools/py.mjs backend/scripts/check_pins.py"
+    "check:pins": "node tools/py.mjs backend/scripts/check_pins.py",
+    "fixture:refresh": "node tools/fixture.mjs --refresh"
   },
   "devDependencies": {
     "mathjax-full": "^3.2.1",

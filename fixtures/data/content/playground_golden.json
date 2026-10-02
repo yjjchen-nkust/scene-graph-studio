@@ -1,0 +1,605 @@
+{
+  "$comment": "One case per playground configuration. `why` writes out the arithmetic a reader would check, exactly as data/golden/vectors.json does for the evaluation engine: a bare expected number is a value somebody typed, and recomputing it in the test from the same annotation would mirror the implementation and prove nothing. content_lint.mjs refuses a case whose why is missing.",
+  "cases": [
+    {
+      "id": "pg-F1-ph001-full-slice",
+      "kp": "F1",
+      "image_id": "ph-001",
+      "knobs": { "density": 1, "predicate_count": 16 },
+      "expect": { "objects": 6, "annotated": 6, "candidates": 480, "ratio": 0.0125 },
+      "why": "ph-001 carries 6 objects and 6 annotated edges. Ordered pairs of distinct objects = 6 x 5 = 30. With the slice's 16 predicates the candidate space is 30 x 16 = 480. The annotated share is 6 / 480 = 0.0125."
+    },
+    {
+      "id": "pg-F1-ph001-full-vg150",
+      "kp": "F1",
+      "image_id": "ph-001",
+      "knobs": { "density": 1, "predicate_count": 50 },
+      "expect": { "objects": 6, "annotated": 6, "candidates": 1500, "ratio": 0.004 },
+      "why": "Same 30 ordered pairs, but with VG-150's 50 predicates: 30 x 50 = 1500. The annotated share is 6 / 1500 = 0.004. This is the vocabulary M0's own worked example computes with, which is why it is offered."
+    },
+    {
+      "id": "pg-F1-ph001-half",
+      "kp": "F1",
+      "image_id": "ph-001",
+      "knobs": { "density": 0.5, "predicate_count": 16 },
+      "expect": { "objects": 6, "annotated": 3, "candidates": 480, "ratio": 0.00625 },
+      "why": "Half of 6 edges is 3. The candidate space does not depend on how many edges were annotated, so it stays 480 and only the numerator moves: 3 / 480 = 0.00625. That the bound does not move is the point of the slider."
+    },
+    {
+      "id": "pg-F1-ph001-zero",
+      "kp": "F1",
+      "image_id": "ph-001",
+      "knobs": { "density": 0, "predicate_count": 16 },
+      "expect": { "objects": 6, "annotated": 0, "candidates": 480, "ratio": 0 },
+      "why": "No edges kept. 0 / 480 = 0, which is zero and not undefined: the candidate space is non-empty, so the share is a real number."
+    },
+    {
+      "id": "pg-F2-ph001-directed",
+      "kp": "F2",
+      "image_id": "ph-001",
+      "knobs": { "directed": true, "predicate_count": 16 },
+      "expect": { "candidates": 480 },
+      "why": "6 objects give 6 x 5 = 30 ordered pairs of distinct objects, times 16 predicates = 480."
+    },
+    {
+      "id": "pg-F2-ph001-undirected",
+      "kp": "F2",
+      "image_id": "ph-001",
+      "knobs": { "directed": false, "predicate_count": 16 },
+      "expect": { "candidates": 240 },
+      "why": "Discarding direction identifies (s,o) with (o,s), so 30 ordered pairs become 15 unordered ones: 15 x 16 = 240, exactly half of 480."
+    },
+    {
+      "id": "pg-F8-ph001-forward",
+      "kp": "F8",
+      "image_id": "ph-001",
+      "knobs": { "relationship_id": 1, "swapped": false },
+      "expect": { "recorded": true },
+      "why": "ph-001 relationship 1 is object 3 (box) --on--> object 1 (table). Unswapped, the triplet is the one the annotator wrote, so it is in E."
+    },
+    {
+      "id": "pg-F8-ph001-reversed",
+      "kp": "F8",
+      "image_id": "ph-001",
+      "knobs": { "relationship_id": 1, "swapped": true },
+      "expect": { "recorded": false },
+      "why": "Swapped, the triplet is table --on--> box. No relationship in ph-001 has subject 1, object 3 and predicate on, so it is not in E. Not in E is not the same claim as false."
+    },
+    {
+      "id": "pg-F8-ph001-symmetric-reading",
+      "kp": "F8",
+      "image_id": "ph-001",
+      "knobs": { "relationship_id": 2, "swapped": true },
+      "expect": { "recorded": false },
+      "why": "ph-001 relationship 2 is object 2 (person) --near--> object 1 (table). `near` reads as symmetric, but the annotator wrote one direction only, so table --near--> person is not in E. This is the case worth showing: the absence is a fact about the annotation, not about the world."
+    },
+    {
+      "id": "pg-F6-slice-predicates-merged",
+      "kp": "F6",
+      "scope": "slice",
+      "knobs": { "group": "predicates", "merged": true },
+      "expect": { "classes": 33, "group_count": 272 },
+      "why": "The 80 frames carry 36 predicates. Merging on, above, over and sitting on turns four classes into one: 36 - 4 + 1 = 33. Their distinct triplets are 248 + 11 + 5 + 10 = 274, and two pairs carry two members each, which E prime records once: 274 - 2 = 272."
+    },
+    {
+      "id": "pg-F6-slice-predicates-unmerged",
+      "kp": "F6",
+      "scope": "slice",
+      "knobs": { "group": "predicates", "merged": false },
+      "expect": { "classes": 36, "group_count": 248 },
+      "why": "Unmerged, the slice uses 36 predicates, and on alone carries 248 of the 684 distinct triplets (382 of the 892 annotation rows; E is a set). The other three members keep their own 11, 5 and 10."
+    },
+    {
+      "id": "pg-F6-slice-objects-merged",
+      "kp": "F6",
+      "scope": "slice",
+      "knobs": { "group": "objects", "merged": true },
+      "expect": { "classes": 113, "group_count": 127 },
+      "why": "The slice uses 115 object names. Merging man, person and people turns three into one: 115 - 3 + 1 = 113, with 56 + 52 + 19 = 127 objects in the merged class."
+    },
+    {
+      "id": "pg-F6-228-membership-unmerged",
+      "kp": "F6",
+      "image_id": "228",
+      "knobs": { "relationship_id": 5, "substitute": "on", "merged": false },
+      "expect": { "annotated_predicate": "sitting on", "recorded": false },
+      "why": "Frame 228, relationship 5 is glass (10) sitting on table (2). The frame carries no on edge from 10 to 2, so glass on table is not in E before the merge."
+    },
+    {
+      "id": "pg-F6-228-membership-merged",
+      "kp": "F6",
+      "image_id": "228",
+      "knobs": { "relationship_id": 5, "substitute": "on", "merged": true },
+      "expect": { "annotated_predicate": "sitting on", "recorded": true },
+      "why": "With on and sitting on merged, glass (10) sitting on table (2) and glass on table share the key (10, on, 2), so the substituted triplet is in E prime. No annotation and no model changed."
+    },
+    {
+      "id": "pg-F7-model-flat",
+      "kp": "F7",
+      "scope": "model",
+      "knobs": { "s": 0, "C": 36, "k": 3 },
+      "expect": { "head_share": 0.083333, "tail_to_head": 1 },
+      "why": "At s = 0 every class holds the same count, so the three most frequent of 36 hold 3 / 36 = 1/12 = 0.083333, and the rarest is as frequent as the first: 36^0 = 1."
+    },
+    {
+      "id": "pg-F7-model-s1-C4-k1",
+      "kp": "F7",
+      "scope": "model",
+      "knobs": { "s": 1, "C": 4, "k": 1 },
+      "expect": { "head_share": 0.48, "tail_to_head": 0.25 },
+      "why": "H_4 at s = 1 is 1 + 1/2 + 1/3 + 1/4 = 25/12. The first class holds 1 / (25/12) = 12/25 = 0.48. The fourth is 4^(-1) = 0.25 of the first."
+    },
+    {
+      "id": "pg-F7-slice-top3",
+      "kp": "F7",
+      "scope": "slice",
+      "knobs": { "k": 3 },
+      "expect": { "head_share": 0.516082 },
+      "why": "Counting distinct triplets, the slice's three most frequent predicates are on 248, near 54 and has 51: 248 + 54 + 51 = 353 of 684 triplets, and 353 / 684 = 0.516082."
+    },
+    {
+      "id": "pg-X1-v2-canonical-train",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v2", "vs": "canonical", "split": "train" },
+      "expect": { "difference": 10815, "explained_by": 10815 },
+      "why": "v2 states 68,538 training images and the canonical protocol 57,723: 68,538 - 57,723 = 10,815, which is the card's own count of v2 training images kept with no relation."
+    },
+    {
+      "id": "pg-X1-v2-canonical-test",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v2", "vs": "canonical", "split": "test" },
+      "expect": { "difference": 5430, "explained_by": 5430 },
+      "why": "v2 states 31,876 test images and the canonical protocol 26,446: 31,876 - 26,446 = 5,430, the card's count of v2 test images kept with no relation."
+    },
+    {
+      "id": "pg-X1-v1-v2-train",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v1", "vs": "sgb-v2", "split": "train" },
+      "expect": { "difference": 5000, "explained_by": 5000 },
+      "why": "Issue 94 gives v1 73,538 training images against v2's 68,538: 73,538 - 68,538 = 5,000, the canonical validation set the card says v1 folded into train."
+    },
+    {
+      "id": "pg-X1-v1-v2-test",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "sgb-v1", "vs": "sgb-v2", "split": "test" },
+      "expect": { "difference": -4844, "explained_by": 4844 },
+      "why": "v1 has 27,032 test images and v2 31,876: 27,032 - 31,876 = -4,844. The 4,844 are the images the card says v1 took from the test pool for its validation set."
+    },
+    {
+      "id": "pg-X1-xu-canonical-train",
+      "kp": "X1",
+      "scope": "sources",
+      "knobs": { "r": "xu-2017", "vs": "canonical", "split": "train" },
+      "expect": { "difference": null, "explained_by": null },
+      "why": "Xu et al. state 70% of 108,077 images and no count, so there is no count to subtract from 57,723. Multiplying 0.7 by 108,077 would assert a split size the paper never states."
+    },
+    {
+      "id": "pg-F3-identical",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 0, "dy": 0, "lambda": 1, "tau": 0.5 },
+      "expect": { "intersection": 6300, "union": 6300, "iou": 1, "bound": 1, "member": true, "unreachable": false },
+      "why": "Object 3 of ph-001 is 90 x 70 at (250, 240), A = 6300. At lambda 1 with no shift the prediction is the same box: intersection 6300, union 6300 + 6300 - 6300 = 6300, IoU = 6300 / 6300 = 1."
+    },
+    {
+      "id": "pg-F3-lambda-14",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 0, "dy": 0, "lambda": 1.4, "tau": 0.5 },
+      "expect": { "intersection": 6300, "union": 12348, "iou": 0.510204, "bound": 0.510204, "member": true, "unreachable": false },
+      "why": "At lambda 1.4 the prediction is round(1.4 x 90) x round(1.4 x 70) = 126 x 98 = 12348, centred at (295, 275): x 232 to 358, y 226 to 324, containing the annotation. IoU = 6300 / 12348 = 0.510, which meets tau = 0.5; the bound 6300 / 12348 is the same number."
+    },
+    {
+      "id": "pg-F3-lambda-15",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 0, "dy": 0, "lambda": 1.5, "tau": 0.5 },
+      "expect": { "intersection": 6300, "union": 14175, "iou": 0.444444, "bound": 0.444444, "member": false, "unreachable": true },
+      "why": "At lambda 1.5 the prediction is 135 x 105 = 14175 and contains the annotation, so IoU = 6300 / 14175 = 0.444. The bound 6300 / 14175 = 0.444 is below tau = 0.5, so no shift reaches tau: lambda is past sqrt(2)."
+    },
+    {
+      "id": "pg-F3-shift-18",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 18, "dy": 0, "lambda": 1, "tau": 0.5 },
+      "expect": { "intersection": 5040, "union": 7560, "iou": 0.666667, "bound": 1, "member": true, "unreachable": false },
+      "why": "Shifted 18 px right the prediction spans x 268 to 358. The overlap is (340 - 268) x 70 = 5040 and the union 6300 + 6300 - 5040 = 7560, so IoU = 5040 / 7560 = 0.667. Both areas are 6300, so the bound is 6300 / 6300 = 1."
+    },
+    {
+      "id": "pg-F3-at-threshold",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 30, "dy": 0, "lambda": 1, "tau": 0.5 },
+      "expect": { "intersection": 4200, "union": 8400, "iou": 0.5, "bound": 1, "member": true, "unreachable": false },
+      "why": "Object 3 is 90 x 70 at (250, 240), A = 6300. Shifted 30 px right it spans x 280 to 370, so the overlap is (340 - 280) x 70 = 4200 and the union is 6300 + 6300 - 4200 = 8400. IoU = 4200 / 8400 = 0.5, which meets tau = 0.5 because acceptance is IoU >= tau."
+    },
+    {
+      "id": "pg-F3-touching",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 90, "dy": 0, "lambda": 1, "tau": 0.5 },
+      "expect": { "intersection": 0, "union": 12600, "iou": 0, "bound": 1, "member": false, "unreachable": false },
+      "why": "Shifted 90 px right the prediction starts at x = 295 + 90 - 45 = 340, the annotation right edge. Boxes are half-open, so they share no pixel: intersection 0, union 6300 + 6300 - 0 = 12600, IoU = 0 / 12600 = 0. The bound is still 6300 / 6300 = 1."
+    },
+    {
+      "id": "pg-F3-inside",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 0, "dy": 0, "lambda": 0.5, "tau": 0.5 },
+      "expect": { "intersection": 1575, "union": 6300, "iou": 0.25, "bound": 0.25, "member": false, "unreachable": true },
+      "why": "At lambda 0.5 the prediction is 45 x 35 = 1575 at (273, 258), inside the annotation. Intersection 1575, union 6300 + 1575 - 1575 = 6300, IoU = 1575 / 6300 = 0.25; the bound 1575 / 6300 = 0.25 is below tau = 0.5, so no shift reaches it."
+    },
+    {
+      "id": "pg-F3-bound-equals-tau",
+      "kp": "F3",
+      "image_id": "ph-001",
+      "knobs": { "dx": 0, "dy": 0, "lambda": 2, "tau": 0.25 },
+      "expect": { "intersection": 6300, "union": 25200, "iou": 0.25, "bound": 0.25, "member": true, "unreachable": false },
+      "why": "At lambda 2 the prediction is 180 x 140 = 25200 at (205, 205) and contains the annotation: IoU = 6300 / 25200 = 0.25, and the bound 6300 / 25200 = 0.25. With tau = 0.25 the concentric box meets tau exactly, so it counts, and the bound is not below tau."
+    },
+    {
+      "id": "pg-E1-none",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": false, "co": false, "p": false, "bs": false, "bo": false },
+      "expect": { "is_shared": 6300, "is_union": 6300, "io_shared": 46200, "io_union": 46200, "relation": true, "mode": "none", "verdict": "match" },
+      "why": "No defect: box#3 on table#1 against itself. Subject box 90 x 70 unchanged: 6300 / 6300; object box 420 x 110 unchanged: 46200 / 46200. Both IoUs are 1 >= 0.5 and all three names agree, so t-hat ~ t holds and the diff says match."
+    },
+    {
+      "id": "pg-E1-subject-class",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": true, "co": false, "p": false, "bs": false, "bo": false },
+      "expect": { "is_shared": 6300, "is_union": 6300, "io_shared": 46200, "io_union": 46200, "relation": false, "mode": "name", "verdict": "spurious" },
+      "why": "Subject class box -> glove. Subject box 90 x 70 unchanged: 6300 / 6300; object box 420 x 110 unchanged: 46200 / 46200. Both IoUs are 1, but c(s-hat) = glove != box, so the classification half fails; (glove, on, table) is annotated nowhere in ph-001, so the diff says spurious."
+    },
+    {
+      "id": "pg-E1-predicate",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": false, "co": false, "p": true, "bs": false, "bo": false },
+      "expect": { "is_shared": 6300, "is_union": 6300, "io_shared": 46200, "io_union": 46200, "relation": false, "mode": "name", "verdict": "spurious" },
+      "why": "Predicate on -> near. Subject box 90 x 70 unchanged: 6300 / 6300; object box 420 x 110 unchanged: 46200 / 46200. Right place, wrong name: (box, near, table) is annotated nowhere in ph-001, so the diff says spurious, not localization."
+    },
+    {
+      "id": "pg-E1-subject-box",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": false, "co": false, "p": false, "bs": true, "bo": false },
+      "expect": { "is_shared": 3150, "is_union": 9450, "io_shared": 46200, "io_union": 46200, "relation": false, "mode": "place", "verdict": "localization" },
+      "why": "Subject box moved 45 px right: it spans x 295 to 385 against 250 to 340, so the overlap is (340 - 295) x 70 = 3150 and the union 6300 + 6300 - 3150 = 9450; IoU = 3150 / 9450 = 0.333 < 0.5. The names agree, so the diff says localization."
+    },
+    {
+      "id": "pg-E1-both-boxes",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": false, "co": false, "p": false, "bs": true, "bo": true },
+      "expect": { "is_shared": 3150, "is_union": 9450, "io_shared": 23100, "io_union": 69300, "relation": false, "mode": "place", "verdict": "localization" },
+      "why": "Both boxes moved. Subject: 3150 / 9450 = 0.333. Object moved 55 px down: it spans y 355 to 465 against 300 to 410, overlap 420 x (410 - 355) = 23100, union 46200 + 46200 - 23100 = 69300, IoU = 0.333. Names agree: localization."
+    },
+    {
+      "id": "pg-E1-name-and-place",
+      "kp": "E1",
+      "image_id": "ph-001",
+      "knobs": { "cs": false, "co": false, "p": true, "bs": true, "bo": false },
+      "expect": { "is_shared": 3150, "is_union": 9450, "io_shared": 46200, "io_union": 46200, "relation": false, "mode": "both", "verdict": "spurious" },
+      "why": "Predicate on -> near and subject box moved: 3150 / 9450 = 0.333 < 0.5 and a name wrong, so both halves fail. A wrong name is spurious wherever its box sits, so the diff says spurious, as it does for the name alone."
+    },
+    {
+      "id": "pg-E10-predcls-slice",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "predcls", "vocabulary": "slice" },
+      "expect": { "count": "480" },
+      "why": "6 objects, 6 x 5 = 30 ordered pairs of distinct objects; the slice has 16 predicates: 30 x 16 = 480, F1's candidate count."
+    },
+    {
+      "id": "pg-E10-sgcls-slice",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "sgcls", "vocabulary": "slice" },
+      "expect": { "count": "48000" },
+      "why": "30 ordered pairs, 10 classes for each end, 16 predicates: 30 x 10^2 x 16 = 30 x 100 x 16 = 48,000."
+    },
+    {
+      "id": "pg-E10-sgdet-slice",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "sgdet", "vocabulary": "slice" },
+      "expect": { "count": "897116066370414059520000" },
+      "why": "B = 23,679,052,800 = C(641,2) x C(481,2) = 205,120 x 115,440 whole-pixel boxes in 640 x 480; B(B - 1) = 560,697,541,481,508,787,200 ordered pairs of distinct boxes; x 10^2 x 16 = 897,116,066,370,414,059,520,000."
+    },
+    {
+      "id": "pg-E10-predcls-vg150",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "predcls", "vocabulary": "vg150" },
+      "expect": { "count": "1500" },
+      "why": "30 ordered pairs and VG-150's 50 predicates (Xu et al. 2017, section 4): 30 x 50 = 1,500, F1's VG-150 count."
+    },
+    {
+      "id": "pg-E10-sgcls-vg150",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "sgcls", "vocabulary": "vg150" },
+      "expect": { "count": "33750000" },
+      "why": "30 ordered pairs, VG-150's 150 classes for each end and 50 predicates: 30 x 150^2 x 50 = 30 x 22,500 x 50 = 33,750,000."
+    },
+    {
+      "id": "pg-E10-sgdet-vg150",
+      "kp": "E10",
+      "image_id": "ph-001",
+      "knobs": { "protocol": "sgdet", "vocabulary": "vg150" },
+      "expect": { "count": "630784734166697385600000000" },
+      "why": "B = 23,679,052,800 = C(641,2) x C(481,2) = 205,120 x 115,440 whole-pixel boxes in 640 x 480; B(B - 1) = 560,697,541,481,508,787,200; x 150^2 x 50 = x 1,125,000 = 630,784,734,166,697,385,600,000,000."
+    },
+    {
+      "id": "pg-E3-k1",
+      "kp": "E3",
+      "image_id": "ph-001",
+      "knobs": { "k": 1 },
+      "expect": { "in_top": 1, "matched": 1, "truths": "4" },
+      "why": "Capping spec 4.1's twelve ranked rows at 1 per ordered pair drops rank 2 and 6 (both 2,5, repeating rank 1), rank 7 (2,1, repeating rank 4), rank 9 (3,1, repeating rank 3) and rank 10 (2,4, repeating rank 8), leaving 7 rows in rank order 1, 3, 4, 5, 8, 11, 12. At k = 1 only rank 1 survives: person(2) holding wrench(5), score 0.95, is exactly g4. in_top = 1, matched = 1, truths = \"4\"."
+    },
+    {
+      "id": "pg-E3-k2",
+      "kp": "E3",
+      "image_id": "ph-001",
+      "knobs": { "k": 2 },
+      "expect": { "in_top": 2, "matched": 2, "truths": "1,4" },
+      "why": "The same cap-1 pool keeps ranks 1, 3, 4, 5, 8, 11, 12 in that order. At k = 2 the top two are rank 1 (person(2) holding wrench(5) = g4) and rank 3 (box(3) on table(1) = g1): in_top = 2, matched = 2, and the ids sorted ascending give truths = \"1,4\"."
+    },
+    {
+      "id": "pg-E3-k4",
+      "kp": "E3",
+      "image_id": "ph-001",
+      "knobs": { "k": 4 },
+      "expect": { "in_top": 4, "matched": 3, "truths": "1,4,5" },
+      "why": "At k = 4 the cap-1 pool's first four rows are ranks 1, 3, 4 and 5: person(2) holding wrench(5) = g4, box(3) on table(1) = g1, person(2) in front of table(1) names no truth, and panel(6) above table(1) = g5. in_top = 4, matched = 3, truths = \"1,4,5\"."
+    },
+    {
+      "id": "pg-E3-k7",
+      "kp": "E3",
+      "image_id": "ph-001",
+      "knobs": { "k": 7 },
+      "expect": { "in_top": 7, "matched": 3, "truths": "1,4,5" },
+      "why": "The cap-1 pool holds only 7 rows (ranks 1, 3, 4, 5, 8, 11, 12), so topK at k = 7 takes all of them: in_top = 7. Rank 8 (person(2) holding glove(4)), rank 11 (wrench(5) on table(1)) and rank 12 (table(1) behind person(2)) name no truth beyond the three already found at k = 4, so matched stays 3 and truths = \"1,4,5\"."
+    },
+    {
+      "id": "pg-E3-k12",
+      "kp": "E3",
+      "image_id": "ph-001",
+      "knobs": { "k": 12 },
+      "expect": { "in_top": 7, "matched": 3, "truths": "1,4,5" },
+      "why": "topK cannot exceed the pool it cuts: the cap-1 pool has only 7 rows, so k = 12 still yields in_top = 7, the same 7 rows as k = 7. No further truth is named past the three already found (g4, g1, g5), so matched stays 3 and truths = \"1,4,5\"."
+    },
+    {
+      "id": "pg-E4-graph-k2",
+      "kp": "E4",
+      "image_id": "ph-001",
+      "knobs": { "mode": "graph", "k": 2 },
+      "expect": { "pool": 7, "matched": 2, "matched_none": 1 },
+      "why": "Mode graph caps at 1 per pair: 7 rows survive (ranks 1, 3, 4, 5, 8, 11, 12), so pool = 7. At k = 2 the top two, rank 1 (g4) and rank 3 (g1), give matched = 2. Under mode none (cap = Infinity) the same k = 2 takes ranks 1 and 2 (both pair 2,5), of which only rank 1 names g4, so matched_none = 1."
+    },
+    {
+      "id": "pg-E4-none-k2",
+      "kp": "E4",
+      "image_id": "ph-001",
+      "knobs": { "mode": "none", "k": 2 },
+      "expect": { "pool": 12, "matched": 1, "matched_none": 1 },
+      "why": "Mode none keeps every row, so pool = 12. At k = 2 the top two are rank 1 (person(2) holding wrench(5) = g4) and rank 2 (person(2) next to wrench(5), no truth), so matched = 1. The mode already is none, so matched_none repeats the same computation: matched_none = 1."
+    },
+    {
+      "id": "pg-E4-semi-k6",
+      "kp": "E4",
+      "image_id": "ph-001",
+      "knobs": { "mode": "semi", "k": 6 },
+      "expect": { "pool": 11, "matched": 4, "matched_none": 3 },
+      "why": "Mode semi caps at 2 per pair, dropping only rank 6 (a third 2,5 row): 11 rows survive, pool = 11. At k = 6 the top six are ranks 1, 2, 3, 4, 5, 7, naming g4, none, g1, none, g5, g2: matched = 4 (ids 1, 2, 4, 5). Under mode none at the same k = 6, ranks 1 to 6 name g4, none, g1, none, g5, none (rank 6 itself has no truth): matched_none = 3."
+    },
+    {
+      "id": "pg-E4-graph-k12",
+      "kp": "E4",
+      "image_id": "ph-001",
+      "knobs": { "mode": "graph", "k": 12 },
+      "expect": { "pool": 7, "matched": 3, "matched_none": 5 },
+      "why": "Mode graph's pool is the same 7 rows as always, pool = 7; at k = 12, topK cannot exceed 7 rows, so it is all of them, naming g4, g1, g5: matched = 3, as at k = 7. Under mode none at k = 12 all 12 rows are taken, adding rank 7 (g2) and rank 10 (g3) to the three already found: matched_none = 5."
+    },
+    {
+      "id": "pg-E4-none-k12",
+      "kp": "E4",
+      "image_id": "ph-001",
+      "knobs": { "mode": "none", "k": 12 },
+      "expect": { "pool": 12, "matched": 5, "matched_none": 5 },
+      "why": "Mode none's pool is all 12 rows, pool = 12. At k = 12 every row is taken: ranks 1, 3, 5, 7 and 10 name g4, g1, g5, g2 and g3, giving matched = 5. The mode already is none, so matched_none repeats the same five: matched_none = 5."
+    },
+    {
+      "id": "pg-E7-m1-k2",
+      "kp": "E7",
+      "image_id": "ph-001",
+      "knobs": { "m": 1, "k": 2 },
+      "expect": { "pool": 7, "matched": 2 },
+      "why": "m = 1 caps at 1 per pair, the same pool E4's graph mode uses: 7 rows, pool = 7. At k = 2 the top two, rank 1 (person(2) holding wrench(5) = g4) and rank 3 (box(3) on table(1) = g1), give matched = 2."
+    },
+    {
+      "id": "pg-E7-m2-k2",
+      "kp": "E7",
+      "image_id": "ph-001",
+      "knobs": { "m": 2, "k": 2 },
+      "expect": { "pool": 11, "matched": 1 },
+      "why": "m = 2 caps at 2 per pair, the same pool E4's semi mode uses: 11 rows (only rank 6 dropped), pool = 11. At k = 2 the top two are ranks 1 and 2, both on pair (2,5); only rank 1 names g4, so matched = 1."
+    },
+    {
+      "id": "pg-E7-m1-k12",
+      "kp": "E7",
+      "image_id": "ph-001",
+      "knobs": { "m": 1, "k": 12 },
+      "expect": { "pool": 7, "matched": 3 },
+      "why": "m = 1's pool has only 7 rows (ranks 1, 3, 4, 5, 8, 11, 12), so k = 12 still takes all 7: pool = 7. Three of them, ranks 1, 3 and 5, name g4, g1 and g5; the rest name nothing, so matched = 3."
+    },
+    {
+      "id": "pg-E7-m2-k12",
+      "kp": "E7",
+      "image_id": "ph-001",
+      "knobs": { "m": 2, "k": 12 },
+      "expect": { "pool": 11, "matched": 5 },
+      "why": "m = 2's pool has 11 rows (every rank but 6), so k = 12 still takes all 11: pool = 11. Ranks 1, 3, 5, 7 and 10 name g4, g1, g5, g2 and g3, so matched = 5."
+    },
+    {
+      "id": "pg-E7-m10-k12",
+      "kp": "E7",
+      "image_id": "ph-001",
+      "knobs": { "m": 10, "k": 12 },
+      "expect": { "pool": 12, "matched": 5 },
+      "why": "The largest count any one pair holds is 3 (pair 2,5, at ranks 1, 2 and 6), so a cap of m = 10 drops nothing: pool = 12, the full ranked list. At k = 12 the same five ranks (1, 3, 5, 7, 10) name g4, g1, g5, g2 and g3, so matched = 5."
+    },
+    {
+      "id": "pg-E13-single-d3",
+      "kp": "E13",
+      "image_id": "ph-001",
+      "knobs": { "multi": false, "d": 3 },
+      "expect": { "emitted": 3, "admitted": 1, "kept": 1, "g4": false },
+      "why": "d = 3 emits the first 3 copies of the person-wrench mask pair: predicates next to (0.9), holding (0.88) and near (0.7), all keyed '2|5'. emitted = 3. SingleMPO (multi = false) keeps only the first row per mask key, so admitted = 1 (the 'next to' copy). The graph cap keeps that one admitted row, so kept = 1. g4 needs a kept row with predicate holding, but the surviving copy's predicate is next to, so g4 = false."
+    },
+    {
+      "id": "pg-E13-multi-d1",
+      "kp": "E13",
+      "image_id": "ph-001",
+      "knobs": { "multi": true, "d": 1 },
+      "expect": { "emitted": 1, "admitted": 1, "kept": 1, "g4": false },
+      "why": "d = 1 emits only the first copy: subject 2, object 5, predicate next to, score 0.9, masked '2|5'. emitted = 1. MultiMPO (multi = true) keeps every emitted row unchanged, so admitted = 1; the graph cap changes nothing on one row, so kept = 1. Its predicate is next to, not holding, so g4 = false."
+    },
+    {
+      "id": "pg-E13-multi-d2",
+      "kp": "E13",
+      "image_id": "ph-001",
+      "knobs": { "multi": true, "d": 2 },
+      "expect": { "emitted": 2, "admitted": 2, "kept": 2, "g4": true },
+      "why": "d = 2 emits copy 1 (subject 2, object 5, next to, 0.9) and copy 2 (subject 12, object 22, holding, 0.88), both masked '2|5'. emitted = 2; MultiMPO keeps both: admitted = 2. Their subject-object pairs differ, so the graph cap drops neither: kept = 2. Copy 2 is masked '2|5' with predicate holding, exactly what g4 needs, so g4 = true."
+    },
+    {
+      "id": "pg-E13-multi-d5",
+      "kp": "E13",
+      "image_id": "ph-001",
+      "knobs": { "multi": true, "d": 5 },
+      "expect": { "emitted": 5, "admitted": 5, "kept": 5, "g4": true },
+      "why": "d = 5 emits all five copies, every one masked '2|5' though their subject-object ids run 2/5, 12/22, 13/23, 14/24 and 15/25. emitted = 5; MultiMPO keeps all five, admitted = 5; every pair is distinct, so the graph cap drops none: kept = 5. Copy 2's predicate is holding on mask '2|5', so g4 = true."
+    },
+    {
+      "id": "pg-X2-m1",
+      "kp": "X2",
+      "image_id": "ph-001",
+      "knobs": { "m": 1 },
+      "expect": { "pairs": 30, "pool": 30, "share": 1, "cut": false },
+      "why": "ph-001 has 6 objects, so directed ordered pairs = 6 x 5 = 30: pairs = 30. At m = 1 the pool is pairs times min(1, 70) = 30 x 1 = 30. share = min(1, 100) = 1. Since 30 is not greater than 100, cut = false."
+    },
+    {
+      "id": "pg-X2-m10",
+      "kp": "X2",
+      "image_id": "ph-001",
+      "knobs": { "m": 10 },
+      "expect": { "pairs": 30, "pool": 300, "share": 10, "cut": true },
+      "why": "pairs stays 6 x 5 = 30, unaffected by m. At m = 10 the pool is 30 x min(10, 70) = 30 x 10 = 300. share = min(10, 100) = 10. Since 300 > 100, cut = true."
+    },
+    {
+      "id": "pg-X2-m70",
+      "kp": "X2",
+      "image_id": "ph-001",
+      "knobs": { "m": 70 },
+      "expect": { "pairs": 30, "pool": 2100, "share": 70, "cut": true },
+      "why": "pairs is still 30. At m = 70 the pool is 30 x min(70, 70) = 30 x 70 = 2100. share = min(70, 100) = 70. Since 2100 > 100, cut = true."
+    },
+    {
+      "id": "pg-T1-rank1",
+      "kp": "T1",
+      "image_id": "2045",
+      "knobs": { "frame": 1 },
+      "expect": { "objects": 4, "pairs": 12, "decisions": 600, "rows": 4, "related": 2 },
+      "why": "Ordered by object count and then by image id as a number, the first of the 80 vg150-sgb frames is 2045, one of two with 4 objects (2045 before 4176). Ordered pairs 4 x 3 = 12; decisions 12 x 50 = 600 with VG150's 50 predicates. Its 4 relationship rows fall on 2 distinct ordered pairs, so 2 of the 12 pairs are related."
+    },
+    {
+      "id": "pg-T1-rank40",
+      "kp": "T1",
+      "image_id": "547",
+      "knobs": { "frame": 40 },
+      "expect": { "objects": 16, "pairs": 240, "decisions": 12000, "rows": 5, "related": 5 },
+      "why": "Ranks 1 to 39 hold the frames of 4 to 15 objects. The four frames of 16 objects are 547, 1246, 1632 and 1701 by image id as a number, so rank 40, the median place, is 547. Ordered pairs 16 x 15 = 240; decisions 240 x 50 = 12000. Its 5 relationship rows fall on 5 distinct ordered pairs: 5 of 240."
+    },
+    {
+      "id": "pg-T1-rank80",
+      "kp": "T1",
+      "image_id": "3182",
+      "knobs": { "frame": 80 },
+      "expect": { "objects": 39, "pairs": 1482, "decisions": 74100, "rows": 45, "related": 29 },
+      "why": "3182 carries the most objects of the 80 frames, 39, and is rank 80 alone (rank 79 has 35). Ordered pairs 39 x 38 = 1482; decisions 1482 x 50 = 74100. Its 45 relationship rows fall on 29 distinct ordered pairs: 29 of 1482."
+    },
+    {
+      "id": "pg-T1-slice",
+      "kp": "T1",
+      "scope": "slice",
+      "knobs": {},
+      "expect": { "frames": 80, "objects": 1348, "pairs": 26282, "rows": 892, "related": 651 },
+      "why": "Summed over the 80 frames of data/slices/vg150-sgb: 1348 objects; the sum of N(N - 1) over the frames is 26282 ordered pairs; 892 relationship rows; 651 distinct (subject, object) pairs carry at least one row, so 651 / 26282 = 0.0248 of the ordered pairs are related, before the 50 predicates multiply the decisions."
+    },
+    {
+      "id": "pg-T2-relations-w05-t0",
+      "kp": "T2",
+      "image_id": "ph-001",
+      "knobs": { "graph": "relations", "w": 0.5, "t": 0 },
+      "expect": { "beliefs": "0.9000,0.2000,0.7000,0.4000,0.1000,0.6000", "spread": 0.8, "distance": 0.2065, "bound": 0.2065, "spread_fixed": 0.3924 },
+      "why": "t = 0 is b0 itself, (0.9, 0.2, 0.7, 0.4, 0.1, 0.6) for table, person, box, glove, wrench, panel; spread 0.9 - 0.1 = 0.8. The fixed point solves (I - 0.5S) b* = 0.5 b0 on the relation graph: b* = (0.6978, 0.3280, 0.6989, 0.3640, 0.3065, 0.6489), spread 0.6989 - 0.3065 = 0.3924. Distance max |b0 - b*| = |0.1 - 0.3065| = 0.2065 at the wrench; bound 0.5^0 x 0.2065 = 0.2065."
+    },
+    {
+      "id": "pg-T2-relations-w05-t1",
+      "kp": "T2",
+      "image_id": "ph-001",
+      "knobs": { "graph": "relations", "w": 0.5, "t": 1 },
+      "expect": { "beliefs": "0.6500,0.3333,0.8000,0.3000,0.3250,0.7500", "spread": 0.5, "distance": 0.1011, "bound": 0.1032, "spread_fixed": 0.3924 },
+      "why": "One round, b1 = 0.5 b0 + 0.5 S b0. table 0.45 + 0.5 x (0.2 + 0.7 + 0.1 + 0.6)/4 = 0.65; person 0.1 + 0.5 x (0.9 + 0.4 + 0.1)/3 = 0.3333; box 0.35 + 0.5 x 0.9 = 0.8; glove 0.2 + 0.5 x 0.2 = 0.3; wrench 0.05 + 0.5 x (0.9 + 0.2)/2 = 0.325; panel 0.3 + 0.5 x 0.9 = 0.75. Spread 0.8 - 0.3 = 0.5. Distance max |b1 - b*| = 0.8 - 0.6989 = 0.1011 at the box (the panel ties); bound 0.5 x 0.2065 = 0.1032."
+    },
+    {
+      "id": "pg-T2-relations-w05-t5",
+      "kp": "T2",
+      "image_id": "ph-001",
+      "knobs": { "graph": "relations", "w": 0.5, "t": 5 },
+      "expect": { "beliefs": "0.6962,0.3288,0.7011,0.3629,0.3070,0.6511", "spread": 0.3941, "distance": 0.0022, "bound": 0.0065, "spread_fixed": 0.3924 },
+      "why": "Five rounds of the same rule give b5 = (0.6962, 0.3288, 0.7011, 0.3629, 0.3070, 0.6511); spread 0.7011 - 0.3070 = 0.3941, near the fixed point's 0.3924 and not falling toward 0. Distance max |b5 - b*| = 0.7011 - 0.6989 = 0.0022 at the box; bound 0.5^5 x 0.2065 = 0.03125 x 0.2065 = 0.0065."
+    },
+    {
+      "id": "pg-T2-relations-w09-t10",
+      "kp": "T2",
+      "image_id": "ph-001",
+      "knobs": { "graph": "relations", "w": 0.9, "t": 10 },
+      "expect": { "beliefs": "0.5614,0.4561,0.5539,0.4623,0.4631,0.5439", "spread": 0.1053, "distance": 0.0122, "bound": 0.1276, "spread_fixed": 0.1105 },
+      "why": "At w = 0.9 the fixed point solves (I - 0.9S) b* = 0.1 b0: b* = (0.5512, 0.4618, 0.5661, 0.4556, 0.4659, 0.5561), spread 0.5661 - 0.4556 = 0.1105; its distance from b0 is |0.1 - 0.4659| = 0.3659 at the wrench. Ten rounds give b10 = (0.5614, 0.4561, 0.5539, 0.4623, 0.4631, 0.5439), spread 0.5614 - 0.4561 = 0.1053. Distance max |b10 - b*| = 0.5661 - 0.5539 = 0.0122 at the box; bound 0.9^10 x 0.3659 = 0.3487 x 0.3659 = 0.1276."
+    },
+    {
+      "id": "pg-T2-relations-w1-t40",
+      "kp": "T2",
+      "image_id": "ph-001",
+      "knobs": { "graph": "relations", "w": 1, "t": 40 },
+      "expect": { "beliefs": "0.5084,0.5083,0.5082,0.5084,0.5083,0.5082", "spread": 0.0002, "distance": null, "bound": null, "limit": 0.5083, "mean": 0.4833 },
+      "why": "At w = 1 the own-evidence term vanishes and b40 = S^40 b0; I - S is singular, so no fixed point is solved. The degree-weighted sum is invariant: degrees (4, 3, 1, 1, 2, 1) sum to 12, and 4 x 0.9 + 3 x 0.2 + 0.7 + 0.4 + 2 x 0.1 + 0.6 = 6.1, so every belief tends to 6.1 / 12 = 0.5083. After 40 rounds b40 = (0.5084, 0.5083, 0.5082, 0.5084, 0.5083, 0.5082), spread 0.0002. The plain mean is 2.9 / 6 = 0.4833."
+    },
+    {
+      "id": "pg-T2-every-w09-t1",
+      "kp": "T2",
+      "image_id": "ph-001",
+      "knobs": { "graph": "every", "w": 0.9, "t": 1 },
+      "expect": { "beliefs": "0.4500,0.5060,0.4660,0.4900,0.5140,0.4740", "spread": 0.064, "distance": 0.0686, "bound": 0.3432, "spread_fixed": 0.0678 },
+      "why": "Every pair: each object's neighbours are the other five, so (S b0)_i = (2.9 - b0_i) / 5. One round at w = 0.9: table 0.09 + 0.9 x 2.0/5 = 0.45; person 0.02 + 0.9 x 2.7/5 = 0.506; box 0.07 + 0.9 x 2.2/5 = 0.466; glove 0.04 + 0.9 x 2.5/5 = 0.49; wrench 0.01 + 0.9 x 2.8/5 = 0.514; panel 0.06 + 0.9 x 2.3/5 = 0.474. Spread 0.514 - 0.45 = 0.064, below the fixed point's 0.0678. b* = (0.5186, 0.4593, 0.5017, 0.4763, 0.4508, 0.4932); its distance from b0 is 0.9 - 0.5186 = 0.3814 at the table. Distance max |b1 - b*| = 0.5186 - 0.45 = 0.0686; bound 0.9 x 0.3814 = 0.3432."
+    },
+    {
+      "id": "pg-T2-every-w1-t5",
+      "kp": "T2",
+      "image_id": "ph-001",
+      "knobs": { "graph": "every", "w": 1, "t": 5 },
+      "expect": { "beliefs": "0.4832,0.4834,0.4833,0.4834,0.4835,0.4833", "spread": 0.0003, "distance": null, "bound": null, "limit": 0.4833, "mean": 0.4833 },
+      "why": "Every pair gives each object 5 neighbours, a regular graph, so the degree-weighted mean is the plain mean: 5 x 2.9 / 30 = 2.9 / 6 = 0.4833. At w = 1 each round maps b_i to (sum - b_i)/5, which multiplies every deviation from the mean by -1/5; after 5 rounds the spread is 0.8 / 5^5 = 0.8 / 3125 = 0.0003, and b5 = (0.4832, 0.4834, 0.4833, 0.4834, 0.4835, 0.4833)."
+    }
+  ]
+}

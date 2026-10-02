@@ -1,0 +1,2111 @@
+{
+  "$schema_version": 1,
+  "provenance": {
+    "model": "fasterrcnn-r50fpn-coco+freq-vg150sgb",
+    "fidelity": "measured",
+    "generated_at": "2026-09-29T14:49:34Z",
+    "note_en": "Faster R-CNN ResNet-50 FPN, COCO_V1 weights, detections with score >= 0.5; every ordered pair takes the predicate most frequent for its class pair over the vg150-sgb slice's 80 frames (FREQ in form), or `on` when the pair is unseen or a class is not a slice class.",
+    "note_zh": "本檔之偵測由 Faster R-CNN ResNet-50 FPN（COCO_V1 權重）取得，僅保留分數不低於 0.5 之偵測；每一有序物件對之謂詞取該類別對於 vg150-sgb 切片 80 個影格中最常見者（FREQ 形式），該類別對未曾出現或任一類別非切片類別時，取 `on`。"
+  },
+  "detector": {
+    "weights": "fasterrcnn_resnet50_fpn_coco-258fb6c6.pth",
+    "threshold": 0.5
+  },
+  "prior": {
+    "dataset": "vg150-sgb",
+    "frames": 80,
+    "rows": 892,
+    "fallback": "on",
+    "predicates": [
+      "above",
+      "across",
+      "along",
+      "and",
+      "at",
+      "attached to",
+      "behind",
+      "belonging to",
+      "between",
+      "carrying",
+      "covered in",
+      "covering",
+      "for",
+      "growing on",
+      "hanging from",
+      "has",
+      "holding",
+      "in",
+      "in front of",
+      "laying on",
+      "looking at",
+      "near",
+      "of",
+      "on",
+      "on back of",
+      "over",
+      "parked on",
+      "sitting on",
+      "standing on",
+      "under",
+      "using",
+      "walking in",
+      "walking on",
+      "wearing",
+      "wears",
+      "with"
+    ]
+  },
+  "class_map": {
+    "book": "book",
+    "cell phone": "phone",
+    "donut": null,
+    "knife": null,
+    "person": "person",
+    "remote": null,
+    "tie": "tie",
+    "toothbrush": null
+  },
+  "o_isg_coco": {
+    "hand": null,
+    "beam": null,
+    "brace": null,
+    "block": null,
+    "wheel": null,
+    "axle": null,
+    "pin": null,
+    "nut": null,
+    "washer": null,
+    "assembly": null,
+    "instruction sheet": null,
+    "workbench": "dining table"
+  },
+  "vg150_predicate_count": 50,
+  "frames": [
+    {
+      "image_id": "m0-demo-088",
+      "t": 88.0,
+      "keyframe": false,
+      "width": 1280,
+      "height": 720,
+      "detections": [
+        {
+          "object_id": 0,
+          "label": "remote",
+          "score": 0.9742847084999084,
+          "bbox": {
+            "x": 688.0507202148438,
+            "y": 198.77236938476562,
+            "w": 118.79388427734375,
+            "h": 126.34011840820312
+          }
+        },
+        {
+          "object_id": 1,
+          "label": "remote",
+          "score": 0.9458061456680298,
+          "bbox": {
+            "x": 611.2490234375,
+            "y": 390.6958923339844,
+            "w": 245.5721435546875,
+            "h": 267.5925598144531
+          }
+        },
+        {
+          "object_id": 2,
+          "label": "person",
+          "score": 0.9276528358459473,
+          "bbox": {
+            "x": 137.43218994140625,
+            "y": 361.3584899902344,
+            "w": 640.4636840820312,
+            "h": 358.6415100097656
+          }
+        },
+        {
+          "object_id": 3,
+          "label": "remote",
+          "score": 0.9195435643196106,
+          "bbox": {
+            "x": 865.7505493164062,
+            "y": 183.2321319580078,
+            "w": 129.05438232421875,
+            "h": 118.89207458496094
+          }
+        },
+        {
+          "object_id": 4,
+          "label": "person",
+          "score": 0.8498517870903015,
+          "bbox": {
+            "x": 693.0980224609375,
+            "y": 355.90435791015625,
+            "w": 551.4210205078125,
+            "h": 363.9403076171875
+          }
+        },
+        {
+          "object_id": 5,
+          "label": "person",
+          "score": 0.5795819759368896,
+          "bbox": {
+            "x": 126.64683532714844,
+            "y": 153.041015625,
+            "w": 1078.774185180664,
+            "h": 561.201171875
+          }
+        }
+      ],
+      "relations": [
+        {
+          "subject_id": 0,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        }
+      ]
+    },
+    {
+      "image_id": "m0-demo-090",
+      "t": 90.0,
+      "keyframe": true,
+      "width": 1280,
+      "height": 720,
+      "detections": [
+        {
+          "object_id": 0,
+          "label": "person",
+          "score": 0.8361489772796631,
+          "bbox": {
+            "x": 72.82902526855469,
+            "y": 134.08811950683594,
+            "w": 558.6674346923828,
+            "h": 572.9866485595703
+          }
+        },
+        {
+          "object_id": 1,
+          "label": "cell phone",
+          "score": 0.6565259695053101,
+          "bbox": {
+            "x": 909.0147094726562,
+            "y": 300.3674011230469,
+            "w": 211.37261962890625,
+            "h": 159.3516845703125
+          }
+        },
+        {
+          "object_id": 2,
+          "label": "person",
+          "score": 0.6277197599411011,
+          "bbox": {
+            "x": 1005.495849609375,
+            "y": 347.02850341796875,
+            "w": 271.816650390625,
+            "h": 369.3072509765625
+          }
+        },
+        {
+          "object_id": 3,
+          "label": "remote",
+          "score": 0.6060788035392761,
+          "bbox": {
+            "x": 754.0397338867188,
+            "y": 187.62966918945312,
+            "w": 113.17926025390625,
+            "h": 120.68048095703125
+          }
+        },
+        {
+          "object_id": 4,
+          "label": "donut",
+          "score": 0.5738236308097839,
+          "bbox": {
+            "x": 1036.6405029296875,
+            "y": 349.4375305175781,
+            "w": 243.3594970703125,
+            "h": 354.1929016113281
+          }
+        },
+        {
+          "object_id": 5,
+          "label": "toothbrush",
+          "score": 0.5096545219421387,
+          "bbox": {
+            "x": 909.8463134765625,
+            "y": 224.4691925048828,
+            "w": 204.48291015625,
+            "h": 231.40699768066406
+          }
+        }
+      ],
+      "relations": [
+        {
+          "subject_id": 0,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        }
+      ]
+    },
+    {
+      "image_id": "m0-demo-092",
+      "t": 92.0,
+      "keyframe": false,
+      "width": 1280,
+      "height": 720,
+      "detections": [
+        {
+          "object_id": 0,
+          "label": "person",
+          "score": 0.9546681642532349,
+          "bbox": {
+            "x": 0.0,
+            "y": 68.93036651611328,
+            "w": 972.3335571289062,
+            "h": 628.1462936401367
+          }
+        },
+        {
+          "object_id": 1,
+          "label": "person",
+          "score": 0.6871371269226074,
+          "bbox": {
+            "x": 0.0,
+            "y": 128.50765991210938,
+            "w": 375.6282958984375,
+            "h": 590.4450988769531
+          }
+        },
+        {
+          "object_id": 2,
+          "label": "book",
+          "score": 0.6626667380332947,
+          "bbox": {
+            "x": 974.2130126953125,
+            "y": 375.0789794921875,
+            "w": 305.7869873046875,
+            "h": 260.37139892578125
+          }
+        },
+        {
+          "object_id": 3,
+          "label": "remote",
+          "score": 0.572665274143219,
+          "bbox": {
+            "x": 709.2055053710938,
+            "y": 262.15203857421875,
+            "w": 75.560546875,
+            "h": 73.60980224609375
+          }
+        }
+      ],
+      "relations": [
+        {
+          "subject_id": 0,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        }
+      ]
+    },
+    {
+      "image_id": "m0-demo-094",
+      "t": 94.0,
+      "keyframe": false,
+      "width": 1280,
+      "height": 720,
+      "detections": [
+        {
+          "object_id": 0,
+          "label": "remote",
+          "score": 0.9787342548370361,
+          "bbox": {
+            "x": 1011.901611328125,
+            "y": 291.48309326171875,
+            "w": 133.8958740234375,
+            "h": 111.63507080078125
+          }
+        },
+        {
+          "object_id": 1,
+          "label": "person",
+          "score": 0.9768571257591248,
+          "bbox": {
+            "x": 243.78683471679688,
+            "y": 133.26014709472656,
+            "w": 905.5731506347656,
+            "h": 586.7398529052734
+          }
+        },
+        {
+          "object_id": 2,
+          "label": "person",
+          "score": 0.9339748620986938,
+          "bbox": {
+            "x": 256.248291015625,
+            "y": 281.9977111816406,
+            "w": 529.4655151367188,
+            "h": 428.2442932128906
+          }
+        },
+        {
+          "object_id": 3,
+          "label": "person",
+          "score": 0.5551512837409973,
+          "bbox": {
+            "x": 616.5086059570312,
+            "y": 199.58001708984375,
+            "w": 514.1336059570312,
+            "h": 509.080078125
+          }
+        }
+      ],
+      "relations": [
+        {
+          "subject_id": 0,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        }
+      ]
+    },
+    {
+      "image_id": "m0-demo-096",
+      "t": 96.0,
+      "keyframe": true,
+      "width": 1280,
+      "height": 720,
+      "detections": [
+        {
+          "object_id": 0,
+          "label": "person",
+          "score": 0.8923251628875732,
+          "bbox": {
+            "x": 166.60250854492188,
+            "y": 57.417572021484375,
+            "w": 531.2429504394531,
+            "h": 650.6908264160156
+          }
+        },
+        {
+          "object_id": 1,
+          "label": "person",
+          "score": 0.8674325346946716,
+          "bbox": {
+            "x": 281.3519592285156,
+            "y": 90.6619644165039,
+            "w": 964.0678405761719,
+            "h": 577.6607894897461
+          }
+        },
+        {
+          "object_id": 2,
+          "label": "remote",
+          "score": 0.7189434766769409,
+          "bbox": {
+            "x": 528.3067016601562,
+            "y": 291.18255615234375,
+            "w": 684.4423217773438,
+            "h": 406.6033935546875
+          }
+        },
+        {
+          "object_id": 3,
+          "label": "remote",
+          "score": 0.661122739315033,
+          "bbox": {
+            "x": 410.6372985839844,
+            "y": 96.18956756591797,
+            "w": 224.22262573242188,
+            "h": 163.75055694580078
+          }
+        },
+        {
+          "object_id": 4,
+          "label": "knife",
+          "score": 0.5143292546272278,
+          "bbox": {
+            "x": 503.2380676269531,
+            "y": 369.85552978515625,
+            "w": 213.22836303710938,
+            "h": 80.18133544921875
+          }
+        }
+      ],
+      "relations": [
+        {
+          "subject_id": 0,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        }
+      ]
+    },
+    {
+      "image_id": "m0-demo-098",
+      "t": 98.0,
+      "keyframe": false,
+      "width": 1280,
+      "height": 720,
+      "detections": [
+        {
+          "object_id": 0,
+          "label": "person",
+          "score": 0.9907978773117065,
+          "bbox": {
+            "x": 21.052093505859375,
+            "y": 162.68255615234375,
+            "w": 465.2392272949219,
+            "h": 547.6351928710938
+          }
+        },
+        {
+          "object_id": 1,
+          "label": "person",
+          "score": 0.8340823650360107,
+          "bbox": {
+            "x": 682.98583984375,
+            "y": 211.6754913330078,
+            "w": 572.32421875,
+            "h": 469.72410583496094
+          }
+        },
+        {
+          "object_id": 2,
+          "label": "person",
+          "score": 0.7816082239151001,
+          "bbox": {
+            "x": 0.0,
+            "y": 137.57350158691406,
+            "w": 1280.0,
+            "h": 557.1448822021484
+          }
+        },
+        {
+          "object_id": 3,
+          "label": "remote",
+          "score": 0.709324836730957,
+          "bbox": {
+            "x": 151.65182495117188,
+            "y": 420.7851867675781,
+            "w": 984.4325256347656,
+            "h": 244.82955932617188
+          }
+        },
+        {
+          "object_id": 4,
+          "label": "remote",
+          "score": 0.6017649173736572,
+          "bbox": {
+            "x": 229.2542724609375,
+            "y": 468.5125732421875,
+            "w": 597.2470703125,
+            "h": 162.20489501953125
+          }
+        }
+      ],
+      "relations": [
+        {
+          "subject_id": 0,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        }
+      ]
+    },
+    {
+      "image_id": "m0-demo-100",
+      "t": 100.0,
+      "keyframe": false,
+      "width": 1280,
+      "height": 720,
+      "detections": [
+        {
+          "object_id": 0,
+          "label": "person",
+          "score": 0.9549244046211243,
+          "bbox": {
+            "x": 607.4423217773438,
+            "y": 18.260128021240234,
+            "w": 653.8880004882812,
+            "h": 674.5086708068848
+          }
+        },
+        {
+          "object_id": 1,
+          "label": "person",
+          "score": 0.9169909954071045,
+          "bbox": {
+            "x": 14.538928031921387,
+            "y": 399.5767517089844,
+            "w": 618.0369997024536,
+            "h": 316.0194396972656
+          }
+        },
+        {
+          "object_id": 2,
+          "label": "remote",
+          "score": 0.7445392608642578,
+          "bbox": {
+            "x": 606.5516967773438,
+            "y": 139.58518981933594,
+            "w": 98.46624755859375,
+            "h": 136.04908752441406
+          }
+        },
+        {
+          "object_id": 3,
+          "label": "remote",
+          "score": 0.7339529991149902,
+          "bbox": {
+            "x": 433.3982849121094,
+            "y": 451.91900634765625,
+            "w": 243.78927612304688,
+            "h": 142.77362060546875
+          }
+        },
+        {
+          "object_id": 4,
+          "label": "tie",
+          "score": 0.7036727070808411,
+          "bbox": {
+            "x": 822.869384765625,
+            "y": 264.0617370605469,
+            "w": 163.00225830078125,
+            "h": 132.32266235351562
+          }
+        }
+      ],
+      "relations": [
+        {
+          "subject_id": 0,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        }
+      ]
+    },
+    {
+      "image_id": "m0-demo-102",
+      "t": 102.0,
+      "keyframe": true,
+      "width": 1280,
+      "height": 720,
+      "detections": [
+        {
+          "object_id": 0,
+          "label": "remote",
+          "score": 0.9497231245040894,
+          "bbox": {
+            "x": 873.3825073242188,
+            "y": 45.496402740478516,
+            "w": 147.72296142578125,
+            "h": 121.25646591186523
+          }
+        },
+        {
+          "object_id": 1,
+          "label": "person",
+          "score": 0.8411104083061218,
+          "bbox": {
+            "x": 53.112430572509766,
+            "y": 265.8486633300781,
+            "w": 719.6364097595215,
+            "h": 377.8925476074219
+          }
+        },
+        {
+          "object_id": 2,
+          "label": "person",
+          "score": 0.7018880248069763,
+          "bbox": {
+            "x": 373.989501953125,
+            "y": 261.82806396484375,
+            "w": 892.67724609375,
+            "h": 395.085205078125
+          }
+        },
+        {
+          "object_id": 3,
+          "label": "donut",
+          "score": 0.6849247813224792,
+          "bbox": {
+            "x": 847.8172607421875,
+            "y": 264.60693359375,
+            "w": 422.8953857421875,
+            "h": 378.34808349609375
+          }
+        },
+        {
+          "object_id": 4,
+          "label": "person",
+          "score": 0.584713876247406,
+          "bbox": {
+            "x": 805.4697875976562,
+            "y": 277.2496337890625,
+            "w": 471.97442626953125,
+            "h": 331.3956298828125
+          }
+        },
+        {
+          "object_id": 5,
+          "label": "remote",
+          "score": 0.577231764793396,
+          "bbox": {
+            "x": 566.697509765625,
+            "y": 363.5146179199219,
+            "w": 292.18939208984375,
+            "h": 223.16104125976562
+          }
+        }
+      ],
+      "relations": [
+        {
+          "subject_id": 0,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        }
+      ]
+    },
+    {
+      "image_id": "m0-demo-104",
+      "t": 104.0,
+      "keyframe": false,
+      "width": 1280,
+      "height": 720,
+      "detections": [
+        {
+          "object_id": 0,
+          "label": "person",
+          "score": 0.9824389219284058,
+          "bbox": {
+            "x": 787.5892944335938,
+            "y": 221.80824279785156,
+            "w": 487.35272216796875,
+            "h": 461.32225036621094
+          }
+        },
+        {
+          "object_id": 1,
+          "label": "remote",
+          "score": 0.9709314703941345,
+          "bbox": {
+            "x": 909.4052124023438,
+            "y": 0.7215736508369446,
+            "w": 138.75604248046875,
+            "h": 103.20996779203415
+          }
+        },
+        {
+          "object_id": 2,
+          "label": "person",
+          "score": 0.8471885919570923,
+          "bbox": {
+            "x": 297.1611328125,
+            "y": 114.13008117675781,
+            "w": 981.5633544921875,
+            "h": 580.3368377685547
+          }
+        },
+        {
+          "object_id": 3,
+          "label": "person",
+          "score": 0.8171625137329102,
+          "bbox": {
+            "x": 87.7787094116211,
+            "y": 167.20626831054688,
+            "w": 705.1071548461914,
+            "h": 419.5243835449219
+          }
+        },
+        {
+          "object_id": 4,
+          "label": "remote",
+          "score": 0.6549643278121948,
+          "bbox": {
+            "x": 543.226318359375,
+            "y": 302.392822265625,
+            "w": 321.92059326171875,
+            "h": 201.16696166992188
+          }
+        },
+        {
+          "object_id": 5,
+          "label": "person",
+          "score": 0.6350700855255127,
+          "bbox": {
+            "x": 269.7301025390625,
+            "y": 182.55990600585938,
+            "w": 533.5648193359375,
+            "h": 279.8507995605469
+          }
+        }
+      ],
+      "relations": [
+        {
+          "subject_id": 0,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 5,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 5,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        }
+      ]
+    },
+    {
+      "image_id": "m0-demo-106",
+      "t": 106.0,
+      "keyframe": false,
+      "width": 1280,
+      "height": 720,
+      "detections": [
+        {
+          "object_id": 0,
+          "label": "person",
+          "score": 0.9635440707206726,
+          "bbox": {
+            "x": 659.1832275390625,
+            "y": 234.2897186279297,
+            "w": 605.1094970703125,
+            "h": 456.7001495361328
+          }
+        },
+        {
+          "object_id": 1,
+          "label": "remote",
+          "score": 0.9621215462684631,
+          "bbox": {
+            "x": 881.6072998046875,
+            "y": 2.1886775493621826,
+            "w": 143.1112060546875,
+            "h": 85.52131390571594
+          }
+        },
+        {
+          "object_id": 2,
+          "label": "person",
+          "score": 0.9160504937171936,
+          "bbox": {
+            "x": 0.0,
+            "y": 19.189668655395508,
+            "w": 627.1104736328125,
+            "h": 374.1509380340576
+          }
+        },
+        {
+          "object_id": 3,
+          "label": "remote",
+          "score": 0.7254719138145447,
+          "bbox": {
+            "x": 201.24130249023438,
+            "y": 264.9945373535156,
+            "w": 728.8623352050781,
+            "h": 281.4424743652344
+          }
+        },
+        {
+          "object_id": 4,
+          "label": "remote",
+          "score": 0.5316735506057739,
+          "bbox": {
+            "x": 519.7042846679688,
+            "y": 248.04917907714844,
+            "w": 356.75732421875,
+            "h": 281.0177764892578
+          }
+        }
+      ],
+      "relations": [
+        {
+          "subject_id": 0,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 0,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 1,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 2,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 3,
+          "object_id": 4,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 0,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 1,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 2,
+          "predicate": "on",
+          "from": "fallback"
+        },
+        {
+          "subject_id": 4,
+          "object_id": 3,
+          "predicate": "on",
+          "from": "fallback"
+        }
+      ]
+    }
+  ]
+}

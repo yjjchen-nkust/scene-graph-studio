@@ -1,0 +1,123 @@
+{
+  "$schema_version": 1,
+  "source": "IndustReal (4TU.ResearchData, doi:10.4121/b008dd74-020d-4ea4-a8ba-7bb60769d224)",
+  "source_video": "01_assy_0_1.mp4",
+  "segment_seconds": [
+    88.0,
+    106.0
+  ],
+  "licence": "Apache-2.0; the 4TU data record states it for the data, not only the code",
+  "distribution": "bundle",
+  "clip": {
+    "file": "clip.mp4",
+    "sha256": "71d67ef8cfc9395868d87c87791fb7ad20c4b2eb6e09485f60c7b18c22bf1fbe",
+    "bytes": 2139278,
+    "width": 1280,
+    "height": 720,
+    "codec": "h264",
+    "audio": false,
+    "seconds": 18.0
+  },
+  "frames": [
+    {
+      "image_id": "m0-demo-088",
+      "file": "frames/m0-demo-088.jpg",
+      "timestamp_seconds": 88.0,
+      "keyframe": false,
+      "sha256": "9b2aba1a052178368522ca596e2314c9f24baf196caf584027cb9abea37e90f3",
+      "bytes": 55026,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "image_id": "m0-demo-090",
+      "file": "frames/m0-demo-090.jpg",
+      "timestamp_seconds": 90.0,
+      "keyframe": true,
+      "sha256": "7d878b5b3d3fc51c0282ac1689a89a47d9f374c4bd9fca71761c402e410d1593",
+      "bytes": 36333,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "image_id": "m0-demo-092",
+      "file": "frames/m0-demo-092.jpg",
+      "timestamp_seconds": 92.0,
+      "keyframe": false,
+      "sha256": "81417cebf751dd484cdcd38ea8e3b98834c264b1c20a14b582c19447bedcb598",
+      "bytes": 51731,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "image_id": "m0-demo-094",
+      "file": "frames/m0-demo-094.jpg",
+      "timestamp_seconds": 94.0,
+      "keyframe": false,
+      "sha256": "2a5775d50daf56db3712903b39d4149d99222b20f66d75ab0bf2740a6014485e",
+      "bytes": 51918,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "image_id": "m0-demo-096",
+      "file": "frames/m0-demo-096.jpg",
+      "timestamp_seconds": 96.0,
+      "keyframe": true,
+      "sha256": "ad55f69103d3cb97c45e31464b4a707d1db1e445ef64d96048242899b0dd9624",
+      "bytes": 41241,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "image_id": "m0-demo-098",
+      "file": "frames/m0-demo-098.jpg",
+      "timestamp_seconds": 98.0,
+      "keyframe": false,
+      "sha256": "da1ed11545eef89db0904a6fd9751a55054b7ea614dd092552673183a745ddf4",
+      "bytes": 58456,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "image_id": "m0-demo-100",
+      "file": "frames/m0-demo-100.jpg",
+      "timestamp_seconds": 100.0,
+      "keyframe": false,
+      "sha256": "71c2e91ca572369df0f570c0b73cafeb4e020718fb55578d5d7ebcea9b1e51f7",
+      "bytes": 67901,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "image_id": "m0-demo-102",
+      "file": "frames/m0-demo-102.jpg",
+      "timestamp_seconds": 102.0,
+      "keyframe": true,
+      "sha256": "7e138f07d4aeb716e1c5914900a28f6cf13d55da2ef40591a86052791cd3cdd9",
+      "bytes": 47330,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "image_id": "m0-demo-104",
+      "file": "frames/m0-demo-104.jpg",
+      "timestamp_seconds": 104.0,
+      "keyframe": false,
+      "sha256": "ac51dd924cf2e51f6bd872069ffd516e6fc05b0d0b24a69126e3908653c1e655",
+      "bytes": 63258,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "image_id": "m0-demo-106",
+      "file": "frames/m0-demo-106.jpg",
+      "timestamp_seconds": 106.0,
+      "keyframe": false,
+      "sha256": "16c53ff80152da45f90b09af437e94df87d655f82ca7d134a8dcc26c370f23c8",
+      "bytes": 54958,
+      "width": 1280,
+      "height": 720
+    }
+  ]
+}

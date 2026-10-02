@@ -1,0 +1,36 @@
+{
+  "$schema_version": 1,
+  "provenance": {
+    "recorded": false,
+    "source": "wang-2025 §3.2 and Figure 2",
+    "authored_on": "2026-09-18",
+    "note_en": "Authored from Wang et al. 2025 §3.2 and Figure 2, which name these three corrections in prose. No VLM produced this text. It is a teaching artefact that reproduces the paper's own walkthrough so that L5 runs with no API key and no network; it is not evidence of what any model does on this frame.",
+    "note_zh": "依 Wang et al. 2025 §3.2 與 Figure 2 之文字敘述撰寫，該處以文字載明此三項修正。本段文字並非由任何 VLM 產生，而是重現該論文自身範例的教學素材，俾使 L5 於無 API 金鑰、無網路之環境下仍可執行；不得視為任何模型於本幀之行為證據。"
+  },
+  "exchanges": [
+    {
+      "case": "hallucinated_wrench",
+      "key": "cda0dcbeb03c4746",
+      "prompt": "TRIPLE-CHECKING -- expert 1 of N\nReview the draft triplets below against the frame and the criteria.\nDelete any entity that is not visible. Recover any entity that is visible and missing.\nReplace any predicate that is not in the dictionary with the nearest one that is.\n\nTRIPLETS EXTRACTION CRITERIA -- object categories\n- worker\n- wrench\n- terminals\n- beam\n- panel\n- screwdriver\n- tape\n- workbench\n\nTRIPLETS EXTRACTION CRITERIA -- predicate dictionary\n- holding\n- knocking on\n- on\n- near\n- installing\n- above\n\nTRIPLETS EXTRACTION CRITERIA -- examples\n[positive] <worker, knocking on, panel> -- The hand contacts the panel repeatedly; `knocking on` is in the dictionary.\n[negative] <worker, taping, panel> -- `taping` is not in the dictionary, so this triplet cannot be scored at all.\n\nDRAFT\n<worker, holding, wrench>\n<worker, near, workbench>\n\nOUTPUT\nThe revised triplet set, one per line, in <subject, predicate, object> form.\nThen a line reading ANALYSIS_EN, followed by one paragraph in English explaining every change.\nThen a line reading ANALYSIS_ZH, followed by the same paragraph in Traditional Chinese.",
+      "image_ref": "isg-fig2-t1",
+      "context": {},
+      "completion": "<worker, near, workbench>\n\nANALYSIS_EN\nThe draft asserted <worker, holding, wrench>. No wrench is visible in this frame, so the triplet is deleted rather than re-predicated: a relation to an entity that is not there has no correct predicate.\nANALYSIS_ZH\n草稿主張 <worker, holding, wrench>。本幀並未出現 wrench，故刪除該三元組，而非改換其 predicate：與不存在之實體所建立的關係，並無正確的 predicate 可供替換。"
+    },
+    {
+      "case": "missing_nodes",
+      "key": "e723c2d610f29a07",
+      "prompt": "TRIPLE-CHECKING -- expert 1 of N\nReview the draft triplets below against the frame and the criteria.\nDelete any entity that is not visible. Recover any entity that is visible and missing.\nReplace any predicate that is not in the dictionary with the nearest one that is.\n\nTRIPLETS EXTRACTION CRITERIA -- object categories\n- worker\n- wrench\n- terminals\n- beam\n- panel\n- screwdriver\n- tape\n- workbench\n\nTRIPLETS EXTRACTION CRITERIA -- predicate dictionary\n- holding\n- knocking on\n- on\n- near\n- installing\n- above\n\nTRIPLETS EXTRACTION CRITERIA -- examples\n[positive] <worker, knocking on, panel> -- The hand contacts the panel repeatedly; `knocking on` is in the dictionary.\n[negative] <worker, taping, panel> -- `taping` is not in the dictionary, so this triplet cannot be scored at all.\n\nDRAFT\n<worker, near, workbench>\n\nOUTPUT\nThe revised triplet set, one per line, in <subject, predicate, object> form.\nThen a line reading ANALYSIS_EN, followed by one paragraph in English explaining every change.\nThen a line reading ANALYSIS_ZH, followed by the same paragraph in Traditional Chinese.",
+      "image_ref": "isg-fig2-t2",
+      "context": {},
+      "completion": "<worker, near, workbench>\n<worker, installing, terminals>\n<terminals, on, panel>\n<panel, above, beam>\n\nANALYSIS_EN\nThe draft named only the workbench. terminals, beam and panel are visible and are all in the object set, so the relations that involve them were recovered. A missing node removes every triplet that would have used it, which is why recall falls faster than the count of missed entities suggests.\nANALYSIS_ZH\n草稿僅提及 workbench。terminals、beam 與 panel 於畫面中可見且均屬既定物件集合，故補回涉及此三者之關係。缺漏一個節點將連帶移除所有以之為端點的三元組，此即 recall 下降幅度大於漏檢實體數之緣由。"
+    },
+    {
+      "case": "imprecise_taping",
+      "key": "09f4d9c485f63074",
+      "prompt": "TRIPLE-CHECKING -- expert 1 of N\nReview the draft triplets below against the frame and the criteria.\nDelete any entity that is not visible. Recover any entity that is visible and missing.\nReplace any predicate that is not in the dictionary with the nearest one that is.\n\nTRIPLETS EXTRACTION CRITERIA -- object categories\n- worker\n- wrench\n- terminals\n- beam\n- panel\n- screwdriver\n- tape\n- workbench\n\nTRIPLETS EXTRACTION CRITERIA -- predicate dictionary\n- holding\n- knocking on\n- on\n- near\n- installing\n- above\n\nTRIPLETS EXTRACTION CRITERIA -- examples\n[positive] <worker, knocking on, panel> -- The hand contacts the panel repeatedly; `knocking on` is in the dictionary.\n[negative] <worker, taping, panel> -- `taping` is not in the dictionary, so this triplet cannot be scored at all.\n\nDRAFT\n<worker, taping, panel>\n\nOUTPUT\nThe revised triplet set, one per line, in <subject, predicate, object> form.\nThen a line reading ANALYSIS_EN, followed by one paragraph in English explaining every change.\nThen a line reading ANALYSIS_ZH, followed by the same paragraph in Traditional Chinese.",
+      "image_ref": "isg-fig2-t3",
+      "context": {},
+      "completion": "<worker, knocking on, panel>\n\nANALYSIS_EN\nThe draft used the predicate taping, which is not in the dictionary. The nearest legal term describing the same human action is knocking on. Projecting onto the dictionary after generation is what makes the output comparable with a fixed predicate set; a free-text predicate scores zero however well it describes the frame.\nANALYSIS_ZH\n草稿採用之 predicate 為 taping，該詞不在詞典之內。描述相同人類動作且合乎規範之最近詞彙為 knocking on。於生成之後投影至詞典，正是使輸出得以與固定 predicate 集合相互比較的機制；自由文字之 predicate 無論描述多麼貼切，計分皆為零。"
+    }
+  ]
+}
