@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "scene-graph-studio",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/dev/WekaExt/scene-graph-studio/system/tools/start.mjs"],
+      "port": 5173
+    }
+  ]
+}
