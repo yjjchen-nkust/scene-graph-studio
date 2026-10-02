@@ -1,10 +1,11 @@
 # devdata entries for this subproject: see spec section 6.2 (Project manifest).
 #
-# One dataset: data/, the junction to the NAS that D110 made, under the machine root `raw`
-# (C:\DataRaw on the author's machine). `devdata pull` makes the same link that start.ps1 and
-# fetch-data.ps1 make through system/tools/Connect-DataDirectory.ps1; both stay until a second
-# machine has passed with devdata alone (spec section 10.1, step 6; D123).
+# One dataset: data/, the link to the NAS that D110 made, at the machine root `raw`'s
+# WekaExt/scene-graph-studio, where decision 4.5 puts project-owned data (D125). Generators write
+# through it, and stop when it is absent (rule 10.4). `devdata pull` makes the link, as start.ps1 and
+# fetch-data.ps1 do through system/tools/Connect-DataDirectory.ps1; those stay until a second machine
+# has passed with devdata alone (spec section 10.1, steps 5 and 6).
 [entries.data]
-kind   = "dataset"
-path   = "data"
-source = "raw:scene-graph"
+kind    = "dataset"
+path    = "data"
+source  = "raw:WekaExt/scene-graph-studio"
