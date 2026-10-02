@@ -2172,3 +2172,26 @@ and 734). Checked by eye against the frames at 90, 92, 94, 96 and 100 s: each ha
 | `npm run ci` | green; 399 pytest and 7 skipped, **1356 vitest** in 92 files, parity 21 agree, i18n 507 keys, content lint clean |
 | `npm run test:e2e` | **107 passed**, 2.6 min; before part 3's scroll box, D-V part 3 at 90 s, expert 3, ran 157 px past 1024×768 in 繁體中文, and part 1 ran 13 px past while s11 named the hands |
 | `npm run check:perf` | **33 passed**, 35.8 s; D-T 32.7 ms, D-V 32.5 ms |
+
+---
+
+## 35. The devdata migration, measured 2026-10-02
+
+D125, plan `2026-10-02-devdata-migration.md`. The "before" column is `main` at `20a3fc7`.
+
+| Step | Before (`20a3fc7`) | After (D125) |
+|---|---|---|
+| NAS folder | `raw:scene-graph`, 289 files, 5,000,284,186 bytes | `raw:WekaExt/scene-graph-studio`, the same 289 files and bytes; `devdata status` `linked` |
+| `devdata lint` | 54 findings, exit 5 | **0 findings, exit 0** |
+| Writer run without `data/` | `make_placeholders.py` created `data/` | stops naming `devdata pull`, creates nothing; 13 backend writers and the harvest guarded |
+| `npm run ci` against the NAS | 399 pytest and 7 skipped, 1356 vitest in 92 files | **404 pytest** and 7 skipped, **1364 vitest** in 95 files |
+| `npm run ci` against `fixtures/data` only, `CI=true`, linked by `devdata pull --ci` | not possible: no fixture, and no `data/` on a runner since D109 | **401 pytest** and 10 skipped, **1359 vitest** in 93 files, frontend builds |
+| `npm run test:e2e` | 107 passed | **107 passed**, 2.1 min |
+| Fixture drift | — | 127 files, 0 differ from `data/`; a one-byte change fails the test and `fixture:refresh` restores it |
+| remotex for the runner | — | private: anonymous API 404, anonymous git 401; the job needs `REMOTEX_READ_TOKEN` |
+
+The fixture run's first attempt failed six backend tests, every one for the vg150-sgb slice the D-T prior and the
+slice-distribution tests read; its annotations and manifest, 596 KB without its 14 MB of images, made them pass. A
+worktree with a borrowed `node_modules` resolved vitest's setup file in the main tree, so the fixture was measured in
+the main tree itself, its link restored by `devdata pull` afterwards. `Get-DataTarget` resolves the same target under
+PowerShell 7 and 5.1.

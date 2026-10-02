@@ -5534,3 +5534,59 @@ D114/D115's files are kept: `data/vlm/transcripts-pre-D124/m0-demo.json` (SHA-25
 **Verification.** On this branch, 2026-10-02: `npm run ci` green, **399 pytest** and 7 skipped, **1356 vitest** in
 92 files, parity 21 agree, i18n 507 keys, content lint clean, frontend builds; `npm run test:e2e` **107 passed** and
 `npm run check:perf` **33 passed**, D-V at 32.5 ms. VERIFICATION §34 records the recording and the runs.
+
+## D125 — the track's data follows remotex devdata: moved, guarded, fixtured, and named by root
+
+**Plan:** `plans/2026-10-02-devdata-migration.md`, the devdata spec's wave 2 for WekaExt (its §10.2), whose one data
+mechanism is this track's (§10.3). **Decisions:** none of D-01 to D-23; three locked with the author on 2026-10-02:
+move the data to decision 4.5's place, rewrite every line `devdata lint` reports, records included, and link the CI
+fixture with `devdata pull --ci`. Branch `feat/sgs-devdata-migration`, from `main` at `20a3fc7`.
+
+**The location.** The devdata spec's decision 4.5, added the same day, puts project-owned data at
+`<raw>/<project>/<subproject path>`. The NAS folder was renamed in place from `raw:scene-graph` to
+`raw:WekaExt/scene-graph-studio`, one volume, so no copy: 289 files and 5,000,284,186 bytes before and after.
+`data.toml` names the new source, `devdata pull` replaced the junction it reported `wrong-target`, and D-V's
+transcript and derived file kept their SHA-256 values.
+
+**The writers.** Rule 10.4: a generator writes through the link and never creates it. Run without data/,
+`make_placeholders.py` made `data/` a real directory, which devdata reports as `occupied`, and its output then lay
+on no NAS. `app.settings.require_data_dir()` stops with a message naming `devdata pull` and creates nothing, and the
+thirteen backend scripts that write under `DATA_DIR` call it before anything else; `tools/data_dir.mjs` is the
+same rule for the harvest, which now reads `SGS_DATA_DIR` as the backend does. A static test lists the writers and
+refuses a script that writes under `DATA_DIR` without being on the list.
+
+**The fixture.** Decision 4.5 has git track only each linked entry's fixture, linked in its place by
+`devdata pull --ci`. `fixtures/data` holds 127 files, 6.3 MB: what `npm run ci` reads, without the corpora, the
+two papers, the earlier recordings, or the images of vg150-sgb, psg and indoorvg, whose annotations alone the
+D-T prior needs. Every file clears its row of `LICENCES.md`: the placeholder and the predictions over it are this
+repository's own, vg150-sgb contributes annotations only (`annotations_commit` YES), mini-isg and the M0 demos
+are IndustReal under Apache-2.0 with both gates YES. Linked as the runner will link it, the gate is green: 401
+pytest and 10 skipped, 1,359 vitest. `.gitattributes` unsets `text` under it, since its bytes are compared and
+hashed. A tools test holds each fixture file to its NAS copy, byte for byte, outside CI, and fails naming the file
+after a one-byte change; `npm run fixture:refresh` copies the NAS's versions over it and never adds a file.
+
+**The lint.** 54 tracked lines spelt a data root, the 38 counted on 2026-10-02 morning and 16 written since. The
+code: `Connect-DataDirectory.ps1` now reads its target from devdata's roots file and `data.toml`, as
+`devdata pull` does, and its test, run under pwsh, found that `Join-Path` throws when the root's drive is not
+mounted, so the path is combined with `IO.Path`; messages in `start.ps1` and `start.mjs` name `devdata pull`;
+comments and test paths name no machine. The records: a path is written as the entry path, the root by name
+(`raw:scene-graph`, where the data was), or `SGS_CORPUS_ROOT` in the reproduction commands, and two quotations of
+the author's own instructions carry the substitution in brackets. `vg150_splits.json`'s measuring command changed
+identically on the NAS and in the fixture. The D108 and D110 records tests name the source by root, and D109's
+admits an unset attribute. `devdata lint` reports zero.
+
+**The CI link.** The workflow installs remotex and runs `devdata pull --ci` at the track root before `npm run ci`.
+remotex is private: an anonymous request answered 404 from Gitea's API and 401 from git, so the install reads
+the repository secret `REMOTEX_READ_TOKEN` and fails with that reason when it is not set. Until the author sets
+it, the job stops at that step; before D125 it could not pass either, since no `data/` existed on a runner after
+D109. No runner has taken a job since 2026-09-26, so the workflow has not run.
+
+**Left for the author.** The spec's §10.1 steps 5 and 6: on a second machine, `git pull`, `devdata pull` and the
+tests; then `Connect-DataDirectory.ps1`, `fetch-data.ps1`'s link step, `SGS_DATA_DIR` and `SGS_CORPUS_ROOT` are
+retired. The corpora under `data/_raw` and the author's `SGS_CORPUS_ROOT` would then become dataset entries of
+their own. The secret `REMOTEX_READ_TOKEN`: a Gitea access token that reads `CIL-Team/remotex`.
+
+**Verification.** On this branch, 2026-10-02: `npm run ci` green, **404 pytest** and 7 skipped, **1,364 vitest** in
+95 files, parity 21 agree, i18n 507 keys, content lint clean, frontend builds; `npm run test:e2e` **107 passed**;
+against the fixture alone with `CI=true`, 401 pytest and 10 skipped and 1,359 vitest; `devdata lint` exit 0 and
+`devdata status` `linked`. VERIFICATION §35 records the runs.

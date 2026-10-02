@@ -42,10 +42,11 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/2026-09-27-graph-constraint-key.md` | Both engines re-keyed, gv-014, `semi` described, D51 corrected | **executed** |
 | `superpowers/plans/2026-09-28-playgrounds-m4.md` | M4's corrections, the ranked list and its arithmetic, E3, E4, E7, E13 and X2, their golden cases, M4 s3 to s16 | **executed** |
 | `superpowers/plans/2026-09-29-playgrounds-m5.md` | M5's corrections, the slice ordered and the six beliefs, T1 and T2, their golden cases, M5 s3, s5 and s6 | **executed** |
+| `superpowers/plans/2026-10-02-devdata-migration.md` | remotex devdata's wave 2 for this track: the NAS folder moved, the writers' guard, the CI fixture, lint to zero, the CI link | **executed**; steps 5 and 6 of the spec's §10.1 wait for a second machine |
 | `superpowers/plans/2026-09-29-m0-demos.md` | The live VLM provider's frame, the clip, D-T and D-V recorded and derived, the demo components, the lint rules, M0 s7 to s15, the Chromium checks | **executed** |
 | `PLAYBOOK.md` | How this was built, as reusable prompts for the next project | reference |
-| `../DEVIATIONS.md` | **D1…D124. Every departure from plan, with its reason.** | live |
-| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28), the M4 playgrounds (§29), the M5 playgrounds (§30), the M0 demos (§31), the findings D120 left open (§32), the dev server and F2's edges (§33) and D-V recorded again (§34)** | live |
+| `../DEVIATIONS.md` | **D1…D125. Every departure from plan, with its reason.** | live |
+| `VERIFICATION.md` | **The nine checks of design §6, plus NFR-8 (§10), the pins (§11), the interpreter (§12), the CUDA build (§13), the runner (§14), the playgrounds (§15), the lint suite by mutation (§16), the M1 playgrounds (§17), the M1 minors (§18), the review of the day's merges (§19), the split playgrounds (§20), the M2 playground (§21), the M3 playgrounds (§22), the graph constraint's key (§23), the review minors (§24), the deferred minors (§25), the open checks (§26), the review of the open checks (§27), the empty training split (§28), the M4 playgrounds (§29), the M5 playgrounds (§30), the M0 demos (§31), the findings D120 left open (§32), the dev server and F2's edges (§33), D-V recorded again (§34) and the devdata migration (§35)** | live |
 | `../data/LICENCES.md` | The two licence gates, per dataset | live |
 | `../system/web/knowledge-map/FROZEN.md` | The freeze, its release by D-23, and every correction made under it | live |
 
@@ -549,6 +550,16 @@ and notes are rewritten from it, part 3's longer analyses scroll in their own bo
 branch merges, `main` fails its gate against the NAS; the earlier files are kept beside the new ones. See D124.
 **Verification.** `npm run ci` green, 2026-10-02, with D124: 399 pytest and 7 skipped, **1356 vitest** in 92 files;
 `npm run test:e2e` 107 and `npm run check:perf` 33 passed (VERIFICATION §34).
+
+**The data follows remotex devdata, 2026-10-02.** The devdata spec's wave 2 for this track. The NAS folder moved to
+`raw:WekaExt/scene-graph-studio`, decision 4.5's place, by a rename; every writer of `data/` stops when the link is
+absent rather than create a directory in its place; `fixtures/data`, 127 files and 6.3 MB, is the CI fixture, against
+which alone the gate is green, held to its NAS copies by a test; no tracked file spells a data root, so
+`devdata lint` reports zero, the connect script reading devdata's own files; and the workflow links the fixture with
+`devdata pull --ci`, which needs the secret `REMOTEX_READ_TOKEN`, since remotex is private. A second machine and the
+retirement of the old link scripts are left to the author. See D125. **Verification.** `npm run ci` green,
+2026-10-02, with D125: 404 pytest and 7 skipped, **1364 vitest** in 95 files; `npm run test:e2e` 107; against the
+fixture alone, 401 pytest and 1359 vitest (VERIFICATION §35).
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in

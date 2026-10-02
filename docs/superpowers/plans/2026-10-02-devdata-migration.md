@@ -1,5 +1,8 @@
 # devdata migration, WekaExt wave 2 — plan
 
+**Status: executed 2026-10-02** (D125), Tasks 1 to 6; VERIFICATION §35 records the runs. Task 5 found remotex private
+(anonymous 401), so the runner needs the repository secret `REMOTEX_READ_TOKEN`, which the author sets.
+
 **Goal:** Scene Graph Studio's data follows remotex's devdata convention (spec
 `C:\dev\remotex\docs\superpowers\specs\2026-10-01-devdata-design.md`, decision 4.5 and §10): one linked dataset whose
 master is on the NAS under the `raw` root at `WekaExt/scene-graph-studio`, a tracked CI fixture in its place on the

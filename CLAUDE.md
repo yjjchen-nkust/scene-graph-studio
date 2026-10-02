@@ -5,7 +5,7 @@
 `docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
 `docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
 run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split, §29 the M4 playgrounds, §30 the M5 playgrounds, §31 the M0 demos, §32 the findings D120 left open, §33 the dev server and F2's edges and §34 D-V recorded again), and all 124 logged deviations. It is kept current. **Read it
+CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split, §29 the M4 playgrounds, §30 the M5 playgrounds, §31 the M0 demos, §32 the findings D120 left open, §33 the dev server and F2's edges, §34 D-V recorded again and §35 the devdata migration), and all 125 logged deviations. It is kept current. **Read it
 before changing anything.**
 
 ## What this is
@@ -52,7 +52,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D124` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D125` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
   `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
@@ -99,11 +99,21 @@ cd scene-graph-studio\system ; npm run ci
   D125), and no data file lives in the checkout but the CI fixture (D109, D110).** `.gitignore` ignores `/data/` whole, so git carries none of it:
   corpora, slice images, annotations, manifests, `data/content/`, the golden vectors, the
   predictions and `data/LICENCES.md`. Every reader keeps its `data/` path and reaches the one
-  copy through the link; `SGS_DATA_DIR` names another target. `start.ps1` and `fetch-data.ps1`
-  make the link through `system/tools/Connect-DataDirectory.ps1`, and so does `devdata pull`
-  (remotex's devdata), which `data.toml` declares it to as the dataset `raw:scene-graph` (D123).
-  **A fresh clone has no `data/`** until one of them runs, and a gate run on a machine without
-  the NAS fails at its first read of it. Vite checks real paths, so `vitest.config.ts` and
+  copy through the link; `SGS_DATA_DIR` names another target. **`devdata pull`** (remotex's
+  devdata) makes the link from `data.toml`'s `source` and the machine's roots file, and so do
+  `start.ps1` and `fetch-data.ps1` through `system/tools/Connect-DataDirectory.ps1`, which reads
+  the same two files; those retire once a second machine has passed with devdata alone (D125).
+  **No tracked file spells a data root**: `devdata lint` reports zero, and a path in prose is the
+  entry path, the root by name (`raw:scene-graph` for where the data was before D125), or
+  `SGS_CORPUS_ROOT`. **Every writer of `data/` stops when the link is absent**
+  (`app.settings.require_data_dir`, `tools/data_dir.mjs`), never creating a real directory
+  where the link belongs. **A fresh clone has no `data/`** until one of them runs. **The CI fixture
+  is `fixtures/data`** (127 files, 6.3 MB, `-text` in `.gitattributes`): what `npm run ci` reads,
+  without the corpora, the papers, the earlier recordings or the three large slices' images; the
+  runner links it with `devdata pull --ci`, installing private remotex with the repository secret
+  `REMOTEX_READ_TOKEN`. A tools test holds each fixture file to its NAS copy, byte for byte, and
+  `npm run fixture:refresh` copies the NAS's over them; a file the gate comes to need is copied in
+  by hand. Vite checks real paths, so `vitest.config.ts` and
   `frontend/vite.config.ts` allow the link's target through `data.dir.ts`. That target is on D:
   beside a checkout on C:, and Vite 8.3.0's `/@fs/` reads only its own drive and answers anything
   else with `index.html` and 200, so the dev server showed no clip and no photograph from
