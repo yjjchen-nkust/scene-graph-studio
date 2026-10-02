@@ -5452,7 +5452,10 @@ pair shows as a dashed edge until it is added. The drawing carries no text and i
 viewBox falls below the 18 px floor (D98), so the predicates stay in the list, which a screen reader reads. The
 buttons keep their DOM order, so the keyboard walk is unchanged. At 1024×768 in 繁體中文 the box takes the height
 F2's stacked readouts already took: the visual is 282 px and the step runs 21 px past the panel, both as before.
-`F2/test/drawing.test.ts` (8 tests) and four new tests in `TripletCombinatorics.test.tsx` failed before.
+`F2/test/drawing.test.ts` (8 tests) and four new tests in `TripletCombinatorics.test.tsx` failed before. At a
+narrow width the drawing pushed the list of edges under the frame's 46vh clip (in the Browser pane at 800 × 566 its
+top stood at 452 px and the clip at 446), and the list is the only place the predicates are written, so F2 now passes
+`clip={false}` (D93); at 1024×768 its default state already stood below the clip, 282 px under 353 px.
 
 **devdata.** `data.toml` at WekaExt's root (`project = "WekaExt"`) and in this track declare `data/` as the dataset
 `raw:scene-graph`, and `devdata init` wrote the managed `.gitignore` blocks. `devdata status` reports it `linked`:
@@ -5469,7 +5472,7 @@ and its §10.2 gives WekaExt's wave a plan of its own. Three facts about this tr
   D115 already met: `main` failed its gate until a branch merged, and a revert needed hand edits on the NAS.
 
 **Verification.** On this branch, 2026-10-02: `npm run ci` green, 395 pytest and 7 skipped, parity 21 agree, i18n
-507 keys, **1353 vitest** in 92 files, ruff clean, content lint clean, standalone current, frontend builds;
-`npm run test:e2e` **107 passed**, and `npm run check:perf` **33 passed**, F2's direction toggle at 34.4 ms against
+507 keys, **1354 vitest** in 92 files, ruff clean, content lint clean, standalone current, frontend builds;
+`npm run test:e2e` **107 passed**, again after the clip, and `npm run check:perf` **33 passed**, F2's direction toggle at 34.4 ms against
 its 100 ms budget. In the Browser pane under `npm start`, both clips load (18.0 s, 1280 px wide) and the twelve
 photographs of M0's study page render. VERIFICATION §33 records the runs.

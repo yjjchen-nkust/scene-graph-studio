@@ -174,6 +174,15 @@ describe('F2', () => {
     expect(screen.getAllByTestId(/^f2-edge-/)).toHaveLength(1);
   });
 
+  // The drawing pushed the list below the frame's 46vh clip at a narrow width (measured in the
+  // Browser pane at 800 × 566 on 2026-10-02: the list's top at 452 px, the clip at 446). The list
+  // is the only place the predicates are written, and a word under the clip is beyond the reach
+  // of the step's scroll (D93), so F2's visual is not clipped.
+  it('leaves the list of edges within reach of the step\'s scroll', () => {
+    mount();
+    expect(screen.getByTestId('playground-visual').className).not.toMatch(/overflow-hidden|max-h-/);
+  });
+
   it('keeps the drawing out of the accessibility tree, since the list beneath says the same', () => {
     mount();
     addEdge('1', '2', 'on');

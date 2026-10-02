@@ -329,7 +329,7 @@ was run and its outcome. All nine have been run and passed; check 6 was first re
 **not run** (D69) and passed on 2026-09-18.
 
 `npm run ci` is green on py12: 395 Python tests (7 skipped for a corpus this machine may not
-have), 1353 TypeScript tests across 92 files, parity 21/21, i18n 507 keys in both locales,
+have), 1354 TypeScript tests across 92 files, parity 21/21, i18n 507 keys in both locales,
 content lint clean, frozen-page lints clean, and the frontend builds, measured 2026-10-01 on
 branch `fix/sgs-review-2026-10-01-c` (D122, D123). `npm run test:e2e` is 107 passed,
 `npm run check:perf` is 33, which also measures the two demonstrations, and

@@ -539,7 +539,7 @@ the edges the student adds, one curve per edge |E| counts, opposite arrows mergi
 direction is discarded, in the height its readouts already took. `data.toml` declares `data/` to remotex's devdata
 as the dataset `raw:scene-graph`, which `devdata status` reports linked; nothing is retired yet. See D123.
 **Verification.** `npm run ci` green, 2026-10-02, on branch `fix/sgs-review-2026-10-01-c` with D123: 395 pytest and 7
-skipped, **1353 vitest** in 92 files; `npm run test:e2e` 107 and `npm run check:perf` 33 passed (VERIFICATION §33).
+skipped, **1354 vitest** in 92 files; `npm run test:e2e` 107 and `npm run check:perf` 33 passed (VERIFICATION §33).
 
 **The lint suite guards all eleven playground rules, 2026-09-26.** D91 wrote
 `tools/test/content_lint.test.mjs` so that deleting a rule fails the gate. Disabling each rule in

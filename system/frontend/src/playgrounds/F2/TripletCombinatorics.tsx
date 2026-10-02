@@ -219,7 +219,9 @@ export function TripletCombinatorics() {
   );
 
   return (
-    <PlaygroundFrame title="F2" controls={controls}>
+    // Unclipped: below the drawing the list of edges is the only place the predicates are written,
+    // and at a narrow width the drawing pushed it under the 46vh clip, out of the step's reach (D93).
+    <PlaygroundFrame title="F2" controls={controls} clip={false}>
       <div className="flex flex-col gap-4 lg:flex-row">
         {/* `lg:flex-1`, not `flex-1`: in the narrow column layout a zero basis would collapse a
             box whose children are all positioned absolutely. */}
