@@ -1,23 +1,22 @@
-# Publishing scene-graph-studio from GitHub
+# Publishing from GitHub
 
-Frontend on GitHub Pages, backend on Render's free web service, both built from the same push.
-The backend serves `fixtures/data` (6 MB), not the NAS corpus.
+Frontend on GitHub Pages, backend on Render's free web service. The backend serves `fixtures/data`
+(6 MB), not the full corpus.
 
 | Part | File | Result |
 |---|---|---|
-| Frontend | `.github/workflows/scene-graph-studio-pages.yml` | `https://<owner>.github.io/<repository>/` |
+| Gate and frontend | `.github/workflows/ci-cd.yml` | `https://<owner>.github.io/<repository>/` |
 | Backend | `render.yaml` | `https://scene-graph-studio-api.onrender.com` |
 
 ## One-time setup (also the student exercise)
 
-1. Gitea: Repository > Settings > Repository > Push Mirrors. URL `https://github.com/<owner>/<repository>.git`,
-   username the GitHub account, password a fine-grained token with Contents read/write on that repository.
-   Enable "Sync when commits are pushed".
-2. GitHub: Settings > Pages > Source: GitHub Actions. (A private repository needs a paid plan for Pages.)
-3. Render: New > Blueprint > pick the repository. Confirm `SGS_CORS_ORIGINS` is the Pages origin
+1. Fork or create the repository on GitHub. If Gitea is the primary, add a push mirror there
+   (Repository > Settings > Push Mirrors) with a fine-grained token that has Contents read/write.
+2. GitHub: Settings > Pages > Source: GitHub Actions.
+3. Render: New > Blueprint > pick the repository. Set `SGS_CORS_ORIGINS` to the Pages origin
    (scheme and host, no path, no trailing slash).
 4. GitHub: Settings > Secrets and variables > Actions > Variables > `SGS_API_BASE` = the Render URL.
-5. Re-run the Pages workflow (Actions > Run workflow) so the build reads the variable.
+5. Re-run the workflow (Actions > ci-cd > Run workflow) so the build reads the variable.
 
 ## Behaviour to expect
 

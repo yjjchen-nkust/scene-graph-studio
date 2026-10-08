@@ -1,0 +1,88 @@
+name: ci-cd
+
+# One workflow, so the deployment cannot run ahead of the gate: `npm run ci` must pass, then the
+# frontend is published to GitHub Pages. The backend is not deployed from here; Render deploys it
+# from render.yaml on the same push.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: system
+    env:
+      # Local steps resolve a py12 virtual environment (D80); the runner has none, so name the
+      # interpreter setup-python installed.
+      SGS_PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+          cache: npm
+          cache-dependency-path: system/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements.txt
+      # data/ is a local directory or link holding the full corpus and is not in the repository.
+      # The runner reads the 6 MB fixture in its place.
+      - run: ln -s fixtures/data ../data
+      - run: npm ci
+      - run: npm run ci
+
+  pages-build:
+    needs: ci
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: system
+    env:
+      SGS_BASE: /${{ github.event.repository.name }}/
+      # Repository variable (Settings > Secrets and variables > Actions > Variables), e.g.
+      # https://scene-graph-studio-api.onrender.com
+      VITE_API_BASE: ${{ vars.SGS_API_BASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+          cache: npm
+          cache-dependency-path: system/package-lock.json
+      - run: ln -s fixtures/data ../data
+      - run: npm ci
+      - run: npm run harvest
+      - run: npm run build:metrics
+      - run: npm run build:frontend
+      # GitHub Pages answers an unknown path with 404.html; serving the app shell there lets a
+      # deep link such as /<repository>/labs/L1 reach the client router.
+      - run: cp frontend/dist/index.html frontend/dist/404.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: system/frontend/dist
+
+  pages-deploy:
+    needs: pages-build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

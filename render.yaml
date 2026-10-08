@@ -1,0 +1,20 @@
+# Render Blueprint for the backend. The frontend is published to GitHub Pages by
+# .github/workflows/ci-cd.yml.
+services:
+  - type: web
+    name: scene-graph-studio-api
+    runtime: python
+    plan: free
+    region: singapore
+    autoDeployTrigger: commit
+    buildCommand: pip install -r system/backend/requirements.txt
+    startCommand: cd system/backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      # Relative to the start command's directory: the 6 MB CI fixture, since the full corpus is too large for the instance.
+      - key: SGS_DATA_DIR
+        value: ../../fixtures/data
+      - key: SGS_CORS_ORIGINS
+        value: https://yjjchen-nkust.github.io
