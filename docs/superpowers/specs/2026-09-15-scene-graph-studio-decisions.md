@@ -651,13 +651,13 @@ carries only the CI fixture, `fixtures/data` (D125).
 **Decision.** Scene Graph Studio is its own repository, with two remotes: `origin`
 (`gitea.cillab.me/CIL-Team/scene-graph-studio`) and `github`
 (`github.com/yjjchen-nkust/scene-graph-studio`). Deployment is in scope. The frontend is published to
-GitHub Pages by `.github/workflows/ci-cd.yml`, after the gate passes and only from `main`; the backend
+GitHub Pages by `.github/workflows/ci-cd.yml`, after its `ci` job passes and only from `main`; the backend
 runs on Render from `render.yaml`. The backend serves `fixtures/data` and is installed without
-`torch`, so live inference reports unavailable, and L4 says so on the hosted site. D-15's decision,
-that one command defines green, stands: the workflow's `ci` job runs `npm run ci`. The workflow
-D-15's note names, `.gitea/workflows/scene-graph-studio.yml` filtered on `scene-graph-studio/**`, is
-replaced by `.github/workflows/ci-cd.yml`, which has no path filter. D126 records the separation,
-D127 the hosting, D128 the data shared through Google Drive and D129 `deploy.ps1`.
+`torch`, so live inference reports unavailable, and L4 says so on the hosted site. D-15's note
+names the workflow `.gitea/workflows/scene-graph-studio.yml`, filtered on `scene-graph-studio/**`;
+the workflow is now `.github/workflows/ci-cd.yml`, which has no path filter and whose `ci` job runs
+`npm run ci`. D126 records the separation, D127 the hosting, D128 the data shared through Google
+Drive and D129 `deploy.ps1`.
 
 **Why.** Students reach the course without a local install, and setting up the deployment is itself
 a course exercise. `docs/DEPLOY-GITHUB.md` heads its setup steps "One-time setup (also the student
@@ -687,6 +687,12 @@ finding F5 of `2026-10-08-subsystem-index-design.md`, and the third is read from
 - **F4, `start.ps1`'s interpreter.** `start.ps1` still defaults to WekaExt's `..\.venv` (D121). A
   standalone checkout has no such directory beside it, so the script warns and falls back to `py12`
   on every run.
+- **D-15's path filter and its "second opinion, not the gate".** D-15 has a path-filtered workflow
+  run the one command, and states "The workflow is a second opinion, not the gate".
+  `.github/workflows/ci-cd.yml` has no path filter; `deploy.ps1`'s help calls it "the gate and the
+  deployment" (D129), and `docs/DEPLOY-GITHUB.md` lists it as "Gate and frontend". Whether D-15's
+  path filter and its "second opinion, not the gate" still hold is the author's to rule; D-24 rules
+  on neither.
 
 ---
 

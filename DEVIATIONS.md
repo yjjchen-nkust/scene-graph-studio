@@ -5601,13 +5601,13 @@ for standing alone; the author's is recorded in D-24.
 `d010e49` (2026-10-08), which deletes `scene-graph-studio/` and `.gitea/workflows/scene-graph-studio.yml` and states:
 "It now lives at CIL-Team/scene-graph-studio on Gitea, mirrored to GitHub, with its own CI. Its workflow leaves
 .gitea/workflows; ci.yml and deploy.yml are unchanged." The remotes are `origin`,
-`gitea.cillab.me/CIL-Team/scene-graph-studio`, and `github`, `github.com/yjjchen-nkust/scene-graph-studio`. This
-repository's history begins at `db5cdb1`, WekaExt's subtree merge of 2026-09-19, which names the split commit
-`cec9ab8` and has no parent here. The `course-lab` history that D-22 carried over is not in this repository: neither
-`fe1e9a9`, which D-22 names, nor `cec9ab8` resolves, and `git blame` on a line unchanged since the move stops at
-`db5cdb1`. How the history was extracted is not recorded.
+`gitea.cillab.me/CIL-Team/scene-graph-studio`, and `github`, `github.com/yjjchen-nkust/scene-graph-studio`. The
+history begins at `db5cdb1`, this repository's parentless rewrite of WekaExt's git subtree add commit of
+2026-09-19, which names the split commit `cec9ab8`. The `course-lab` history that D-22 carried over is not in this
+repository: neither `fe1e9a9`, which D-22 names, nor `cec9ab8` resolves, and `git blame` on a line unchanged since
+the move stops at `db5cdb1`. How the history was extracted is not recorded.
 
-**CI.** The gate moved from WekaExt's `.gitea/workflows/scene-graph-studio.yml`, a Gitea Actions workflow filtered on
+**CI.** CI moved from WekaExt's `.gitea/workflows/scene-graph-studio.yml`, a Gitea Actions workflow filtered on
 `scene-graph-studio/**`, to `.github/workflows/ci-cd.yml`, which GitHub Actions runs on every push to `main`, every
 pull request and `workflow_dispatch`, with no path filter. Its `ci` job keeps Node 22.12, Python 3.12,
 `SGS_PYTHON: python`, the install of `backend/requirements.txt` and `npm run ci`, run from `system/`. Where D125's
@@ -5643,7 +5643,7 @@ answered and an unlisted one not; a JSON `POST`'s preflight accepted.
 
 **The Pages jobs** (`1c8bea2`). In `.github/workflows/ci-cd.yml`, `pages-build` needs `ci` and runs only when the
 event is not a pull request and the ref is `refs/heads/main`, and `pages-deploy` needs `pages-build`: the frontend is
-published only after the gate passes, and only from `main`. `pages-build` sets `SGS_BASE` to `/<repository name>/`
+published only after `ci` passes, and only from `main`. `pages-build` sets `SGS_BASE` to `/<repository name>/`
 and `VITE_API_BASE` to the repository variable `SGS_API_BASE`, links the fixture as `ci` does, runs
 `npm run harvest`, `npm run build:metrics` and `npm run build:frontend`, copies `index.html` to `404.html` so that a
 deep link reaches the client router, and uploads `system/frontend/dist`; `pages-deploy` publishes it with
@@ -5730,15 +5730,15 @@ passed on `695b4fd`'s push (run 37726857232), which holds both test files.
 D-24's hosting. Why the script was added is not recorded beyond the commit's subject.
 
 **What it does.** `0398bc8` adds `deploy.ps1` at the repository root, "to merge, push to both remotes and watch the
-CI/CD run". Its help states the frame: `.github/workflows/ci-cd.yml` is the gate and the deployment, and the script
-does "the steps around that push, in order, and stops at the first problem". It requires `git`, and `gh` unless
-`-NoWatch`; refuses a working tree with uncommitted changes; requires the remote `origin` and adds `github` when it is
-missing; fetches both; merges `-Branch`, by default the current branch, into `main` with `--ff-only`; refuses when
-`main` is behind or has diverged from either remote's `main`; with `-Gate`, runs `npm run ci` in `system/` first;
-pushes `main` to `origin` and then to `github`, with no force; and, unless `-NoWatch`, looks up the `ci-cd` run of the
-pushed commit with `gh run list`, up to 15 times at 4-second intervals, follows it with
-`gh run watch --exit-status`, and prints the Pages URL and the Render health URL. `-DryRun` pushes nothing and lists
-what would be pushed.
+CI/CD run". Its help states that GitHub Actions (`.github/workflows/ci-cd.yml`) "is the gate and the deployment", and
+that the script does "the steps around that push, in order, and stops at the first problem". It requires `git`, and
+`gh` unless `-NoWatch`; refuses a working tree with uncommitted changes; requires the remote `origin` and adds
+`github` when it is missing; fetches both; merges `-Branch`, by default the current branch, into `main` with
+`--ff-only`; refuses when `main` is behind or has diverged from either remote's `main`; with `-Gate`, runs
+`npm run ci` in `system/` first; pushes `main` to `origin` and then to `github`, with no force; and, unless
+`-NoWatch`, looks up the `ci-cd` run of the pushed commit with `gh run list`, up to 15 times at 4-second intervals,
+follows it with `gh run watch --exit-status`, and prints the Pages URL and the Render health URL. `-DryRun` pushes
+nothing and lists what would be pushed.
 
 **The wrapper fix.** `803bc76` renames the script's git wrapper from `Git` to `Invoke-Git`, at its definition and its
 eight calls. The wrapper runs `& git @args` and throws on a non-zero exit code. Named `Git`, the call inside it named
