@@ -2254,7 +2254,8 @@ were repeated, and the locale comparison was mutated in two ways.
 | locale comparison, the demo kind removed | `refuses a demo that differs between the two locales` |
 | locale comparison, the demo term removed | `refuses a demo that differs between the two locales` |
 
-11 of 11 caught, each exiting 1, and the mapping agrees row for row with the one Task 7 measured.
+11 of 11 caught, each exiting 1. Task 7's earlier run of its ten mutants is not recorded in the repository, and this
+table does not rest on it.
 
 **The gate.** `npm run ci` from `system/`, three times: at `1b8286c`, before the records tests moved; at `73d2ab8`,
 after; and with D130 and this section written.
@@ -2271,7 +2272,10 @@ after; and with D130 and this section written.
 
 The third run, with D130 and this section written on the working tree over `73d2ab8`, gave the same counts at every
 step as at `73d2ab8`, exit 0; `git status` then listed only the seven documents this record's commit changes, and
-no file under `fixtures/`.
+no file under `fixtures/`. A fourth run, after the final review's corrections, on the working tree over `1597a13`
+(R6 exempts the bare `data/` token), gave the same counts at every step, the suite of `system/tools/docs_index.mjs`
+still 23 tests, exit 0; `git status` then listed only the five documents those corrections change, and no file under
+`fixtures/`. With R6 disabled on that commit, `R6 names a missing path` alone failed, as in the table above.
 
 **The five acceptance questions** (spec §10, item 3), each answered from the map and one page, without opening
 `DEVIATIONS.md`:

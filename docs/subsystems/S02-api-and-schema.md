@@ -61,7 +61,7 @@ S2 is the backend's HTTP surface and its data model: the FastAPI application, th
 24. `n_experts` is 1, 2, 3 or 5, and `provider` is `transcript` or `claude`. [contracts §1.9] [`system/backend/app/api/vlm.py`]
 25. CORS is added only when `SGS_CORS_ORIGINS`, a comma-separated list, names an origin; it then allows `GET` and `POST` and the `content-type` header. Locally the variable is unset and Vite proxies `/api`. This replaces contracts §1.0's statement that there is no CORS configuration because every deployment is localhost: D-24, the later binding record, brings deployment into scope. [D127] [D-24] [contracts §1.0]
 26. `DATA_DIR` is `SGS_DATA_DIR`, or the track root's `data/` when unset; `CORPUS_ROOT` is `SGS_CORPUS_ROOT`, or `DATA_DIR/_raw` when unset, so an explicit corpus root is not moved by the data directory. [D84] [`system/backend/app/settings.py`]
-27. `require_data_dir()` stops with a message naming `devdata pull` and creates nothing when `DATA_DIR` is absent, and every backend script that writes under `DATA_DIR` calls it first. [D125] [`system/backend/app/settings.py`]
+27. `require_data_dir()` stops with a message naming `devdata pull` and creates nothing when `DATA_DIR` is absent, and every backend script that writes under `DATA_DIR` calls it first, except `system/backend/scripts/data_bundles.py`, D128's exemption (S15 rule 9). [D125] [D128] [`system/backend/app/settings.py`]
 28. The graphs of the M0 demonstrations carry `dataset: "mini-isg"` and no `DatasetId` of their own, because the datasets API serves only the slices under `data/slices/`. [D113]
 
 ## 5. Verification

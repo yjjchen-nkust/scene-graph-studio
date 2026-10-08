@@ -40,7 +40,7 @@ cd scene-graph-studio ; .\start.ps1     # checks both toolchains, installs on fi
 cd scene-graph-studio\system ; npm run ci
 ```
 
-- **Node ≥ 22.12 is a hard prerequisite** (`vite@8.3.0` engines). Measured: 24.19.0. D-03 closed.
+- **Node ≥ 22.12 is a hard prerequisite** (`system/package.json` engines; D-03). Measured: 24.19.0. D-03 closed.
 - **Python is `py12`, never the bare `python` on PATH, except in `start.ps1`.** `system/tools/Resolve-Python.ps1`
   (PowerShell) and `system/tools/py.mjs` (Node) resolve it; `SGS_PYTHON` overrides both, which is
   what CI sets. `start.ps1` defaults to WekaExt's `..\.venv` instead and falls back to the
@@ -95,8 +95,8 @@ cd scene-graph-studio\system ; npm run ci
   `fetch-data.ps1` makes (D110, D125); a real directory that `npm run data:fetch` fills from
   Google Drive, with the `core` bundle by default (D128); or, on the CI runner, a link to the
   fixture (D126); a fresh clone has no `data/` until one of them makes it. See
-  `docs/subsystems/S15-data-infrastructure.md` §6, and its §8 for the form observed in this
-  checkout on 2026-10-08.
+  `docs/subsystems/S15-data-infrastructure.md` §6, and its §8 for the form observed in the
+  author's checkout on 2026-10-08.
 - **Where `data/` is the devdata link to the NAS, it is one copy, shared by every branch and
   every checkout linked to it.** A branch that changes
   `data/` changes it for every branch at once: merge it promptly, and do not run another branch's

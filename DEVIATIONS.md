@@ -5771,7 +5771,10 @@ coverage test (spec §8), the accuracy pass (§9) and the acceptance of §10.
 
 **What was added.**
 
-- `system/tools/docs_index.mjs`, rules R1 to R8 as spec §8 states them, and its suite
+- `system/tools/docs_index.mjs`, rules R1 to R8 as spec §8 states them, but for R6's scope: R6 checks a cited path
+  only when it begins with `system/`, `fixtures/`, `docs/`, `.github/` or `.claude/`, and exempts `data/`, so a root
+  file such as `render.yaml`, `start.ps1`, `data.toml` or `.gitattributes`, and a path written relative to `system/`,
+  go unchecked; and its suite
   `system/tools/test/docs_index.test.mjs`, 23 tests in vitest's `tools` project, so the coverage test runs in step 4
   and the gate stays at eleven steps.
 - D-24 in the decisions register, D-22 annotated in place as superseded by it, the PRD's cloud-deployment non-goal
