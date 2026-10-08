@@ -69,6 +69,7 @@ S12 is the sixteen playgrounds: interactive steps inside a module, each a small 
 
 ## 6. Traps
 
+- A playground is a step kind, not a lab: it computes a count, a bound, a set membership or a value of the rule its step teaches, never a metric, since a metric is a lab's business and the boundary is the point. [D111] [contracts §2.4] [`CLAUDE.md`]
 - A playground measured only in its default state says nothing about the state its step exists to show, and an acceptance of overflow inherits the same blind spot. [D95] [VERIFICATION §19]
 - Moving a step's text to a step of its own cannot fit a playground whose frame alone is taller than the panel; the playground itself has to be divided, and its knobs carried across the division. [D96] [VERIFICATION §20]
 - A count of relationship rows is not a count of triplets when a frame annotates one twice, and a merge can make two rows of one pair the same triplet. [D96] [`docs/INDEX.md`]

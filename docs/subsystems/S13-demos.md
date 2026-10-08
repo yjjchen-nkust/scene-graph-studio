@@ -77,6 +77,7 @@ S13 is M0's two demonstrations on one IndustReal clip: D-T, the traditional dete
 
 ## 6. Traps
 
+- A demo is a step kind that replays a recording and computes counts, set memberships and set differences over it, never a metric, and the content lint reads the three tables of `system/frontend/src/demos/mounts.tsx` as text, one entry to a line, so the tables keep that form. [contracts §2.4] [VERIFICATION §31] [`system/frontend/src/demos/test/Demo.test.tsx`] [`CLAUDE.md`]
 - The recordings live in the one shared `data/`, so a branch that records again breaks `main`'s gate until it merges; the map states the rule, and D124 names the files a revert copies back. [D124] [`docs/subsystems/README.md`]
 - A live provider that accepted `image_ref` and never read it produced answers about an image the model never saw, each reading as a description of it. [D112]
 - One fixed seed made the three experts of a frame correlated, two of them identical on `m0-demo-088`; greedy decoding repeated one triplet to the token limit; and with thinking on, the reasoning arrived inside the answer. [D114]

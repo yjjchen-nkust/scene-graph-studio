@@ -145,9 +145,28 @@ A path belongs to the subsystem of the longest prefix that matches it. Exempt fr
 
 ## Dependencies
 
-DRAFT
+Each line copies the **Consumes** list in §3 of that subsystem's page, which names the import, file read or test behind every edge; no other edge is drawn.
+
+- S1 consumes S2, S14, S15.
+- S2 consumes S1, S3, S4, S5.
+- S3 consumes S1, S2, S5.
+- S4 consumes S2, S3.
+- S5 consumes S2, S3, S13.
+- S6 consumes S1, S3, S7, S8, S10, S12, S13, S15.
+- S7 consumes S1, S6, S9, S10, S11, S12, S15.
+- S8 consumes none.
+- S9 consumes S1, S7, S10, S12, S15.
+- S10 consumes S1, S6, S7, S11, S15.
+- S11 consumes S1, S2, S9, S10, S15.
+- S12 consumes S1, S9, S10, S11, S15.
+- S13 consumes S1, S2, S3, S5, S10, S11, S12, S15.
+- S14 consumes S1, S2, S3, S4, S6, S8, S10, S15, S16.
+- S15 consumes S1, S2, S3, S4, S5, S6, S10, S13, S14.
+- S16 consumes S1, S2, S3, S6, S10, S14, S15.
 
 ## Cross-cutting rules
+
+The rules below bind every subsystem and are stated here, not on the pages. Two records govern every subsystem in the same way: the master plan, whose global constraints every task's requirements include, and the decisions register, which is read before any task. [`2026-09-15-00-master.md`] [`2026-09-15-scene-graph-studio-decisions.md`]
 
 **The P0 rule.** No P0 feature may depend on `torch`, on CUDA, on the network or on an API key. A task that appears to violate it has been misread, and D-05 is the record to check before writing the code. The rule outranks every other statement in the track's index, and the master plan lists it first among the rules every plan obeys. [D-05] [`2026-09-15-00-master.md`] [`docs/INDEX.md`]
 
@@ -157,7 +176,7 @@ DRAFT
 
 **Two numbering schemes.** Binding decisions are numbered D-01 and upward, in the decisions document. Deviations from plan are numbered D1 and upward, in `DEVIATIONS.md`. The two collide in print, and D-22 and D22 are different records about different things. A reference must therefore keep the hyphen for a decision and omit it for a deviation. [D-22] [D22] [`DEVIATIONS.md`]
 
-**One shared `data/`.** `data/` is a link to the NAS copy, so a branch that changes it changes it for every branch and every checkout at once. Until such a branch merges, `main` fails its gate against the NAS, and running `main`'s harvest or gate in between writes the old content back. D111 records this for M5's playgrounds, D115 for the rekey of the Figure 2 transcripts, and D124 for D-V's recording again. [D111] [D115] [D124]
+**One shared `data/`.** `data/` is a link to the NAS copy, so a branch that changes it changes it for every branch and every checkout at once. Until such a branch merges, `main` fails its gate against the NAS, and running `main`'s harvest in between writes the old content back. D111 records this for M5's playgrounds, D115 for the rekey of the Figure 2 transcripts, and D124 for D-V's recording again. [D111] [D115] [D124]
 
 **Deleting `data/`.** The NAS copy is the only copy. Measured on a scratch junction, `rm -rf data/` in Git Bash, with the trailing slash, deletes the files on the NAS through the link, whereas `rm -rf data`, `git clean -fdX` and PowerShell `Remove-Item -Recurse` remove the link alone. [D110]
 

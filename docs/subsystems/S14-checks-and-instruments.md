@@ -123,6 +123,7 @@ S14 holds the checks the project is verified by and the instruments they run on:
 - An instrument's skip list can only report what its loop reaches, so a tag allowlist is a second silent skip hiding behind the report that was added to end the first. [D91] [`docs/INDEX.md`]
 - A canvas keeps its previous `fillStyle` when handed a colour it cannot parse, so priming with black scores every unresolvable colour as the highest contrast on the slide. [D91] [`docs/INDEX.md`]
 - Clamping a difference between two noisy samples at zero turns "below the resolution" into an apparent measurement of none. [D91] [VERIFICATION §15]
+- A correction recorded in a deviation is not a correction of the document that carried the error, which keeps printing it: D91 said it had corrected the clamped NFR-8 figure, and VERIFICATION §15 still printed `0.0 ms` under **Work** until D92 marked the column in place. [D92] [VERIFICATION §15] [`docs/INDEX.md`]
 - A pin that no longer matches the interpreter still reads as a version somebody tested. [VERIFICATION §11] [`system/backend/tests/test_pins.py`]
 - A module that reads `process.platform` at its top, and `node:path`'s host-flavoured `join`, can only be asserted on the host the test runs on, so the surroundings are made an argument rather than a second machine added. [D83] [VERIFICATION §14]
 - Three documents quoting the same measurement give three different numbers unless something compares them to a run. [VERIFICATION §14]
@@ -174,6 +175,7 @@ S14 holds the checks the project is verified by and the instruments they run on:
 | D89 | the gate left the tree dirty on every green run | primary |
 | D90 | the eight minor findings the review deferred | secondary |
 | D91 | the instrument rewritten to stop skipping silently, which still did | primary |
+| D92 | the suite written to guard the lint rules missed eight of seventeen breaks | secondary |
 | D93 | M1's three playgrounds, and the premise X1 could not be built on | secondary |
 | D95 | the review of the day's merges: F6's status under its clip, and what surrounded it | secondary |
 | D96 | the long playgrounds split across steps, and triplets counted as a set | secondary |

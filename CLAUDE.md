@@ -2,10 +2,12 @@
 
 ## Read this first
 
-`docs/INDEX.md` is the knowledge index for this track. It indexes the specs, the plans,
-`docs/VERIFICATION.md` (the nine checks of design §6, each with its date and outcome — all nine
-run and passed — plus §10 NFR-8 measured, §11 the dependency pins, §12 the interpreter, §13 the
-CUDA build, §14 the runner gate, §15 the M0 playgrounds, §16 the lint suite by mutation, §17 the M1 playgrounds, §18 the M1 minors, §19 the review of the day's merges, §20 the split playgrounds, §21 the M2 playground, §22 the M3 playgrounds, §23 the graph constraint's key, §24 the review minors, §25 the deferred minors, §26 the open checks, §27 the review of the open checks, §28 the empty training split, §29 the M4 playgrounds, §30 the M5 playgrounds, §31 the M0 demos, §32 the findings D120 left open, §33 the dev server and F2's edges, §34 D-V recorded again and §35 the devdata migration), and all 125 logged deviations. It is kept current. **Read it
+`docs/subsystems/README.md` is the map of this repository. Its ownership table names the
+subsystem that owns each path, and that subsystem's page under `docs/subsystems/` states its
+current rules, its traps and the records behind them; a change to a subsystem updates its page's
+current rules in the same commit. `docs/INDEX.md` is the register of the documents: the specs, the
+plans, the binding decisions, `docs/VERIFICATION.md` (§1 to §35, each check with its date and
+outcome) and the logged deviations. **Read the map, then the page of the subsystem being changed,
 before changing anything.**
 
 ## What this is
@@ -15,20 +17,22 @@ A full-stack teaching application for scene graph generation, built for 大語�
 103107. It teaches 15 bilingual modules over 93 knowledge points, with 8 labs, 16 playgrounds, 60 paper
 cards and 5 frozen leaderboards.
 
-It lives at `scene-graph-studio/` inside the WekaExt repository and is **not** a separate
-repository (decision **D-22**, which superseded both D-01 and D-20 on 2026-09-19 when the track
-moved here from the `course-lab` teaching repository). It is independent of the rest of WekaExt:
-it shares no code, no build, no dependency and no deployment with the platform, and its own CI is
-a separate path-filtered workflow. That independence runs one way: WekaExt's `ci.yml` has no
-`paths:` filter of its own, so a commit touching only this track still runs the platform's backend
-and frontend jobs — that is the platform's file to fix, not this one. Do not wire this track into
-WekaExt's `docker-compose.yml`, `ci.yml` or `deploy.yml`.
+It is its own repository (decision **D-24**, 2026-10-08, which superseded D-22's location, its
+independence clause and its exclusion of deployment; D-22 had superseded D-01 and D-20 when the
+track moved from the `course-lab` teaching repository into WekaExt). Its remotes are `origin`
+(`gitea.cillab.me/CIL-Team/scene-graph-studio`) and `github`
+(`github.com/yjjchen-nkust/scene-graph-studio`). Its history begins at `db5cdb1`, a rewrite of
+WekaExt's subtree-add commit, so `git blame` stops there and the `course-lab` commits D-22 names do
+not resolve (D126). The course is hosted: the frontend on GitHub Pages and the backend on Render,
+which serves `fixtures/data` without `torch`, so live inference reports unavailable (D127). Every
+departure from plan is logged in `DEVIATIONS.md`: 129 deviations, D1 to D129.
 
 ## Layout and commands
 
 **All machinery lives under `system/`** — the npm workspace root, `backend/`, `frontend/`,
 `packages/sgg-metrics/`, `tools/`, `web/`. `data/`, `docs/`, `start.ps1` and `fetch-data.ps1`
-stayed at the track root; `data/` is now a link to the NAS (D110). **Every `npm` command runs from `system/`.**
+stayed at the track root; `data/` is a link to the data directory (D110, D125), whose target
+`docs/subsystems/S15-data-infrastructure.md` states. **Every `npm` command runs from `system/`.**
 
 ```powershell
 cd scene-graph-studio ; .\start.ps1     # checks both toolchains, installs on first run, launches
@@ -40,6 +44,8 @@ cd scene-graph-studio\system ; npm run ci
   (PowerShell) and `system/tools/py.mjs` (Node) resolve it; `SGS_PYTHON` overrides both, which is
   what CI sets. `start.ps1` defaults to WekaExt's `..\.venv` instead and falls back to the
   resolver without it (D121); that default is the one thing the track reads from outside itself.
+  A standalone checkout has no such `.venv` beside it, so the script warns and falls back on every
+  run, an open item on S16 (D-24).
 - **`npm run ci` is the gate**, eleven steps: harvest, pytest, the metrics build, vitest, ruff,
   parity, i18n, content, frozen, standalone, frontend build. The static UI mockup and its
   `lint:mockup` check were removed on 2026-09-29 (D107).
@@ -51,43 +57,31 @@ cd scene-graph-studio\system ; npm run ci
 
 ## Traps
 
-- **Two numbering schemes coexist and collide.** `D-01…D-23` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D125` are deviations in `DEVIATIONS.md`. **`D-22`
+- **Two numbering schemes coexist and collide.** `D-01…D-24` are binding decisions in
+  `docs/superpowers/specs/…-decisions.md`. `D1…D129` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
-- **`system/web/knowledge-map/` was frozen** (2026-09-15, D-13) and harvested into
-  `data/content/` as the seed corpus. **The freeze was released 2026-09-27 (D-23)**: the page may
-  be extended, but it is still the harvest's source, so edit the page, run `npm run harvest`,
-  whose output lands on the NAS through `data/`, and commit the page (D110); and it must still open from disk with no build step. Its `pg.js evaluate()` is a
-  teaching toy over fifteen hard-coded rows and **must never be promoted to the evaluation
-  engine** (decision **D-14**, which D-23 leaves standing).
-  `system/tools/audit.js` and `check.js` validate it; `audit.js` exists to catch a `\` line break
-  inside display math outside an alignment, which MathJax renders as a visible red error rather
-  than failing loudly.
-- **The graph constraint keys on the ordered object pair, not the class pair** (D99). Tang's
-  evaluator keeps one predicate per pair of predicted object indices, and so do both engines:
-  `Triplet` carries `subject_id` and `object_id`. Two hands on one assembly are two pairs.
-  `semi` caps predicates per object pair; it is not the Semi Constraint STTran proposed for Action
-  Genome, which the course states and the engine does not compute.
-- **Box selection is `geometry.pickObjectAt`, not the browser's hit test** (deviation **D75**). A
-  bounding box is drawn `fill="none"`, so SVG hit-tests its outline and a click in the middle of
-  an object selects nothing. `pointer-events: all` would hand the choice to paint order, so the
-  click handler sits on the `<svg>` and picks the smallest box containing the point, ties broken
-  by the lower object id. **Do not move it back onto the rects.**
-- **`ImageOverlay` has no width of its own.** Its children are all absolutely positioned, so a
-  container that does not give it a width renders the photograph 0×0, with no error and a step
-  that "fits" the panel. F1 did so on every projector until D96;
-  `F1, F3, E3, E4 and E7 show their photographs, whole and on the screen` in
-  `e2e/projector.spec.ts` now measures it. F3, E1 and E10 draw through
-  `playgrounds/PhotoMarks.tsx`, an `<svg>` over the same kind of photograph that must have the
-  photograph's box exactly (E3, E4 and E7 through `playgrounds/M4/PairPhoto.tsx`, which uses it):
-  in a stretched column it drew every mark 122 px below its object in F3's
-  longest state, 96.5 px at Δx = 18, with every readout correct (D97), and
-  `F3, E1, E10, E3, E4 and E7 draw their marks on their photographs` now measures that (D98, D106).
-- **Presenter notes are mandatory.** `system/tools/content_lint.mjs` refuses a step without them
-  in both locales (**D76**). All 129 steps carry theirs; 258 notes.
-- **`docs/brief.standalone.html` is generated** from `system/web/brief/index.html`, and
-  `npm run lint:standalone` asserts they agree. Edit the source, then run
-  `npm run build:standalone` in the same commit.
+- **The knowledge map's `pg.js evaluate()` is a teaching toy over fifteen hard-coded rows and must
+  never be promoted to the evaluation engine** (D-14, which D-23's release of the freeze leaves
+  standing), and `system/tools/audit.js` exists to catch a `\\` line break inside display math
+  outside an alignment, which MathJax renders as a visible red error rather than failing loudly.
+  See `docs/subsystems/S08-knowledge-map-and-brief.md` §6.
+- **The graph constraint keys on the ordered object pair, not the class pair, and `semi` caps
+  predicates per object pair rather than computing the Semi Constraint STTran proposed for Action
+  Genome** (D99). See `docs/subsystems/S01-evaluation-engine.md` §6.
+- **Box selection is `geometry.pickObjectAt` on the `<svg>`, not the browser's hit test, because a
+  box drawn `fill="none"` is hit-tested on its outline only; do not move it back onto the rects**
+  (D75). See `docs/subsystems/S09-graph-and-readouts.md` §6.
+- **`ImageOverlay` has no width of its own, and a mark layer over a photograph
+  (`playgrounds/PhotoMarks.tsx`) must have the photograph's box exactly: given no width, the
+  photograph renders 0×0, and given a stretched column, every mark lands off its object while every
+  readout stays correct** (D96, D97). See
+  `docs/subsystems/S09-graph-and-readouts.md` §6 and `docs/subsystems/S12-playgrounds.md` §6.
+- **Presenter notes are mandatory: `system/tools/content_lint.mjs` refuses a step without them in
+  either locale** (D76), and all 129 steps carry theirs, 258 notes. See
+  `docs/subsystems/S06-course-content.md` §6.
+- **`docs/brief.standalone.html` is generated from `system/web/brief/index.html`: edit the source
+  and run `npm run build:standalone` in the same commit, or `npm run lint:standalone` fails.** See
+  `docs/subsystems/S08-knowledge-map-and-brief.md` §6.
 - **Generated files are pinned to LF in `.gitattributes`, and the reasons are written there.**
   `core.autocrlf=true` checks a file out as CRLF while every generator here writes LF, which
   either fails a byte-equality step or — worse, because it is silent — leaves `git status`
@@ -95,33 +89,12 @@ cd scene-graph-studio\system ; npm run ci
   that writes into a tracked path means adding its path there too. Nothing under `data/` is
   tracked since D109, so the six `data/` rules of D89 and D91 are gone; the Python generators
   still write LF (`newline=""`).
-- **`data/` is a directory junction to the NAS, at `raw:WekaExt/scene-graph-studio` (`data.toml`,
-  D125), and no data file lives in the checkout but the CI fixture (D109, D110).** `.gitignore` ignores `/data/` whole, so git carries none of it:
-  corpora, slice images, annotations, manifests, `data/content/`, the golden vectors, the
-  predictions and `data/LICENCES.md`. Every reader keeps its `data/` path and reaches the one
-  copy through the link; `SGS_DATA_DIR` names another target. **`devdata pull`** (remotex's
-  devdata) makes the link from `data.toml`'s `source` and the machine's roots file, and so do
-  `start.ps1` and `fetch-data.ps1` through `system/tools/Connect-DataDirectory.ps1`, which reads
-  the same two files; those retire once a second machine has passed with devdata alone (D125).
-  **No tracked file spells a data root**: `devdata lint` reports zero, and a path in prose is the
-  entry path, the root by name (`raw:scene-graph` for where the data was before D125), or
-  `SGS_CORPUS_ROOT`. **Every writer of `data/` stops when the link is absent**
-  (`app.settings.require_data_dir`, `tools/data_dir.mjs`), never creating a real directory
-  where the link belongs. **A fresh clone has no `data/`** until one of them runs. **The CI fixture
-  is `fixtures/data`** (127 files, 6.3 MB, `-text` in `.gitattributes`): what `npm run ci` reads,
-  without the corpora, the papers, the earlier recordings or the three large slices' images; the
-  runner links it with `devdata pull --ci`, installing private remotex with the repository secret
-  `REMOTEX_READ_TOKEN`. A tools test holds each fixture file to its NAS copy, byte for byte, and
-  `npm run fixture:refresh` copies the NAS's over them; a file the gate comes to need is copied in
-  by hand. Vite checks real paths, so `vitest.config.ts` and
-  `frontend/vite.config.ts` allow the link's target through `data.dir.ts`. That target is on D:
-  beside a checkout on C:, and Vite 8.3.0's `/@fs/` reads only its own drive and answers anything
-  else with `index.html` and 200, so the dev server showed no clip and no photograph from
-  `data/` until `fs.plugin.ts`'s `crossDriveFs` served them (D123). **The NAS folder is
-  Synology-replicated** (`D:\Data` holds `.SynologyWorkingDirectory`), and every gate run's
-  harvest writes `data/content/` into it. `sync-data.ps1` (D108) was retired: there
-  is no second copy to keep in step. WekaExt's root `.gitignore` has no rule over this tree, so
-  every exclusion the track needs is stated locally.
+- **`data/` is a link to the data directory, and no data file lives in the checkout but the CI
+  fixture `fixtures/data`** (D110, D125); a fresh clone has no `data/` until `devdata pull`,
+  `start.ps1` or `fetch-data.ps1` links it, or `npm run data:fetch` unpacks D128's Google Drive
+  bundles, `core` and `industreal` in `data.drive.json`, into a real directory, and the CI runner
+  links the fixture in its place (D126). See `docs/subsystems/S15-data-infrastructure.md` §6, and
+  its §8 for where the link pointed in the checkout observed on 2026-10-08.
 - **`data/` is one copy, shared by every branch and every checkout.** A branch that changes
   `data/` changes it for every branch at once: merge it promptly, and do not run another branch's
   gate or harvest in between. M5's playgrounds were the first such branch: until they merge, `main`
@@ -135,64 +108,38 @@ cd scene-graph-studio\system ; npm run ci
   D-V's recording again is the third (D124): until it merges, `main` fails its gate against the NAS, which
   holds the transcript recorded under `O_DEMO`; the files before it are `vlm/transcripts-pre-D124/m0-demo.json`
   and `demos/m0/pre-D124/indvissgg.json`.
+  The CI runner, which links `fixtures/data` (D126), and a checkout whose `data/` was unpacked from
+  Google Drive (D128) each hold a copy of their own.
 - **Never `rm -rf data/` in Git Bash.** With the trailing slash it deletes the files on the NAS
-  through the link (measured on a scratch junction, D110), and the NAS copy is the only copy.
+  through the link (measured on a scratch junction, D110), and the NAS copy is the only complete
+  copy; D128's Google Drive bundles hold a part of it.
   `rm -rf data`, `git clean -fdX` and PowerShell `Remove-Item -Recurse` remove the link alone.
 - **The design document's ARM64/Snapdragon hardware table describes a different machine** and is
-  marked superseded in place.
-- **A playground reads `data/` from outside vitest's root, and the allow list is why that works.**
-  `frontend/src/playgrounds/` imports the placeholder slice and its images from `data/`, which is a
-  sibling of `system/` rather than a descendant, so Vite's filesystem guard denies the read and six
-  suites fail to collect. `vitest.config.ts` sets `server: { fs: { allow: ['..'] } }` on the
-  frontend project, which replaces Vite's defaults rather than adding to them — the root is itself
-  under that parent, so listing the parent alone still covers everything the defaults did. Removing
-  it turns the gate red at step 4 with an error that names neither the config nor the cause.
-- **A playground is a step kind, not a lab.** `kind: playground` with `kp:`, one
-  `<Playground kp="…"/>` in the body, registered in `frontend/src/playgrounds/mounts.tsx`;
-  contracts §2.4 is normative and `content_lint.mjs` holds eleven rules over it, and a twelfth over
-  `data/content/vg150_splits.json`, each
-  failing a test in `tools/test/content_lint.test.mjs` when disabled (D92 for the eleven, D93 to
-  D95 for the twelfth). **It computes a
-  count, a bound, a set membership or a value of the rule its step teaches, never a metric** (D111) — a metric is a lab's business and the
-  boundary is the point. Nothing in `frontend/src/playgrounds/` imports from `sgg-metrics` except
-  its types, and three tests in `playgrounds/test/logic.test.ts` that hold F3's IoU to `boxIou`, on the golden cases and at every knob setting, and E1's verdict to `classify` (D97, D98, D100), and four more there that hold M4's cap to `applyConstraint`, its counts to `evaluate`, and E13's admission to `applyPairing` and its match to `evaluate` (D106). M0 carries three (F1, F2, F8), M1
-  three (F6, F7, X1), M2 one (F3), M3 two (E1, E10), M4 five (E3, E4, E7, E13, X2) and M5 two (T1, T2); 12 live knowledge points have none. See D88, D93, D97, D98, D106 and D111. **`PlaygroundFrame`
-  clips only a picture** (`clip`, default on): a playground of words and figures passes
-  `clip={false}`, because a word under the clip is beyond the reach of the step's scroll (D93).
-  **`PlaygroundFrame`'s `dense` is M4's**, for its twelve-row lists at 1024×768, and M5's, for T1's
-  six readouts and T2's table (D111); the earlier
-  playgrounds keep the measured default, and their records (D95 to D102) measure it (D106);
-  `playgrounds/test/Playground.test.tsx` requires the dense frame of exactly E3, E4, E7, E13, X2, T1 and T2.
-  **A playground too tall for one panel spans consecutive steps as parts** (D96): `part: n` on
-  each step and its tag, the count in `PLAYGROUND_PARTS` in `mounts.tsx`, E1, E10, E3, E4, E7, F1, F3, F6, F7 and T2 in two
-  and X1 in three. The stepper carries the knobs between the parts of one playground and nowhere
-  else, and the projector suite asserts that every part fits 1024×768 in 繁體中文 in its longest
-  state. **F6 and F7 count distinct triplets** (D96): E is a set, and 208 of the slice's 892
-  relationship rows repeat a triplet of the same frame.
-- **A `demo` is the second such step kind** (D112 to D117): `kind: demo` with `demo:`, `part: n` and a
-  `seconds_budget`, and one `<Demo id="DT" part="1" />` in the body, mounted from
-  `frontend/src/demos/mounts.tsx`. Its three tables, `DEMO_MOUNTS`, `DEMO_PARTS = { DT: 4, DV: 5 }` and
-  `DEMO_ARTEFACTS`, are read by `content_lint.mjs` as text, one entry to a line, so keep that form. A demo
-  replays a recording and computes counts, set memberships and set differences over it, never a metric:
-  D-T (four parts) is a COCO detector with an 80-frame frequency prior, D-V (five parts) is IndVisSGG's
-  three steps. **Five lint rules** hold it, each failing a test in `tools/test/content_lint.test.mjs` when
-  disabled: a registered demo and an integer part; exactly one `<Demo>` per step, agreeing with the
-  frontmatter, and every tag answering to a step; parts 1 to n on consecutive steps of one module, in order;
-  the recorded artefact exists and carries a provenance object; a positive `seconds_budget`. The data are
-  under `data/demos/m0/` (the 18.0 s clip, ten frames, `traditional.json`, `indvissgg.json`) and D-V's
-  transcript is `data/vlm/transcripts/m0-demo.json`, all on the NAS. **D-V drafts under `O_DEMO`**, `O_ISG`
-  with `hand` split into `left hand` and `right hand`, and `EXAMPLES_DEMO` (D124); D-T's comparison keeps `O_ISG`. **Every graph a demo produces is filed
-  under `mini-isg`** with no `DatasetId` of its own, though its frames are not the slice's (D113). D-V was
-  recorded through `app/vlm/openai_compat.py` and not on the Anthropic API (D114), on the author's pro6000
-  (`Qwen/Qwen3.8-27B`) until D124, and since then on the A6000 (`Qwen/Qwen3.8-27B-FP8`, vLLM 0.21.0 in
-  `/mnt/data/yenming/sgs-vlm`, started by its `serve.sh`); its graphs are `reconstructed`, and no label
-  says "measured" of a replay. The projector suite holds every demo part to 1024×768 in 繁體中文 only, and
-  three parts run past it in English (D117). M0's lab and checkpoint are s16 and s17 since the nine demo
-  steps were inserted, so a quiz schedule stored under `m00:s8:*` is orphaned (D117).
+  marked superseded in place. See `docs/subsystems/S14-checks-and-instruments.md` §6.
+- **A playground reads `data/` from outside vitest's root, so the frontend project of
+  `system/vitest.config.ts` widens `server.fs.allow`, a list that replaces Vite's defaults rather
+  than adding to them; removing it fails six suites at collection, at step 4 of the gate, with an
+  error that names neither the configuration nor the cause.** See
+  `docs/subsystems/S14-checks-and-instruments.md` §6.
+- **A playground is a step kind, not a lab, and computes a count, a bound, a set membership or a
+  value of the rule its step teaches, never a metric** (D111): nothing in `frontend/src/playgrounds/`
+  imports a value from `sgg-metrics`, only its types. See `docs/subsystems/S12-playgrounds.md` §6.
+- **A `demo` replays a recording and computes counts, set memberships and set differences over it,
+  never a metric; `content_lint.mjs` reads the three tables of `frontend/src/demos/mounts.tsx` as
+  text, one entry to a line, and every graph a demo produces is filed under `mini-isg` with no
+  `DatasetId` of its own** (D112 to D117). See `docs/subsystems/S13-demos.md` §6, and
+  `docs/subsystems/S05-vlm-pipeline.md` §6 for D-V's prompt and recording.
 
 ## CI
 
-`.gitea/workflows/scene-graph-studio.yml` at the WekaExt root, filtered to
-`scene-graph-studio/**`, Node 22.12, Python 3.12, `SGS_PYTHON: python`, running `npm run ci`.
-Deployment is out of scope: the earlier attempt was abandoned over a private repository,
-third-party content and the backend dependency, and none of those has changed.
+`.github/workflows/ci-cd.yml` runs on every push to `main`, every pull request and
+`workflow_dispatch`, with no path filter (D126). Its `ci` job runs from `system/` on `ubuntu-latest`
+with Node 22.12, Python 3.12 and `SGS_PYTHON: python`: it installs `backend/requirements.txt`,
+links the fixture with `ln -s fixtures/data ../data`, and runs `npm ci` and `npm run ci`; it installs
+no remotex and reads no `REMOTEX_READ_TOKEN`. After `ci` passes, and only from `main`, `pages-build`
+and `pages-deploy` publish the frontend to GitHub Pages; the backend runs on Render from
+`render.yaml` as `scene-graph-studio-api`, serving `fixtures/data` with no `torch` (D-24, D127).
+`deploy.ps1` merges a branch into `main` with `--ff-only`, pushes to both remotes and follows the
+run (D129), and `docs/DEPLOY-GITHUB.md` gives the one-time setup. Whether D-15's path filter and its
+"second opinion, not the gate" still hold is the author's to rule. See
+`docs/subsystems/S16-repository-and-deployment.md`.
