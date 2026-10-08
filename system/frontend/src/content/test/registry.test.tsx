@@ -862,7 +862,7 @@ describe('the playground step kind', () => {
     }
   });
 
-  it('the records carry D110, and data/ is a link to the NAS with no file of its own', () => {
+  it('the records carry D110 and D131, and data/ is a link or a directory filled from Drive', () => {
     const deviations = source('../../../../../DEVIATIONS.md');
     const claude = source('../../../../../CLAUDE.md');
     const index = source('../../../../../docs/INDEX.md');
@@ -876,8 +876,12 @@ describe('the playground step kind', () => {
     atLeast(claude, /(\d+) deviations, D1 to D\d+/, 110, 'CLAUDE.md deviations');
     // Through a parameter, as `source` resolves its paths: Vite rewrites a literal `new URL`.
     const at = (path: string) => new URL(path, import.meta.url);
-    // data/ is the link, not a directory of copies; Node reports a junction as a symbolic link.
-    expect(lstatSync(at('../../../../../data')).isSymbolicLink()).toBe(true);
+    // data/ takes one of the three forms S15 states: devdata's link to the NAS, the runner's link
+    // to fixtures/data, or, since D128, a real directory that `npm run data:fetch` filled from
+    // Drive (D131). Node reports a junction as a symbolic link; git ignores /data/ in every form.
+    expect(deviations).toContain('## D131 — the gate accepts a `data/` filled from Google Drive');
+    const form = lstatSync(at('../../../../../data'));
+    expect(form.isSymbolicLink() || form.isDirectory(), 'data/ is a link or a directory').toBe(true);
     expect(existsSync(at('../../../../../sync-data.ps1'))).toBe(false);
     // One target, overridable, made by the two entry scripts, and the helper deletes nothing.
     // Since D125 the target is read from devdata's roots file and data.toml, never spelt.

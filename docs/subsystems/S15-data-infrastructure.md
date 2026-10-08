@@ -74,16 +74,17 @@ S15 decides where `data/` is and how a machine comes to have it, in each of the 
 21. `crossDriveFs` in `system/fs.plugin.ts` is a development-only middleware, registered on Windows ahead of Vite's own, that serves a `/@fs/` file on another drive than the dev server's, inside the allow list and requested with no query, honouring byte ranges; every other request goes on to Vite. [D123] [`system/fs.plugin.ts`]
 22. `fetch-data.ps1` downloads no corpus. It reports each dataset's state, fetches a cut slice's images from the source through `system/backend/scripts/fetch_images.py`, verifies unpacked images, and unpacks a slice bundle; the corpora are the author's, under `SGS_CORPUS_ROOT`, `data/_raw` by default. [D-08] [`fetch-data.ps1`]
 23. The convention since D125 is that a tracked file names a data location by the entry path, by the root's name, as `raw:WekaExt/scene-graph-studio`, or by `SGS_CORPUS_ROOT`; after D125's rewrite, `devdata lint` reported zero findings on 2026-10-02. [D125] [VERIFICATION §35]
+24. `npm run ci` accepts each of the three forms. The D110 records test of `system/frontend/src/content/test/registry.test.tsx` requires that `data/` is a link, as Node reports a junction and a symbolic link alike, or a directory; `fetch` leaves no marker in `data/`, so the test does not tell a directory filled from Drive from any other. [D110] [D128] [D131] [`system/frontend/src/content/test/registry.test.tsx`]
 
 ## 5. Verification
 
-**Records:** VERIFICATION §33, VERIFICATION §35.
+**Records:** VERIFICATION §33, VERIFICATION §35, VERIFICATION §37.
 
 **`npm run ci` steps:** the gate's readers of `data/` are other subsystems' (1 harvest, 2 pytest, 4 vitest, 6 parity, 8 content and 11 frontend build among them), and all reach it through the link. S15's own tests run in 2 pytest, `system/backend/tests/test_data_bundles.py` and `system/backend/tests/test_data_dir_guard.py`, and in 4 vitest's `tools` project, `system/tools/test/data_dir.test.mjs`, `system/tools/test/fixture.test.mjs`, `system/tools/test/fs_plugin.test.mjs`, `system/tools/test/dev_server.test.mjs` and `system/tools/test/connect_data.test.mjs`, the last under `pwsh` and skipped where `pwsh` is absent.
 
 **Outside `ci`:** none of `test:e2e`, `check:offline`, `check:perf` and `check:pins` is specific to S15. `check:offline` seeds its scratch data directory from `data/`, and `node tools/fixture.mjs`, run from `system/`, lists every fixture file that differs from `data/` and exits 1 on any.
 
-**What the records measure.** §33 is D123's dev server: before it, the clip's `/@fs/` URL answered with `index.html` and status 200; after it, both clips and the twelve photographs of M0's study page loaded under `npm start`. §35 is D125's migration: the NAS folder renamed with its 289 files and bytes unchanged, `devdata lint` from 54 findings to 0, a writer run without `data/` stopping and creating nothing, the gate green against the NAS and against `fixtures/data` alone, and the fixture's 127 files equal to the NAS's.
+**What the records measure.** §33 is D123's dev server: before it, the clip's `/@fs/` URL answered with `index.html` and status 200; after it, both clips and the twelve photographs of M0's study page loaded under `npm start`. §35 is D125's migration: the NAS folder renamed with its 289 files and bytes unchanged, `devdata lint` from 54 findings to 0, a writer run without `data/` stopping and creating nothing, the gate green against the NAS and against `fixtures/data` alone, and the fixture's 127 files equal to the NAS's. §37 is D131's three forms: on a `data/` that `npm run data:fetch` filled with the core bundle's 135 files, the gate failed at step 4 on the D110 records test before the change and passed all eleven steps after it, with the fixture's 127 files equal to the bundle's copies; on a junction to `fixtures/data` it passed too.
 
 ## 6. Traps
 
@@ -114,6 +115,7 @@ S15 decides where `data/` is and how a machine comes to have it, in each of the 
 | D125 | the track's data follows remotex devdata: moved, guarded, fixtured, and named by root | primary |
 | D126 | the repository stands alone, with its own workflow and launch configuration | secondary |
 | D128 | data shared through Google Drive with `gdown`, beside the devdata link | primary |
+| D131 | the gate accepts a `data/` filled from Google Drive | primary |
 
 ## 8. Open items
 
@@ -126,4 +128,3 @@ S15 decides where `data/` is and how a machine comes to have it, in each of the 
 7. D-08's table marks the slices' annotations and manifests and the placeholder slice as committed; since D109 nothing under `data/` is tracked, and D-08 carries no note of it. [D-08] [D109]
 8. `.gitignore`'s comment says that WekaExt's root `.gitignore` has no rule over this tree; since D-24 the repository stands alone and has no such parent. [D-24] [`.gitignore`]
 9. Tracked lines still name folders on a machine, against D125's convention: `DEVIATIONS.md:5469` names the NAS's folder on a drive, `DEVIATIONS.md:5431` a file path on a drive, and `docs/superpowers/plans/2026-09-26-playgrounds-m1.md:99` a corpus path under a drive. D125 records `devdata lint` at zero findings on 2026-10-02, and no record reconciles these lines with that result. The paths are not repeated here, so this page adds none. [D125] [VERIFICATION §35] [`DEVIATIONS.md`] [`docs/superpowers/plans/2026-09-26-playgrounds-m1.md`]
-10. The gate accepts only the link forms of `data/`. The D110 records test of `system/frontend/src/content/test/registry.test.tsx` asserts without condition that `lstatSync` reports `data/` as a symbolic link, which Node reports for a junction too. A real directory that `npm run data:fetch` filled from Google Drive fails that assertion, so `npm run ci` in such a checkout fails at step 4; this follows from the assertion and has not been measured. The test predates D128's real-directory form, and no record states the conflict. [D110] [D128] [`system/frontend/src/content/test/registry.test.tsx`]

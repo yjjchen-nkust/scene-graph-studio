@@ -176,8 +176,9 @@ is rejected before anything is placed in `data/`. The folder is
 every image whose `bundle_distribute` is not YES and the two journal papers, so `psg`, `vg150-sgb` and
 `indoorvg` report `images_present: false` until you fetch their images from source. The maintainer
 rebuilds the bundles with `npm run data:pack -- --out <dir>`, uploads them, and pastes the ids in.
-`fetch` refuses to write through a link, so a NAS-linked `data/` is never touched. CI does not use
-Drive: it reads `fixtures/data`, which is in git.
+`fetch` refuses to write through a link, so a NAS-linked `data/` is never touched. `npm run ci`
+passes on a `data/` filled this way (D131). CI does not use Drive: it reads `fixtures/data`, which
+is in git.
 
 ### From the NAS (the author's machines)
 
