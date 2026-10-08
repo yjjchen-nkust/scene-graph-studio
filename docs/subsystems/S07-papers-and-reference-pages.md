@@ -2,7 +2,7 @@
 
 ## 1. Purpose and boundary
 
-S7 is the course's reference pages: the field map at `/map`, which lays the paper cards out by branch and, as a second view, indexes the knowledge points by the module that teaches them, and the frozen per-paper leaderboards at `/leaderboards`. It owns the paper corpus `papers.json` and its view `leaderboards.json`, in which every published figure names the table it was read from and nothing is ranked. It is not the component that renders a figure (S9's `MetricReadout`), not the modules or the knowledge points themselves (S6), and not the evaluation engine (S1): no figure on these pages is computed.
+S7 is the course's reference pages: the field map at `/map`, which lays the paper cards out by branch and, as a second view, indexes the knowledge points by the module that teaches them, and the frozen per-paper leaderboards at `/leaderboards`. It is built on the paper corpus `papers.json` and its view `leaderboards.json`, in which every published figure names the table it was read from and nothing is ranked. It is not the component that renders a figure (S9's `MetricReadout`), not the modules or the knowledge points themselves (S6), and not the evaluation engine (S1): no figure on these pages is computed.
 
 ## 2. Code and data
 
