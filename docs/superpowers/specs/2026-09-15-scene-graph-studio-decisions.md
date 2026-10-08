@@ -36,6 +36,7 @@ Each decision carries the evidence it rests on. Where a decision rests on a comm
 | D-21 | The paper corpus is two tiers; only scored methods carry numbers | D-19 scope cut |
 | D-22 | Repository location is `scene-graph-studio/` inside WekaExt | supersedes D-01, D-20 |
 | D-23 | The knowledge-map freeze is released; the page may be extended | supersedes D-13's freeze |
+| D-24 | The repository stands alone, and the course is hosted | supersedes D-22 |
 
 ---
 
@@ -566,6 +567,12 @@ cards number 56. The rule above is unaffected: no card carries an unverified num
 
 ## D-22 Repository location is `scene-graph-studio/` inside WekaExt
 
+> **Superseded 2026-10-08 by D-24.** The location this decision fixes, its independence clause and
+> its last sentence, "Deployment of this track remains out of scope", no longer hold: the track is
+> its own repository, and its frontend and backend are hosted. Its consequence, that large binary
+> corpora are not committed, stands. The text below is left intact as the record of what was
+> decided on 2026-09-19. See D126 to D129.
+
 **Decided 2026-09-19.** Supersedes D-01 (location) and D-20 (where the track is documented).
 
 **Decision.** The project lives at `scene-graph-studio/` inside the WekaExt repository
@@ -631,6 +638,55 @@ all the same, under a rule that made each change argue first that it was not an 
 
 **Records.** `FROZEN.md` keeps its name and its correction log. It now opens with this release,
 and later changes to the page are logged in `DEVIATIONS.md` like any other.
+
+---
+
+## D-24 The repository stands alone, and the course is hosted
+
+**Decided 2026-10-08, by the author.** Supersedes D-22's location, its independence clause and its
+sentence "Deployment of this track remains out of scope". D-22's consequence, that large binary
+corpora are not committed, is not superseded: `.gitignore` ignores `/data/` whole (D109), and git
+carries only the CI fixture, `fixtures/data` (D125).
+
+**Decision.** Scene Graph Studio is its own repository, with two remotes: `origin`
+(`gitea.cillab.me/CIL-Team/scene-graph-studio`) and `github`
+(`github.com/yjjchen-nkust/scene-graph-studio`). Deployment is in scope. The frontend is published to
+GitHub Pages by `.github/workflows/ci-cd.yml`, after the gate passes and only from `main`; the backend
+runs on Render from `render.yaml`. The backend serves `fixtures/data` and is installed without
+`torch`, so live inference reports unavailable, and L4 says so on the hosted site. D-15's decision,
+that one command defines green, stands: the workflow's `ci` job runs `npm run ci`. The workflow
+D-15's note names, `.gitea/workflows/scene-graph-studio.yml` filtered on `scene-graph-studio/**`, is
+replaced by `.github/workflows/ci-cd.yml`, which has no path filter. D126 records the separation,
+D127 the hosting, D128 the data shared through Google Drive and D129 `deploy.ps1`.
+
+**Why.** Students reach the course without a local install, and setting up the deployment is itself
+a course exercise. `docs/DEPLOY-GITHUB.md` heads its setup steps "One-time setup (also the student
+exercise)".
+
+**D-22's three reasons, as they now stand.** D-22 keeps deployment out of scope; D87 and
+`2026-09-19-relocation-design.md` §2 give the three reasons: a private repository, third-party
+content and the backend dependency. On 2026-10-08 they stand as follows; the first two are
+finding F5 of `2026-10-08-subsystem-index-design.md`, and the third is read from `render.yaml`.
+- **A private repository.** The GitHub repository is public, with Pages enabled:
+  `gh api repos/yjjchen-nkust/scene-graph-studio` reports `"visibility":"public"` and
+  `"has_pages":true`.
+- **Third-party content.** Only `fixtures/data` is served. Its tracked media are 11 files of
+  `demos/m0`, 40 of `slices/mini-isg` and 6 of `slices/placeholder`, and `fixtures/data/LICENCES.md`
+  gives each of the three `bundle_distribute: YES`. `slices/vg150-sgb` carries annotations only,
+  under `annotations_commit: YES`. The three JPEGs under `system/backend/tests/fixtures/psg/` are
+  synthetic (`make_psg_fixture.py`, `Image.new`).
+- **The backend dependency.** Render runs without `torch`: `render.yaml` installs
+  `system/backend/requirements.txt`, which does not list it, and live inference is reported
+  unavailable (`docs/DEPLOY-GITHUB.md`).
+
+**Open.**
+- **F5's unresolved question.** `bundle_distribute` is defined as distribution "to enrolled students
+  for classroom use". A public repository and a public Render service reach a wider audience than
+  that definition states. Whether the named licences (Apache-2.0, CC BY 4.0, MIT) cover it is the
+  author's finding to record; D-24 records the question, not an answer.
+- **F4, `start.ps1`'s interpreter.** `start.ps1` still defaults to WekaExt's `..\.venv` (D121). A
+  standalone checkout has no such directory beside it, so the script warns and falls back to `py12`
+  on every run.
 
 ---
 
