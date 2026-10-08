@@ -42,6 +42,11 @@ A student reading IndVisSGG cannot evaluate its claims without that context, and
 
 Training any model. Reproducing published benchmark numbers. Hosting full dataset corpora. Multi-user accounts, cloud deployment, or live class polling. A general-purpose annotation tool — Label Studio and CVAT already exist. Mobile layout; this targets desktop and projector only.
 
+> **Annotated 2026-10-08 by D-24.** Cloud deployment of the course frontend and a fixture-only
+> backend are in scope since D-24: the frontend on GitHub Pages, and the backend on Render serving
+> `fixtures/data`. The paragraph above is left intact as the record of what was approved on
+> 2026-09-15.
+
 ## 6. Features
 
 ### 6.1 Curriculum shell (P0)

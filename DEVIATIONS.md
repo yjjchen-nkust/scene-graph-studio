@@ -5590,3 +5590,242 @@ their own. The secret `REMOTEX_READ_TOKEN`: a Gitea access token that reads `CIL
 95 files, parity 21 agree, i18n 507 keys, content lint clean, frontend builds; `npm run test:e2e` **107 passed**;
 against the fixture alone with `CI=true`, 401 pytest and 10 skipped and 1,359 vitest; `devdata lint` exit 0 and
 `devdata status` `linked`. VERIFICATION §35 records the runs.
+
+## D126 — the repository stands alone, with its own workflow and launch configuration
+
+**Commits.** `70fd0dc` (2026-10-02) and `1c8bea2` (2026-10-08), on `main` after the D125 merge `3e3090b`. **Plan:**
+none. **Decision:** D-24, which supersedes D-22's location and its independence clause. The commits state no reason
+for standing alone; the author's is recorded in D-24.
+
+**The separation.** `1c8bea2` is "chore: stand alone as its own repository". Its counterpart in WekaExt is
+`d010e49` (2026-10-08), which deletes `scene-graph-studio/` and `.gitea/workflows/scene-graph-studio.yml` and states:
+"It now lives at CIL-Team/scene-graph-studio on Gitea, mirrored to GitHub, with its own CI. Its workflow leaves
+.gitea/workflows; ci.yml and deploy.yml are unchanged." The remotes are `origin`,
+`gitea.cillab.me/CIL-Team/scene-graph-studio`, and `github`, `github.com/yjjchen-nkust/scene-graph-studio`. The
+history begins at `db5cdb1`, this repository's parentless rewrite of WekaExt's git subtree add commit of
+2026-09-19, which names the split commit `cec9ab8`. The `course-lab` history that D-22 carried over is not in this
+repository: neither `fe1e9a9`, which D-22 names, nor `cec9ab8` resolves, and `git blame` on a line unchanged since
+the move stops at `db5cdb1`. How the history was extracted is not recorded.
+
+**CI.** CI moved from WekaExt's `.gitea/workflows/scene-graph-studio.yml`, a Gitea Actions workflow filtered on
+`scene-graph-studio/**`, to `.github/workflows/ci-cd.yml`, which GitHub Actions runs on every push to `main`, every
+pull request and `workflow_dispatch`, with no path filter. Its `ci` job keeps Node 22.12, Python 3.12,
+`SGS_PYTHON: python`, the install of `backend/requirements.txt` and `npm run ci`, run from `system/`. Where D125's
+workflow installed remotex with the repository secret `REMOTEX_READ_TOKEN` and ran `devdata pull --ci` at the track
+root, the runner now links the fixture with `ln -s fixtures/data ../data`; nothing in the workflow installs remotex or
+reads the secret. The commit's message: "The CI fixture replaces the NAS link on the runner." `data.toml` is
+unchanged, and its comment that `devdata pull --ci` links the fixture on the runner no longer describes the runner.
+The same file carries the deployment jobs (D127).
+
+**The launch configuration.** `70fd0dc` adds `.claude/launch.json`: one configuration, `scene-graph-studio`, that runs
+`node` on `system/tools/start.mjs` and names port 5173. As added, in WekaExt (its `32d776b`), it gave the script as an
+absolute path into the WekaExt checkout; `1c8bea2` makes it relative to the repository root. Why it was added is not
+recorded beyond the commit's subject.
+
+**Verification.** The commits record no run. GitHub's run list for `ci-cd`, read on 2026-10-08, holds seven runs, the
+first on `1c8bea2`'s push, and the `ci` job passed in all seven; D127 gives the deployment jobs.
+
+## D127 — the frontend on GitHub Pages and the backend on Render
+
+**Commits.** `371c2db`, `1ee42e9` and `428ab53` (2026-10-08); the workflow and `render.yaml` they depend on arrive in
+`1c8bea2` (D126). **Plan:** none. **Decision:** D-24, which brings deployment into scope.
+
+**The build, base-path and API-origin aware** (`371c2db`). `SGS_BASE` sets Vite's `base`, `/` when unset
+(`system/frontend/vite.config.ts`), and `main.tsx` gives the router `import.meta.env.BASE_URL` without its trailing
+slash as `basename`. `VITE_API_BASE` is the backend's origin: `system/frontend/src/labs/api.ts` exports it as
+`API_BASE`, trailing slashes removed, and `getJson` and the health query of `pages/Status.tsx` prefix their requests
+with it. Empty, the default, keeps the local run, where Vite proxies `/api`.
+
+**CORS** (`371c2db`). `create_app` in `system/backend/app/main.py` adds FastAPI's `CORSMiddleware` only when
+`SGS_CORS_ORIGINS`, a comma-separated list, names an origin, and then allows `GET` and `POST` and the `content-type`
+header. `system/backend/tests/test_cors.py` holds three cases: no CORS header without the variable; a listed origin
+answered and an unlisted one not; a JSON `POST`'s preflight accepted.
+
+**The Pages jobs** (`1c8bea2`). In `.github/workflows/ci-cd.yml`, `pages-build` needs `ci` and runs only when the
+event is not a pull request and the ref is `refs/heads/main`, and `pages-deploy` needs `pages-build`: the frontend is
+published only after `ci` passes, and only from `main`. `pages-build` sets `SGS_BASE` to `/<repository name>/`
+and `VITE_API_BASE` to the repository variable `SGS_API_BASE`, links the fixture as `ci` does, runs
+`npm run harvest`, `npm run build:metrics` and `npm run build:frontend`, copies `index.html` to `404.html` so that a
+deep link reaches the client router, and uploads `system/frontend/dist`; `pages-deploy` publishes it with
+`actions/deploy-pages@v4`.
+
+**Render** (`1c8bea2`). `render.yaml` declares one web service, `scene-graph-studio-api`, on the `free` plan in
+`singapore`, deployed on each commit (`autoDeployTrigger: commit`). It installs `system/backend/requirements.txt`,
+which lists no `torch`, starts `uvicorn app.main:app` from `system/backend`, checks `/api/health`, and sets
+`PYTHON_VERSION` to 3.12.8, `SGS_DATA_DIR` to `../../fixtures/data` and `SGS_CORS_ORIGINS` to
+`https://yjjchen-nkust.github.io`. `docs/DEPLOY-GITHUB.md` gives the one-time setup, headed "also the student
+exercise", and what to expect: the free instance sleeps after 15 minutes idle, the first lab request after that takes
+about a minute, and it has no persistent disk and no checkpoint or `torch` build.
+
+**`371c2db`'s message and its files disagree.** Its message names `render.yaml` and "a Pages workflow", and the
+`docs/DEPLOY-GITHUB.md` it adds names `.github/workflows/scene-graph-studio-pages.yml`; the commit holds neither file,
+and no commit in this repository adds a file of that name. `1c8bea2` adds `render.yaml` and
+`.github/workflows/ci-cd.yml` and points the guide at the latter. Why the two files arrived in a later commit, one
+under another name, is not recorded.
+
+**The L4 message** (`428ab53`). `MethodComparator` takes `hosted`, which defaults to `API_BASE !== ''`; when it is
+true, a model that is not live shows the new key `l4.live_hosted` in place of the registry's `live_blocked_reason_en`
+or `live_blocked_reason_zh`. In English it reads "Live inference is not offered on this hosted demo: the server has
+no `torch` and no model checkpoint. The columns show the committed predictions. Run the studio locally to run a
+model."; `zh-TW.json` carries the same sentence in 繁體中文. The commit's reason: on a static deployment "the server
+has no torch or checkpoint by design". The component's comment adds that the registry's text is "a missing-package
+sentence that reads as a fault to fix". One new test in `MethodComparator.test.tsx` mounts it hosted and requires
+"hosted demo" and no "detectron2".
+
+**The favicon** (`1ee42e9`). `system/frontend/public/favicon.svg`, Vite's default mark, becomes a drawing on a
+64 by 64 `viewBox`: three nodes joined by three edges on a dark rounded square, with
+`aria-label="Scene Graph Studio"`. Why is not recorded beyond the commit's subject.
+
+**Verification.** The commits record no run. GitHub's run list for `ci-cd`, read on 2026-10-08 with `gh run list`
+and `gh run view`, holds seven runs. `pages-deploy` failed on the pushes of `1c8bea2` (run 37718141895) and
+`695b4fd` (run 37726857232), each with "Failed to create deployment (status: 404)" and "Ensure GitHub Pages has been
+enabled". The two `workflow_dispatch` runs on `695b4fd` (37728264387 and 37733150706) and the pushes of `1ee42e9`,
+`428ab53` and `d3629f8` passed all three jobs. No record states the outcome of a Render deployment.
+
+## D128 — data shared through Google Drive with `gdown`, beside the devdata link
+
+**Commits.** `fab7b41` and `695b4fd` (2026-10-08). **Plan:** none. **Decisions:** none new. Why the data is shared
+through Google Drive is not recorded. `README.md` heads the new route "From Google Drive (any machine)" and the NAS
+route "From the NAS (the author's machines)".
+
+**What it adds.** `system/backend/scripts/data_bundles.py` has two commands, `pack` and `fetch`, run as
+`npm run data:pack` and `npm run data:fetch` (`system/package.json`). `data.drive.json` at the repository root names
+the Drive folder and records each bundle's Drive file id and SHA-256. The script's docstring gives the reason for
+bundles: gdown's folder download stops at 50 files. There are two: `core`, the archive
+`scene-graph-studio-core.zip`, 135 files and 4898723 bytes, extracted into `data/`; and `industreal`, the file
+`_raw/industreal/all_rgb_videos.zip`, 4960644152 bytes, placed at that path under `data/`. `fab7b41` left both
+`file_id` values empty, and `695b4fd` records them.
+
+**`pack`** reads `data/`, writes the core zip to `--out`, and records into `data.drive.json` the core's file count,
+size and SHA-256, and each file bundle's size and SHA-256 when that file is present. The core takes everything under
+`data/` except `_raw/`, every `.pdf` (the journal papers, left out "because their publisher holds the rights") and
+the images under `slices/<dataset>/` of every dataset whose `bundle_distribute` in `data/LICENCES.md` is not YES;
+such a dataset keeps its annotations. The upload to Drive and the file ids are the maintainer's, by hand.
+
+**`fetch`** (`--bundle core|industreal|all`, default `core`) needs `gdown==6.4.1`, pinned in
+`system/backend/requirements-data.txt`, which the labs and the test suite do not need. Each bundle is downloaded to a
+temporary directory and rejected, with nothing placed, when its SHA-256 differs from the manifest; an archive is
+extracted only after no member is found to resolve outside `data/`; a bundle with no `file_id` stops the run.
+
+**Beside D125's link.** The two routes exclude each other on one checkout. `fetch` refuses when `data/` is a
+symbolic link or a junction, "refusing to write through it", so where `devdata pull` has made the link, `fetch`
+writes nothing. Where `data/` is absent, `fetch` creates it as a real directory, the state D125 records devdata
+reporting as `occupied`. `pack` reads `DATA_DIR`, through the link where there is one; its docstring says it "runs
+where data/ is complete". D125's rule that every writer of `data/` stops when the link is absent, never creating a real directory
+where the link belongs, therefore has one exception: `fab7b41` adds `EXEMPT = ("data_bundles.py",)` to
+`system/backend/tests/test_data_dir_guard.py`, and the static test now accepts a script that writes under `DATA_DIR`
+when it is a listed writer or exempt. The test's comment gives the reason: "`data_bundles.py fetch` is how a fresh
+checkout gets data/ at all, so it creates the directory, and it refuses to write through a link." CI does not use
+Drive: it links `fixtures/data` (D126).
+
+**Verification.** `fab7b41` adds `system/backend/tests/test_data_bundles.py`, seven tests: a closed dataset's images
+stay and its annotations travel; papers and raw corpora never enter the core bundle; pack then fetch round-trips
+through the checksum; a download that fails its checksum places nothing; an archive cannot write outside `data/`; a
+bundle not yet uploaded says so; `fetch` refuses to write through a link. The commits record no run. The `ci` job
+passed on `695b4fd`'s push (run 37726857232), which holds both test files.
+
+## D129 — `deploy.ps1`: merge, push to both remotes, and watch the run
+
+**Commits.** `0398bc8` and `803bc76` (2026-10-08). **Plan:** none. **Decisions:** none new; the script carries out
+D-24's hosting. Why the script was added is not recorded beyond the commit's subject.
+
+**What it does.** `0398bc8` adds `deploy.ps1` at the repository root, "to merge, push to both remotes and watch the
+CI/CD run". Its help states that GitHub Actions (`.github/workflows/ci-cd.yml`) "is the gate and the deployment", and
+that the script does "the steps around that push, in order, and stops at the first problem". It requires `git`, and
+`gh` unless `-NoWatch`; refuses a working tree with uncommitted changes; requires the remote `origin` and adds
+`github` when it is missing; fetches both; merges `-Branch`, by default the current branch, into `main` with
+`--ff-only`; refuses when `main` is behind or has diverged from either remote's `main`; with `-Gate`, runs
+`npm run ci` in `system/` first; pushes `main` to `origin` and then to `github`, with no force; and, unless
+`-NoWatch`, looks up the `ci-cd` run of the pushed commit with `gh run list`, up to 15 times at 4-second intervals,
+follows it with `gh run watch --exit-status`, and prints the Pages URL and the Render health URL. `-DryRun` pushes
+nothing and lists what would be pushed.
+
+**The wrapper fix.** `803bc76` renames the script's git wrapper from `Git` to `Invoke-Git`, at its definition and its
+eight calls. The wrapper runs `& git @args` and throws on a non-zero exit code. Named `Git`, the call inside it named
+the wrapper itself, since PowerShell matches command names without regard to case and runs a function before an
+external command of the same name (`about_Command_Precedence`). The commit's subject: "name the git wrapper so it
+does not call itself".
+
+**Verification.** The commits record no run of the script, and no test exercises it.
+
+## D130 — the subsystem index: sixteen pages, a map, and a coverage test
+
+**Plan:** `plans/2026-10-08-subsystem-index.md`, from the spec `specs/2026-10-08-subsystem-index-design.md` (`612cd1b`
+and `19c80c9`, 2026-10-08). **Decisions:** D-24, added on this branch with D126 to D129, which record the
+commits it rules on. Branch `docs/subsystem-index`, from `main` at `d3629f8`.
+
+**Why.** The track's knowledge was recorded by date: at the spec's writing, sixteen specs and fifteen plans under
+`docs/superpowers/` (spec §1 swaps the two), 125 deviations and 35 sections of `docs/VERIFICATION.md`, each grown in
+the order the work happened, and `INDEX.md` listed the documents by date. Nothing answered the question a maintainer
+starts from: what binds a part of the system, what built it, what checks it, and what has already gone wrong in it
+(spec §1).
+
+**The decisions** (spec §3). Each page states the current truth in its own words and cites the records behind every
+statement; the chronological records stay as the audit trail. The nine commits after the D125 merge (`3e3090b`)
+that no deviation recorded were recorded first, as D-24 and D126 to D129, and then indexed as current truth. There
+is one page per subsystem under `docs/subsystems/`, sixteen in four groups, a map page and a coverage test, and no
+page carries a date stamp. In `CLAUDE.md` the cross-cutting traps stay in full and every other trap shrinks to its
+rule and a pointer. D-24 makes the standalone repository final, for the reason spec §3 records: students reach the
+course without a local install, and setting up the deployment is itself a course exercise. Enforcement is the
+coverage test (spec §8), the accuracy pass (§9) and the acceptance of §10.
+
+**What was added.**
+
+- `system/tools/docs_index.mjs`, rules R1 to R8 as spec §8 states them, but for R6's scope: R6 checks a cited path
+  only when it begins with `system/`, `fixtures/`, `docs/`, `.github/` or `.claude/`, and exempts `data/`, so a root
+  file such as `render.yaml`, `start.ps1`, `data.toml` or `.gitattributes`, and a path written relative to `system/`,
+  go unchecked; and its suite
+  `system/tools/test/docs_index.test.mjs`, 23 tests in vitest's `tools` project, so the coverage test runs in step 4
+  and the gate stays at eleven steps.
+- D-24 in the decisions register, D-22 annotated in place as superseded by it, the PRD's cloud-deployment non-goal
+  annotated in place, and D126 to D129.
+- `docs/subsystems/README.md`, the map: how to use it, path ownership (130 prefixes, the longest match wins), the
+  dependencies, the cross-cutting rules, NFR-1 to NFR-8 with the subsystem that enforces each, the citation forms and
+  the maintenance rule; and the sixteen pages `S01` to `S16`, each with the eight sections of spec §5.
+- `docs/HISTORY.md`, under a one-line header naming its origin.
+
+**What was moved.** `INDEX.md` keeps its six section numbers, since earlier records cite INDEX §4, §5 and §6. §1 is
+the register, with a Subsystems column; §2 the decisions, with D-24; §3 points to the map's non-functional
+requirements; §4 to the map's ownership table and each page's §2 and §4; §5 was moved verbatim to `docs/HISTORY.md`;
+§6 points to each page's §6 and, for the cross-cutting traps, to the map. `CLAUDE.md`'s "Read this first" names the
+map, "What this is" and "CI" state D-24, and each trap that is not cross-cutting is its rule and the page that owns it.
+
+**The records tests follow the text.** Spec §7 left all code unchanged but the two new tools files. The rewrite of
+`CLAUDE.md` and `INDEX.md` (`1f023a3`, `d0a735b`) turned `npm run ci` red at step 4: on 2026-10-08, at `1b8286c`, 16
+records tests of `system/frontend/src/content/test/registry.test.tsx` failed (1371 passed, 1 skipped, of 1388), each
+reading text the rewrite had moved. Two of their assertions, `D-01…D-23` in `CLAUDE.md` and `D-01 … D-23` in INDEX's
+§2 heading, can no longer hold once D-24 exists, so restoring the text could not clear them, and the test file was
+changed instead (`73d2ab8`): each assertion now reads the fact where it lives and keeps its bound or its equality, but
+for four on `docs/HISTORY.md`, and the two decision ranges read D-24. Those four held figures of INDEX's former §5
+equal to the code: the steps and notes (`holds 129 and 258 since D117]`), the playgrounds (`five labs and sixteen
+playgrounds`) and the golden vectors (`21 since D105), slice ingestion` and `parity 21 agree`). `docs/HISTORY.md`
+states that its text is not edited, so they hold those four literals as written, and each figure stays held equal to
+the code on its live home: the steps and notes and the playgrounds in `CLAUDE.md`, the golden vectors on the map, on
+S1 and in `README.md`.
+
+| Now read in | Assertions |
+|---|---|
+| `docs/HISTORY.md`, INDEX's former §5 | 16: `96.5 px` twice, the pytest and vitest counts six times, `[Settled by D105.]`, `(M4's step ids before the renumbering)`, `` `main` before the merge fails `npm run ci` ``, `since D117]`, the steps and notes, `five labs and sixteen playgrounds`, and the golden vectors twice |
+| `docs/subsystems/README.md` | 1: NFR-3's `` `parity.mjs`, 21 golden vectors `` |
+| S1 | 1: the count of golden vectors, "There are 21 vectors" |
+| S12 | 3: what `logic.test.ts` holds to the engine, `dense` as M4's spacing, and the uncovered live points, in words |
+| S13 | 5: `DEMO_PARTS = { DT: 4, DV: 5 }`, `data/demos/m0/`, D113, D114 and the five lint rules |
+| S15 | 1: `raw:WekaExt/scene-graph-studio` |
+| `CLAUDE.md`, in its present form | 25: the range `§1 to §N` with the floors 24 to 31 (8), the count `N deviations, D1 to DN` (12: eleven with a floor from 102 to 117, one requiring three digits), `all N steps carry theirs, N notes` (1), `D-01…D-24` (1), and three phrases the slimmed traps still carry: a playground is a step kind, not a lab; a `demo` replays a recording; one copy, shared by every branch and every checkout |
+| `INDEX.md` §2 | 1: `## 2. Decisions — D-01 … D-24` |
+
+53 assertions moved or were restated. Three were deleted, because the fact has no current home in the document
+they read and is held elsewhere or nowhere: `96.5 px` in `CLAUDE.md`, in two tests, since its `ImageOverlay` trap
+keeps the rule and no page states the figure (`DEVIATIONS.md` and `docs/HISTORY.md` still carry it, and both are
+asserted); and the check that `CLAUDE.md` cites by name two projector tests the suite runs (`… show their
+photographs …` and `… draw their marks on their photographs`), since neither `CLAUDE.md` nor any page now cites a
+projector test by those names. A comment above the records tests says where they read since D130.
+
+**Open items.** F4: `start.ps1` still defaults to WekaExt's `..\.venv` (D121), so a standalone checkout warns and
+falls back to `py12` on every run; S16's open items carry it, and the spec leaves `start.ps1` unchanged. F5: whether
+the named licences cover a public repository and a public Render service, beyond `bundle_distribute`'s "to enrolled
+students for classroom use", is the author's finding to record; S3's and S16's open items carry it.
+
+**Verification.** VERIFICATION §36: the coverage at close, 130 of 130 deviations and 36 of 36 sections cited; the
+eight coverage rules disabled one at a time, 8 of 8 caught; the demo rules of the content lint likewise, 11 of 11;
+the gate's counts before and after the records tests moved; and the five acceptance questions of spec §10.
