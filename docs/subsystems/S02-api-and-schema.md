@@ -76,7 +76,7 @@ S2 is the backend's HTTP surface and its data model: the FastAPI application, th
 
 ## 6. Traps
 
-- A demonstration's graph is filed under `mini-isg` with no `DatasetId` of its own, though its frames are not the slice's, so a reader that joins on `dataset == "mini-isg"` and looks the frame up in the slice's manifest finds no row. [D113] [`CLAUDE.md`]
+- A demonstration's graph is filed under `mini-isg` with no `DatasetId` of its own, though its frames are not the slice's, so a reader that joins on `dataset == "mini-isg"` and looks the frame up in the slice's manifest finds no row. [D113]
 
 ## 7. History
 

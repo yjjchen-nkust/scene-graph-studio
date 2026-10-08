@@ -23,6 +23,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/specs/2026-09-15-…-contracts.md` | **Normative field names, types, enum spellings** | live | S2, S6, S9, S10, S12 |
 | `superpowers/specs/2026-09-16-indvissgg-reading.md` | The anchor paper read as M11's source | reference | S5, S6 |
 | `superpowers/specs/2026-09-19-playgrounds-design.md` | The `playground` step kind, and the three that complete M0 | **executed** | S6, S12 |
+| `superpowers/specs/2026-09-19-relocation-design.md` | The move out of `course-lab` into WekaExt: the target layout, how the history travels, the dependencies the move severs and what replaces them | **executed** (D87); its location superseded by D-24 | S16 |
 | `superpowers/specs/2026-09-26-playgrounds-m1-design.md` | F6, F7, X1, and what the opened sources say about VG150 | **executed** | S12 |
 | `superpowers/specs/2026-09-26-split-and-distinct-design.md` | A playground split across steps as parts; triplets counted as a set | **executed** | S12 |
 | `superpowers/specs/2026-09-27-playgrounds-m2-design.md` | F3, and three statements about IoU the opened sources contradict | **executed** | S12 |
@@ -38,6 +39,7 @@ network, or on an API key. A task that appears to violate it has been misread.
 | `superpowers/plans/…-03-models-and-vlm.md` | Phases 5–6: registry, RelTR, L4, L6, L5 | **executed**; the measured prediction tier is blocked on licences, see PROVENANCE.md | S4, S5, S11 |
 | `superpowers/plans/…-04-labs-shells-hardening.md` | Phases 7–9: L3, L7, L8, shells, hardening | **executed** | S3, S10, S11, S14 |
 | `superpowers/plans/2026-09-19-playgrounds-m0.md` | The `playground` step kind, F1, F2, F8, the golden file, the lint rules | **executed** | S12 |
+| `superpowers/plans/2026-09-19-relocation.md` | The move by `git subtree`, the history carried, the two severed dependencies restored, the decisions marked superseded, a new `CLAUDE.md` and a Gitea workflow | **executed** (D87); its location superseded by D-24 | S16 |
 | `superpowers/plans/2026-09-26-playgrounds-m1.md` | X1's cited figures, rules 9 and 12, the corrections, F6, F7, X1 | **executed** | S12 |
 | `superpowers/plans/2026-09-27-playgrounds-m2.md` | The IoU corrections, F3's arithmetic and golden cases, the component, M2 s3 and s4 | **executed** | S12 |
 | `superpowers/plans/2026-09-27-playgrounds-m3.md` | M3's corrections, `PhotoMarks`, E1 and E10, their golden cases, M3 s3 to s7 | **executed** | S12 |

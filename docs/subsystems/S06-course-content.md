@@ -95,7 +95,7 @@ S6 is the course text: fifteen bilingual MDX modules, the build-time pipeline th
 - Two MDX pipelines would let a formula typeset under vitest and arrive as dollar signs on the projector, which is why one plugin serves both. [D28]
 - KaTeX keeps a formula's TeX in a MathML `<annotation>`, so a test that the rendered text lacks the TeX asserts the reverse of typesetting. [D28]
 - Content between one step's `</Step>` and the next step's opening tag has no filter over it and renders on every slide of the module. [D91] [`system/tools/content_lint.mjs`]
-- A lint rule watched failing by hand and then only described in prose leaves nothing that notices its deletion. [D91] [`docs/INDEX.md`]
+- A lint rule watched failing by hand and then only described in prose leaves nothing that notices its deletion. [D91]
 - A test suite is an instrument too: a fixture with one module and one frontmatter cannot express a cross-module or cross-locale defect, so those rules could be deleted with the suite green until each was disabled in turn. [D92] [VERIFICATION §16]
 - A lint that reads `id` where the schema names `key` reports every claim as citing a paper that does not exist. [D33]
 - A regularity quoted as forced is checked by asking what the argument proves: an inclusion of what each protocol allows bounds no model's recall. [D98] [VERIFICATION §22]

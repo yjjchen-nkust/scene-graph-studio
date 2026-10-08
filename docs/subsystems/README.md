@@ -176,9 +176,9 @@ The rules below bind every subsystem and are stated here, not on the pages. Two 
 
 **Two numbering schemes.** Binding decisions are numbered D-01 and upward, in the decisions document. Deviations from plan are numbered D1 and upward, in `DEVIATIONS.md`. The two collide in print, and D-22 and D22 are different records about different things. A reference must therefore keep the hyphen for a decision and omit it for a deviation. [D-22] [D22] [`DEVIATIONS.md`]
 
-**One shared `data/`.** `data/` is a link to the NAS copy, so a branch that changes it changes it for every branch and every checkout at once. Until such a branch merges, `main` fails its gate against the NAS, and running `main`'s harvest in between writes the old content back. D111 records this for M5's playgrounds, D115 for the rekey of the Figure 2 transcripts, and D124 for D-V's recording again. [D111] [D115] [D124]
+**One shared `data/`.** Where `data/` is the devdata link to the NAS, it is one copy, so a branch that changes it changes it for every branch and every checkout linked to it at once. Until such a branch merges, `main` fails its gate against the NAS, and running `main`'s harvest in between writes the old content back. D111 records this for M5's playgrounds, D115 for the rekey of the Figure 2 transcripts, and D124 for D-V's recording again. The runner's link to `fixtures/data` and a `data/` filled from Google Drive are copies of their own; S15 states the three forms. [D111] [D115] [D124] [D126] [D128]
 
-**Deleting `data/`.** The NAS copy is the only copy. Measured on a scratch junction, `rm -rf data/` in Git Bash, with the trailing slash, deletes the files on the NAS through the link, whereas `rm -rf data`, `git clean -fdX` and PowerShell `Remove-Item -Recurse` remove the link alone. [D110]
+**Deleting `data/`.** The NAS copy is the only complete copy: D128's Google Drive bundles leave out `_raw/` but for `all_rgb_videos.zip`, every PDF, and the images of each slice whose `bundle_distribute` is not YES. Measured on a scratch junction, `rm -rf data/` in Git Bash, with the trailing slash, deletes the files on the NAS through the link, whereas `rm -rf data`, `git clean -fdX` and PowerShell `Remove-Item -Recurse` remove the link alone. [D110] [D128]
 
 **LF pins.** Generated files are pinned to LF in `.gitattributes`, because `core.autocrlf=true` checks a file out as CRLF while every generator writes LF. The mismatch either fails a byte-equality step or, silently, leaves `git status` dirty after a green gate with `git diff` showing nothing. A generator that writes into a tracked path needs its path pinned there as well, and the Python generators write LF with `newline=""`. [D89] [D91]
 
@@ -186,7 +186,7 @@ The rules below bind every subsystem and are stated here, not on the pages. Two 
 
 | Id | Requirement | Enforced by | Subsystem |
 |---|---|---|---|
-| NFR-1 | Offline-complete; every P0 feature works with the network down and `torch` absent | the placeholder slice, in `data/`, which comes from the NAS (D109) | S3, S15 |
+| NFR-1 | Offline-complete; every P0 feature works with the network down and `torch` absent | the placeholder slice, in `data/` in any of the three forms S15 states (D109) | S3, S15 |
 | NFR-2 | Honest numbers: every figure carries a source and a `verified` flag | `content_lint.mjs` | S6, S9 |
 | NFR-3 | Two implementations, one truth | `parity.mjs`, 21 golden vectors | S1 |
 | NFR-4 | Determinism, including tie-break order | `sorted(key=(-score, relationship_id))` | S1 |

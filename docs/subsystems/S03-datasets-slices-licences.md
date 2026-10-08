@@ -84,7 +84,7 @@ S3 turns the corpora the author downloads into the small teaching slices the lab
 
 ## 6. Traps
 
-- "Read the source's own statement" means every place the source publishes: IndoorVG states no licence on GitHub and CC BY 4.0 on Hugging Face. [`data/LICENCES.md`] [`docs/INDEX.md`]
+- "Read the source's own statement" means every place the source publishes: IndoorVG states no licence on GitHub and CC BY 4.0 on Hugging Face. [`data/LICENCES.md`]
 - A corpus layout recorded from memory was wrong in two of three fields; `LAYOUTS` now records what was read off the files. [D17] [`system/backend/app/datasets/adapters/__init__.py`]
 - A cutter that copies images from a directory writes a silent empty slice when the corpus embeds the images instead. [D17]
 - A test that asserts "nothing cut yet" goes stale the moment something is cut. [D19]

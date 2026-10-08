@@ -86,12 +86,12 @@ S10 is the frontend application around the content: its build and dev-server con
 
 ## 6. Traps
 
-- A unit test that waits for a render between two keypresses cannot see a lost keypress; a browser does not wait. [D67] [`docs/INDEX.md`]
-- One key with two encodings stays invisible until something writes it both ways. [D68] [`docs/INDEX.md`]
-- A scrolling container clamps its child's bounding rectangle, so the overflow measured is zero. [D70] [`docs/INDEX.md`]
-- A layout measured before the webfonts decode is a layout that is never painted. [D70] [`docs/INDEX.md`]
-- A colour's contrast ratio written into a comment from memory reads as a measurement and is not one. [D54] [`docs/INDEX.md`]
-- A jsdom gap can make a whole navigation silently not happen, leaving the assertion to compare the old value. [D55] [`docs/INDEX.md`]
+- A unit test that waits for a render between two keypresses cannot see a lost keypress; a browser does not wait. [D67]
+- One key with two encodings stays invisible until something writes it both ways. [D68]
+- A scrolling container clamps its child's bounding rectangle, so the overflow measured is zero. [D70]
+- A layout measured before the webfonts decode is a layout that is never painted. [D70]
+- A colour's contrast ratio written into a comment from memory reads as a measurement and is not one. [D54]
+- A jsdom gap can make a whole navigation silently not happen, leaving the assertion to compare the old value. [D55]
 - jsdom has no `BroadcastChannel`, and Node's own, borrowed from inside jsdom's realm, delivers nothing on Node 22.12, so the presenter tests passed on the author's Node and timed out on CI's. [D81]
 - `BroadcastChannel` retains nothing, so a subscriber that arrives after the last message hears silence, and a test that arranges the favourable ordering cannot see the defect. [D86]
 - Node 18 and later resolve `localhost` verbatim, so a dev server bound to `::1` looks dead to a browser that resolves `localhost` to `127.0.0.1`. [D10]

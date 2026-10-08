@@ -31,7 +31,8 @@ departure from plan is logged in `DEVIATIONS.md`: 129 deviations, D1 to D129.
 
 **All machinery lives under `system/`** — the npm workspace root, `backend/`, `frontend/`,
 `packages/sgg-metrics/`, `tools/`, `web/`. `data/`, `docs/`, `start.ps1` and `fetch-data.ps1`
-stayed at the track root; `data/` is a link to the data directory (D110, D125), whose target
+stayed at the track root; `data/` is the devdata link to the NAS, a real directory filled from
+Google Drive, or on the CI runner a link to `fixtures/data` (D110, D125, D126, D128), as
 `docs/subsystems/S15-data-infrastructure.md` states. **Every `npm` command runs from `system/`.**
 
 ```powershell
@@ -89,13 +90,15 @@ cd scene-graph-studio\system ; npm run ci
   that writes into a tracked path means adding its path there too. Nothing under `data/` is
   tracked since D109, so the six `data/` rules of D89 and D91 are gone; the Python generators
   still write LF (`newline=""`).
-- **`data/` is a link to the data directory, and no data file lives in the checkout but the CI
-  fixture `fixtures/data`** (D110, D125); a fresh clone has no `data/` until `devdata pull`,
-  `start.ps1` or `fetch-data.ps1` links it, or `npm run data:fetch` unpacks D128's Google Drive
-  bundles, `core` and `industreal` in `data.drive.json`, into a real directory, and the CI runner
-  links the fixture in its place (D126). See `docs/subsystems/S15-data-infrastructure.md` §6, and
-  its §8 for where the link pointed in the checkout observed on 2026-10-08.
-- **`data/` is one copy, shared by every branch and every checkout.** A branch that changes
+- **`data/` takes one of three recorded forms, and git tracks no data but the CI fixture
+  `fixtures/data`**: the devdata link to the NAS, which `devdata pull`, `start.ps1` or
+  `fetch-data.ps1` makes (D110, D125); a real directory that `npm run data:fetch` fills from
+  Google Drive, with the `core` bundle by default (D128); or, on the CI runner, a link to the
+  fixture (D126); a fresh clone has no `data/` until one of them makes it. See
+  `docs/subsystems/S15-data-infrastructure.md` §6, and its §8 for the form observed in this
+  checkout on 2026-10-08.
+- **Where `data/` is the devdata link to the NAS, it is one copy, shared by every branch and
+  every checkout linked to it.** A branch that changes
   `data/` changes it for every branch at once: merge it promptly, and do not run another branch's
   gate or harvest in between. M5's playgrounds were the first such branch: until they merge, `main`
   fails `npm run ci` against the NAS, and running `main`'s harvest writes M5's old text back into
@@ -108,11 +111,12 @@ cd scene-graph-studio\system ; npm run ci
   D-V's recording again is the third (D124): until it merges, `main` fails its gate against the NAS, which
   holds the transcript recorded under `O_DEMO`; the files before it are `vlm/transcripts-pre-D124/m0-demo.json`
   and `demos/m0/pre-D124/indvissgg.json`.
-  The CI runner, which links `fixtures/data` (D126), and a checkout whose `data/` was unpacked from
+  The CI runner, which links `fixtures/data` (D126), and a checkout whose `data/` was filled from
   Google Drive (D128) each hold a copy of their own.
 - **Never `rm -rf data/` in Git Bash.** With the trailing slash it deletes the files on the NAS
   through the link (measured on a scratch junction, D110), and the NAS copy is the only complete
-  copy; D128's Google Drive bundles hold a part of it.
+  copy: D128's Google Drive bundles leave out `_raw/` but for `all_rgb_videos.zip`, every PDF,
+  and the images of each slice whose `bundle_distribute` is not YES.
   `rm -rf data`, `git clean -fdX` and PowerShell `Remove-Item -Recurse` remove the link alone.
 - **The design document's ARM64/Snapdragon hardware table describes a different machine** and is
   marked superseded in place. See `docs/subsystems/S14-checks-and-instruments.md` §6.
@@ -122,8 +126,10 @@ cd scene-graph-studio\system ; npm run ci
   error that names neither the configuration nor the cause.** See
   `docs/subsystems/S14-checks-and-instruments.md` §6.
 - **A playground is a step kind, not a lab, and computes a count, a bound, a set membership or a
-  value of the rule its step teaches, never a metric** (D111): nothing in `frontend/src/playgrounds/`
-  imports a value from `sgg-metrics`, only its types. See `docs/subsystems/S12-playgrounds.md` §6.
+  value of the rule its step teaches, never a metric** (D111): no playground component imports a
+  value from `sgg-metrics`, only its types, and the tests in `playgrounds/test/logic.test.ts`
+  import the engine's functions to hold the playgrounds' arithmetic to the engine. See
+  `docs/subsystems/S12-playgrounds.md` §6.
 - **A `demo` replays a recording and computes counts, set memberships and set differences over it,
   never a metric; `content_lint.mjs` reads the three tables of `frontend/src/demos/mounts.tsx` as
   text, one entry to a line, and every graph a demo produces is filed under `mini-isg` with no

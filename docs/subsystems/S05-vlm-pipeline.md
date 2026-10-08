@@ -65,8 +65,8 @@ S5 is the replica of IndVisSGG's three steps, extraction under the Triplets Extr
 
 ## 6. Traps
 
-- D-V drafts under `O_DEMO`, which is `O_ISG` with `hand` split into `left hand` and `right hand`, and `EXAMPLES_DEMO`; D-T's comparison keeps `O_ISG`. [D124] [`CLAUDE.md`]
-- D-V was recorded through `app/vlm/openai_compat.py` and not on the Anthropic API, on the author's pro6000 (`Qwen/Qwen3.8-27B`) until D124 and on the A6000 (`Qwen/Qwen3.8-27B-FP8`, vLLM 0.21.0) since; its graphs are `reconstructed`, and no label says "measured" of a replay. [D114] [D124] [`CLAUDE.md`]
+- D-V drafts under `O_DEMO`, which is `O_ISG` with `hand` split into `left hand` and `right hand`, and `EXAMPLES_DEMO`; D-T's comparison keeps `O_ISG`. [D124]
+- D-V was recorded through `app/vlm/openai_compat.py` and not on the Anthropic API, on the author's pro6000 (`Qwen/Qwen3.8-27B`) until D124 and on the A6000 (`Qwen/Qwen3.8-27B-FP8`, vLLM 0.21.0) since; its graphs are `reconstructed`, and no label says "measured" of a replay. [D114] [D124]
 
 ## 7. History
 

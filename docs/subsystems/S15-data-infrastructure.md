@@ -2,7 +2,7 @@
 
 ## 1. Purpose and boundary
 
-S15 decides where `data/` is and how a machine comes to have it: the devdata link to the NAS and the scripts that make it, the guard that stops a writer when the link is absent, the CI fixture `fixtures/data`, the Google Drive bundles, and the two Vite pieces that let the test run and the dev server read through the link. It does not own what `data/` holds, which belongs to the subsystems that write each part (the golden vectors S1's, the slices and licence findings S3's, the content S6's, the demos S13's), and it does not decide what may leave the machine, which `data/LICENCES.md` decides (S3).
+S15 decides where `data/` is and how a machine comes to have it, in each of the three forms it takes: the devdata link to the NAS and the scripts that make it, a real directory filled from the Google Drive bundles, and the link to the CI fixture `fixtures/data` on the runner; with them, the guard that stops a writer when the link is absent, and the two Vite pieces that let the test run and the dev server read through the link. It does not own what `data/` holds, which belongs to the subsystems that write each part (the golden vectors S1's, the slices and licence findings S3's, the content S6's, the demos S13's), and it does not decide what may leave the machine, which `data/LICENCES.md` decides (S3).
 
 ## 2. Code and data
 
@@ -27,7 +27,7 @@ S15 decides where `data/` is and how a machine comes to have it: the devdata lin
 | `system/tools/test/fixture.test.mjs` | Tests that the fixture equals its NAS copy |
 | `system/tools/test/fs_plugin.test.mjs` | Tests of the dev server plugin |
 | `system/tools/test/dev_server.test.mjs` | Tests of the dev server |
-| `data/` | Link to the NAS copy of all data (NAS) |
+| `data/` | The project data, in one of three forms: the devdata link to the NAS copy, a directory filled from Google Drive, or the runner's link to `fixtures/data` (NAS) |
 
 ## 3. Interfaces
 
@@ -51,7 +51,7 @@ S15 decides where `data/` is and how a machine comes to have it: the devdata lin
 
 ## 4. Current rules
 
-1. `data/` is a link, and no data file lives in the checkout but the CI fixture: every reader keeps its `data/` path and reaches the one copy through the link. `SGS_DATA_DIR` names another directory to the backend's `DATA_DIR` and to `system/tools/data_dir.mjs` alike. [D110] [D125] [`system/backend/app/settings.py`] [`system/tools/data_dir.mjs`]
+1. `data/` takes one of three forms: the devdata link to the NAS (items 2 to 4), a real directory filled from Google Drive (items 9 and 16 to 18), or, on the CI runner and in the Pages build, a link to `fixtures/data` (item 5). Where it is a link, no data file lives in the checkout but the CI fixture, and every reader keeps its `data/` path and reaches the one copy through the link. `SGS_DATA_DIR` names another directory to the backend's `DATA_DIR` and to `system/tools/data_dir.mjs` alike. [D110] [D125] [D126] [D128] [`system/backend/app/settings.py`] [`system/tools/data_dir.mjs`]
 2. `data.toml` declares one dataset entry: `path = "data"`, `source = "raw:WekaExt/scene-graph-studio"` and `fixture = "fixtures/data"`. On the author's machines `data/` is a directory junction to that NAS folder, which `devdata pull` makes from the source and the machine's roots file. [D110] [D125] [`data.toml`]
 3. `system/tools/Connect-DataDirectory.ps1` makes the same link on a machine without remotex: to `SGS_DATA_DIR` when it is set, otherwise to the source under the root that devdata's roots file names (`DEVDATA_ROOTS_FILE`, else `~/.config/devdata/roots.toml`), as a junction, or as a symbolic link for a `\\server\share` target. `start.ps1` calls it before any install, and `fetch-data.ps1` before any read. [D110] [D125] [`system/tools/Connect-DataDirectory.ps1`] [`start.ps1`] [`fetch-data.ps1`]
 4. The script creates and never deletes or moves: a real `data/` directory, a link to another target, an unreachable target and an unconfigured location each return a sentence instead of a link. [D110] [`system/tools/Connect-DataDirectory.ps1`]
@@ -87,11 +87,12 @@ S15 decides where `data/` is and how a machine comes to have it: the devdata lin
 
 ## 6. Traps
 
-- A bare `data` pattern in a parent `.gitignore` swallows a whole tree, and git will not descend into an ignored directory, so negations inside it never fire; this `.gitignore` anchors its rule as `/data/` for that reason. INDEX's write-up is §19.2 of KNOWLEDGE_BASE.md, a file of the course-lab repository, outside this one. [D87] [D109] [`docs/INDEX.md`] [`2026-09-19-relocation-design.md`]
-- Vite checks real paths, and Vite 8.3.0's `/@fs/` reads only its own drive and answers a file on another with `index.html` and status 200, so a clip or a photograph from `data/` failed under `npm start` with nothing in the terminal saying why, while the build showed it. [D110] [D123] [`CLAUDE.md`] [`system/tools/test/dev_server.test.mjs`]
+- A bare `data` pattern in a parent `.gitignore` swallows a whole tree, and git will not descend into an ignored directory, so negations inside it never fire; this `.gitignore` anchors its rule as `/data/` for that reason. Its write-up is §19.2 of course-lab's KNOWLEDGE_BASE.md, outside this repository. [D87] [D109] [`2026-09-19-relocation-design.md`]
+- Vite checks real paths, and Vite 8.3.0's `/@fs/` reads only its own drive and answers a file on another with `index.html` and status 200, so a clip or a photograph from `data/` failed under `npm start` with nothing in the terminal saying why, while the build showed it. [D110] [D123] [`system/tools/test/dev_server.test.mjs`]
+- `data/` is not always the devdata link. It takes one of three recorded forms: the link to the NAS, which `devdata pull`, `start.ps1` and `fetch-data.ps1` make; a real directory that `npm run data:fetch` fills from Google Drive, with the `core` bundle unless `--bundle` names another; and, on the CI runner and in the Pages build, a link to `fixtures/data`. Git tracks no data but that fixture, and §8 item 1 records the form observed in this checkout on 2026-10-08. [D110] [D125] [D126] [D127] [D128] [`system/package.json`] [`system/backend/scripts/data_bundles.py`]
 - A fresh clone has no `data/` until `devdata pull`, `start.ps1`, `fetch-data.ps1` or `npm run data:fetch` makes it. [D125] [D128] [`CLAUDE.md`]
-- The NAS folder is replicated by Synology, so every gate run's harvest writes `data/content/` into a replicated folder. [D123] [`CLAUDE.md`]
-- The one shared copy of `data/`, which a branch changes for every branch at once, and the hazard of `rm -rf data/` in Git Bash are cross-cutting and stated on the map. [D110] [D111] [`docs/subsystems/README.md`]
+- The NAS folder is replicated by Synology, so every gate run's harvest writes `data/content/` into a replicated folder. [D123]
+- The one shared copy behind the devdata link, which a branch changes for every branch at once, and the hazard of `rm -rf data/` in Git Bash are cross-cutting and stated on the map. [D110] [D111] [`docs/subsystems/README.md`]
 
 ## 7. History
 

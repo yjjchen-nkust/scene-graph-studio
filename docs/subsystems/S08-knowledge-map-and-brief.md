@@ -29,7 +29,7 @@ S8 is the two static pages that predate the application: the knowledge map under
 1. The knowledge map, `system/web/knowledge-map/` (`index.html`, `kp-data.js`, `pg.js`, `imagelab.js`), is the source the harvest reads: the 93 knowledge points in 12 clusters of `kp-data.js` `CLUSTERS`, and the `MATH` and `DERIV` maps of `pg.js`. [D-13] [D-23] [`system/tools/harvest.mjs`]
 2. What the page may become, and what it may never become: since D-23 released the freeze of D-13, the page may be extended and not only corrected, while D-14 stands, so `pg.js evaluate()`, a teaching instrument over fifteen hard-coded prediction rows, is excluded from the harvest and never becomes the evaluation engine, which is written with no reference to it. [D-23] [D-14] [D101]
 3. D-14's reason: `evaluate()` matches a triplet by string equality against a precomputed per-prediction IoU scalar, carries no protocol, no constraint mode and no mask pairing, has a `Ra` weighting dial that is no published metric, and runs on eight hard-coded objects and fifteen rows. Promoted, it would disagree with the field while the parity check passed, both engines being wrong together; the dial survives as knowledge point E6, taught and not computed. [D-14] [`system/web/knowledge-map/FROZEN.md`]
-4. Besides D-14, three things stand from the freeze: the harvest from the page, the two validators, which still run as `npm run lint:frozen` under that name, and a page that opens from disk with no build step. [D-23] [`CLAUDE.md`]
+4. Besides D-14, three things stand from the freeze: the harvest from the page, the two validators, which still run as `npm run lint:frozen` under that name, and a page that opens from disk with no build step. [D-23]
 5. An edit to the page is followed by `npm run harvest`, which writes `kp.json`, `math.json` and `deriv.json` under `data/content/` through the `data/` link. D-23 has the page and the three files committed together; §8 item 10 records why that no longer settles what a commit carries. [D-23] [D110] [`system/tools/harvest.mjs`]
 6. Changes to the page since the release are logged in `DEVIATIONS.md`, and `FROZEN.md` keeps its name and its log of the corrections made under the freeze. [D-23] [D101]
 7. A formula or derivation corrected in a module is rebuilt on the page from the corrected MDX and harvested again, so the two cannot differ. [D98] [D106] [D111]
@@ -61,7 +61,7 @@ S8 is the two static pages that predate the application: the knowledge map under
 
 ## 6. Traps
 
-- A correction is not an extension: a page that teaches something false is worse than one out of date, which is why the freeze admitted corrections and logged each one. [`system/web/knowledge-map/FROZEN.md`] [`docs/INDEX.md`]
+- A correction is not an extension: a page that teaches something false is worse than one out of date, which is why the freeze admitted corrections and logged each one. [`system/web/knowledge-map/FROZEN.md`]
 - A figure repeated across the page, the brief and a decision from one early reading is wrong in all three at once, and only opening the source finds it. [D93] [`system/web/knowledge-map/FROZEN.md`]
 - Neither validator reads a claim: in D16 every number was real and correctly transcribed, and only the sentences around them were wrong. [D16]
 - A `\\` line break inside display math outside an alignment renders in MathJax as a visible red error rather than failing loudly, which is what `audit.js` exists to catch. [`CLAUDE.md`] [`system/web/knowledge-map/FROZEN.md`]

@@ -95,7 +95,7 @@ S1 scores a predicted scene graph against a ground-truth one: the match relation
 
 ## 6. Traps
 
-- The graph constraint keys on the ordered object pair, not the class pair, so two hands on one assembly are two pairs, and `semi` is a cap per object pair, not the Semi Constraint STTran proposed for Action Genome, which the course states and the engine does not compute. [D99] [`CLAUDE.md`]
+- The graph constraint keys on the ordered object pair, not the class pair, so two hands on one assembly are two pairs, and `semi` is a cap per object pair, not the Semi Constraint STTran proposed for Action Genome, which the course states and the engine does not compute. [D99]
 - `pg.js evaluate()` is a teaching toy over fifteen hard-coded rows and must never be promoted to the evaluation engine. [D-14] [`CLAUDE.md`]
 
 ## 7. History

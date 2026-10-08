@@ -75,7 +75,7 @@ S11 is the eight interactive labs, L1 to L8, reached at `/lab/:labId`: the labs 
 - An invariant that holds because both sides are equal for every input cannot fail: three calls to `evaluate` differing only in `protocol` return one number three times. [D27]
 - Swapping the overlay's objects from the working copy to the draft left every L8 test green, so nothing observed the student's geometry until box adjustment was wired. [D50]
 - A `.ts` test under `system/frontend/src/` was collected by no vitest project until the include admitted `.test.ts`, and would have passed by never running. [D43]
-- An input-to-paint measurement that awaits two animation frames cannot report less than two frame intervals, so five labs all came back at the display's cadence. [D74] [`docs/INDEX.md`]
+- An input-to-paint measurement that awaits two animation frames cannot report less than two frame intervals, so five labs all came back at the display's cadence. [D74]
 
 ## 7. History
 
