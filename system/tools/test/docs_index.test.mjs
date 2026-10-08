@@ -91,7 +91,11 @@ describe('docs_index', () => {
   });
 
   it('R6 strips decorations and exempts data/ and globs', () => {
-    const t = withCites('`system/a.ts:12` `system/a.ts:3-9` `system/` `system/*.ts` `data/x.json`');
+    const t = withCites(
+      '`system/a.ts:12` `system/a.ts:3-9` `system/` `system/*.ts` `data/` `data/x.json`',
+    );
+    // A fresh clone has no data/, so the bare token must be exempt, not found.
+    t.exists = (p) => p !== 'data' && base().exists(p);
     expect(run('R6', t)).toEqual([]);
   });
 

@@ -179,7 +179,7 @@ function r6(tree) {
   const problems = [];
   for (const { file, text } of tree.pages) {
     for (const path of citations(text).paths) {
-      if (path.startsWith('data/') || /[*…< ]/.test(path)) continue;
+      if (path === 'data' || path.startsWith('data/') || /[*…< ]/.test(path)) continue;
       if (!tree.exists(path)) problems.push(`${file}: ${path} does not exist`);
     }
   }
