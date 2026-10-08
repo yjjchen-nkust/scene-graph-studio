@@ -32,7 +32,7 @@ S1 scores a predicted scene graph against a ground-truth one: the match relation
 
 **Consumes:**
 
-- S2 (every module of `app/eval/` but `metrics.py` imports `app.schema`; `run_golden.py` and `build_golden.py` import `DATA_DIR` from `app.settings`, and `build_golden.py` also `require_data_dir`).
+- S2 (every non-empty module of `app/eval/` but `metrics.py` imports `app.schema`; `run_golden.py` and `build_golden.py` import `DATA_DIR` from `app.settings`, and `build_golden.py` also `require_data_dir`).
 - S14 (`system/tools/parity.mjs` imports `pythonPath` from `system/tools/py.mjs`).
 - S15 (`parity.mjs`, `test_golden.py` and `engine.test.ts` read `data/golden/vectors.json` through the `data/` link, whose CI copy is `fixtures/data/golden/vectors.json`).
 
@@ -87,7 +87,7 @@ S1 scores a predicted scene graph against a ground-truth one: the match relation
 
 **Records:** VERIFICATION §1, VERIFICATION §2, VERIFICATION §3, VERIFICATION §5, VERIFICATION §23, VERIFICATION §24, VERIFICATION §25, VERIFICATION §26, VERIFICATION §27, VERIFICATION §28, VERIFICATION §32.
 
-**`npm run ci` steps:** 2 pytest, the seven test files of §2; 3 metrics build, which compiles `dist` for parity; 4 vitest, the `metrics` project (`system/packages/sgg-metrics/test/engine.test.ts`, `pairing.test.ts`, `rle.test.ts`, `types.test.ts`); 5 ruff, over `backend` and `tools`; 6 parity, `system/tools/parity.mjs` over every golden vector; 8 content, whose first block requires each vector's schema version, a unique id, `hand_checked: true`, a `why` of at least 40 characters, and `gt`, `pred`, `params` and `expect` (`system/tools/content_lint.mjs`).
+**`npm run ci` steps:** 2 pytest, the seven test files of §2; 3 metrics build, which compiles `dist` for parity; 4 vitest, the `metrics` project (`system/packages/sgg-metrics/test/engine.test.ts`, `pairing.test.ts`, `rle.test.ts`, `types.test.ts`); 5 ruff, over `backend` and `tools`; 6 parity, `system/tools/parity.mjs` over every golden vector; 8 content, whose first block requires the file's schema version 1 and, of each vector, a unique id, `hand_checked: true`, a `why` of at least 40 characters, and `gt`, `pred`, `params` and `expect` (`system/tools/content_lint.mjs`).
 
 **Outside `ci`:** none of `test:e2e`, `check:offline`, `check:perf` and `check:pins` is specific to S1.
 
@@ -124,7 +124,7 @@ S1 scores a predicted scene graph against a ground-truth one: the match relation
 
 ## 8. Open items
 
-1. D-11 states that `system/backend/app/eval/` imports nothing outside the Python standard library. `engine.py` imports `pydantic` for `EvalRequest` and `MetricValue`, and every module but `metrics.py` imports `app.schema`, whose models are pydantic; plan 01's own `engine.py` imported `pydantic`, and no record reconciles the two. [D-11] [`2026-09-15-01-skeleton-and-eval-engine.md`] [`system/backend/app/eval/engine.py`]
+1. D-11 states that `system/backend/app/eval/` imports nothing outside the Python standard library. `engine.py` imports `pydantic` for `EvalRequest` and `MetricValue`, and every non-empty module but `metrics.py` imports `app.schema`, whose models are pydantic; plan 01's own `engine.py` imported `pydantic`, and no record reconciles the two. [D-11] [`2026-09-15-01-skeleton-and-eval-engine.md`] [`system/backend/app/eval/engine.py`]
 2. D-12 places the TypeScript decoder at `frontend/packages/sgg-metrics/src/rle.ts`, under `system/`; the file is `system/packages/sgg-metrics/src/rle.ts`. [D-12] [`system/packages/sgg-metrics/src/rle.ts`]
 3. Contracts §1.5 marks `semi_constraint_max_per_pair` as required when `constraint` is `semi` and gives it a default of 2. Both engines default it to 2 and require it under no mode. [contracts §1.5] [`system/backend/app/eval/engine.py`] [`system/packages/sgg-metrics/src/index.ts`]
 4. The pytest harness finds a verdict row by its first matching `pred_index`, so a `-1` row matches any missed one and an extra row is never refused. D104's reviewer set it aside, and it is left. [D104]
