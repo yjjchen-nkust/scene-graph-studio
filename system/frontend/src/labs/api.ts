@@ -42,10 +42,17 @@ interface WireError {
   error?: { code?: string; message_en?: string; message_zh?: string; detail?: unknown };
 }
 
+/**
+ * Where the backend lives. Empty for the local run, where Vite proxies `/api` to it. A static
+ * deployment (GitHub Pages) has no such proxy, so its build sets `VITE_API_BASE` to the backend's
+ * own origin, without a trailing slash.
+ */
+export const API_BASE: string = (import.meta.env.VITE_API_BASE ?? '').replace(/\/+$/, '');
+
 export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(url, init);
+    response = await fetch(`${API_BASE}${url}`, init);
   } catch {
     // `fetch` rejects only for a transport failure, which here means the local backend is not
     // running. That is a different instruction to the reader than any status code.

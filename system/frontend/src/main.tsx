@@ -14,7 +14,10 @@ const client = new QueryClient({
 
 // Data-router mode, per contracts section 2.2. Built once at module scope: building it inside a
 // component would hand React a new router on every render and drop the history with it.
-const router = createBrowserRouter(ROUTES);
+// `BASE_URL` is `/` locally and `/<repository>/` on GitHub Pages; the router wants no trailing slash.
+const router = createBrowserRouter(ROUTES, {
+  basename: import.meta.env.BASE_URL.replace(/(.)\/$/, '$1'),
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

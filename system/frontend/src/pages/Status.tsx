@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocale } from '../i18n/useLocale';
+import { API_BASE } from '../labs/api';
 
 interface HealthResponse {
   status: 'ok';
@@ -27,7 +28,7 @@ export default function Status() {
   const { data, isPending, isError } = useQuery<HealthResponse>({
     queryKey: ['health'],
     queryFn: async () => {
-      const r = await fetch('/api/health');
+      const r = await fetch(`${API_BASE}/api/health`);
       if (!r.ok) throw new Error(String(r.status));
       return r.json();
     },

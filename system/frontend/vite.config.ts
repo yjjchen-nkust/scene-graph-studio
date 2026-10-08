@@ -8,6 +8,8 @@ import { mdxPlugin } from '../mdx.plugin.ts';
 const BACKEND = `http://127.0.0.1:${process.env.SGS_BACKEND_PORT ?? 8000}`;
 
 export default defineConfig({
+  // `/` locally. GitHub Pages serves a project site below `/<repository>/`, so its build sets SGS_BASE.
+  base: process.env.SGS_BASE ?? '/',
   plugins: [mdxPlugin(), react(), tailwindcss(), crossDriveFs()],
   server: {
     // Bound to IPv4 explicitly. Node 18+ resolves 'localhost' verbatim, so Vite's default
