@@ -56,7 +56,7 @@ S11 is the eight interactive labs, L1 to L8, reached at `/lab/:labId`: the labs 
 25. L7 turns a caption into a graph by rule over a closed vocabulary, with no language library, and keeps a predicate outside P, marked in the `spurious` style and counted, since `kp:L10` counts one such error twice. [`system/frontend/src/labs/L7/parse.ts`] [`system/frontend/src/labs/L7/CaptionToGraph.tsx`]
 26. L8 shows the VLM draft beside its frame and counts four kinds of correction, deletions, additions, predicate rewrites and box adjustments; it counts work rather than distance, a no-op is not counted, and a rewrite is one correction. A box is adjusted by choosing it and drawing its replacement, and the choice clears after one adjustment. [D50] [`system/frontend/src/labs/L8/corrections.ts`]
 27. L8 does not call the mini-ISG reference ground truth, never edits the draft, and presents its projection as arithmetic; its draft is IndVisSGG's step 1 from the authored transcript, fetched rather than run. [`system/frontend/src/labs/L8/MiniISGAnnotator.tsx`] [`system/frontend/src/labs/mounts.tsx`]
-28. A box in L1 and L8 is selected through S9's `ImageOverlay`, by the smallest box containing the click. [D75]
+28. A box in L1 is selected through S9's `ImageOverlay`, by the smallest box containing the click; L8 passes no `onSelect` and chooses the box to adjust from a list, as rule 26 states. [D75] [`system/frontend/src/labs/L8/MiniISGAnnotator.tsx`]
 
 ## 5. Verification
 

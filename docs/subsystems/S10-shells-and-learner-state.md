@@ -42,7 +42,7 @@ S10 is the frontend application around the content: its build and dev-server con
 5. The favicon, `system/frontend/public/favicon.svg`, is three nodes joined by three edges on a dark rounded square, labelled `Scene Graph Studio`. [D127]
 6. The dev server binds `127.0.0.1` on port 5173 with `strictPort`, and proxies `/api` and `/images` to the backend on `SGS_BACKEND_PORT`, 8000 by default; `vite preview`, which the end-to-end suites run against, carries the same host and proxy. [D10] [D14] [`system/frontend/vite.config.ts`]
 7. The dev server's `server.fs.allow` restates the workspace root and adds the target of the `data/` link, and the `crossDriveFs` plugin serves a `/@fs/` file on another drive than the server's, so that the clip and the photographs under `data/` load under `npm start`. [D123] [`system/frontend/vite.config.ts`]
-8. The frontend needs Node 22.12 or later, the floor `vite@8.3.0` declares. [D3] [D9] [`system/package.json`]
+8. The frontend needs Node 22.12 or later, the floor D-03 sets and `system/package.json` declares; `vite@8.3.0` itself accepts `^20.19.0 || >=22.12.0`. [D-03] [D3] [D9] [`system/package.json`]
 9. `npm run ci` ends with the frontend build, `tsc -b && vite build`, because vitest transpiles without type checking. [D12] [`system/frontend/package.json`]
 10. One content base, two shells: both render the steps `getModule` returns, and neither knows what a lab is. The study shell shows every step in one scrolling column, each in its own `data-step-id` section; the lecture shell shows one step at a time. [contracts §2.4] [D53] [`system/frontend/src/shells/study/StudyShell.tsx`] [`system/frontend/src/shells/lecture/LectureShell.tsx`]
 11. The lecture shell sets a 24 px base type once, on its root, and draws every colour from `LECTURE_PALETTE`. The palette test recomputes each of its five ink tokens against white with a WCAG 2.1 `contrastRatio` and fails any below 7:1, and pins the measured ratios to two decimals; the accent is `#1e40af`, at 8.72. [SRS §7] [D54] [`system/frontend/src/shells/lecture/palette.ts`]
@@ -100,7 +100,7 @@ S10 is the frontend application around the content: its build and dev-server con
 
 ## 7. History
 
-**Binding decisions:** none.
+**Binding decisions:** D-03.
 
 **Specs and plans:** `2026-09-15-04-labs-shells-hardening.md`, `2026-09-15-scene-graph-studio-contracts.md`.
 

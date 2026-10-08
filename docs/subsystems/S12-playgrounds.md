@@ -2,7 +2,7 @@
 
 ## 1. Purpose and boundary
 
-S12 is the sixteen playgrounds: interactive steps inside a module, each a small set of knobs that move a quantity the module has just defined, mounted by knowledge point from one table over a shared control kit, with the arithmetic they display, the photograph overlay three of them share, and the golden cases and release figures that pin that arithmetic. A playground demonstrates; it computes no metric. S12 is not the labs, which score (S11), not the demonstrations, which replay recordings (S13), not the step contract's host, the module registry and the content lint (S6), and not the stepper that carries knobs between parts (S10).
+S12 is the sixteen playgrounds: interactive steps inside a module, each a small set of knobs that move a quantity the module has just defined, mounted by knowledge point from one table over a shared control kit, with the arithmetic they display, the photograph overlay six of them draw through, and the golden cases and release figures that pin that arithmetic. A playground demonstrates; it computes no metric. S12 is not the labs, which score (S11), not the demonstrations, which replay recordings (S13), not the step contract's host, the module registry and the content lint (S6), and not the stepper that carries knobs between parts (S10).
 
 ## 2. Code and data
 
@@ -22,7 +22,7 @@ S12 is the sixteen playgrounds: interactive steps inside a module, each a small 
 
 **Consumes:**
 
-- S1 (every playground imports its types from `sgg-metrics`; `system/frontend/src/playgrounds/test/logic.test.ts` imports `applyConstraint`, `applyPairing`, `boxIou`, `classify`, `encodeCounts`, `evaluate`, `rank` and `toTriplets`).
+- S1 (`system/frontend/src/playgrounds/logic.ts`, `slice.ts`, `PhotoMarks.tsx` and `system/frontend/src/playgrounds/F6/PredicateSynonymy.tsx` import types from `sgg-metrics`; `system/frontend/src/playgrounds/test/logic.test.ts` imports `applyConstraint`, `applyPairing`, `boxIou`, `classify`, `encodeCounts`, `evaluate`, `rank` and `toTriplets`).
 - S9 (`system/frontend/src/playgrounds/F1/LabelsToStructure.tsx` imports `ImageOverlay`).
 - S10 (every playground imports `useLocale`; several tests import `system/frontend/src/i18n/en.json` and `zh-TW.json`).
 - S11 (every playground imports `useLabParams` from `system/frontend/src/labs/useLabParams.ts`).
@@ -55,7 +55,7 @@ S12 is the sixteen playgrounds: interactive steps inside a module, each a small 
 23. Over `playground_golden.json`: (9) every case has a unique `id` and carries `kp`, `knobs`, a non-empty `expect` and exactly one of `image_id` or a `scope` in {`slice`, `model`, `sources`}; (10) its `why`, at least 40 characters, writes out the arithmetic; (11) it names a `kp` with a registered component. [`2026-09-19-playgrounds-design.md`] [D92] [D93] [`system/tools/content_lint.mjs`]
 24. Over `vg150_splits.json`, rule 12: every release figure and note carries `source`, `url`, `locator` and a non-empty `quote`; a count equals one whole number of its quote, named by `index` when the quote holds several; coded values lie within their sets; every release states all five figures; a measured row count equals its value; a share appears in its quote as written; every note has a numeric value, both texts and the split it explains; and every release has both labels. [D93] [D94] [D95] [`2026-09-19-playgrounds-design.md`]
 25. Each of the twelve rules, and each clause added since, fails a test in `system/tools/test/content_lint.test.mjs` when disabled: the suite caught 17 of 17 mutants of rules 1 to 11 after D92, 23 of 23 mutants, one per clause of the twelve rules, at D93, 10 of 10 clauses of rule 12 at D94, 4 of 4 at D95, and 7 of 7 clauses on parts at D96, with the clause its review added to rule 6. [D92] [D93] [D94] [D95] [D96] [VERIFICATION §17]
-26. The projector suite holds every playground but F2 and F8, each part of a split one, in its longest state to the panel at 1024×768, 1280×800 and 1920×1080 in 繁體中文. F2 and F8, one step each, are held only to controls inside the panel and no word clipped out of reach, since they ran 24 and 27 px past 1024×768 when D96 measured them; English is not held to the panel. [D95] [D96] [D106] [D111] [`system/e2e/projector.spec.ts`]
+26. The projector suite holds every playground but F2 and F8, each part of a split one, in its longest state to the panel at 1024×768, 1280×800 and 1920×1080 in 繁體中文. F2 and F8, one step each, are held only to controls inside the panel and no word clipped out of reach, since they ran 24 and 27 px past 1024×768 when D96 measured them. English is held to the panel only for E1's first part and E10's second, in three states. [D95] [D96] [D98] [D100] [D106] [D111] [`system/e2e/projector.spec.ts`]
 
 ## 5. Verification
 
