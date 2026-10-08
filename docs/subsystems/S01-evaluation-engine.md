@@ -32,6 +32,8 @@ DRAFT
 
 ## 5. Verification
 
+**Records:** VERIFICATION §1, VERIFICATION §2, VERIFICATION §3, VERIFICATION §5, VERIFICATION §23, VERIFICATION §24, VERIFICATION §25, VERIFICATION §26, VERIFICATION §27, VERIFICATION §28, VERIFICATION §32.
+
 DRAFT
 
 ## 6. Traps
@@ -40,7 +42,27 @@ DRAFT
 
 ## 7. History
 
-DRAFT
+**Binding decisions:** D-11, D-12, D-14, D-16.
+
+**Specs and plans:** `2026-09-15-01-skeleton-and-eval-engine.md`, `2026-09-15-scene-graph-studio-SRS.md`, `2026-09-15-scene-graph-studio-design.md`, `2026-09-27-graph-constraint-key-design.md`, `2026-09-27-graph-constraint-key.md`.
+
+| Deviation | Effect | Role |
+|---|---|---|
+| D2 | `system/tools/parity.mjs` reads compiled output, not `.ts` | primary |
+| D4 | the IoU-at-threshold fixture had to be reconstructed | primary |
+| D27 | the engine does not read `protocol`, so the ordering invariant was untestable | secondary |
+| D36 | the pairing key is the mask pair, not the mask pair plus the class names | primary |
+| D51 | what the review of D46–D50 found | secondary |
+| D91 | the instrument rewritten to stop skipping silently, which still did | secondary |
+| D99 | the graph constraint was keyed on class pairs; the reference keys it on object pairs | primary |
+| D100 | the review minors of M2, M3 and D99, settled | secondary |
+| D102 | the five minors D100's review deferred, settled | secondary |
+| D103 | the checks D102 left open: every golden vector's warnings, and the locales' placeholders | secondary |
+| D104 | the review of the open checks: two warnings no vector raised, and five minors | secondary |
+| D105 | an empty training split is no split: the author's ruling, pinned | primary |
+| D120 | the review of 2026-10-01 | secondary |
+| D122 | the findings D120 left open, the RLE engines' memory and width, and D121's drift made visible | secondary |
+| D125 | the track's data follows remotex devdata: moved, guarded, fixtured, and named by root | secondary |
 
 ## 8. Open items
 

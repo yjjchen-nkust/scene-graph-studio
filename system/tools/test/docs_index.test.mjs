@@ -12,6 +12,7 @@ import {
   citations,
   normalise,
   deviationIds,
+  loadTree,
   sectionIds,
   trackedFiles,
 } from '../docs_index.mjs';
@@ -174,5 +175,12 @@ describe('docs_index', () => {
       expect(existsSync(join(root, f)), f).toBe(true);
       expect(f.startsWith('"')).toBe(false);
     }
+  });
+});
+
+describe('the real documents', () => {
+  const tree = loadTree(resolve(import.meta.dirname, '../../..'));
+  it.each(Object.keys(RULES))('%s holds over the repository', (rule) => {
+    expect(RULES[rule](tree)).toEqual([]);
   });
 });

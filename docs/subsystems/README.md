@@ -151,6 +151,10 @@ DRAFT
 
 **The P0 rule.** No P0 feature may depend on `torch`, on CUDA, on the network or on an API key. A task that appears to violate it has been misread, and D-05 is the record to check before writing the code. The rule outranks every other statement in the track's index, and the master plan lists it first among the rules every plan obeys. [D-05] [`2026-09-15-00-master.md`] [`docs/INDEX.md`]
 
+**Two machines.** Every specification targets the weaker of two machines, TEACH (Snapdragon X, Windows ARM64); DEV only produces committed artefacts, and no feature may require CUDA at run time. [D-02]
+
+**Effort estimates and the cut order.** D-19 estimates each plan in focused working days and fixes the order in which scope is cut if the term calendar binds, from FSRS spaced repetition through L8 and the mini-ISG build, L7 and a reduced paper-card corpus to L6, and it never cuts plan 01 or the lecture shell. [D-19]
+
 **Two numbering schemes.** Binding decisions are numbered D-01 and upward, in the decisions document. Deviations from plan are numbered D1 and upward, in `DEVIATIONS.md`. The two collide in print, and D-22 and D22 are different records about different things. A reference must therefore keep the hyphen for a decision and omit it for a deviation. [D-22] [D22] [`DEVIATIONS.md`]
 
 **One shared `data/`.** `data/` is a link to the NAS copy, so a branch that changes it changes it for every branch and every checkout at once. Until such a branch merges, `main` fails its gate against the NAS, and running `main`'s harvest or gate in between writes the old content back. D111 records this for M5's playgrounds, D115 for the rekey of the Figure 2 transcripts, and D124 for D-V's recording again. [D111] [D115] [D124]
