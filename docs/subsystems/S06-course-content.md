@@ -77,6 +77,7 @@ S6 is the course text: fifteen bilingual MDX modules, the build-time pipeline th
 34. A module's statements about the engine, the slices, the map and the recordings are held by tests in `registry.test.tsx` that read what they describe: M2's strict √2 boundary, M3's inclusion and verdict table, `semi` described as a cap per object pair, M4's and M5's corrections against the harvested formulas and the map, and M0's demonstration prose against the recordings. [D97] [D98] [D99] [D106] [D111] [D124]
 35. The test in `registry.test.tsx` that typesets every math step carries a 60-second budget, and its two M4 tests that ran past vitest's 5,000 ms default under contention carry 20,000 ms. [D43] [D111]
 36. The records tests of `registry.test.tsx` read each fact where the subsystem index put it: `INDEX.md`'s former §5 in `docs/HISTORY.md`, its NFR table on the map, its count of golden vectors and the facts of `CLAUDE.md`'s former traps on the subsystem pages, and `CLAUDE.md`'s counts in their present form, `N deviations, D1 to DN` and `§1 to §N`. `docs/HISTORY.md` states that its text is not edited, so its figures are held as written, and each live figure is held equal to the code on its live home. [D130] [`system/frontend/src/content/test/registry.test.tsx`]
+37. The D110 records test of `registry.test.tsx` holds `data/` to the three forms S15 states, a link or a directory, so the gate passes where `npm run data:fetch` filled `data/` from Google Drive. [D110] [D131] [`system/frontend/src/content/test/registry.test.tsx`]
 
 ## 5. Verification
 
@@ -153,6 +154,7 @@ S6 is the course text: fifteen bilingual MDX modules, the build-time pipeline th
 | D124 | D-V names each hand, and is recorded again on the A6000 | secondary |
 | D125 | the track's data follows remotex devdata: moved, guarded, fixtured, and named by root | secondary |
 | D130 | the subsystem index: sixteen pages, a map, and a coverage test; the records tests follow the moved text | secondary |
+| D131 | the gate accepts a `data/` filled from Google Drive | secondary |
 
 ## 8. Open items
 

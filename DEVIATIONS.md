@@ -5829,3 +5829,27 @@ students for classroom use", is the author's finding to record; S3's and S16's o
 **Verification.** VERIFICATION §36: the coverage at close, 130 of 130 deviations and 36 of 36 sections cited; the
 eight coverage rules disabled one at a time, 8 of 8 caught; the demo rules of the content lint likewise, 11 of 11;
 the gate's counts before and after the records tests moved; and the five acceptance questions of spec §10.
+
+## D131 — the gate accepts a `data/` filled from Google Drive
+
+**Plan:** none. **Decisions:** none new. Branch `fix/data-forms`, from `main` at `da5e4bb`. It settles the open item
+S15 recorded at D130, that the gate accepted only the link forms of `data/`.
+
+**Problem.** D110's records test in `system/frontend/src/content/test/registry.test.tsx` asserted without condition
+that `lstatSync` reports `data/` as a symbolic link, which Node reports for a junction too. D128 added a third form, a
+real directory that `npm run data:fetch` creates where `data/` is absent and fills from Google Drive, and the
+assertion predates it. Measured on 2026-10-09 (VERIFICATION §37): in a worktree of `main` at `da5e4bb`, whose `data/`
+`npm run data:fetch` filled with the core bundle's 135 files, `npm run ci` passed steps 1 to 3 and failed at step 4
+on that test alone, 1 failed and 1387 passed of 1388, with `expected false to be true`.
+
+**Resolution.** The test now requires that `data/` is a link or a directory (`isSymbolicLink() || isDirectory()`),
+and asserts this record's heading; its title names D110 and D131. Its other assertions stand: `sync-data.ps1` is
+gone, `Connect-DataDirectory.ps1` reads its target from devdata's roots file and deletes nothing, both entry scripts
+call it, and the trailing-slash hazard is stated where a reader meets it. That git tracks nothing under `data/`, in
+any form, is D109's records test, which asserts the anchored `/data/` rule. `fetch` writes no marker into `data/`, so
+no test can tell a directory filled from Drive from any other real directory. A marker was considered and not
+taken: it would change `system/backend/scripts/data_bundles.py`, its tests and `pack`'s exclusions for a distinction
+no reader of `data/` makes.
+
+**Verification.** VERIFICATION §37: the gate on the Drive directory before and after the change, and on a checkout
+whose `data/` is a junction to `fixtures/data`.
