@@ -76,6 +76,7 @@ S6 is the course text: fifteen bilingual MDX modules, the build-time pipeline th
 33. M4 teaches R@k ≤ ngR@k only once k covers the unconstrained pool, since the constraint filters the ranking before the cut is taken; at a smaller k either side can be larger. [D106] [`system/web/knowledge-map/FROZEN.md`]
 34. A module's statements about the engine, the slices, the map and the recordings are held by tests in `registry.test.tsx` that read what they describe: M2's strict √2 boundary, M3's inclusion and verdict table, `semi` described as a cap per object pair, M4's and M5's corrections against the harvested formulas and the map, and M0's demonstration prose against the recordings. [D97] [D98] [D99] [D106] [D111] [D124]
 35. The test in `registry.test.tsx` that typesets every math step carries a 60-second budget, and its two M4 tests that ran past vitest's 5,000 ms default under contention carry 20,000 ms. [D43] [D111]
+36. The records tests of `registry.test.tsx` read each fact where the subsystem index put it: `INDEX.md`'s former §5 in `docs/HISTORY.md`, its NFR table on the map, its count of golden vectors and the facts of `CLAUDE.md`'s former traps on the subsystem pages, and `CLAUDE.md`'s counts in their present form, `N deviations, D1 to DN` and `§1 to §N`. [D130] [`system/frontend/src/content/test/registry.test.tsx`]
 
 ## 5. Verification
 
@@ -151,6 +152,7 @@ S6 is the course text: fifteen bilingual MDX modules, the build-time pipeline th
 | D122 | the findings D120 left open, the RLE engines' memory and width, and D121's drift made visible | secondary |
 | D124 | D-V names each hand, and is recorded again on the A6000 | secondary |
 | D125 | the track's data follows remotex devdata: moved, guarded, fixtured, and named by root | secondary |
+| D130 | the subsystem index: sixteen pages, a map, and a coverage test; the records tests follow the moved text | secondary |
 
 ## 8. Open items
 
@@ -163,3 +165,4 @@ S6 is the course text: fifteen bilingual MDX modules, the build-time pipeline th
 7. A tag quoted in inline code or a fenced block is still counted by the lint; the corpus has none. Left open by D122. [D122] [`system/tools/content_lint.mjs`]
 8. M4's symbol table glosses `m` as predicates per ordered pair, the letter s13's Formal and Worked lines use for a mask, and s12's prior π_p shares its letter with the symbol table's pair map π. Found and left open by D106. [D106]
 9. Contracts §3.4 says the lint reports how many points remain unassigned and does not fail on them. The lint fails on an unassigned point; D29 records the assignment's move to `assignment.json` and not this change. [contracts §3.4] [D29] [`system/tools/content_lint.mjs`]
+10. Four assertions in two records tests of `registry.test.tsx` hold a figure of `docs/HISTORY.md` equal to the code: the steps and notes (`holds 129 and 258 since D117]`), the playgrounds (`five labs and sixteen playgrounds`) and the golden vectors twice (`21 since D105), slice ingestion` and `parity 21 agree`). `docs/HISTORY.md` states that its text is not edited, so a new step, playground or golden vector fails those tests until the author rules whether the history or the test moves. [D130] [`system/frontend/src/content/test/registry.test.tsx`] [`docs/HISTORY.md`]

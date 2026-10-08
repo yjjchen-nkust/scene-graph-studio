@@ -5747,3 +5747,79 @@ external command of the same name (`about_Command_Precedence`). The commit's sub
 does not call itself".
 
 **Verification.** The commits record no run of the script, and no test exercises it.
+
+## D130 — the subsystem index: sixteen pages, a map, and a coverage test
+
+**Plan:** `plans/2026-10-08-subsystem-index.md`, from the spec `specs/2026-10-08-subsystem-index-design.md` (`612cd1b`
+and `19c80c9`, 2026-10-08). **Decisions:** D-24, added on this branch with D126 to D129, which record the
+commits it rules on. Branch `docs/subsystem-index`, from `main` at `d3629f8`.
+
+**Why.** The track's knowledge was recorded by date: at the spec's writing, fifteen specs and sixteen plans under
+`docs/superpowers/`, 125 deviations and 35 sections of `docs/VERIFICATION.md`, each grown in the order the work
+happened, and `INDEX.md` listed the documents by date. Nothing answered the question a maintainer starts from: what
+binds a part of the system, what built it, what checks it, and what has already gone wrong in it (spec §1).
+
+**The decisions** (spec §3). Each page states the current truth in its own words and cites the records behind every
+statement; the chronological records stay as the audit trail. The nine commits after the D125 merge (`3e3090b`)
+that no deviation recorded were recorded first, as D-24 and D126 to D129, and then indexed as current truth. There
+is one page per subsystem under `docs/subsystems/`, sixteen in four groups, a map page and a coverage test, and no
+page carries a date stamp. In `CLAUDE.md` the cross-cutting traps stay in full and every other trap shrinks to its
+rule and a pointer. D-24 makes the standalone repository final, for the reason spec §3 records: students reach the
+course without a local install, and setting up the deployment is itself a course exercise. Enforcement is the
+coverage test (spec §8), the accuracy pass (§9) and the acceptance of §10.
+
+**What was added.**
+
+- `system/tools/docs_index.mjs`, rules R1 to R8 as spec §8 states them, and its suite
+  `system/tools/test/docs_index.test.mjs`, 23 tests in vitest's `tools` project, so the coverage test runs in step 4
+  and the gate stays at eleven steps.
+- D-24 in the decisions register, D-22 annotated in place as superseded by it, the PRD's cloud-deployment non-goal
+  annotated in place, and D126 to D129.
+- `docs/subsystems/README.md`, the map: how to use it, path ownership (130 prefixes, the longest match wins), the
+  dependencies, the cross-cutting rules, NFR-1 to NFR-8 with the subsystem that enforces each, the citation forms and
+  the maintenance rule; and the sixteen pages `S01` to `S16`, each with the eight sections of spec §5.
+- `docs/HISTORY.md`, under a one-line header naming its origin.
+
+**What was moved.** `INDEX.md` keeps its six section numbers, since earlier records cite INDEX §4, §5 and §6. §1 is
+the register, with a Subsystems column; §2 the decisions, with D-24; §3 points to the map's non-functional
+requirements; §4 to the map's ownership table and each page's §2 and §4; §5 was moved verbatim to `docs/HISTORY.md`;
+§6 points to each page's §6 and, for the cross-cutting traps, to the map. `CLAUDE.md`'s "Read this first" names the
+map, "What this is" and "CI" state D-24, and each trap that is not cross-cutting is its rule and the page that owns it.
+
+**The records tests follow the text.** Spec §7 left all code unchanged but the two new tools files. The rewrite of
+`CLAUDE.md` and `INDEX.md` (`1f023a3`, `d0a735b`) turned `npm run ci` red at step 4: on 2026-10-08, at `1b8286c`,
+16 records tests of `system/frontend/src/content/test/registry.test.tsx` failed (1371 passed, 1 skipped, of 1388),
+each reading text the rewrite had moved. Two of their assertions, `D-01…D-23` in `CLAUDE.md` and `D-01 … D-23` in
+INDEX's §2 heading, can no longer hold once D-24 exists, so restoring the text could not clear them, and the test
+file was changed instead (`73d2ab8`): each assertion now reads the fact where it lives and keeps its bound or its
+equality, and the two decision ranges read D-24.
+
+| Now read in | Assertions |
+|---|---|
+| `docs/HISTORY.md`, INDEX's former §5 | 16: `96.5 px` twice, the pytest and vitest counts six times, `[Settled by D105.]`, `(M4's step ids before the renumbering)`, `` `main` before the merge fails `npm run ci` ``, `since D117]`, the steps and notes, `five labs and sixteen playgrounds`, and the golden vectors twice |
+| `docs/subsystems/README.md` | 1: NFR-3's `` `parity.mjs`, 21 golden vectors `` |
+| S1 | 1: the count of golden vectors, "There are 21 vectors" |
+| S12 | 3: what `logic.test.ts` holds to the engine, `dense` as M4's spacing, and the uncovered live points, in words |
+| S13 | 5: `DEMO_PARTS = { DT: 4, DV: 5 }`, `data/demos/m0/`, D113, D114 and the five lint rules |
+| S15 | 1: `raw:WekaExt/scene-graph-studio` |
+| `CLAUDE.md`, in its present form | 25: the range `§1 to §N` with the floors 24 to 31 (8), the count `N deviations, D1 to DN` (12: eleven with a floor from 102 to 117, one requiring three digits), `all N steps carry theirs, N notes` (1), `D-01…D-24` (1), and three phrases the slimmed traps still carry: a playground is a step kind, not a lab; a `demo` replays a recording; one copy, shared by every branch and every checkout |
+| `INDEX.md` §2 | 1: `## 2. Decisions — D-01 … D-24` |
+
+53 assertions moved or were restated. Three were deleted, because the fact has no current home in the document
+they read and is held elsewhere or nowhere: `96.5 px` in `CLAUDE.md`, in two tests, since its `ImageOverlay` trap
+keeps the rule and no page states the figure (`DEVIATIONS.md` and `docs/HISTORY.md` still carry it, and both are
+asserted); and the check that `CLAUDE.md` cites by name two projector tests the suite runs (`… show their
+photographs …` and `… draw their marks on their photographs`), since neither `CLAUDE.md` nor any page now cites a
+projector test by those names. A comment above the records tests says where they read since D130.
+
+**Open items.** F4: `start.ps1` still defaults to WekaExt's `..\.venv` (D121), so a standalone checkout warns and
+falls back to `py12` on every run; S16's open items carry it, and the spec leaves `start.ps1` unchanged. F5: whether
+the named licences cover a public repository and a public Render service, beyond `bundle_distribute`'s "to enrolled
+students for classroom use", is the author's finding to record; S3's and S16's open items carry it. And four
+assertions in two records tests now hold a figure of `docs/HISTORY.md` equal to the code (the steps and notes, the
+playgrounds, and the golden vectors twice), while `docs/HISTORY.md` states that its text is not edited, so a new step,
+playground or golden vector fails them until the author rules which moves; S6's open items carry it.
+
+**Verification.** VERIFICATION §36: the coverage at close, 130 of 130 deviations and 36 of 36 sections cited; the
+eight coverage rules disabled one at a time, 8 of 8 caught; the demo rules of the content lint likewise, 11 of 11;
+the gate's counts before and after the records tests moved; and the five acceptance questions of spec §10.

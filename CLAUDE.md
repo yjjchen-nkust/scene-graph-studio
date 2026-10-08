@@ -6,7 +6,7 @@
 subsystem that owns each path, and that subsystem's page under `docs/subsystems/` states its
 current rules, its traps and the records behind them; a change to a subsystem updates its page's
 current rules in the same commit. `docs/INDEX.md` is the register of the documents: the specs, the
-plans, the binding decisions, `docs/VERIFICATION.md` (§1 to §35, each check with its date and
+plans, the binding decisions, `docs/VERIFICATION.md` (§1 to §36, each check with its date and
 outcome) and the logged deviations. **Read the map, then the page of the subsystem being changed,
 before changing anything.**
 
@@ -25,7 +25,7 @@ track moved from the `course-lab` teaching repository into WekaExt). Its remotes
 WekaExt's subtree-add commit, so `git blame` stops there and the `course-lab` commits D-22 names do
 not resolve (D126). The course is hosted: the frontend on GitHub Pages and the backend on Render,
 which serves `fixtures/data` without `torch`, so live inference reports unavailable (D127). Every
-departure from plan is logged in `DEVIATIONS.md`: 129 deviations, D1 to D129.
+departure from plan is logged in `DEVIATIONS.md`: 130 deviations, D1 to D130.
 
 ## Layout and commands
 
@@ -59,7 +59,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-24` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D129` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D130` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **The knowledge map's `pg.js evaluate()` is a teaching toy over fifteen hard-coded rows and must
   never be promoted to the evaluation engine** (D-14, which D-23's release of the freeze leaves

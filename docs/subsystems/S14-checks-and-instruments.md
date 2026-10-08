@@ -106,16 +106,17 @@ S14 holds the checks the project is verified by and the instruments they run on:
     - R7: every file `git ls-files -z` lists, outside `docs/`, `CLAUDE.md`, `README.md` and `DEVIATIONS.md`, begins with some prefix of the map's ownership table; a prefix that is empty or the root, is listed twice, or matches no tracked file is refused.
     - R8: each page's first non-empty line begins `# S<n> `, with n read from its file name, and the page carries the eight section headings, each a line of its own, in order.
 42. The coverage test runs in vitest's `tools` project, step 4 of the gate, as `system/tools/test/docs_index.test.mjs`: one fixture case per rule, the parser cases, and a last block that runs all eight rules over the repository. Run as `node tools/docs_index.mjs` from `system/`, it prints each problem and the count, and exits 1 on any. [`2026-10-08-subsystem-index-design.md`] [`system/tools/test/docs_index.test.mjs`] [`system/tools/docs_index.mjs`]
+43. Disabling any one rule, by making its function return no problem, fails that rule's own fixture case and no other test of the suite: 8 of 8, as spec §8's mutation obligation requires. [D130] [VERIFICATION §36] [`2026-10-08-subsystem-index-design.md`]
 
 ## 5. Verification
 
-**Records:** VERIFICATION §6, VERIFICATION §8, VERIFICATION §10, VERIFICATION §11, VERIFICATION §12, VERIFICATION §13, VERIFICATION §14, VERIFICATION §15, VERIFICATION §32.
+**Records:** VERIFICATION §6, VERIFICATION §8, VERIFICATION §10, VERIFICATION §11, VERIFICATION §12, VERIFICATION §13, VERIFICATION §14, VERIFICATION §15, VERIFICATION §32, VERIFICATION §36.
 
 **`npm run ci` steps:** all eleven are S14's definition in `system/package.json`. Of S14's own tests, 2 pytest runs `system/backend/tests/test_pins.py`; 4 vitest's `tools` project runs `system/tools/test/py.test.mjs`, `system/tools/test/servers.test.mjs` and `system/tools/test/docs_index.test.mjs`; 5 ruff lints the Python under `system/backend/` and `system/tools/`.
 
 **Outside `ci`:** S14 owns all four. `npm run test:e2e` runs `system/e2e/lecture.spec.ts` and `system/e2e/projector.spec.ts`; `npm run check:offline` runs `system/e2e/offline.spec.ts`; `npm run check:perf` runs `system/e2e/perf.spec.ts`; `npm run check:pins` runs `system/backend/scripts/check_pins.py`. Their last recorded run together, on 2026-10-01, gave 107 passed, 9 passed, 33 passed, and 9 of 9 required and 5 of 5 optional pins in agreement. [VERIFICATION §32]
 
-**What the records measure.** §6 is check 6 as `system/tools/offline_check.mjs` arranges it. §8 is the lecture rehearsal at three resolutions, the three defects it found and the contrast measured as painted. §10 is NFR-8's first measurement, with the calibration of the two-frame floor. §11 compares the pins with the interpreter, §12 records the interpreter every check runs on, and §13 the CUDA build of `torch` and the asymmetric comparison of a local segment. §14 is the gate red on the runner for five pushes while green on the author's machine, and its fix (D83, D84). §15 is the contrast instrument's blind spot and NFR-8 on the M0 playgrounds. §32 is the last recorded run of the gate and all four checks.
+**What the records measure.** §6 is check 6 as `system/tools/offline_check.mjs` arranges it. §8 is the lecture rehearsal at three resolutions, the three defects it found and the contrast measured as painted. §10 is NFR-8's first measurement, with the calibration of the two-frame floor. §11 compares the pins with the interpreter, §12 records the interpreter every check runs on, and §13 the CUDA build of `torch` and the asymmetric comparison of a local segment. §14 is the gate red on the runner for five pushes while green on the author's machine, and its fix (D83, D84). §15 is the contrast instrument's blind spot and NFR-8 on the M0 playgrounds. §32 is the last recorded run of the gate and all four checks together. §36 is the subsystem index measured on 2026-10-08: the coverage at close, the coverage rules disabled one at a time (8 of 8 caught), the demo rules of the content lint likewise (11 of 11), the gate's counts against `fixtures/data`, and the five acceptance questions of the spec answered from the map and one page each.
 
 ## 6. Traps
 
@@ -195,6 +196,7 @@ S14 holds the checks the project is verified by and the instruments they run on:
 | D122 | the findings D120 left open, the RLE engines' memory and width, and D121's drift made visible | secondary |
 | D125 | the track's data follows remotex devdata: moved, guarded, fixtured, and named by root | secondary |
 | D128 | data shared through Google Drive with `gdown`, beside the devdata link | secondary |
+| D130 | the subsystem index: sixteen pages, a map, and a coverage test | primary |
 
 ## 8. Open items
 

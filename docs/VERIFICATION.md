@@ -2195,3 +2195,98 @@ slice-distribution tests read; its annotations and manifest, 596 KB without its 
 worktree with a borrowed `node_modules` resolved vitest's setup file in the main tree, so the fixture was measured in
 the main tree itself, its link restored by `devdata pull` afterwards. `Get-DataTarget` resolves the same target under
 PowerShell 7 and 5.1.
+
+## 36. The subsystem index, measured 2026-10-08
+
+D130, plan `2026-10-08-subsystem-index.md`, spec `2026-10-08-subsystem-index-design.md` §8 and §10. Measured on the
+branch `docs/subsystem-index`, in a checkout whose `data/` is a junction to its own `fixtures/data`, as S15's open
+items record; every count of the gate below is therefore against the CI fixture.
+
+**Coverage at close**, read from the tree by `loadTree` of `system/tools/docs_index.mjs` with D130 and this section in
+place:
+
+| Item | Count |
+|---|---|
+| Subsystem pages | 16 |
+| Deviations cited by a page | 130 of 130 |
+| `VERIFICATION.md` sections cited by a page | 36 of 36 |
+| Specs and plans cited by a page | 33 of 33 |
+| Decisions cited by a page or the map | 24 of 24 |
+| Tracked files outside `docs/`, `CLAUDE.md`, `README.md` and `DEVIATIONS.md` owned by a prefix | 556 of 556, of 618 tracked |
+| Ownership prefixes on the map | 130, none empty, repeated or matching no tracked file |
+| `node tools/docs_index.mjs` | `docs_index: 0 problems` |
+
+**The coverage rules by mutation** (spec §8). A script in the session's scratchpad, outside the repository, replaced
+`function rN(tree) {` with `function rN(tree) { return [];` in `system/tools/docs_index.mjs` for each N in 1 to 8,
+ran `npx vitest run --project tools tools/test/docs_index.test.mjs`, and restored the original bytes before the next
+N. The suite passed 23 of 23 before the run, and `git diff --quiet tools/docs_index.mjs` exited 0 after it.
+
+| Rule disabled | Exit | Failing test (the other 22 pass) |
+|---|---|---|
+| R1 | 1 | `R1 names an uncited deviation` |
+| R2 | 1 | `R2 names an uncited verification section` |
+| R3 | 1 | `R3 names an uncited spec or plan` |
+| R4 | 1 | `R4 accepts the map and names an uncited decision` |
+| R5 | 1 | `R5 names each dangling citation` |
+| R6 | 1 | `R6 names a missing path` |
+| R7 | 1 | `R7 names an unowned file, a stale prefix, a root prefix and a duplicate` |
+| R8 | 1 | `R8 names a missing heading, a heading out of order and a wrong title` |
+
+8 of 8 caught. The real-tree block passes under every mutant, since a rule that returns nothing reports nothing.
+
+**The demo rules of the content lint by mutation** (S13 rule 25). `system/tools/content_lint.mjs` and
+`system/tools/test/content_lint.test.mjs` were copied into the scratchpad, where the suite finds the lint beside it,
+with `node_modules` a junction to the workspace's, removed afterwards. Each mutant was written into the copy of the
+lint alone, the whole suite run, and the copy restored; nothing in the repository was written. Task 7's ten mutants
+were repeated, and the locale comparison was mutated in two ways.
+
+| Mutant | Failing tests (of 67; 67 pass before) |
+|---|---|
+| rule 1, no demo or an unregistered one | `refuses a demo step that names no demo, or no part` |
+| rule 1, integer part | `refuses a demo step that names no demo, or no part` |
+| rule 2, the step carries its own tag | `refuses a demo step whose body carries no matching <Demo>`, `refuses a <Demo> whose part is not a literal`, `does not count a <Demo> inside an MDX comment` |
+| rule 2, every tag answers to a step | `refuses a <Demo> no step declares`, `counts a <Demo> spelt in another order as the tag it is` |
+| rule 2, no tag twice | `refuses a <Demo> mounted more than once in one module`, `counts a <Demo> spelt in another order as the tag it is` |
+| rule 3, parts consecutive | `refuses demo parts apart, out of order, or fewer than DEMO_PARTS gives`, `refuses the parts of one demo spread over two modules` |
+| rule 3, no `DEMO_PARTS` entry | `refuses demo parts apart, out of order, or fewer than DEMO_PARTS gives` |
+| rule 4, whole | `refuses a demo whose artefact is missing or carries no provenance`, `refuses a demo whose artefact lies outside data/demos/` |
+| rule 5 | `refuses a demo step with no seconds_budget` |
+| locale comparison, the demo kind removed | `refuses a demo that differs between the two locales` |
+| locale comparison, the demo term removed | `refuses a demo that differs between the two locales` |
+
+11 of 11 caught, each exiting 1, and the mapping agrees row for row with the one Task 7 measured.
+
+**The gate.** `npm run ci` from `system/`, three times: at `1b8286c`, before the records tests moved; at `73d2ab8`,
+after; and with D130 and this section written.
+
+| Step | `1b8286c` | `73d2ab8` |
+|---|---|---|
+| 1 harvest | 93 knowledge points (27 live) across 12 clusters, 26 formulas, 23 derivations | the same |
+| 2 pytest | 410 passed, 11 skipped | 410 passed, 11 skipped |
+| 3 metrics build | passed | passed |
+| 4 vitest | **16 failed**, 1371 passed, 1 skipped, of 1388; 1 of 96 files failed, `registry.test.tsx` | **1387 passed, 1 skipped, of 1388, in 96 files** |
+| 5 to 11 | not run | ruff "All checks passed!"; "parity: 21 cases agree"; "i18n parity: 508 keys, both locales complete; 54 carry a placeholder, all agreeing"; "content lint: 21 golden cases, 75 playground cases, 25 release figures, 8 licence rows, 15 of 15 modules x 2 locales, 93 knowledge points all assigned, 50 symbols, clean"; frozen "no problems found" and "PROBLEMS: none"; "standalone: up to date (254 equations, 1063 KB)"; frontend build, 826 modules transformed |
+| exit | 1 | 0 |
+| `git status` after | clean | clean |
+
+The third run, with D130 and this section written on the working tree over `73d2ab8`, gave the same counts at every
+step as at `73d2ab8`, exit 0; `git status` then listed only the seven documents this record's commit changes, and
+no file under `fixtures/`.
+
+**The five acceptance questions** (spec §10, item 3), each answered from the map and one page, without opening
+`DEVIATIONS.md`:
+
+| Question | Page | §4 statements |
+|---|---|---|
+| What keys the graph constraint, and which golden vector pins it? | S1 | 15, the ordered object pair `(subject_id, object_id)`; 16, `gv-014-graph-constraint-per-object-pair` |
+| Which lint rules hold a `demo` step, and which tests fail when one is removed? | S13 | 23, the five rules; 24, the locale comparison; 25, the failing tests of each |
+| Where does `data/` point, and what does a writer do when the link is absent? | S15 | 1 and 2, the three forms and `data.toml`'s source; 7, each writer calls the guard, stops naming `devdata pull` and creates nothing |
+| Why is a box selected by `geometry.pickObjectAt`, and what must not be changed? | S9 | 5, the rule; 6, why, the outline hit test of `fill="none"` and paint order; 7, the handler stays on the `<svg>` |
+| What does the hosted deployment serve, and why does live inference report unavailable? | S16 | 7, the frontend on Pages; 9 and 10, the backend on Render serving `fixtures/data` and nothing more; 11, no `torch` and no checkpoint; 12, L4's hosted message |
+
+Item 4 of spec §10 holds: `INDEX.md` keeps the headings §4, §5 and §6, each a pointer, to the map's ownership table
+and each page's §2 and §4, to `HISTORY.md`, and to each page's §6 and the map.
+
+**What this section does not claim.** A caught mutant shows that disabling one rule fails a test; it does not show
+that a page states its subsystem correctly, which spec §9's second reading was for. `npm run test:e2e`,
+`npm run check:offline`, `npm run check:perf` and `npm run check:pins` were not run: nothing they exercise changed.
