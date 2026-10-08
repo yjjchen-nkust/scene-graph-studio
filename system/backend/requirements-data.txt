@@ -1,0 +1,2 @@
+# Only `scripts/data_bundles.py fetch` needs this; the labs and the test suite do not.
+gdown==6.4.1

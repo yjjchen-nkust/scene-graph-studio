@@ -29,6 +29,10 @@ WRITERS = (
     "rekey_step2_transcripts.py",
 )
 
+#: Scripts that name DATA_DIR on purpose without the guard. `data_bundles.py fetch` is how a fresh
+#: checkout gets data/ at all, so it creates the directory, and it refuses to write through a link.
+EXEMPT = ("data_bundles.py",)
+
 
 def test_the_guard_stops_names_devdata_pull_and_creates_nothing(tmp_path, monkeypatch) -> None:
     absent = tmp_path / "data"
@@ -56,7 +60,7 @@ def test_no_script_writes_under_data_without_being_a_listed_writer() -> None:
     for path in SCRIPTS.glob("*.py"):
         text = path.read_text(encoding="utf-8")
         if "DATA_DIR" in text and writes.search(text):
-            assert path.name in WRITERS, path.name
+            assert path.name in WRITERS + EXEMPT, path.name
 
 
 def test_a_writer_run_without_data_stops_and_creates_nothing(tmp_path) -> None:

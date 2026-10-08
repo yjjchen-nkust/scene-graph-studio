@@ -162,6 +162,25 @@ decision D-14.
 
 ## Data
 
+### From Google Drive (any machine)
+
+```powershell
+pip install -r system/backend/requirements-data.txt
+cd system; npm run data:fetch                 # core: about 5 MB, what the labs and demos read
+npm run data:fetch -- --bundle industreal     # the 4.7 GB raw video corpus, only to regenerate demos
+```
+
+`data.drive.json` records each bundle's Drive file id and SHA-256; a download that does not match
+is rejected before anything is placed in `data/`. The folder is
+<https://drive.google.com/drive/folders/1n66Lhspt7vCqkm5Z_-cZgGSJH7jV3qOF>. The core bundle leaves out
+every image whose `bundle_distribute` is not YES and the two journal papers, so `psg`, `vg150-sgb` and
+`indoorvg` report `images_present: false` until you fetch their images from source. The maintainer
+rebuilds the bundles with `npm run data:pack -- --out <dir>`, uploads them, and pastes the ids in.
+`fetch` refuses to write through a link, so a NAS-linked `data/` is never touched. CI does not use
+Drive: it reads `fixtures/data`, which is in git.
+
+### From the NAS (the author's machines)
+
 ```powershell
 .\fetch-data.ps1                          # what exists, what each dataset still needs
 .\fetch-data.ps1 -Fetch -Dataset psg      # per-image download from source, hash-checked

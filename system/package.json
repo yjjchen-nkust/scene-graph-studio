@@ -30,7 +30,9 @@
     "check:perf": "node tools/perf_check.mjs",
     "lint:py": "node tools/py.mjs -m ruff check backend tools",
     "check:pins": "node tools/py.mjs backend/scripts/check_pins.py",
-    "fixture:refresh": "node tools/fixture.mjs --refresh"
+    "fixture:refresh": "node tools/fixture.mjs --refresh",
+    "data:fetch": "node tools/py.mjs backend/scripts/data_bundles.py fetch",
+    "data:pack": "node tools/py.mjs backend/scripts/data_bundles.py pack"
   },
   "devDependencies": {
     "mathjax-full": "^3.2.1",

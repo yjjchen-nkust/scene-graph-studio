@@ -1,0 +1,21 @@
+{
+  "folder": "https://drive.google.com/drive/folders/1n66Lhspt7vCqkm5Z_-cZgGSJH7jV3qOF",
+  "bundles": {
+    "core": {
+      "kind": "archive",
+      "name": "scene-graph-studio-core.zip",
+      "file_id": "",
+      "files": 135,
+      "bytes": 4898723,
+      "sha256": "37b332deec39213d63bad38fb37b6c87e5c57a93ebce75aa41225aa6f3e0242f"
+    },
+    "industreal": {
+      "kind": "file",
+      "name": "all_rgb_videos.zip",
+      "path": "_raw/industreal/all_rgb_videos.zip",
+      "file_id": "",
+      "bytes": 4960644152,
+      "sha256": "556357b3ae5804541d6cef75df724af43170f63df6d3cdfda7150fd175822268"
+    }
+  }
+}
