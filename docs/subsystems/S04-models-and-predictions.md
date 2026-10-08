@@ -63,7 +63,7 @@ S4 answers which scene-graph models can run on this machine and why the others c
 
 ## 6. Traps
 
-- No trap in `CLAUDE.md` or `docs/INDEX.md` §6 has S4 as its subject.
+None. No trap in `CLAUDE.md` or `docs/INDEX.md` §6 has S4 as its subject.
 
 ## 7. History
 
