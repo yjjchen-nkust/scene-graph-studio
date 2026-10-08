@@ -530,6 +530,9 @@ describe('the playground step kind', () => {
       .toContain('[**Corrected 2026-09-27 (D99):**');
   });
 
+  // The records tests below read each fact where it now lives. Since D130, `INDEX.md` §5 is
+  // `docs/HISTORY.md`, verbatim; INDEX's NFR table is the map's (`docs/subsystems/README.md`); and
+  // `CLAUDE.md`'s traps are their subsystem pages', where `CLAUDE.md` keeps a one-line pointer.
   it('the review minors of M2 and M3 are settled in the text', () => {
     const deviations = source('../../../../../DEVIATIONS.md');
     const specM3 = source('../../../../../docs/superpowers/specs/2026-09-27-playgrounds-m3-design.md');
@@ -540,8 +543,9 @@ describe('the playground step kind', () => {
     // M3-2: the frozen E10 no longer calls its toy ordering an invariant.
     expect(source('../../../../web/knowledge-map/pg.js')).not.toContain("k:'invariant'");
     expect(source('../../../../web/knowledge-map/FROZEN.md')).toContain('ordering on this toy');
-    // M2-1: the overlay's offset is named with the state it was measured in.
-    for (const file of ['../../../../../DEVIATIONS.md', '../../../../../CLAUDE.md', '../../../../../docs/INDEX.md']) {
+    // M2-1: the overlay's offset is named with the state it was measured in. CLAUDE.md's trap keeps
+    // its rule and not the figure since D130; INDEX's copy is HISTORY's.
+    for (const file of ['../../../../../DEVIATIONS.md', '../../../../../docs/HISTORY.md']) {
       expect(source(file), file).toContain('96.5 px');
     }
     // M2-2 and M2-5.
@@ -576,13 +580,20 @@ describe('the playground step kind', () => {
     const verification = source('../../../../../docs/VERIFICATION.md');
     const claude = source('../../../../../CLAUDE.md');
     const index = source('../../../../../docs/INDEX.md');
+    const history = source('../../../../../docs/HISTORY.md');
+    const playgrounds = source('../../../../../docs/subsystems/S12-playgrounds.md').replace(/\s+/g, ' ');
     // Counts and section lists the branch moved; README's count of vectors is held from the file.
-    expect(claude).toContain('§24 the review minors');
-    expect(claude).toContain('three tests in `playgrounds/test/logic.test.ts`');
+    // CLAUDE.md states VERIFICATION's range, INDEX names the sections, S12 names the three tests.
+    atLeast(claude, /§1 to §(\d+)/, 24, 'CLAUDE.md verification');
+    expect(playgrounds).toContain(
+      "whose tests hold F3's IoU to `boxIou` on the golden cases and at every knob setting, E1's verdict to `classify`",
+    );
     expect(index).toContain('the review minors (§24)');
     // The offset at Δx = 18 is derived, (454 − 261) / 2 = 96.5 px, and is not rounded.
-    for (const [name, text] of [['DEVIATIONS', deviations], ['CLAUDE.md', claude], ['INDEX', index]]) {
+    for (const [name, text] of [['DEVIATIONS', deviations], ['HISTORY', history]]) {
       expect(text, name).toContain('96.5 px');
+    }
+    for (const [name, text] of [['DEVIATIONS', deviations], ['CLAUDE.md', claude], ['INDEX', index], ['HISTORY', history]]) {
       expect(text, name).not.toContain('97 px');
     }
     expect(source('../../playgrounds/PhotoMarks.tsx')).toContain("122 px below its object in F3's longest state");
@@ -611,10 +622,11 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       expect(Number(/D1…D(\d+)/.exec(text)?.[1]), name).toBeGreaterThanOrEqual(101);
     }
-    expect(claude).toContain('D-01…D-23');
-    expect(claude).toMatch(/all 1\d\d logged deviations/);
+    // Both readers count the decisions to D-24 (2026-10-08), and CLAUDE.md the deviations to the last.
+    expect(claude).toContain('D-01…D-24');
+    expect(claude).toMatch(/1\d\d deviations, D1 to D1\d\d/);
     expect(claude).not.toContain('as the seed corpus. Do not extend it.');
-    expect(index).toContain('## 2. Decisions — D-01 … D-23');
+    expect(index).toContain('## 2. Decisions — D-01 … D-24');
     expect(source('../../../../../README.md')).not.toContain('Do not extend it;');
   });
 
@@ -623,6 +635,7 @@ describe('the playground step kind', () => {
     const verification = source('../../../../../docs/VERIFICATION.md');
     const claude = source('../../../../../CLAUDE.md');
     const index = source('../../../../../docs/INDEX.md');
+    const history = source('../../../../../docs/HISTORY.md');
     const readme = source('../../../../../README.md');
     expect(deviations).toContain('## D102 — ');
     expect(verification).toContain('## 25. ');
@@ -630,19 +643,19 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 102, name);
     }
-    expect(claude).toContain('§25 the deferred minors');
-    atLeast(claude, /all (\d+) logged deviations/, 102, 'CLAUDE.md deviations');
+    atLeast(claude, /§1 to §(\d+)/, 25, 'CLAUDE.md verification');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, 102, 'CLAUDE.md deviations');
     atLeast(claude, /resolutions, (\d+) tests,/, 75, 'CLAUDE.md e2e');
     expect(index).toContain('the deferred minors (§25)');
     atLeast(readme, /i18n (\d+) keys/, 331, 'README i18n');
     atLeast(readme, /`npm run test:e2e` is (\d+)/, 75, 'README e2e');
-    // The gate's counts, where README and INDEX state them (D102's review).
+    // The gate's counts, where README and HISTORY, INDEX's former §5, state them (D102's review).
     atLeast(readme, /(\d+) Python tests/, 279, 'README pytest');
     atLeast(readme, /(\d+) TypeScript tests across \d+ files/, 893, 'README vitest');
     atLeast(readme, /TypeScript tests across (\d+) files/, 66, 'README vitest files');
-    atLeast(index, /\*\*(\d+) pytest\*\*/, 279, 'INDEX pytest');
-    atLeast(index, /\*\*(\d+) vitest\*\* in \d+ files/, 893, 'INDEX vitest');
-    atLeast(index, /\*\*\d+ vitest\*\* in (\d+) files/, 66, 'INDEX vitest files');
+    atLeast(history, /\*\*(\d+) pytest\*\*/, 279, 'HISTORY pytest');
+    atLeast(history, /\*\*(\d+) vitest\*\* in \d+ files/, 893, 'HISTORY vitest');
+    atLeast(history, /\*\*\d+ vitest\*\* in (\d+) files/, 66, 'HISTORY vitest files');
     expect(index).not.toContain('the ten newest');
     // The five items D100's review deferred, each named where it was settled.
     for (const item of ['dangling_reference', 'gv-017', 'idRun', 'E1_DEFECTS', '►']) {
@@ -654,6 +667,7 @@ describe('the playground step kind', () => {
     const deviations = source('../../../../../DEVIATIONS.md');
     const claude = source('../../../../../CLAUDE.md');
     const index = source('../../../../../docs/INDEX.md');
+    const history = source('../../../../../docs/HISTORY.md');
     const readme = source('../../../../../README.md');
     // Whitespace collapsed, since a phrase may wrap across a line of the record.
     const d103 = record(deviations, 'D103').replace(/\s+/g, ' ');
@@ -662,8 +676,8 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 103, name);
     }
-    atLeast(claude, /all (\d+) logged deviations/, 103, 'CLAUDE.md deviations');
-    expect(claude).toContain('§26 the open checks');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, 103, 'CLAUDE.md deviations');
+    atLeast(claude, /§1 to §(\d+)/, 26, 'CLAUDE.md verification');
     expect(index).toContain('the open checks (§26)');
     expect(source('../../../../../data/golden/README.md')).toContain('compare that set exactly');
     // What was closed, what was measured on main, and what is still queued.
@@ -672,14 +686,15 @@ describe('the playground step kind', () => {
     }
     atLeast(readme, /(\d+) Python tests/, 281, 'README pytest');
     atLeast(readme, /(\d+) TypeScript tests across \d+ files/, 901, 'README vitest');
-    atLeast(index, /\*\*(\d+) pytest\*\*/, 281, 'INDEX pytest');
-    atLeast(index, /\*\*(\d+) vitest\*\* in \d+ files/, 901, 'INDEX vitest');
+    atLeast(history, /\*\*(\d+) pytest\*\*/, 281, 'HISTORY pytest');
+    atLeast(history, /\*\*(\d+) vitest\*\* in \d+ files/, 901, 'HISTORY vitest');
   });
 
   it('the records carry D104 and the vectors it added', () => {
     const deviations = source('../../../../../DEVIATIONS.md');
     const claude = source('../../../../../CLAUDE.md');
     const index = source('../../../../../docs/INDEX.md');
+    const history = source('../../../../../docs/HISTORY.md');
     const readme = source('../../../../../README.md');
     const golden = source('../../../../../data/golden/README.md');
     const d104 = record(deviations, 'D104').replace(/\s+/g, ' ');
@@ -688,8 +703,8 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 104, name);
     }
-    atLeast(claude, /all (\d+) logged deviations/, 104, 'CLAUDE.md deviations');
-    expect(claude).toContain('§27 the review of the open checks');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, 104, 'CLAUDE.md deviations');
+    atLeast(claude, /§1 to §(\d+)/, 27, 'CLAUDE.md verification');
     expect(index).toContain('the review of the open checks (§27)');
     // The three vectors, each where a reader of the golden file looks for what a case pins.
     for (const id of ['gv-018', 'gv-019', 'gv-020']) {
@@ -703,7 +718,7 @@ describe('the playground step kind', () => {
       expect(d104, item).toContain(item);
     }
     atLeast(readme, /(\d+) Python tests/, 285, 'README pytest');
-    atLeast(index, /\*\*(\d+) pytest\*\*/, 285, 'INDEX pytest');
+    atLeast(history, /\*\*(\d+) pytest\*\*/, 285, 'HISTORY pytest');
   });
 
   it('the records carry D105 and the ruling on an empty training split', () => {
@@ -716,8 +731,8 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 105, name);
     }
-    atLeast(claude, /all (\d+) logged deviations/, 105, 'CLAUDE.md deviations');
-    expect(claude).toContain('§28 the empty training split');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, 105, 'CLAUDE.md deviations');
+    atLeast(claude, /§1 to §(\d+)/, 28, 'CLAUDE.md verification');
     expect(index).toContain('the empty training split (§28)');
     // The ruling, where each reader of the definition, the contract and the vectors meets it, by
     // what it says and not only by its bracket (D105's branch review).
@@ -731,7 +746,7 @@ describe('the playground step kind', () => {
     expect(contracts).toContain('`zero_shot_train_triplets: []` is read as omitted');
     expect(contracts).toContain('Omitted or `[]` (D105) → every zR MetricValue has value null.');
     expect(contracts).toContain('a prediction without a score shares no score');
-    expect(source('../../../../../docs/INDEX.md').replace(/\s+/g, ' ')).toContain('[Settled by D105.]');
+    expect(source('../../../../../docs/HISTORY.md').replace(/\s+/g, ' ')).toContain('[Settled by D105.]');
     const golden = source('../../../../../data/golden/README.md');
     expect(golden).toContain('| `gv-021` |');
     expect(golden).not.toContain('One condition has no case');
@@ -750,8 +765,8 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 106, name);
     }
-    atLeast(claude, /all (\d+) logged deviations/, 106, 'CLAUDE.md deviations');
-    expect(claude).toContain('§29 the M4 playgrounds');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, 106, 'CLAUDE.md deviations');
+    atLeast(claude, /§1 to §(\d+)/, 29, 'CLAUDE.md verification');
     expect(index).toContain('the M4 playgrounds (§29)');
     // The counterexample, two of the five playgrounds, and where the branch was cut.
     for (const item of ['R@2=1', 'E13', 'X2', '992287e']) expect(d106, item).toContain(item);
@@ -763,16 +778,10 @@ describe('the playground step kind', () => {
     expect(d106).not.toContain('`pool > 100` in both locales, the one note');
     expect(source('../../../../../docs/superpowers/specs/2026-09-28-playgrounds-m4-design.md'))
       .toContain("[**Corrected 2026-09-28 (D106's final review):** it was not the one");
-    expect(index).toContain("(M4's step ids before the renumbering)");
+    expect(source('../../../../../docs/HISTORY.md')).toContain("(M4's step ids before the renumbering)");
     // M4's density is its own; the nine earlier playgrounds keep the layout their records measured.
-    expect(claude).toContain("`PlaygroundFrame`'s `dense` is M4's");
-    // The browser tests CLAUDE.md cites by name are tests the projector suite runs.
-    const projector = source('../../../../e2e/projector.spec.ts');
-    for (const cited of ['draw their marks on their photographs', 'show their photographs']) {
-      const name = new RegExp(`\`([^\`]*${cited}[^\`]*)\``).exec(claude)?.[1];
-      expect(name, cited).toBeDefined();
-      expect(projector, cited).toContain(name);
-    }
+    expect(source('../../../../../docs/subsystems/S12-playgrounds.md').replace(/\s+/g, ' '))
+      .toContain('`dense` is the opt-in tighter spacing of E3, E4, E7, E13, X2');
   });
 
   it('the records carry D107, and the mockup is gone from the gate and the tree', () => {
@@ -784,7 +793,7 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 107, name);
     }
-    atLeast(claude, /all (\d+) logged deviations/, 107, 'CLAUDE.md deviations');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, 107, 'CLAUDE.md deviations');
     // The gate no longer runs a check over a page that no longer exists.
     expect(pkg.scripts['lint:mockup']).toBeUndefined();
     expect(pkg.scripts.ci).not.toContain('mockup');
@@ -805,10 +814,12 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 108, name);
     }
-    atLeast(claude, /all (\d+) logged deviations/, 108, 'CLAUDE.md deviations');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, 108, 'CLAUDE.md deviations');
     // The directory the author named, in both readers, by its devdata source since D125. The
-    // script itself was retired by D110, whose test requires it gone.
-    for (const [name, text] of [['CLAUDE.md', claude], ['README', readme]]) {
+    // script itself was retired by D110, whose test requires it gone. CLAUDE.md's data trap points
+    // to S15 since D130, which names the source.
+    const data = source('../../../../../docs/subsystems/S15-data-infrastructure.md');
+    for (const [name, text] of [['S15', data], ['README', readme]]) {
       expect(text, name).toContain('raw:WekaExt/scene-graph-studio');
     }
     // README's commands are commands: a `\f` meant as `.\fetch` had been written as a form feed.
@@ -832,7 +843,7 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 109, name);
     }
-    atLeast(claude, /all (\d+) logged deviations/, 109, 'CLAUDE.md deviations');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, 109, 'CLAUDE.md deviations');
     // The whole directory, anchored, and no negation that would let a file of it back in.
     expect(ignore).toContain('/data/');
     expect(ignore.filter((line) => line.startsWith('!') && line.includes('data'))).toEqual([]);
@@ -862,7 +873,7 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 110, name);
     }
-    atLeast(claude, /all (\d+) logged deviations/, 110, 'CLAUDE.md deviations');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, 110, 'CLAUDE.md deviations');
     // Through a parameter, as `source` resolves its paths: Vite rewrites a literal `new URL`.
     const at = (path: string) => new URL(path, import.meta.url);
     // data/ is the link, not a directory of copies; Node reports a junction as a symbolic link.
@@ -901,8 +912,8 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, 111, name);
     }
-    atLeast(claude, /all (\d+) logged deviations/, 111, 'CLAUDE.md deviations');
-    expect(claude).toContain('§30 the M5 playgrounds');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, 111, 'CLAUDE.md deviations');
+    atLeast(claude, /§1 to §(\d+)/, 30, 'CLAUDE.md verification');
     expect(index).toContain('the M5 playgrounds (§30)');
     atLeast(readme, /`npm run test:e2e` is (\d+)/, 83, 'README e2e');
     atLeast(readme, /`npm run check:perf` is (\d+)/, 30, 'README perf');
@@ -919,8 +930,10 @@ describe('the playground step kind', () => {
     );
     expect(contracts).toContain('It still computes no metric.]');
     // The NAS is one copy for every branch: what this branch's data does to `main`, and a revert.
-    expect(claude).toContain('**`data/` is one copy, shared by every branch and every checkout.**');
-    expect(index.replace(/\s+/g, ' ')).toContain('`main` before the merge fails `npm run ci`');
+    // Since D130 CLAUDE.md states it of the devdata link, one of the three forms of `data/`.
+    expect(claude.replace(/\s+/g, ' ')).toContain('it is one copy, shared by every branch and every checkout');
+    expect(source('../../../../../docs/HISTORY.md').replace(/\s+/g, ' '))
+      .toContain('`main` before the merge fails `npm run ci`');
     for (const item of ['§2.4 was amended in place', 'every branch', 'pg-T1-rank1', 'by hand', '86 tests', 'R11']) {
       expect(d111, item).toContain(item);
     }
@@ -939,9 +952,9 @@ describe('the playground step kind', () => {
     for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
       atLeast(text, /D1…D(\d+)/, last, name);
     }
-    atLeast(claude, /all (\d+) logged deviations/, last, 'CLAUDE.md deviations');
+    atLeast(claude, /(\d+) deviations, D1 to D\d+/, last, 'CLAUDE.md deviations');
     expect(source('../../../../../docs/VERIFICATION.md')).toContain('## 31. ');
-    expect(claude).toContain('§31 the M0 demos');
+    atLeast(claude, /§1 to §(\d+)/, 31, 'CLAUDE.md verification');
     expect(index).toContain('the M0 demos (§31)');
     // INDEX lists the spec and the plan, each executed.
     for (const file of ['specs/2026-09-29-m0-demos-design.md', 'plans/2026-09-29-m0-demos.md']) {
@@ -949,12 +962,15 @@ describe('the playground step kind', () => {
       expect(row, file).toBeDefined();
       expect(row, file).toContain('**executed**');
     }
-    // CLAUDE.md names the `demo` kind beside the playground, and the table, the data and the filing.
+    // CLAUDE.md names the `demo` kind beside the playground, and the filing; since D130 the table,
+    // the data, D113, D114 and the five lint rules are S13's, where CLAUDE.md's pointer leads.
     const kind = claude.replace(/\s+/g, ' ');
-    expect(kind).toContain('A playground is a step kind, not a lab.');
-    expect(kind).toContain('**A `demo` is the second such step kind**');
-    for (const item of ['DEMO_PARTS = { DT: 4, DV: 5 }', 'data/demos/m0/', '`mini-isg`', 'D113', 'D114', 'Five lint rules']) {
-      expect(kind, item).toContain(item);
+    expect(kind).toContain('A playground is a step kind, not a lab');
+    expect(kind).toContain('**A `demo` replays a recording');
+    expect(kind).toContain('`mini-isg`');
+    const demos = source('../../../../../docs/subsystems/S13-demos.md').replace(/\s+/g, ' ');
+    for (const item of ['DEMO_PARTS = { DT: 4, DV: 5 }', 'data/demos/m0/', 'D113', 'D114', 'holds a `demo` step to five rules']) {
+      expect(demos, item).toContain(item);
     }
     // The counts the branch measured, as the three records state them.
     atLeast(claude, /resolutions, (\d+) tests,/, 107, 'CLAUDE.md e2e');
@@ -962,7 +978,8 @@ describe('the playground step kind', () => {
     atLeast(readme, /`npm run check:perf` is (\d+)/, 33, 'README perf');
     expect(readme.replace(/\s+/g, ' ')).toContain('two demonstrations');
     // The note count is attributed to the deviation that changed it: D117 moved M0's lab and checkpoint.
-    expect(/since\s+D(\d+)\]/.exec(index)?.[1], 'INDEX attribution').toBe(String(last));
+    expect(/since\s+D(\d+)\]/.exec(source('../../../../../docs/HISTORY.md'))?.[1], 'HISTORY attribution')
+      .toBe(String(last));
     const d117 = record(deviations, 'D117').replace(/\s+/g, ' ');
     for (const item of ['m00:s8', 'm00:s17', 'D106', '1024×768', 'D-T part 4', 'D-V part 4', 'D-V part 5', '25, 37 and 43 px', 'D96', 'D116']) {
       expect(d117, item).toContain(item);
@@ -973,7 +990,8 @@ describe('the playground step kind', () => {
     // Taken from the mount table, the harvest and the modules, as the vectors' count is taken from
     // their file: a bound passes a count left stale (D104's branch review, D106).
     const claude = source('../../../../../CLAUDE.md');
-    const index = source('../../../../../docs/INDEX.md');
+    const history = source('../../../../../docs/HISTORY.md');
+    const playgrounds = source('../../../../../docs/subsystems/S12-playgrounds.md');
     const readme = source('../../../../../README.md');
     const mounted = Object.keys(PLAYGROUND_MOUNTS);
     const uncovered = kp.filter((p) => p.status === 'live' && !mounted.includes(p.id)).length;
@@ -982,13 +1000,14 @@ describe('the playground step kind', () => {
     const stated = (text: string, pattern: RegExp) => pattern.exec(text)?.slice(1);
     // Whitespace as \s+, since a phrase may wrap across a line of the record.
     expect(stated(claude, /8 labs,\s+(\d+)\s+playgrounds/), 'CLAUDE.md playgrounds').toEqual([String(mounted.length)]);
-    expect(stated(claude, /(\d+)\s+live\s+knowledge\s+points\s+have\s+none/), 'CLAUDE.md uncovered')
-      .toEqual([String(uncovered)]);
-    expect(stated(claude, /All\s+(\d+)\s+steps\s+carry\s+theirs;\s+(\d+)\s+notes/), 'CLAUDE.md notes')
+    // Since D130 the uncovered count is S12's, in words, and INDEX's former §5 is HISTORY.
+    expect(stated(playgrounds, /([\w-]+)\s+live\s+knowledge\s+points\s+have\s+none/)?.map((w) => w.toLowerCase()),
+      'S12 uncovered').toEqual([NUMBER_WORDS[uncovered]]);
+    expect(stated(claude, /all\s+(\d+)\s+steps\s+carry\s+theirs,\s+(\d+)\s+notes/), 'CLAUDE.md notes')
       .toEqual([String(steps), String(2 * steps)]);
-    expect(stated(index, /holds\s+(\d+)\s+and\s+(\d+)\s+since\s+D\d+\]/), 'INDEX notes')
+    expect(stated(history, /holds\s+(\d+)\s+and\s+(\d+)\s+since\s+D\d+\]/), 'HISTORY notes')
       .toEqual([String(steps), String(2 * steps)]);
-    for (const [name, text] of [['CLAUDE.md', claude], ['INDEX', index]]) {
+    for (const [name, text] of [['CLAUDE.md', claude], ['HISTORY', history]]) {
       expect(stated(text, /five\s+labs\s+and\s+([\w-]+)\s+playgrounds/), `${name} perf`)
         .toEqual([NUMBER_WORDS[mounted.length]]);
     }
@@ -1000,13 +1019,16 @@ describe('the playground step kind', () => {
     // Taken from the file, not bounded from below: a bound passes a count left stale, and a pinned
     // count turns every earlier records test red when a vector is added (D104's branch review).
     const n = JSON.parse(source('../../../../../data/golden/vectors.json')).cases.length;
-    const index = source('../../../../../docs/INDEX.md');
+    // Since D130 INDEX's NFR table is the map's, its artefacts row S1's, and its former §5 HISTORY.
+    const map = source('../../../../../docs/subsystems/README.md');
+    const engine = source('../../../../../docs/subsystems/S01-evaluation-engine.md');
+    const history = source('../../../../../docs/HISTORY.md');
     const readme = source('../../../../../README.md');
     const stated = (text: string, pattern: RegExp) => pattern.exec(text)?.slice(1);
-    expect(stated(index, /\| `parity\.mjs`, (\d+) golden vectors \|/), 'INDEX NFR-3').toEqual([String(n)]);
-    expect(stated(index, /\| The (\d+) golden vectors \|/), 'INDEX artefacts').toEqual([String(n)]);
-    expect(stated(index, /, (\d+) since D\d+\), slice ingestion/), 'INDEX state').toEqual([String(n)]);
-    expect(stated(index, /parity (\d+) agree/), 'INDEX verification').toEqual([String(n)]);
+    expect(stated(map, /\| `parity\.mjs`, (\d+) golden vectors \|/), 'map NFR-3').toEqual([String(n)]);
+    expect(stated(engine, /There are (\d+) vectors, `gv-001` to `gv-\d+`/), 'S1 vectors').toEqual([String(n)]);
+    expect(stated(history, /, (\d+) since D\d+\), slice ingestion/), 'HISTORY state').toEqual([String(n)]);
+    expect(stated(history, /parity (\d+) agree/), 'HISTORY verification').toEqual([String(n)]);
     expect(stated(readme, /parity (\d+)\/(\d+)/), 'README status').toEqual([String(n), String(n)]);
     expect(stated(readme, /`data\/golden\/vectors\.json`, ([\w-]+) cases whose/), 'README engine')
       .toEqual([NUMBER_WORDS[n]]);
