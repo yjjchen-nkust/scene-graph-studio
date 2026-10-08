@@ -42,7 +42,7 @@ $ApiUrl = 'https://scene-graph-studio-api.onrender.com/api/health'
 
 function Step([string]$Text) { Write-Host "==> $Text" -ForegroundColor Cyan }
 
-function Git {
+function Invoke-Git {
     # Native commands do not throw on a non-zero exit, so check it here.
     & git @args
     if ($LASTEXITCODE -ne 0) { throw "git $($args -join ' ') failed (exit $LASTEXITCODE)." }
@@ -62,11 +62,11 @@ if (& git status --porcelain) { throw 'The working tree has uncommitted changes.
 $remotes = @(& git remote)
 if ($remotes -notcontains 'origin') { throw 'No remote named origin (Gitea).' }
 if ($remotes -notcontains 'github') {
-    Git remote add github "https://github.com/$Github.git"
+    Invoke-Git remote add github "https://github.com/$Github.git"
     Write-Host "Added remote github -> https://github.com/$Github.git"
 }
-Git fetch origin
-Git fetch github
+Invoke-Git fetch origin
+Invoke-Git fetch github
 
 $current = (& git branch --show-current).Trim()
 if (-not $Branch) { $Branch = $current }
@@ -82,10 +82,10 @@ if ($DryRun -and $Branch -ne 'main') {
 
 if ($Branch -ne 'main') {
     Step "Merging $Branch into main (fast-forward only)"
-    Git switch main
-    Git merge --ff-only $Branch
+    Invoke-Git switch main
+    Invoke-Git merge --ff-only $Branch
 } elseif ($current -ne 'main') {
-    Git switch main
+    Invoke-Git switch main
 }
 
 foreach ($remote in 'origin', 'github') {
@@ -113,8 +113,8 @@ if ($DryRun) {
     & git log --oneline "github/main..main"
     return
 }
-Git push origin main
-Git push github main
+Invoke-Git push origin main
+Invoke-Git push github main
 
 if ($NoWatch) {
     Write-Host "Pushed. Follow the run at https://github.com/$Github/actions"
