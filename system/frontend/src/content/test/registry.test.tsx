@@ -1005,11 +1005,12 @@ describe('the playground step kind', () => {
       'S12 uncovered').toEqual([NUMBER_WORDS[uncovered]]);
     expect(stated(claude, /all\s+(\d+)\s+steps\s+carry\s+theirs,\s+(\d+)\s+notes/), 'CLAUDE.md notes')
       .toEqual([String(steps), String(2 * steps)]);
-    expect(stated(history, /holds\s+(\d+)\s+and\s+(\d+)\s+since\s+D\d+\]/), 'HISTORY notes')
-      .toEqual([String(steps), String(2 * steps)]);
-    for (const [name, text] of [['CLAUDE.md', claude], ['HISTORY', history]]) {
-      expect(stated(text, /five\s+labs\s+and\s+([\w-]+)\s+playgrounds/), `${name} perf`)
-        .toEqual([NUMBER_WORDS[mounted.length]]);
+    expect(stated(claude, /five\s+labs\s+and\s+([\w-]+)\s+playgrounds/), 'CLAUDE.md perf')
+      .toEqual([NUMBER_WORDS[mounted.length]]);
+    // HISTORY.md is not edited, so its figures are held as written; their live homes are above.
+    const frozen = history.replace(/\s+/g, ' ');
+    for (const text of ['holds 129 and 258 since D117]', 'five labs and sixteen playgrounds']) {
+      expect(frozen, `HISTORY ${text}`).toContain(text);
     }
     expect(stated(readme, /The\s+([\w-]+)\s+playgrounds\s+too\s+tall\s+for\s+one\s+panel/), 'README parts')
       .toEqual([NUMBER_WORDS[split]]);
@@ -1027,8 +1028,11 @@ describe('the playground step kind', () => {
     const stated = (text: string, pattern: RegExp) => pattern.exec(text)?.slice(1);
     expect(stated(map, /\| `parity\.mjs`, (\d+) golden vectors \|/), 'map NFR-3').toEqual([String(n)]);
     expect(stated(engine, /There are (\d+) vectors, `gv-001` to `gv-\d+`/), 'S1 vectors').toEqual([String(n)]);
-    expect(stated(history, /, (\d+) since D\d+\), slice ingestion/), 'HISTORY state').toEqual([String(n)]);
-    expect(stated(history, /parity (\d+) agree/), 'HISTORY verification').toEqual([String(n)]);
+    // HISTORY.md is not edited, so its figures are held as written; the map, S1 and README are live.
+    const frozen = history.replace(/\s+/g, ' ');
+    for (const text of ['21 since D105), slice ingestion', 'parity 21 agree']) {
+      expect(frozen, `HISTORY ${text}`).toContain(text);
+    }
     expect(stated(readme, /parity (\d+)\/(\d+)/), 'README status').toEqual([String(n), String(n)]);
     expect(stated(readme, /`data\/golden\/vectors\.json`, ([\w-]+) cases whose/), 'README engine')
       .toEqual([NUMBER_WORDS[n]]);

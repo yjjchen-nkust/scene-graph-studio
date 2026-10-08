@@ -5754,10 +5754,11 @@ does not call itself".
 and `19c80c9`, 2026-10-08). **Decisions:** D-24, added on this branch with D126 to D129, which record the
 commits it rules on. Branch `docs/subsystem-index`, from `main` at `d3629f8`.
 
-**Why.** The track's knowledge was recorded by date: at the spec's writing, fifteen specs and sixteen plans under
-`docs/superpowers/`, 125 deviations and 35 sections of `docs/VERIFICATION.md`, each grown in the order the work
-happened, and `INDEX.md` listed the documents by date. Nothing answered the question a maintainer starts from: what
-binds a part of the system, what built it, what checks it, and what has already gone wrong in it (spec §1).
+**Why.** The track's knowledge was recorded by date: at the spec's writing, sixteen specs and fifteen plans under
+`docs/superpowers/` (spec §1 swaps the two), 125 deviations and 35 sections of `docs/VERIFICATION.md`, each grown in
+the order the work happened, and `INDEX.md` listed the documents by date. Nothing answered the question a maintainer
+starts from: what binds a part of the system, what built it, what checks it, and what has already gone wrong in it
+(spec §1).
 
 **The decisions** (spec §3). Each page states the current truth in its own words and cites the records behind every
 statement; the chronological records stay as the audit trail. The nine commits after the D125 merge (`3e3090b`)
@@ -5787,12 +5788,17 @@ requirements; §4 to the map's ownership table and each page's §2 and §4; §5 
 map, "What this is" and "CI" state D-24, and each trap that is not cross-cutting is its rule and the page that owns it.
 
 **The records tests follow the text.** Spec §7 left all code unchanged but the two new tools files. The rewrite of
-`CLAUDE.md` and `INDEX.md` (`1f023a3`, `d0a735b`) turned `npm run ci` red at step 4: on 2026-10-08, at `1b8286c`,
-16 records tests of `system/frontend/src/content/test/registry.test.tsx` failed (1371 passed, 1 skipped, of 1388),
-each reading text the rewrite had moved. Two of their assertions, `D-01…D-23` in `CLAUDE.md` and `D-01 … D-23` in
-INDEX's §2 heading, can no longer hold once D-24 exists, so restoring the text could not clear them, and the test
-file was changed instead (`73d2ab8`): each assertion now reads the fact where it lives and keeps its bound or its
-equality, and the two decision ranges read D-24.
+`CLAUDE.md` and `INDEX.md` (`1f023a3`, `d0a735b`) turned `npm run ci` red at step 4: on 2026-10-08, at `1b8286c`, 16
+records tests of `system/frontend/src/content/test/registry.test.tsx` failed (1371 passed, 1 skipped, of 1388), each
+reading text the rewrite had moved. Two of their assertions, `D-01…D-23` in `CLAUDE.md` and `D-01 … D-23` in INDEX's
+§2 heading, can no longer hold once D-24 exists, so restoring the text could not clear them, and the test file was
+changed instead (`73d2ab8`): each assertion now reads the fact where it lives and keeps its bound or its equality, but
+for four on `docs/HISTORY.md`, and the two decision ranges read D-24. Those four held figures of INDEX's former §5
+equal to the code: the steps and notes (`holds 129 and 258 since D117]`), the playgrounds (`five labs and sixteen
+playgrounds`) and the golden vectors (`21 since D105), slice ingestion` and `parity 21 agree`). `docs/HISTORY.md`
+states that its text is not edited, so they hold those four literals as written, and each figure stays held equal to
+the code on its live home: the steps and notes and the playgrounds in `CLAUDE.md`, the golden vectors on the map, on
+S1 and in `README.md`.
 
 | Now read in | Assertions |
 |---|---|
@@ -5815,10 +5821,7 @@ projector test by those names. A comment above the records tests says where they
 **Open items.** F4: `start.ps1` still defaults to WekaExt's `..\.venv` (D121), so a standalone checkout warns and
 falls back to `py12` on every run; S16's open items carry it, and the spec leaves `start.ps1` unchanged. F5: whether
 the named licences cover a public repository and a public Render service, beyond `bundle_distribute`'s "to enrolled
-students for classroom use", is the author's finding to record; S3's and S16's open items carry it. And four
-assertions in two records tests now hold a figure of `docs/HISTORY.md` equal to the code (the steps and notes, the
-playgrounds, and the golden vectors twice), while `docs/HISTORY.md` states that its text is not edited, so a new step,
-playground or golden vector fails them until the author rules which moves; S6's open items carry it.
+students for classroom use", is the author's finding to record; S3's and S16's open items carry it.
 
 **Verification.** VERIFICATION §36: the coverage at close, 130 of 130 deviations and 36 of 36 sections cited; the
 eight coverage rules disabled one at a time, 8 of 8 caught; the demo rules of the content lint likewise, 11 of 11;
