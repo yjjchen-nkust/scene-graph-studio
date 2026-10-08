@@ -9,7 +9,7 @@ S7 is the course's reference pages: the field map at `/map`, which lays the pape
 | Path | Role |
 |---|---|
 | `system/frontend/src/pages/` | Reference pages: field map, knowledge index, paper cards, leaderboards |
-| `system/tools/gen_papers.py` | Authors the paper corpus |
+| `system/tools/gen_papers.py` | Driverless scaffold kept as a record of how the corpus's rows were shaped; writes nothing (D79) |
 | `system/tools/test/papers.test.mjs` | Tests of the paper corpus |
 | `system/tools/test/leaderboards.test.mjs` | Tests of the leaderboards |
 | `data/content/papers.json` | The paper corpus (NAS) |

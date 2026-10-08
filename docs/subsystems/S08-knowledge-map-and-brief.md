@@ -12,7 +12,7 @@ S8 is the two static pages that predate the application: the knowledge map under
 | `system/tools/audit.js` | Audits display math in the knowledge map and the brief |
 | `system/tools/check.js` | Checks the knowledge map data |
 | `system/tools/build_standalone.mjs` | Builds the standalone brief with pre-rendered math |
-| `system/tools/test/standalone.check.mjs` | Asserts the standalone brief agrees with its source |
+| `system/tools/test/standalone.check.mjs` | Asserts the standalone brief renders with no network: no request, no unrendered math, the prototype working |
 
 ## 3. Interfaces
 
@@ -30,7 +30,7 @@ S8 is the two static pages that predate the application: the knowledge map under
 2. What the page may become, and what it may never become: since D-23 released the freeze of D-13, the page may be extended and not only corrected, while D-14 stands, so `pg.js evaluate()`, a teaching instrument over fifteen hard-coded prediction rows, is excluded from the harvest and never becomes the evaluation engine, which is written with no reference to it. [D-23] [D-14] [D101]
 3. D-14's reason: `evaluate()` matches a triplet by string equality against a precomputed per-prediction IoU scalar, carries no protocol, no constraint mode and no mask pairing, has a `Ra` weighting dial that is no published metric, and runs on eight hard-coded objects and fifteen rows. Promoted, it would disagree with the field while the parity check passed, both engines being wrong together; the dial survives as knowledge point E6, taught and not computed. [D-14] [`system/web/knowledge-map/FROZEN.md`]
 4. Besides D-14, three things stand from the freeze: the harvest from the page, the two validators, which still run as `npm run lint:frozen` under that name, and a page that opens from disk with no build step. [D-23] [`CLAUDE.md`]
-5. An edit to the page is followed by `npm run harvest`, whose output lands on the NAS through `data/`, and the commit carries the page alone, since nothing under `data/` is tracked; D-23's instruction to commit both predates that. [D-23] [`CLAUDE.md`]
+5. An edit to the page is followed by `npm run harvest`, which writes `kp.json`, `math.json` and `deriv.json` under `data/content/` through the `data/` link. D-23 has the page and the three files committed together; §8 item 10 records why that no longer settles what a commit carries. [D-23] [D110] [`system/tools/harvest.mjs`]
 6. Changes to the page since the release are logged in `DEVIATIONS.md`, and `FROZEN.md` keeps its name and its log of the corrections made under the freeze. [D-23] [D101]
 7. A formula or derivation corrected in a module is rebuilt on the page from the corrected MDX and harvested again, so the two cannot differ. [D98] [D106] [D111]
 8. A correction to the page leaves its toy demonstrations computing as they did and corrects what the page says about them: E10's bars from invented IoU scale factors, whose readout now says "ordering on this toy", T1's toy readout with its |P| slider to 310, and T2's toy average over the whole graph. [D98] [D100] [D111] [`system/web/knowledge-map/FROZEN.md`]
@@ -101,3 +101,4 @@ S8 is the two static pages that predate the application: the knowledge map under
 7. The frozen F7 note's "s ≈ 1.1" was not examined, and the note still carries it. [D93] [`system/web/knowledge-map/pg.js`]
 8. Knowledge point F3's `knobs` field names "sliders: x, y, w, h of the predicted box", where F3 has Δx, Δy and one scale λ; recorded and not changed, since the field makes no claim about a source. [D97]
 9. Knowledge point X2's title, "VRD and the undeclared k", and the label of its toy's knob still write k for the per-pair count, which its `knobs` field, its note and M4 write m; left as the frozen page's own. [D106] [`system/web/knowledge-map/FROZEN.md`]
+10. D-23 has the page and the three harvested files committed together, and `CLAUDE.md` says to commit the page. Since D110 no data file lies in the checkout, but D125 tracks fixture copies of the three, `fixtures/data/content/kp.json`, `math.json` and `deriv.json`, which `system/tools/test/fixture.test.mjs` holds byte-equal to their NAS copies outside CI, and which `npm run fixture:refresh` copies over from the NAS. Committing the page alone is therefore incomplete, and no record states the current commit rule. In this checkout on 2026-10-08, `data/` is a junction to `fixtures/data`, so the harvest writes the fixture copies directly. [D-23] [D110] [D125] [`CLAUDE.md`] [`system/tools/test/fixture.test.mjs`]

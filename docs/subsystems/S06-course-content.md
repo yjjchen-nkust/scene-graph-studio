@@ -12,11 +12,11 @@ S6 is the course text: fifteen bilingual MDX modules, the build-time pipeline th
 | `system/mdx.plugin.ts` | Vite plugin that compiles the MDX modules |
 | `system/tools/harvest.mjs` | Harvests the knowledge map into the seed corpus |
 | `system/tools/kp_latex.mjs` | Converts harvested LaTeX to the delimiters MDX reads |
-| `system/tools/gen_modules.py` | Emits the remaining module files |
+| `system/tools/gen_modules.py` | Driverless scaffold kept as a record of how the modules were shaped; writes nothing (D79) |
 | `system/tools/content_lint.mjs` | Content lint: golden vectors, licence gates and the module rules |
 | `system/tools/test/harvest.test.mjs` | Tests of the harvest |
 | `system/tools/test/kp_latex.test.mjs` | Tests of the LaTeX delimiter conversion |
-| `system/tools/test/content_lint.test.mjs` | Tests that each lint rule fails when disabled |
+| `system/tools/test/content_lint.test.mjs` | Tests of the playground and demo lint rules and three module rules, run over fixture corpora |
 | `data/content/` | Harvested corpus and golden playground cases (NAS) |
 
 ## 3. Interfaces
@@ -61,7 +61,7 @@ S6 is the course text: fifteen bilingual MDX modules, the build-time pipeline th
 18. Every claim in a module's frontmatter carries `source`, `source_table`, `constraint`, `protocol` and `verified`, and its `source` is the `key` of a card in `papers.json`. A claim may carry `verified: false`. [contracts §3.1] [D33] [D106] [`system/tools/content_lint.mjs`]
 19. A claim read from IndVisSGG carries `unstated` for its protocol and its constraint, since the paper names neither. [D34] [`system/frontend/src/content/m11.en.mdx`]
 20. Symbols are global: the lint refuses a `sym` glossed two ways anywhere in the corpus, and a module that quotes a paper spending a letter differently states the local meaning in prose at the point of use, while the symbol table keeps the course-wide gloss. The corpus holds 50 symbols. [contracts §3.1] [D30] [D111]
-21. Which module teaches a knowledge point is `data/content/assignment.json`, not a `module` field of `kp.json`, which the harvest rewrites; D29 records the departure from contracts §3.4. Each of the 93 points is assigned to exactly one of the fifteen modules, and the lint refuses a point assigned twice, an assigned point absent from `kp.json` and an unassigned point. [D29] [contracts §3.4] [VERIFICATION §9] [`system/tools/content_lint.mjs`]
+21. Which module teaches a knowledge point is `data/content/assignment.json`, not a `module` field of `kp.json`, which the harvest rewrites; D29 records the departure from contracts §3.4. Each of the 93 points is assigned to exactly one of the fifteen modules, and the lint refuses a point assigned twice and an assigned point absent from `kp.json`. [D29] [contracts §3.4] [VERIFICATION §9] [`system/tools/content_lint.mjs`]
 22. A module's `knowledge_points` lists every point assigned to it and may list points it draws on, so the frontmatter does not name a point's owner; every listed point is in `kp.json`. [D101] [`system/tools/content_lint.mjs`]
 23. The lint reads a body as MDX compiles it: `{/* … */}` comments are removed before every body rule, an HTML comment, which MDX 3 does not compile, is refused, and a tag is read in any attribute order or quote, over several lines, with a literal in braces. [D122] [VERIFICATION §32]
 24. The content lint also holds the structure of the golden vectors (S1), the licence gates (S3), twelve playground rules over the steps, `playground_golden.json` and `vg150_splits.json` (S12), and five demo rules (S13); the comparison of a playground or demo step's component and part across the two locales belongs with them. [contracts §2.4] [`system/tools/content_lint.mjs`]
