@@ -10,6 +10,7 @@ import {
   RULES,
   check,
   citations,
+  normalise,
   deviationIds,
   sectionIds,
   trackedFiles,
@@ -147,6 +148,8 @@ describe('docs_index', () => {
     const converted = { ...crlf({ ...t, exists: undefined }), exists: t.exists };
     expect(check(converted)).toEqual([]);
     expect(deviationIds('## D1 — a\r\n## D2 — b\r\n')).toEqual([1, 2]);
+    expect(normalise('a\r\nb\r\n')).toBe('a\nb\n');
+    expect(normalise('a\r\nb')).not.toContain('\r');
   });
 
   it('ignores tokens that only resemble a deviation', () => {
