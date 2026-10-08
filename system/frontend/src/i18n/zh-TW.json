@@ -124,6 +124,7 @@
   "l4.chip_reconstructed": "重建",
   "l4.latency": "實測延遲",
   "l4.latency_unmeasured": "本機尚未量測延遲。",
+  "l4.live_hosted": "此託管示範未提供即時推論：伺服器未安裝 `torch`，亦無模型權重。各欄顯示已提交之預測。欲執行模型，請於本機啟動本應用程式。",
   "l4.run_live": "執行即時推論",
   "l4.prediction_failed": "無法讀取本影格之預測結果，此情形不等同於未收錄預測。",
   "l3.heading": "L3 — 長尾實驗",

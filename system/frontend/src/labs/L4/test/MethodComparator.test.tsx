@@ -82,6 +82,13 @@ describe('MethodComparator', () => {
     expect(screen.getByTestId('blocked-psgformer').textContent).toContain('detectron2');
   });
 
+  it('says the demo is hosted, not that a package is missing, on a static deployment', () => {
+    mount({ hosted: true });
+    const reason = screen.getByTestId('blocked-psgformer').textContent ?? '';
+    expect(reason).toContain('hosted demo');
+    expect(reason).not.toContain('detectron2');
+  });
+
   it('enables live inference only where the registry says it is live', () => {
     const { onInfer } = mount();
     const button = screen.getByTestId('infer-reltr');

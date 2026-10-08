@@ -124,6 +124,7 @@
   "l4.chip_reconstructed": "reconstructed",
   "l4.latency": "Measured latency",
   "l4.latency_unmeasured": "Latency has not been measured on this machine.",
+  "l4.live_hosted": "Live inference is not offered on this hosted demo: the server has no `torch` and no model checkpoint. The columns show the committed predictions. Run the studio locally to run a model.",
   "l4.run_live": "Run live inference",
   "l4.prediction_failed": "the prediction for this frame could not be read, which is not the same as there being none.",
   "l3.heading": "L3 — Long-Tail Lab",

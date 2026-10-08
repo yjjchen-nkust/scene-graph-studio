@@ -3,7 +3,7 @@ import type { Fidelity, SceneGraph } from 'sgg-metrics';
 import { evaluate } from 'sgg-metrics';
 import { MetricReadout } from '../../components/MetricReadout';
 import { useLocale, type Locale } from '../../i18n/useLocale';
-import { ApiFailure, messageOf } from '../api';
+import { API_BASE, ApiFailure, messageOf } from '../api';
 import type { Column, Failure, ModelRow } from './types';
 
 const K = 20;
@@ -57,7 +57,9 @@ function refusalText(error: unknown, locale: Locale): string {
  * **A failed read is not an absent prediction.** `failures` are the models whose prediction could
  * not be read, a 404 excepted, and each is listed with its reason; "nothing to compare" is said
  * only when no column and no failure is left. `refusal` is the live run's failure, shown under
- * the button that asked for it.
+ * the button that asked for it. `hosted` is true on a static deployment, where the backend is a
+ * small remote service with no `torch` and no checkpoint by design; the reason shown then says so,
+ * rather than a missing-package sentence that reads as a fault to fix.
  */
 export function MethodComparator({
   gt,
@@ -66,6 +68,7 @@ export function MethodComparator({
   onInfer,
   failures = [],
   refusal = null,
+  hosted = API_BASE !== '',
 }: {
   gt: SceneGraph;
   columns: Column[];
@@ -73,6 +76,7 @@ export function MethodComparator({
   onInfer: (model: string) => void;
   failures?: Failure[];
   refusal?: Failure | null;
+  hosted?: boolean;
 }) {
   const { locale, t } = useLocale();
   const en = locale === 'en';
@@ -203,7 +207,9 @@ export function MethodComparator({
                 </button>
                 {model && !model.live ? (
                   <p data-testid={`blocked-${column.model}`} className="text-xs text-slate-600">
-                    {(en ? model.live_blocked_reason_en : model.live_blocked_reason_zh) ?? ''}
+                    {hosted
+                      ? t('l4.live_hosted')
+                      : ((en ? model.live_blocked_reason_en : model.live_blocked_reason_zh) ?? '')}
                   </p>
                 ) : null}
                 {refusal?.model === column.model ? (
