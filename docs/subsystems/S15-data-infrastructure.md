@@ -78,13 +78,13 @@ S15 decides where `data/` is and how a machine comes to have it, in each of the 
 
 ## 5. Verification
 
-**Records:** VERIFICATION §33, VERIFICATION §35.
+**Records:** VERIFICATION §33, VERIFICATION §35, VERIFICATION §37.
 
 **`npm run ci` steps:** the gate's readers of `data/` are other subsystems' (1 harvest, 2 pytest, 4 vitest, 6 parity, 8 content and 11 frontend build among them), and all reach it through the link. S15's own tests run in 2 pytest, `system/backend/tests/test_data_bundles.py` and `system/backend/tests/test_data_dir_guard.py`, and in 4 vitest's `tools` project, `system/tools/test/data_dir.test.mjs`, `system/tools/test/fixture.test.mjs`, `system/tools/test/fs_plugin.test.mjs`, `system/tools/test/dev_server.test.mjs` and `system/tools/test/connect_data.test.mjs`, the last under `pwsh` and skipped where `pwsh` is absent.
 
 **Outside `ci`:** none of `test:e2e`, `check:offline`, `check:perf` and `check:pins` is specific to S15. `check:offline` seeds its scratch data directory from `data/`, and `node tools/fixture.mjs`, run from `system/`, lists every fixture file that differs from `data/` and exits 1 on any.
 
-**What the records measure.** §33 is D123's dev server: before it, the clip's `/@fs/` URL answered with `index.html` and status 200; after it, both clips and the twelve photographs of M0's study page loaded under `npm start`. §35 is D125's migration: the NAS folder renamed with its 289 files and bytes unchanged, `devdata lint` from 54 findings to 0, a writer run without `data/` stopping and creating nothing, the gate green against the NAS and against `fixtures/data` alone, and the fixture's 127 files equal to the NAS's.
+**What the records measure.** §33 is D123's dev server: before it, the clip's `/@fs/` URL answered with `index.html` and status 200; after it, both clips and the twelve photographs of M0's study page loaded under `npm start`. §35 is D125's migration: the NAS folder renamed with its 289 files and bytes unchanged, `devdata lint` from 54 findings to 0, a writer run without `data/` stopping and creating nothing, the gate green against the NAS and against `fixtures/data` alone, and the fixture's 127 files equal to the NAS's. §37 is D131's three forms: on a `data/` that `npm run data:fetch` filled with the core bundle's 135 files, the gate failed at step 4 on the D110 records test before the change and passed all eleven steps after it, with the fixture's 127 files equal to the bundle's copies; on a junction to `fixtures/data` it passed too.
 
 ## 6. Traps
 

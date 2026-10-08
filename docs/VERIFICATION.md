@@ -2294,3 +2294,26 @@ and each page's §2 and §4, to `HISTORY.md`, and to each page's §6 and the map
 **What this section does not claim.** A caught mutant shows that disabling one rule fails a test; it does not show
 that a page states its subsystem correctly, which spec §9's second reading was for. `npm run test:e2e`,
 `npm run check:offline`, `npm run check:perf` and `npm run check:pins` were not run: nothing they exercise changed.
+
+## 37. The gate on a `data/` filled from Google Drive, measured 2026-10-09
+
+D131. Two checkouts. The first is a git worktree in the session's scratchpad, outside the repository, with its own
+`npm ci`. It had no `data/` until `npm run data:fetch` created one as a real directory and placed the core bundle,
+whose download matched the manifest's SHA-256: 135 files. `lstatSync` reported that `data/` as a directory and not a
+symbolic link. The second is the author's checkout, whose `data/` is a junction to its own `fixtures/data`, as S15's
+open items record. `npm run ci` ran from `system/` in each.
+
+| Run | `data/` | Commit | pytest | vitest | Gate |
+|---|---|---|---|---|---|
+| Before | filled from Drive | `da5e4bb`, `main` | 410 passed, 11 skipped | 1 failed, 1387 passed, of 1388 in 96 files | exit 1 at step 4 |
+| After | filled from Drive | `8656cd2` | 410 passed, 11 skipped | **1388 passed**, of 1388 | **11 of 11 steps, exit 0** |
+| After | junction to `fixtures/data` | `8656cd2` | 410 passed, 11 skipped | 1387 passed, 1 skipped, of 1388 | **11 of 11 steps, exit 0** |
+
+The one failure before the change was the D110 records test of
+`system/frontend/src/content/test/registry.test.tsx`, with `expected false to be true`; steps 1 to 3 had passed. In
+the directory filled from Drive, `system/tools/test/fixture.test.mjs` compares the fixture with `data/` instead of
+skipping, and the comparison passed: `node tools/fixture.mjs` reported `fixture: 127 files, 0 differ from data/`, so
+the core bundle holds every fixture file byte for byte. Under the junction that comparison is the one skipped test.
+After the junction run, `git status` in the author's checkout was clean, so the harvest's writes through the junction
+into `fixtures/data` changed no tracked file. `npm run test:e2e`, `npm run check:offline`, `npm run check:perf` and
+`npm run check:pins` were not run: nothing they exercise changed.
