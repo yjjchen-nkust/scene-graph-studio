@@ -25,7 +25,7 @@ S16 is the repository and the ways the course reaches a reader: the standalone r
 
 **Consumes:**
 
-- S14 (`system/tools/start.mjs` imports `pickPython` from `system/tools/py.mjs` and `portFree` and `stopTree` from `system/tools/servers.mjs`; `start.ps1` dot-sources `system/tools/Resolve-Python.ps1` and runs `system/backend/scripts/check_pins.py`; `.github/workflows/ci-cd.yml` runs `npm ci` against `system/package-lock.json` and `npm run ci`; `deploy.ps1` runs `npm run ci` under `-Gate`).
+- S14 (`system/tools/start.mjs` imports `pickPython` from `system/tools/py.mjs` and `portFree` and `stopTree` from `system/tools/servers.mjs`; `start.ps1` dot-sources `system/tools/Resolve-Python.ps1`; `.github/workflows/ci-cd.yml` runs `npm ci` against `system/package-lock.json` and `npm run ci`; `deploy.ps1` runs `npm run ci` under `-Gate`).
 - S15 (`start.ps1` dot-sources `system/tools/Connect-DataDirectory.ps1`; `system/tools/start.mjs` checks `data/LICENCES.md` through the link; `.github/workflows/ci-cd.yml` links `fixtures/data` as `data/`; `render.yaml` sets `SGS_DATA_DIR` to the fixture).
 - S2 (`system/tools/start.mjs` starts `uvicorn app.main:app` from `system/backend/` and polls `/api/health`; `render.yaml` starts the same application and checks `/api/health`).
 - S3 (`start.ps1` and `system/tools/start.mjs` run `system/backend/scripts/make_placeholders.py` when the placeholder slice is absent).
@@ -51,20 +51,20 @@ S16 is the repository and the ways the course reaches a reader: the standalone r
 15. Locally, `npm start` runs `system/tools/start.mjs`, which checks before it starts anything: Node 22.12 or later; an interpreter, resolved by `pickPython`, that imports `fastapi`, `uvicorn`, `pydantic` and `PIL`; `node_modules`; `data/LICENCES.md` through the link; the placeholder slice, which it generates when absent; and both ports free. [D14] [D110] [D122] [`system/tools/start.mjs`]
 16. It starts the backend as `uvicorn app.main:app --reload` on 127.0.0.1, port 8000 by default, and the dev server by running Vite's own bin with `process.execPath` in `system/frontend/`, port 5173 by default with `--strictPort`. `SGS_BACKEND_PORT` and `SGS_FRONTEND_PORT` move them, and the backend's port reaches Vite's proxy. On exit it ends each child with its process tree. [D14] [D122] [`system/tools/start.mjs`]
 17. `start.ps1` is the Windows front door for `npm start`: it makes the `data/` link before any install, checks that Node is 22.12 or later, D-03's floor, resolves the interpreter, installs on first run or under `-Setup`, generates the placeholder slice when absent, sets `SGS_BACKEND_PORT`, `SGS_FRONTEND_PORT` and `SGS_PYTHON`, and runs `npm start` in `system/`. [D110] [D-03] [`start.ps1`]
-18. `start.ps1` takes WekaExt's `..\.venv` as its interpreter, D121's default, unless `-Python` or `SGS_PYTHON` names one; without that `.venv` it warns and falls back to `Resolve-ProjectPython`. On the shared `.venv` it runs `system/backend/scripts/check_pins.py` and lists any disagreement with the pins, then continues. [D121] [D122] [D80] [`start.ps1`]
+18. `start.ps1` resolves its interpreter through `Resolve-ProjectPython`, in the order of every other front door: `-Python`, `SGS_PYTHON`, an activated `py12`, `py12` on disk, then a choice offered to the user. It reads no environment from outside the repository: D121's default, WekaExt's `..\.venv`, and D122's pin check on it went when D-24 left no WekaExt above the track. [D80] [D121] [D122] [D132] [`start.ps1`]
 19. `start.ps1` installs the npm packages when `node_modules` is absent, and this track's Python requirements only when `fastapi`, `uvicorn`, `pydantic` or `PIL` fails to import; `-Setup` forces both, and `-SkipInstall` skips both. [D121] [`start.ps1`]
 20. `.claude/launch.json` holds one configuration, `scene-graph-studio`, which runs `node` on `system/tools/start.mjs`, a path relative to the repository root, and names port 5173. [D126] [`.claude/launch.json`]
 21. A completed plan is not rewritten when the repository moves: `2026-09-15-01-skeleton-and-eval-engine.md` still names `AI-LLM/scene-graph-studio/`, including the full text of the GitHub workflow it specified, as the record of what was decided at the time. [D87] [`2026-09-19-relocation-design.md`]
 
 ## 5. Verification
 
-**Records:** VERIFICATION §14, VERIFICATION §32.
+**Records:** VERIFICATION §14, VERIFICATION §32, VERIFICATION §38.
 
 **`npm run ci` steps:** none of S16's files runs inside the gate; S16's workflow runs the gate on GitHub. Tests elsewhere hold what S16 relies on: `system/tools/test/servers.test.mjs` (S14) the process-tree stop and the port probe that `system/tools/start.mjs` uses, `system/backend/tests/test_cors.py` (S2) the CORS the hosted backend needs, and `system/frontend/src/labs/L4/test/MethodComparator.test.tsx` (S11) the hosted L4 message.
 
-**Outside `ci`:** none of `test:e2e`, `check:offline`, `check:perf` and `check:pins` measures S16; `check:pins` is the comparison `start.ps1` runs on the shared environment.
+**Outside `ci`:** none of `test:e2e`, `check:offline`, `check:perf` and `check:pins` measures S16.
 
-**What the records measure.** §14 is the gate red on the GitHub Actions runner of the `course-lab` era for five consecutive pushes while green on the author's machine, and its fix by D83 and D84. §32 is the run of D122, whose changes include the process-tree stop of `system/tools/start.mjs` and `start.ps1`'s pin check; its table measures the gate and the four checks, not either script. No VERIFICATION section records the hosted deployment: D126 and D127 read GitHub's run list on 2026-10-08, seven runs, with the `ci` job passing in all seven.
+**What the records measure.** §14 is the gate red on the GitHub Actions runner of the `course-lab` era for five consecutive pushes while green on the author's machine, and its fix by D83 and D84. §32 is the run of D122, whose changes include the process-tree stop of `system/tools/start.mjs` and `start.ps1`'s pin check; its table measures the gate and the four checks, not either script. §38 is D132's launch: `start.ps1 -SkipInstall` on spare ports named `py12` with no warning, and both servers answered. No VERIFICATION section records the hosted deployment: D126 and D127 read GitHub's run list on 2026-10-08, seven runs, with the `ci` job passing in all seven.
 
 ## 6. Traps
 
@@ -95,13 +95,13 @@ S16 is the repository and the ways the course reaches a reader: the standalone r
 | D126 | the repository stands alone, with its own workflow and launch configuration | primary |
 | D127 | the frontend on GitHub Pages and the backend on Render | primary |
 | D129 | `deploy.ps1`: merge, push to both remotes, and watch the run | primary |
+| D132 | `start.ps1` resolves its interpreter as every other front door does | primary |
 
 ## 8. Open items
 
-1. **F4, `start.ps1`'s interpreter.** `start.ps1` still defaults to WekaExt's `..\.venv` (D121). A standalone checkout has no such directory beside it, so the script warns and falls back to `py12` on every run, and its warning names WekaExt's startup.ps1, one directory up, as the way to create the `.venv`. Changing `start.ps1` is outside the work that recorded this. [D-24] [D121] [`start.ps1`] [`2026-10-08-subsystem-index-design.md`]
-2. **F5's unresolved question.** `bundle_distribute` is defined as distribution "to enrolled students for classroom use". A public repository and a public Render service reach a wider audience than that definition states. Whether the named licences (Apache-2.0, CC BY 4.0, MIT) cover it is the author's finding to record; D-24 records the question, not an answer. [D-24] [`2026-10-08-subsystem-index-design.md`]
-3. **D-15's path filter and its "second opinion, not the gate".** D-15 has a path-filtered workflow run the one command, and states "The workflow is a second opinion, not the gate". `.github/workflows/ci-cd.yml` has no path filter; `deploy.ps1`'s help calls GitHub Actions "the gate and the deployment", and `docs/DEPLOY-GITHUB.md` lists the workflow as "Gate and frontend". Whether D-15's filter and that sentence still hold is the author's to rule; D-24 rules on neither. [D-24] [D-15] [D129]
-4. `pages-deploy` failed on the pushes of `1c8bea2` and `695b4fd` with "Failed to create deployment (status: 404)", and the later runs passed all three jobs. No record states the outcome of a Render deployment. [D127]
-5. The design document still gives the repository as `scene-graph-studio/` inside WekaExt under D-22: §4.1, its §5 Phase 0 and its §7 item 1, "Not a separate repository", with no note pointing to D-24. [design §4.1] [design §5] [design §7] [D-24]
-6. D95 left the gate on the Gitea runner for the author: it had not been green there since the track moved into WekaExt, and D96 could not read the runner's logs. D126 moved CI to GitHub Actions, where the `ci` job passed in all seven runs read on 2026-10-08, and no record closes D95's item. [D95] [D96] [D126]
-7. No test exercises `deploy.ps1`, and its commits record no run of it. [D129]
+1. **F5's unresolved question.** `bundle_distribute` is defined as distribution "to enrolled students for classroom use". A public repository and a public Render service reach a wider audience than that definition states. Whether the named licences (Apache-2.0, CC BY 4.0, MIT) cover it is the author's finding to record; D-24 records the question, not an answer. [D-24] [`2026-10-08-subsystem-index-design.md`]
+2. **D-15's path filter and its "second opinion, not the gate".** D-15 has a path-filtered workflow run the one command, and states "The workflow is a second opinion, not the gate". `.github/workflows/ci-cd.yml` has no path filter; `deploy.ps1`'s help calls GitHub Actions "the gate and the deployment", and `docs/DEPLOY-GITHUB.md` lists the workflow as "Gate and frontend". Whether D-15's filter and that sentence still hold is the author's to rule; D-24 rules on neither. [D-24] [D-15] [D129]
+3. `pages-deploy` failed on the pushes of `1c8bea2` and `695b4fd` with "Failed to create deployment (status: 404)", and the later runs passed all three jobs. No record states the outcome of a Render deployment. [D127]
+4. The design document still gives the repository as `scene-graph-studio/` inside WekaExt under D-22: §4.1, its §5 Phase 0 and its §7 item 1, "Not a separate repository", with no note pointing to D-24. [design §4.1] [design §5] [design §7] [D-24]
+5. D95 left the gate on the Gitea runner for the author: it had not been green there since the track moved into WekaExt, and D96 could not read the runner's logs. D126 moved CI to GitHub Actions, where the `ci` job passed in all seven runs read on 2026-10-08, and no record closes D95's item. [D95] [D96] [D126]
+6. No test exercises `deploy.ps1`, and its commits record no run of it. [D129]

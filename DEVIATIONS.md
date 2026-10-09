@@ -5853,3 +5853,25 @@ no reader of `data/` makes.
 
 **Verification.** VERIFICATION §37: the gate on the Drive directory before and after the change, and on a checkout
 whose `data/` is a junction to `fixtures/data`.
+
+## D132 — `start.ps1` resolves its interpreter as every other front door does
+
+**Plan:** none. **Decisions:** none new; D-24 removed the parent directory D121 relied on. Branch
+`fix/start-interpreter`, from `main` at `d39ffd4`. It settles F4, which D130 recorded among S16's open items.
+
+**Problem.** D121, asked for by the author on 2026-10-01 while the track lived inside WekaExt, made `start.ps1`
+default its interpreter to `..\.venv\Scripts\python.exe`, WekaExt's virtual environment one directory above the
+track, and D122 had it run `system/backend/scripts/check_pins.py` on that environment. Since D-24 the repository
+stands alone and no WekaExt lies above a checkout. The directory above the author's checkout holds no `.venv`, so
+every run warned that WekaExt's `.venv` was not found, named WekaExt's `..\startup.ps1` as the remedy, and fell back
+to the resolver.
+
+**Resolution.** `start.ps1` passes `-Python` to `Resolve-ProjectPython` and applies D80's order, as `fetch-data.ps1`,
+the npm scripts and `npm run ci` do: `-Python`, `SGS_PYTHON`, an activated `py12`, `py12` on disk, then a choice
+offered to the user. The run and the gate sit on one interpreter again, the condition D80 established and D121 gave
+up. The pin check of D122 goes with the environment it checked: it ran only on WekaExt's `.venv`, whose lower bounds
+were its reason, and `npm run check:pins` still compares the interpreter `SGS_PYTHON` names with the pins. A records
+test in `system/frontend/src/content/test/registry.test.tsx` holds that `start.ps1` names neither `.venv` nor
+WekaExt and calls the resolver with `-Python`, and that `CLAUDE.md` states one order for every front door.
+
+**Verification.** VERIFICATION §38: `start.ps1 -SkipInstall` on spare ports, and the gate.

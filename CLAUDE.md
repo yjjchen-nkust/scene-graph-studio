@@ -6,7 +6,7 @@
 subsystem that owns each path, and that subsystem's page under `docs/subsystems/` states its
 current rules, its traps and the records behind them; a change to a subsystem updates its page's
 current rules in the same commit. `docs/INDEX.md` is the register of the documents: the specs, the
-plans, the binding decisions, `docs/VERIFICATION.md` (§1 to §37, each check with its date and
+plans, the binding decisions, `docs/VERIFICATION.md` (§1 to §38, each check with its date and
 outcome) and the logged deviations. **Read the map, then the page of the subsystem being changed,
 before changing anything.**
 
@@ -25,7 +25,7 @@ track moved from the `course-lab` teaching repository into WekaExt). Its remotes
 WekaExt's subtree-add commit, so `git blame` stops there and the `course-lab` commits D-22 names do
 not resolve (D126). The course is hosted: the frontend on GitHub Pages and the backend on Render,
 which serves `fixtures/data` without `torch`, so live inference reports unavailable (D127). Every
-departure from plan is logged in `DEVIATIONS.md`: 131 deviations, D1 to D131.
+departure from plan is logged in `DEVIATIONS.md`: 132 deviations, D1 to D132.
 
 ## Layout and commands
 
@@ -41,12 +41,10 @@ cd scene-graph-studio\system ; npm run ci
 ```
 
 - **Node ≥ 22.12 is a hard prerequisite** (`system/package.json` engines; D-03). Measured: 24.19.0. D-03 closed.
-- **Python is `py12`, never the bare `python` on PATH, except in `start.ps1`.** `system/tools/Resolve-Python.ps1`
+- **Python is `py12`, never the bare `python` on PATH.** `system/tools/Resolve-Python.ps1`
   (PowerShell) and `system/tools/py.mjs` (Node) resolve it; `SGS_PYTHON` overrides both, which is
-  what CI sets. `start.ps1` defaults to WekaExt's `..\.venv` instead and falls back to the
-  resolver without it (D121); that default is the one thing the track reads from outside itself.
-  A standalone checkout has no such `.venv` beside it, so the script warns and falls back on every
-  run, an open item on S16 (D-24).
+  what CI sets. `start.ps1` applies the same order (D132), with `-Python` ahead of it; D121's
+  default, WekaExt's `..\.venv`, went because no WekaExt lies above the repository since D-24.
 - **`npm run ci` is the gate**, eleven steps: harvest, pytest, the metrics build, vitest, ruff,
   parity, i18n, content, frozen, standalone, frontend build. The static UI mockup and its
   `lint:mockup` check were removed on 2026-09-29 (D107).
@@ -59,7 +57,7 @@ cd scene-graph-studio\system ; npm run ci
 ## Traps
 
 - **Two numbering schemes coexist and collide.** `D-01…D-24` are binding decisions in
-  `docs/superpowers/specs/…-decisions.md`. `D1…D131` are deviations in `DEVIATIONS.md`. **`D-22`
+  `docs/superpowers/specs/…-decisions.md`. `D1…D132` are deviations in `DEVIATIONS.md`. **`D-22`
   and `D22` are different documents about different things.**
 - **The knowledge map's `pg.js evaluate()` is a teaching toy over fifteen hard-coded rows and must
   never be promoted to the evaluation engine** (D-14, which D-23's release of the freeze leaves

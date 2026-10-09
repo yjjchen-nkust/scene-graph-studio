@@ -2317,3 +2317,24 @@ the core bundle holds every fixture file byte for byte. Under the junction that 
 After the junction run, `git status` in the author's checkout was clean, so the harvest's writes through the junction
 into `fixtures/data` changed no tracked file. `npm run test:e2e`, `npm run check:offline`, `npm run check:perf` and
 `npm run check:pins` were not run: nothing they exercise changed.
+
+## 38. `start.ps1` on `py12`, measured 2026-10-09
+
+D132. On the branch `fix/start-interpreter`, in the author's checkout, with `SGS_PYTHON` and `VIRTUAL_ENV` unset.
+The directory above the checkout holds no `.venv`, so before the change every run of `start.ps1` took D121's
+fallback with its two warnings; the before state was read from that absence and the script, and not run.
+
+| Step | Outcome |
+|---|---|
+| The new test in `registry.test.tsx`, before the change | fails, the D132 heading absent from `DEVIATIONS.md` |
+| `start.ps1` parsed by PowerShell's parser after the change | 0 errors |
+| `start.ps1 -SkipInstall -BackendPort 8010 -FrontendPort 5180` | stopped before the interpreter: `data/` links to `fixtures/data`, not to the NAS folder `data.toml` names (S15's open items) |
+| The same with `SGS_DATA_DIR` set to that `fixtures/data`, for that run only | printed `Python 3.12.3  (py12: ...)` and no warning; `start.mjs` printed `python (SGS_PYTHON):` with `py12`'s `python.exe` |
+| `/api/health` on port 8010 | `"status":"ok"` |
+| The frontend on port 5180 | 200 |
+
+Both servers were stopped by ending the process tree of `start.mjs`, and both ports were free afterwards; `git status`
+showed no file but those of the change. The gate ran with the change and these records in place: `npm run ci` from
+`system/` passed all eleven steps, with 410 pytest passed and 11 skipped, and 1388 vitest passed and 1 skipped of
+1389 in 96 files, the new test among them. `npm run test:e2e`, `npm run check:offline`,
+`npm run check:perf` and `npm run check:pins` were not run: nothing they exercise changed.

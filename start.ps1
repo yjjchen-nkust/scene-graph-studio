@@ -30,11 +30,9 @@
     Port for the Vite dev server. Default 5173. Sets SGS_FRONTEND_PORT.
 
 .PARAMETER Python
-    Python executable to use. Defaults to WekaExt's own virtual environment, ..\.venv beside
-    this track, so Scene Graph Studio runs in the same environment as the platform (D121).
-    SGS_PYTHON, when set, still wins over that default. Without ..\.venv the script says so
-    and falls back to the resolver: the global virtual environment py12, then the menu of
-    virtual environments it can find, never whatever "python" resolves to.
+    Python executable to use. Defaults to the resolver's choice, the order every front door
+    applies (D80, D132): SGS_PYTHON, then the global virtual environment py12, then the menu
+    of virtual environments it can find, never whatever "python" resolves to.
     Sets SGS_PYTHON, so every Python step of the run -- the backend included -- uses it.
 
 .EXAMPLE
@@ -108,22 +106,10 @@ if ($nodeVer -lt $nodeMin) {
 Write-Ok "node $nodeRaw"
 
 # ---- Python -------------------------------------------------------------------------------
-# The run uses WekaExt's .venv, one level above this track, so the platform and Scene Graph
-# Studio share one environment (D121). -Python and SGS_PYTHON still override it. Without that
-# .venv, tools/Resolve-Python.ps1 applies the order tools/py.mjs applies on the Node side:
-# py12, then a choice offered to the user, never whatever PATH resolves first.
+# tools/Resolve-Python.ps1 applies the order tools/py.mjs applies on the Node side: -Python,
+# SGS_PYTHON, py12, then a choice offered to the user, never whatever PATH resolves first. The
+# run and the gate therefore sit on one interpreter (D80, D132).
 . (Join-Path $system 'tools/Resolve-Python.ps1')
-$sharedVenv = $false
-if (-not $Python -and -not $env:SGS_PYTHON) {
-    $wekaVenv = [IO.Path]::Combine((Split-Path -Parent $track), '.venv', 'Scripts', 'python.exe')
-    if (Test-Path -LiteralPath $wekaVenv) {
-        $Python = $wekaVenv
-        $sharedVenv = $true
-    } else {
-        Write-Warn "WekaExt's .venv was not found at $wekaVenv; falling back to py12."
-        Write-Warn 'Create it with ..\startup.ps1, which installs ..\requirements.txt.'
-    }
-}
 $Python = Resolve-ProjectPython -Requested $Python
 if (-not $Python) {
     Stop-With 'No Python interpreter was chosen, so there is nothing to run the backend on.' `
@@ -147,22 +133,6 @@ if (-not $SkipInstall) {
         if ($LASTEXITCODE -ne 0) { Stop-With 'pip install failed.' 'Read the error above.' }
     } else {
         Write-Ok 'python packages present'
-    }
-}
-
-# ---- The shared environment against this track's pins (D121, D122) ------------------------
-# WekaExt's requirements.txt states lower bounds only, so its .venv agrees with this track's
-# pins by circumstance rather than by construction, and the import check above passes on any
-# version. A drift is said here, before the run, not found later in a figure that the gate's
-# py12 does not reproduce. A warning, not a stop: D121 chose the shared environment.
-if ($sharedVenv) {
-    $pinReport = & $Python (Join-Path $system 'backend/scripts/check_pins.py')
-    if ($LASTEXITCODE -ne 0) {
-        Write-Warn "WekaExt's .venv disagrees with this track's pins; the run uses versions the gate did not measure:"
-        $pinReport | ForEach-Object { Write-Warn "  $_" }
-        Write-Warn 'Rerun with -Python <path to py12> for the measured environment (D121).'
-    } else {
-        Write-Ok "WekaExt's .venv agrees with this track's pins"
     }
 }
 

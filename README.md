@@ -31,12 +31,9 @@ On a machine with no `py12`, `start.ps1` says so, lists the virtual environments
 and asks which to use; it does not fall through to PATH silently. Create one with
 `python -m venv C:\Python\pyVenv\py12`, or point `PY12_HOME` at the one you have.
 
-**`start.ps1` is the one exception** (D121). It runs on WekaExt's own virtual environment,
-`..\.venv` beside this track, so the platform and the studio share one environment, and it
-applies the order above only when that `.venv` does not exist. `-Python` and `SGS_PYTHON` still
-override it. The npm scripts, `npm run ci` among them, stay on `py12`; to compare the shared
-environment with this track's pins, set `SGS_PYTHON` to `..\..\.venv\Scripts\python.exe` and run
-`npm run check:pins` from `system/`.
+`start.ps1` applies the same order (D132), and its `-Python` names an interpreter ahead of it. To
+compare any other environment with this track's pins, set `SGS_PYTHON` to its `python.exe` and
+run `npm run check:pins` from `system/`.
 
 To run anything on that interpreter yourself, from `system/`:
 

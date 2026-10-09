@@ -943,6 +943,19 @@ describe('the playground step kind', () => {
     }
   });
 
+  it('the records carry D132, and start.ps1 reads no interpreter from outside the repository', () => {
+    const deviations = source('../../../../../DEVIATIONS.md');
+    const claude = source('../../../../../CLAUDE.md').replace(/\s+/g, ' ');
+    const start = source('../../../../../start.ps1');
+    expect(deviations).toContain("## D132 — `start.ps1` resolves its interpreter as every other front door does");
+    // D121's default named WekaExt's .venv beside the track; since D-24 there is no such parent.
+    expect(start).not.toContain('.venv');
+    expect(start).not.toContain('WekaExt');
+    expect(start).toContain('Resolve-ProjectPython -Requested $Python');
+    expect(claude).not.toContain('except in `start.ps1`');
+    expect(claude).toContain('`start.ps1` applies the same order (D132)');
+  });
+
   it('the records carry the M0 demos', () => {
     const deviations = source('../../../../../DEVIATIONS.md');
     const claude = source('../../../../../CLAUDE.md');
