@@ -2338,3 +2338,24 @@ showed no file but those of the change. The gate ran with the change and these r
 `system/` passed all eleven steps, with 410 pytest passed and 11 skipped, and 1388 vitest passed and 1 skipped of
 1389 in 96 files, the new test among them. `npm run test:e2e`, `npm run check:offline`,
 `npm run check:perf` and `npm run check:pins` were not run: nothing they exercise changed.
+
+## 39. `deploy.ps1`'s first recorded run, measured 2026-10-09
+
+D129's script, run from the author's checkout on the branch `fix/start-interpreter` at `10a3588`, with a clean tree
+and `gh` signed in to github.com. Times are UTC, as GitHub reports them.
+
+| Step | Outcome |
+|---|---|
+| `.\deploy.ps1 -Branch fix/start-interpreter -DryRun` | checked the tree, fetched both remotes, confirmed the fast-forward, and listed one commit, `10a3588`, under "Would merge and push:" |
+| `.\deploy.ps1 -Branch fix/start-interpreter` | fast-forwarded `main` from `d39ffd4` to `10a3588` and pushed it to `origin` and to `github`, each `d3629f8..10a3588`, 44 commits |
+| The run it found and followed | `ci-cd` 37870485087, event `push`, commit `10a3588`: `ci` success, 01:35:13 to 01:36:21; `pages-build` success, 01:36:24 to 01:36:56; `pages-deploy` success, 01:36:59 to 01:39:27; the script exited 0 |
+| The Pages URL it printed | 200 |
+| The Render health URL it printed | `"status":"ok"` and `"torch_present":false`; the response names no commit, so it does not show which commit Render serves |
+
+The dry run's list and the push differ. With `-DryRun` and a branch other than `main`, the script lists
+`main..<branch>` and returns, before its check that `main` has not diverged from either remote and before its
+listing of `github/main..main`; `main` here carried 43 commits beyond both remotes, and the dry run showed none of
+them. The run's annotations state that GitHub forced `actions/checkout@v4`, `actions/setup-node@v4`,
+`actions/setup-python@v5` and `actions/upload-artifact@v4`, which target Node.js 20, onto Node.js 24, and that the
+`ubuntu-latest` label migrates to Ubuntu 26 beginning October 19, 2026. `-Gate`, `-NoWatch` and the script's
+refusals were not exercised. `npm run ci` ran before the push, as §38 records.

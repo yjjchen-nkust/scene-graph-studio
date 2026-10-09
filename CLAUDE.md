@@ -6,7 +6,7 @@
 subsystem that owns each path, and that subsystem's page under `docs/subsystems/` states its
 current rules, its traps and the records behind them; a change to a subsystem updates its page's
 current rules in the same commit. `docs/INDEX.md` is the register of the documents: the specs, the
-plans, the binding decisions, `docs/VERIFICATION.md` (§1 to §38, each check with its date and
+plans, the binding decisions, `docs/VERIFICATION.md` (§1 to §39, each check with its date and
 outcome) and the logged deviations. **Read the map, then the page of the subsystem being changed,
 before changing anything.**
 
